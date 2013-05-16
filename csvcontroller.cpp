@@ -39,20 +39,20 @@ QString CSVController::reduceSpaces(const QString& s) const
 QString CSVController::makeSafe(const QString& s) const
 {
     QString x = s;
-    if (x.contains(getTextQualifier()))
+    if (x.contains(getTextDelimiter()))
     {
-        x = x.replace(getTextQualifier(), QString(2, getTextQualifier()));
+        x = x.replace(getTextDelimiter(), QString(2, getTextDelimiter()));
     }
-    if (x.contains(getQualifiedEscapeCharacter()))
+    if (x.contains(getEscapeCharacter()))
     {
-        x = x.replace(getQualifiedEscapeCharacter(), QString(2, getQualifiedEscapeCharacter()));
+        x = x.replace(getEscapeCharacter(), QString(2, getEscapeCharacter()));
     }
     return x;
 }
 
-QChar CSVController::getTextQualifier() const
+QChar CSVController::getTextDelimiter() const
 {
-    return m_textQualifier;
+    return m_textDelimiter;
 }
 
 QChar CSVController::getRecordDelimiter() const
@@ -60,24 +60,19 @@ QChar CSVController::getRecordDelimiter() const
     return m_recordDelimiter;
 }
 
-QChar CSVController::getCommentQualifier() const
+QChar CSVController::getCommentCharacter() const
 {
     return m_comment;
 }
 
-QChar CSVController::getQualifiedEscapeCharacter() const
+QChar CSVController::getEscapeCharacter() const
 {
-    return m_qualifiedEscapeCharacter;
+    return m_escapeCharacter;
 }
 
 bool CSVController::getRecordDelimiterIsDefault() const
 {
     return m_recordDelimiterIsDefault;
-}
-
-bool CSVController::getUseTextQualifier() const
-{
-    return m_useTextQualifier;
 }
 
 bool CSVController::getUseComments() const
@@ -100,12 +95,7 @@ bool CSVController::getSkipEmptyLines() const
     return m_skipEmptyLines;
 }
 
-bool CSVController::getUseBackslashEscape() const
-{
-    return m_useBackslashEscape;
-}
-
-void CSVController::setRecordDelimiter(QChar delimiter)
+void CSVController::setRecordDelimiter(const QChar delimiter)
 {
     if (m_recordDelimiter != delimiter)
     {
@@ -114,43 +104,34 @@ void CSVController::setRecordDelimiter(QChar delimiter)
     }
 }
 
-void CSVController::setTextQualifier(QChar delimiter)
+void CSVController::setTextDelimiter(const QChar delimiter)
 {
-    if (m_textQualifier != delimiter)
+    if (m_textDelimiter != delimiter)
     {
-        m_textQualifier = delimiter;
-        emit textQualifierChanged(m_textQualifier);
+        m_textDelimiter = delimiter;
+        emit textDelimiterChanged(m_textDelimiter);
     }
 }
 
-void CSVController::setUseTextQualifier(bool useTextQualifier)
-{
-    if (m_useTextQualifier != useTextQualifier)
-    {
-        m_useTextQualifier = useTextQualifier;
-        emit useTextQualifierChanged(m_useTextQualifier);
-    }
-}
-
-void CSVController::setCommentQualifier(QChar comment)
+void CSVController::setCommentCharacter(const QChar comment)
 {
     if (m_comment != comment)
     {
         m_comment = comment;
-        emit commentQualifierChanged(m_comment);
+        emit commentCharacterChanged(m_comment);
     }
 }
 
-void CSVController::setQualifiedEscapeCharacter(QChar escapeCharacter)
+void CSVController::setEscapeCharacter(const QChar escapeCharacter)
 {
-    if (m_qualifiedEscapeCharacter != escapeCharacter)
+    if (m_escapeCharacter != escapeCharacter)
     {
-        m_qualifiedEscapeCharacter = escapeCharacter;
-        emit qualifiedEscapeCharacterChanged(m_qualifiedEscapeCharacter);
+        m_escapeCharacter = escapeCharacter;
+        emit escapeCharacterChanged(m_escapeCharacter);
     }
 }
 
-void CSVController::setRecordDelimiterIsDefault(bool recordDelimiterIsDefault)
+void CSVController::setRecordDelimiterIsDefault(const bool recordDelimiterIsDefault)
 {
     if (m_recordDelimiterIsDefault != recordDelimiterIsDefault)
     {
@@ -159,7 +140,7 @@ void CSVController::setRecordDelimiterIsDefault(bool recordDelimiterIsDefault)
     }
 }
 
-void CSVController::setUseComments(bool useComments)
+void CSVController::setUseComments(const bool useComments)
 {
     if (m_useComments != useComments)
     {
@@ -168,7 +149,7 @@ void CSVController::setUseComments(bool useComments)
     }
 }
 
-void CSVController::setTrimSpaces(bool trimSpaces)
+void CSVController::setTrimSpaces(const bool trimSpaces)
 {
     if (m_trimSpaces != trimSpaces)
     {
@@ -177,7 +158,7 @@ void CSVController::setTrimSpaces(bool trimSpaces)
     }
 }
 
-void CSVController::setCompactSpaces(bool compactSpaces)
+void CSVController::setCompactSpaces(const bool compactSpaces)
 {
     if (m_compactSpaces != compactSpaces)
     {
@@ -186,7 +167,7 @@ void CSVController::setCompactSpaces(bool compactSpaces)
     }
 }
 
-void CSVController::setSkipEmptyLines(bool skipEmptyLines)
+void CSVController::setSkipEmptyLines(const bool skipEmptyLines)
 {
     if (m_skipEmptyLines != skipEmptyLines)
     {
@@ -195,16 +176,7 @@ void CSVController::setSkipEmptyLines(bool skipEmptyLines)
     }
 }
 
-void CSVController::setUseBackslashEscape(bool useBackslashEscape)
-{
-    if (m_useBackslashEscape != useBackslashEscape)
-    {
-        m_useBackslashEscape = useBackslashEscape;
-        emit useBackslashEscapeChanged(m_useBackslashEscape);
-    }
-}
-
-void CSVController::setMergeDelimiters(bool mergeDelimiters)
+void CSVController::setMergeDelimiters(const bool mergeDelimiters)
 {
     if (m_mergeDelimiters != mergeDelimiters)
     {
@@ -240,7 +212,7 @@ uint CSVController::hexToUnicode(const QChar& c) const
     return 0;
 }
 
-void CSVController::setColumnDelimiter(QChar delimiter)
+void CSVController::setColumnDelimiter(const QChar delimiter)
 {
     if (!isColumnDelimiter(delimiter))
     {
@@ -250,7 +222,7 @@ void CSVController::setColumnDelimiter(QChar delimiter)
     }
 }
 
-void CSVController::addColumnDelimiter(QChar delimiter)
+void CSVController::addColumnDelimiter(const QChar delimiter)
 {
     if (!isColumnDelimiter(delimiter))
     {
@@ -259,7 +231,7 @@ void CSVController::addColumnDelimiter(QChar delimiter)
     }
 }
 
-void CSVController::removeColumnDelimiter(QChar delimiter)
+void CSVController::removeColumnDelimiter(const QChar delimiter)
 {
     if (isColumnDelimiter(delimiter))
     {
@@ -290,18 +262,16 @@ QChar CSVController::getColumnDelimiter() const
 
 void CSVController::setControllerDefaults()
 {
-    m_textQualifier = '"';
+    m_textDelimiter = '"';
     setColumnDelimiter(',');
     m_recordDelimiter = '\n';
     m_comment = '#';
-    m_qualifiedEscapeCharacter = '\\';
+    m_escapeCharacter = '\\';
     m_recordDelimiterIsDefault = true;
-    m_useTextQualifier = true;
     m_useComments = true;
     m_compactSpaces = true;
     m_trimSpaces = true;
     m_skipEmptyLines = true;
-    m_useBackslashEscape = false;
     m_mergeDelimiters = false;
 }
 

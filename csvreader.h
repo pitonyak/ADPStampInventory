@@ -162,6 +162,8 @@ public:
 
   QString toString(bool brief = true) const;
 
+  void setColumnType(const int i, const QMetaType::Type t);
+  QMetaType::Type guessColumnType(const int i);
   void guessColumnTypes();
 
 signals:
@@ -169,6 +171,12 @@ signals:
 public slots:
 
 private:
+  /*! Define it but do not implement it to prevent this from being used. */
+  CSVReader(const CSVReader& reader);
+
+  /*! Define it but do not implement it to prevent this from being used. */
+  CSVReader& operator=(const CSVReader& reader);
+
   void readerInitialization();
   void recordInitialization();
   void columnInitialization();
@@ -196,6 +204,8 @@ private:
    *
    ***************************************************************************/
   void endOfColumnReached(const QString& columnValue, bool wasDelimited);
+
+  QList<QMetaType::Type> * m_columnTypes;
 
   bool m_entireRecordRead;
   int m_numberOfRecordsRead;

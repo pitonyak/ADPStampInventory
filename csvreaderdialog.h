@@ -17,11 +17,29 @@ class QLabel;
 class QTableWidget;
 class CSVReader;
 
+//**************************************************************************
+/*! \class CSVReaderDialog
+ *  \brief Configure how a CSV file should be read.
+ *
+ * \author Andrew Pitonyak
+ * \copyright Andrew Pitonyak, but you may use without restriction.
+ * \date 2011-2013
+ *
+ **************************************************************************/
+
 class CSVReaderDialog : public QDialog
 {
   Q_OBJECT
 public:
+
+  /*! \brief Constructor. Dialog geometry is set from the settings to the last size used.
+   *
+   *  \param [in,out] reader Dialog uses this to set CSV parameters.
+   *  \param [in,out] parent Objects owner.
+   */
   explicit CSVReaderDialog(CSVReader* reader = nullptr, QWidget* parent = nullptr);
+
+  /*! \brief Destructor saves dialog geometry. */
   virtual ~CSVReaderDialog();
 
 signals:

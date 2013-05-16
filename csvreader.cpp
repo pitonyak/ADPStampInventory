@@ -17,6 +17,7 @@
 
 CSVReader::CSVReader(QObject *parent) :
     CSVController(parent),
+    m_columnTypes(nullptr),
     m_hasLastChar(false),
     m_lastChar(0)
 {
@@ -51,6 +52,11 @@ void CSVReader::cleanup()
         }
         delete m_file;
         m_file = nullptr;
+    }
+    if (m_columnTypes != nullptr)
+    {
+      delete m_columnTypes;
+      m_columnTypes = nullptr;
     }
 }
 
@@ -274,7 +280,7 @@ bool CSVReader::readNextRecord(bool clearBeforeReading)
 
     recordInitialization();
     columnInitialization();
-    bool textQualifierFound = false;
+    bool textDelimiterFound = false;
     QString currentColumn = "";
 
     while (hasChar() && !m_entireRecordRead && mode != CSVReadMode::MODE_ERROR && mode)
@@ -291,25 +297,25 @@ bool CSVReader::readNextRecord(bool clearBeforeReading)
             break;
 
         case CSVReader::MODE_COLUMN_START:
-            textQualifierFound = false;
+            textDelimiterFound = false;
             currentColumn = "";
-            if (isTextQualifier(currentChar()))
+            if (isTextDelimiter(currentChar()))
             {
-                textQualifierFound = true;
+                textDelimiterFound = true;
                 mode = CSVReader::MODE_COLUMN_READ;
                 moveToNextChar();
             }
             else if (isColumnDelimiter(currentChar()))
             {
                 // Set to a null string because was totally empty.
-                endOfColumnReached(QString(), textQualifierFound);
+                endOfColumnReached(QString(), textDelimiterFound);
                 mode = CSVReader::MODE_COLUMN_START;
                 moveToNextChar();
             }
             else if (isRecordDelimiter(currentChar()))
             {
                 // Set to a null string because was totally empty.
-                endOfColumnReached(QString(), textQualifierFound);
+                endOfColumnReached(QString(), textDelimiterFound);
                 endOfRecordReached();
             }
             else
@@ -322,44 +328,44 @@ bool CSVReader::readNextRecord(bool clearBeforeReading)
 
         case CSVReader::MODE_COLUMN_READ:
             // We are in read mode, which means that the last character was NOT
-            // the text qualifier (ie, a double quote).
-            if (isTextQualifier(currentChar()))
+            // the text Delimiter (ie, a double quote).
+            if (isTextDelimiter(currentChar()))
             {
                 moveToNextChar();
-                if (textQualifierFound)
+                if (textDelimiterFound)
                 {
                     if (!hasChar())
                     {
-                        endOfColumnReached(currentColumn, textQualifierFound);
+                        endOfColumnReached(currentColumn, textDelimiterFound);
                         endOfRecordReached();
                     }
-                    else if (isTextQualifier(currentChar()))
+                    else if (isTextDelimiter(currentChar()))
                     {
-                        // A second text qualifier was found, so use
-                        // the text qualifier
+                        // A second text Delimiter was found, so use
+                        // the text Delimiter
                         currentColumn = currentColumn + currentChar();
                         if (!moveToNextChar())
                         {
                             // TODO: End of record with an open double quote!
-                            endOfColumnReached(currentColumn, textQualifierFound);
+                            endOfColumnReached(currentColumn, textDelimiterFound);
                         }
                     }
                     else
                     {
                         // end of column is not considered reached unless we find
                         // a new column character, or a new record character.
-                        // Perhaps there is another text qualifier.
-                        // endOfColumnReached(currentColumn, textQualifierFound);
+                        // Perhaps there is another text Delimiter.
+                        // endOfColumnReached(currentColumn, textDelimiterFound);
                         mode = CSVReader::MODE_COLUMN_END;
                     }
                 }
                 else
                 {
-                    // Found a text qualifier and one was not previously found.
+                    // Found a text Delimiter and one was not previously found.
                     // This should be an error. But.... Will simply ignore the preceding stuff.
                     // TODO: Warning?
                     currentColumn = "";
-                    textQualifierFound = true;
+                    textDelimiterFound = true;
                 }
             }
             else if ( isEscapeCharacter(currentChar()))
@@ -367,9 +373,9 @@ bool CSVReader::readNextRecord(bool clearBeforeReading)
                 QChar c = currentChar();
                 if (!moveToNextChar())
                 {
-                    endOfColumnReached(currentColumn + c, textQualifierFound);
+                    endOfColumnReached(currentColumn + c, textDelimiterFound);
                     endOfRecordReached();
-                    if (textQualifierFound)
+                    if (textDelimiterFound)
                     {
                         // TODO: End of record with an open double quote!
                     }
@@ -470,20 +476,20 @@ bool CSVReader::readNextRecord(bool clearBeforeReading)
                     }
                 }
             }
-            else if (textQualifierFound)
+            else if (textDelimiterFound)
             {
                 currentColumn = currentColumn + currentChar();
                 moveToNextChar();
             }
             else if (isColumnDelimiter(currentChar()))
             {
-                endOfColumnReached(currentColumn, textQualifierFound);
+                endOfColumnReached(currentColumn, textDelimiterFound);
                 mode = CSVReadMode::MODE_COLUMN_START;
                 moveToNextChar();
             }
             else if (isRecordDelimiter(currentChar()))
             {
-                endOfColumnReached(currentColumn, textQualifierFound);
+                endOfColumnReached(currentColumn, textDelimiterFound);
                 endOfRecordReached();
             }
             else
@@ -498,7 +504,7 @@ bool CSVReader::readNextRecord(bool clearBeforeReading)
             {
                 moveToNextChar();
             }
-            endOfColumnReached(currentColumn, textQualifierFound);
+            endOfColumnReached(currentColumn, textDelimiterFound);
             if (hasChar() && isColumnDelimiter(currentChar()))
             {
                 moveToNextChar();
@@ -555,9 +561,38 @@ QString CSVReader::read( qint64 maxlen )
     return canReadFromStream() ? m_inStream->read(maxlen) : QString();
 }
 
+void CSVReader::setColumnType(const int i, const QMetaType::Type t)
+{
+  if (m_columnTypes == nullptr)
+  {
+    guessColumnTypes();
+  }
+  if (m_columnTypes != nullptr && i >= 0)
+  {
+    while (i >= m_columnTypes->size())
+    {
+      m_columnTypes->append(t);
+    }
+    m_columnTypes->replace(i, t);
+  }
+}
+
+QMetaType::Type CSVReader::guessColumnType(const int i)
+{
+  if (m_columnTypes == nullptr)
+  {
+    guessColumnTypes();
+  }
+  return (m_columnTypes == nullptr) || (i < 0) || (i > m_columnTypes->size()) ? QMetaType::Void : m_columnTypes->at(i);
+}
+
 void CSVReader::guessColumnTypes()
 {
-  QList<QMetaType::Type> columnTypes;
+  if (m_columnTypes == nullptr)
+  {
+    m_columnTypes = new QList<QMetaType::Type>();
+  }
+
   TypeMapper typeMapper;
 
   for (int iRow = 0; iRow < m_lines.count(); ++iRow)
@@ -565,26 +600,26 @@ void CSVReader::guessColumnTypes()
     const CSVLine& line = m_lines[iRow];
     for (int iCol=0; iCol < line.count(); ++ iCol)
     {
-      if (iCol >= columnTypes.count())
+      if (iCol >= m_columnTypes->count())
       {
-        columnTypes.append(line[iCol].getType());
+        m_columnTypes->append(line[iCol].getType());
       }
       else
       {
-        columnTypes[iCol] = typeMapper.mostGenericType(columnTypes[iCol], line[iCol].getType());
+        m_columnTypes->replace(iCol, typeMapper.mostGenericType(m_columnTypes->at(iCol), line[iCol].getType()));
       }
     }
   }
   QString s;
-  for (int i=0; i<columnTypes.count(); ++i)
+  for (int i=0; i<m_columnTypes->count(); ++i)
   {
     if (i == 0)
     {
-      s = QMetaType::typeName(columnTypes[i]);
+      s = QMetaType::typeName(m_columnTypes->at(i));
     }
     else
     {
-      s = s + ", " + QMetaType::typeName(columnTypes[i]);
+      s = s + ", " + QMetaType::typeName(m_columnTypes->at(i));
     }
   }
   qDebug(qPrintable(s));

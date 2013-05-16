@@ -132,9 +132,9 @@ void CSVWriter::write(const CSVColumn& column)
     {
         if (column.isQualified())
         {
-            write(getTextQualifier());
+            write(getTextDelimiter());
             write(makeSafe(s));
-            write(getTextQualifier());
+            write(getTextDelimiter());
         }
         else
         {
