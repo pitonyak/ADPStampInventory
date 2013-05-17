@@ -247,52 +247,102 @@ void CSVReaderDialog::tableSelectionChanged()
 
 void CSVReaderDialog::creatFieldsGroupBox()
 {
-
-  QMap<QMetaType::Type, QStringList> typeToTxt;
-  QMap<QString, QList<QMetaType::Type> > txtToType;
-
   QList<QMetaType::Type> typeList;
   typeList << QMetaType::Bool;
-  txtToType.insert("Boolean", typeList);
+  m_txtToType.insert("Boolean", typeList);
   typeList.clear();
 
   typeList << QMetaType::Short;
   typeList << QMetaType::Int;
-  txtToType.insert("Integer", typeList);
+  m_txtToType.insert("Integer", typeList);
   typeList.clear();
 
   typeList << QMetaType::Long;
-  typeList << QMetaType::LongLong
-  txtToType.insert("Long Integer", typeList);
+  typeList << QMetaType::LongLong;
+  m_txtToType.insert("Long Integer", typeList);
   typeList.clear();
 
   typeList << QMetaType::UShort;
   typeList << QMetaType::UInt;
-  txtToType.insert("Unsigned Integer", typeList);
+  m_txtToType.insert("Unsigned Integer", typeList);
   typeList.clear();
 
   typeList << QMetaType::ULong;
-  typeList << QMetaType::ULongLong
-  txtToType.insert("Unsigned Long Integer", typeList);
+  typeList << QMetaType::ULongLong;
+  m_txtToType.insert("Unsigned Long Integer", typeList);
   typeList.clear();
 
   typeList << QMetaType::QDate;
-  txtToType.insert("Date", typeList);
+  m_txtToType.insert("Date", typeList);
   typeList.clear();
 
   typeList << QMetaType::QDateTime;
-  txtToType.insert("Date / Time", typeList);
+  m_txtToType.insert("Date / Time", typeList);
   typeList.clear();
 
   typeList << QMetaType::QTime;
-  txtToType.insert("Time", typeList);
+  m_txtToType.insert("Time", typeList);
   typeList.clear();
 
   typeList << QMetaType::Float;
   typeList << QMetaType::Double;
-  txtToType.insert("Float", typeList);
+  m_txtToType.insert("Float", typeList);
   typeList.clear();
 
+  QStringList sList;
+  sList << "Boolean";
+  m_typeToTxt.insert(QMetaType::Bool, sList);
+  sList.clear();
+
+  sList << "Integer";
+  m_typeToTxt.insert(QMetaType::Short, sList);
+  m_typeToTxt.insert(QMetaType::Int, sList);
+  sList.clear();
+
+  sList << "Unsigned Integer";
+  m_typeToTxt.insert(QMetaType::UShort, sList);
+  m_typeToTxt.insert(QMetaType::UInt, sList);
+  sList.clear();
+
+
+  sList << "Long Integer";
+  m_typeToTxt.insert(QMetaType::Long, sList);
+  m_typeToTxt.insert(QMetaType::LongLong, sList);
+  sList.clear();
+
+  sList << "Unsigned Long Integer";
+  m_typeToTxt.insert(QMetaType::ULong, sList);
+  m_typeToTxt.insert(QMetaType::ULongLong, sList);
+  sList.clear();
+
+  sList << "Date";
+  m_typeToTxt.insert(QMetaType::QDate, sList);
+  sList.clear();
+
+  sList << "Date / Time";
+  m_typeToTxt.insert(QMetaType::QDateTime, sList);
+  sList.clear();
+
+  sList << "Time";
+  m_typeToTxt.insert(QMetaType::QTime, sList);
+  sList.clear();
+
+  sList << "Float";
+  m_typeToTxt.insert(QMetaType::Float, sList);
+  m_typeToTxt.insert(QMetaType::Double, sList);
+  sList.clear();
+
+
+  m_typeNames << "Text";
+  m_typeNames << "Boolean";
+  m_typeNames << "Integer";
+  m_typeNames << "Unsigned Integer";
+  m_typeNames << "Long Integer";
+  m_typeNames << "Unsigned Long Integer";
+  m_typeNames << "Date";
+  m_typeNames << "Time";
+  m_typeNames << "Date / Time";
+  m_typeNames << "Float";
 
   m_fieldsGroupBox = new QGroupBox(tr("Fields"));
   QVBoxLayout *vBox = new QVBoxLayout();

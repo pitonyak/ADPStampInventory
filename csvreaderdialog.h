@@ -74,6 +74,10 @@ private:
   QLabel* m_columnTypeLabel;
   QTableWidget* m_tableWidget;
   CSVReader* m_reader;
+  QMap<QMetaType::Type, QStringList> m_typeToTxt;
+  QMap<QString, QList<QMetaType::Type> > m_txtToType;
+  QStringList m_typeNames;
+
 };
 
 #endif // CSVREADERDIALOG_H
