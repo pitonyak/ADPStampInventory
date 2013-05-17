@@ -247,6 +247,53 @@ void CSVReaderDialog::tableSelectionChanged()
 
 void CSVReaderDialog::creatFieldsGroupBox()
 {
+
+  QMap<QMetaType::Type, QStringList> typeToTxt;
+  QMap<QString, QList<QMetaType::Type> > txtToType;
+
+  QList<QMetaType::Type> typeList;
+  typeList << QMetaType::Bool;
+  txtToType.insert("Boolean", typeList);
+  typeList.clear();
+
+  typeList << QMetaType::Short;
+  typeList << QMetaType::Int;
+  txtToType.insert("Integer", typeList);
+  typeList.clear();
+
+  typeList << QMetaType::Long;
+  typeList << QMetaType::LongLong
+  txtToType.insert("Long Integer", typeList);
+  typeList.clear();
+
+  typeList << QMetaType::UShort;
+  typeList << QMetaType::UInt;
+  txtToType.insert("Unsigned Integer", typeList);
+  typeList.clear();
+
+  typeList << QMetaType::ULong;
+  typeList << QMetaType::ULongLong
+  txtToType.insert("Unsigned Long Integer", typeList);
+  typeList.clear();
+
+  typeList << QMetaType::QDate;
+  txtToType.insert("Date", typeList);
+  typeList.clear();
+
+  typeList << QMetaType::QDateTime;
+  txtToType.insert("Date / Time", typeList);
+  typeList.clear();
+
+  typeList << QMetaType::QTime;
+  txtToType.insert("Time", typeList);
+  typeList.clear();
+
+  typeList << QMetaType::Float;
+  typeList << QMetaType::Double;
+  txtToType.insert("Float", typeList);
+  typeList.clear();
+
+
   m_fieldsGroupBox = new QGroupBox(tr("Fields"));
   QVBoxLayout *vBox = new QVBoxLayout();
   QFormLayout *typeRow = new QFormLayout();
