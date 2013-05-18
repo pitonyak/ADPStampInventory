@@ -6,202 +6,218 @@
 #include "csvcolumn.h"
 
 //**************************************************************************
-//! Represent a single row.
-/*!
+/*! \class CSVLine
+ * \brief Represent a single row from a CSV file. Contains the original line as well as the parsed columns.
  *
  **************************************************************************/
 
 class CSVLine : public QObject
 {
-    Q_OBJECT
+  Q_OBJECT
 public:
-    //**************************************************************************
-    //! Constructor
-    /*!
-     * \param parent The object's owner. The parent's destructor destroys all child objects.
-     *
-     ***************************************************************************/
-    explicit CSVLine(QObject *parent = nullptr);
+  //**************************************************************************
+  /*! \brief Constructor
+   *
+   * \param [in, out] parent The object's owner. The parent's destructor destroys all child objects.
+   *
+   ***************************************************************************/
+  explicit CSVLine(QObject *parent = nullptr);
 
-    //**************************************************************************
-    //! Constructor
-    /*!
-     * \param x Object to copy into the newly constructed object.
-     * \param parent The object's owner. The parent's destructor destroys all child objects.
-     *
-     ***************************************************************************/
-    explicit CSVLine(const CSVLine& x, QObject *parent = nullptr);
+  //**************************************************************************
+  /*! \brief Constructor
+   *
+   * \param [in] x Object to copy into the newly constructed object.
+   * \param [in, out] parent The object's owner. The parent's destructor destroys all child objects.
+   *
+   ***************************************************************************/
+  explicit CSVLine(const CSVLine& x, QObject *parent = nullptr);
 
-    //**************************************************************************
-    //! Constructor
-    /*!
-     * \param originalLine Unparsed line that was read.
-     * \param parent The object's owner. The parent's destructor destroys all child objects.
-     *
-     ***************************************************************************/
-    explicit CSVLine(const QString& originalLine, QObject *parent = nullptr);
+  //**************************************************************************
+  /*! \brief Constructor
+   *
+   * \param [in] originalLine Unparsed line that was read.
+   * \param [in, out] parent The object's owner. The parent's destructor destroys all child objects.
+   *
+   ***************************************************************************/
+  explicit CSVLine(const QString& originalLine, QObject *parent = nullptr);
 
-    //**************************************************************************
-    //! Virtual destructor... Cleanup any extra memory.
-    /*!
-     *
-     ***************************************************************************/
-    virtual ~CSVLine();
+  //**************************************************************************
+  /*! \brief Virtual destructor... Cleanup any extra memory.
+   *
+   *
+   ***************************************************************************/
+  virtual ~CSVLine();
 
-    //**************************************************************************
-    //! Determine if the original line has been set.
-    /*!
-     * \returns True if there is an original to return.
-     *
-     ***************************************************************************/
-    bool hasOriginalLine() const;
+  //**************************************************************************
+  /*! \brief Determine if the original line has been set.
+   *
+   * \returns True if there is an original to return.
+   *
+   ***************************************************************************/
+  bool hasOriginalLine() const;
 
-    //**************************************************************************
-    //! Get the original line.
-    /*!
-     * \returns The original line, or an empty string if it was not set.
-     *
-     ***************************************************************************/
-    QString getOrignalLine() const;
+  //**************************************************************************
+  /*! \brief Get the original line.
+   *
+   * \returns The original line, or an empty string if it was not set.
+   *
+   ***************************************************************************/
+  QString getOrignalLine() const;
 
-    //**************************************************************************
-    //! Set the original line.
-    /*!
-     * \param originalLine Unparsed line that was read.
-     *
-     ***************************************************************************/
-    void setOriginalLine(const QString& originalLine);
+  //**************************************************************************
+  /*! \brief Set the original line.
+   *
+   * \param [in] originalLine Unparsed line that was read.
+   *
+   ***************************************************************************/
+  void setOriginalLine(const QString& originalLine);
 
-    //**************************************************************************
-    //! Remove any original line.
-    /*!
-     *
-     ***************************************************************************/
-    void clearOriginalLine();
+  //**************************************************************************
+  /*! \brief Remove any original line.
+   *
+   *
+   ***************************************************************************/
+  void clearOriginalLine();
 
-    //**************************************************************************
-    //! Remove columns and original lines.
-    /*!
-     *
-     ***************************************************************************/
-    void clear();
+  //**************************************************************************
+  /*! \brief Remove columns and original lines.
+   *
+   *
+   ***************************************************************************/
+  void clear();
 
-    //**************************************************************************
-    //! Remove columns.
-    /*!
-     *
-     ***************************************************************************/
-    void clearColumns();
+  //**************************************************************************
+  /*! \brief Remove columns.
+   *
+   *
+   ***************************************************************************/
+  void clearColumns();
 
-    //**************************************************************************
-    //!
-    /*!
-     * \returns Number of columns already added to this line.
-     *
-     ***************************************************************************/
-    int count() const;
+  //**************************************************************************
+  /*!
+   *
+   * \returns Number of columns already added to this line.
+   *
+   ***************************************************************************/
+  int count() const;
 
-    //**************************************************************************
-    //! Find the index for a column with the given value.
-    /*!
-     * \param value Value to search for.
-     * \param from First location to search.
-     * \returns Index that value is found, or -1 if not found.
-     *
-     ***************************************************************************/
-    int indexOf(const QString& value, int from = 0) const;
+  //**************************************************************************
+  /*! \brief Find the index for a column with the given value.
+   *
+   * \param [in] value Value to search for.
+   * \param [in] from First location to search.
+   * \returns Index that value is found, or -1 if not found.
+   *
+   ***************************************************************************/
+  int indexOf(const QString& value, const int from = 0) const;
 
-    //**************************************************************************
-    //! Get a specific object. If the index is out of range, an error occurs.
-    /*!
-     * \param index Which object to return.
-     * \returns The object at the index.
-     *
-     ***************************************************************************/
-    CSVColumn& operator[](const int index);
+  //**************************************************************************
+  /*! \brief Get a specific object. If the index is out of range, an error occurs.
+   *
+   * \param [in] index Which object to return.
+   * \returns The object at the index.
+   *
+   ***************************************************************************/
+  CSVColumn& operator[](const int index);
 
-    //**************************************************************************
-    //! Get a specific object. If the index is out of range, an error occurs.
-    /*!
-     * \param index Which object to return.
-     * \returns The object at the index.
-     *
-     ***************************************************************************/
-    const CSVColumn& operator[](const int index) const;
+  //**************************************************************************
+  /*! \brief Get a specific object. If the index is out of range, an error occurs.
+   *
+   * \param [in] index Which object to return.
+   * \returns The object at the index.
+   *
+   ***************************************************************************/
+  const CSVColumn& operator[](const int index) const;
 
-    //**************************************************************************
-    //! Append a column object to the line.
-    /*!
-     * \param column
-     *
-     ***************************************************************************/
-    void append(const CSVColumn& column);
+  //**************************************************************************
+  /*! \brief Append a column object to the line.
+   *
+   * \param [in] column
+   *
+   ***************************************************************************/
+  void append(const CSVColumn& column);
 
-    //**************************************************************************
-    //! Assign the parameter to this object.
-    /*!
-     * \param x Object to copy from.
-     * \returns A reference to this object.
-     *
-     ***************************************************************************/
-    const CSVLine& operator=(const CSVLine& x);
+  //**************************************************************************
+  /*! \brief Assign the parameter to this object.
+   *
+   * \param [in] x Object to copy from.
+   * \returns A reference to this object.
+   *
+   ***************************************************************************/
+  const CSVLine& operator=(const CSVLine& x);
 
-    //**************************************************************************
-    //! Assign the parameter to this object.
-    /*!
-     * \param x Object to copy from.
-     * \returns A reference to this object.
-     *
-     ***************************************************************************/
-    const CSVLine& copyFrom(const CSVLine& x);
+  //**************************************************************************
+  /*! \brief Assign the parameter to this object.
+   *
+   * \param [in] x Object to copy from.
+   * \returns A reference to this object.
+   *
+   ***************************************************************************/
+  const CSVLine& copyFrom(const CSVLine& x);
 
-    QString toString(bool brief=true) const;
-    QStringList toStringList() const;
+  //**************************************************************************
+  /*! \brief Return the line as a "comma" delimited set of values.
+   *
+   * \param [in] brief When True, the value is printed (strings have delimiters).
+   *                   When False, includes type and value.
+   *
+   * \returns Line as a delimited string.
+   *
+   ***************************************************************************/
+  QString toString(const bool brief=true) const;
+
+  //**************************************************************************
+  /*! \brief Return the colunmns as a list of strings.
+   *
+   * \returns Column values as a list of strings.
+   *
+   ***************************************************************************/
+  QStringList toStringList() const;
 
 signals:
 
 public slots:
 
 private:
-    QString* m_originalLine;
-    QList<CSVColumn> m_columns;
+  QString* m_originalLine;
+  QList<CSVColumn> m_columns;
 };
 
 inline bool CSVLine::hasOriginalLine() const
 {
-    return m_originalLine != nullptr;
+  return m_originalLine != nullptr;
 }
 
 inline QString CSVLine::getOrignalLine() const
 {
-    return hasOriginalLine() ? *m_originalLine : QString();
+  return hasOriginalLine() ? *m_originalLine : QString();
 }
 
 
 inline CSVColumn& CSVLine::operator[](const int index)
 {
-    return m_columns[index];
+  return m_columns[index];
 }
 
 inline const CSVColumn& CSVLine::operator[](const int index) const
 {
-    return m_columns[index];
+  return m_columns[index];
 }
 
 inline void CSVLine::append(const CSVColumn& column)
 {
-    m_columns.append(column);
+  m_columns.append(column);
 }
 
 inline void CSVLine::clear()
 {
-    clearColumns();
-    clearOriginalLine();
+  clearColumns();
+  clearOriginalLine();
 }
 
 inline void CSVLine::clearColumns()
 {
-    m_columns.clear();
+  m_columns.clear();
 }
 
 

@@ -232,9 +232,18 @@ void CSVReaderDialog::tableCellChanged(int currentRow, int currentColumn, int pr
   qDebug(qPrintable(QString("(%1,%2)(%3,%4)").arg(currentRow).arg(currentColumn).arg(previousRow).arg(previousColumn)));
   if (m_reader != nullptr)
   {
-    QMetaType::Type t = m_reader->guessColumnType(currentColumn);
-    // TODO: Set the type in the drop down!
     // TODO: Add a listener to the drop down to push type changes back to the reader.
+    // TODO: Track these changes as we move from one to another.
+    QMetaType::Type colType = m_reader->guessColumnType(currentColumn);
+    if (!m_typeToTxt.contains(colType))
+    {
+      m_columnType->setCurrentIndex(0);
+    }
+    else
+    {
+      const QStringList& list = m_typeToTxt.value(colType);
+      m_columnType->setCurrentIndex(m_typeNames.indexOf(list.first()));
+    }
   }
 }
 
@@ -350,12 +359,21 @@ void CSVReaderDialog::creatFieldsGroupBox()
   m_columnTypeLabel = new QLabel(tr("Column type"));
   m_columnType = new QComboBox();
   m_columnTypeLabel->setBuddy(m_columnType);
+
+  for (int i=0; i<m_typeNames.size(); ++i)
+  {
+    m_columnType->addItem(m_typeNames[i]);
+  }
+
+  /*
   m_columnType->addItem(tr("Date (MDY)"));
   m_columnType->addItem(tr("Date (DMY)"));
   m_columnType->addItem(tr("String"));
   m_columnType->addItem(tr("Integer"));
   m_columnType->addItem(tr("Float"));
   m_columnType->addItem(tr("Standard"));
+  */
+
   typeRow->addRow(m_columnTypeLabel, m_columnType);
   vBox->addLayout(typeRow);
 
