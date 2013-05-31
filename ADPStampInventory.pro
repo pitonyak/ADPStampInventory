@@ -39,7 +39,8 @@ SOURCES += main.cpp\
     csvline.cpp \
     csvcolumn.cpp \
     typemapper.cpp \
-    constants.cpp
+    constants.cpp \
+    sqldialog.cpp
 
 HEADERS  += mainwindow.h \
     stampdb.h \
@@ -54,7 +55,8 @@ HEADERS  += mainwindow.h \
     csvline.h \
     csvcolumn.h \
     typemapper.h \
-    constants.h
+    constants.h \
+    sqldialog.h
 
 FORMS    += mainwindow.ui
 

@@ -42,6 +42,8 @@ public:
   /*! \brief Destructor saves dialog geometry. */
   virtual ~CSVReaderDialog();
 
+  void configureFromReader(QVBoxLayout* vBoxLayout = nullptr);
+
 signals:
 
 public slots:
@@ -77,6 +79,7 @@ private:
   QMap<QMetaType::Type, QStringList> m_typeToTxt;
   QMap<QString, QList<QMetaType::Type> > m_txtToType;
   QStringList m_typeNames;
+  QList<QMetaType::Type> m_FieldType;
 
 };
 

@@ -33,6 +33,8 @@ public:
   /*! Settings Name to access  */
   static QString Settings_CSVDialogGeometry;
 
+  static QString Settings_SQLDialogGeometry;
+  static QString Settings_LastSQLDialogString;
 
 
 };

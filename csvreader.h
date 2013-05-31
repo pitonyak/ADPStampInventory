@@ -6,8 +6,12 @@
 #include "csvcontroller.h"
 
 //**************************************************************************
-//! Parse CSV files that are assumed to be small enough to fit into memory.
-/*!
+/*! \class CSVReader
+ *  \brief Parse CSV files that are assumed to be small enough to fit into memory.
+ *
+ * \author Andrew Pitonyak
+ * \copyright Andrew Pitonyak, but you may use without restriction.
+ * \date 2012-2013
  *
  **************************************************************************/
 

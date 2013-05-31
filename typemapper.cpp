@@ -171,3 +171,8 @@ QMetaType::Type TypeMapper::mostGenericType(const QMetaType::Type metaType1, con
   return QMetaType::QString;;
 }
 
+QMetaType::Type TypeMapper::toSignedInteger(const QMetaType::Type metaType1) const
+{
+  int pos1InUNumList = m_UNumList.indexOf(metaType1);
+  return (pos1InUNumList >= 0) ? m_NumList[pos1InUNumList] : metaType1;
+}

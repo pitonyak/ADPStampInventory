@@ -234,7 +234,8 @@ void CSVReaderDialog::tableCellChanged(int currentRow, int currentColumn, int pr
   {
     // TODO: Add a listener to the drop down to push type changes back to the reader.
     // TODO: Track these changes as we move from one to another.
-    QMetaType::Type colType = m_reader->guessColumnType(currentColumn);
+    //QMetaType::Type colType = m_reader->guessColumnType(currentColumn);
+    QMetaType::Type colType = m_FieldType[currentColumn];
     if (!m_typeToTxt.contains(colType))
     {
       m_columnType->setCurrentIndex(0);
@@ -376,10 +377,36 @@ void CSVReaderDialog::creatFieldsGroupBox()
 
   typeRow->addRow(m_columnTypeLabel, m_columnType);
   vBox->addLayout(typeRow);
+  configureFromReader(vBox);
 
+  m_fieldsGroupBox->setLayout(vBox);
+  if (m_tableWidget != nullptr)
+  {
+    connect(m_tableWidget, SIGNAL(itemSelectionChanged()), this, SLOT(tableSelectionChanged()));
+    connect(m_tableWidget, SIGNAL(currentCellChanged(int, int, int, int)), this, SLOT(tableCellChanged(int, int, int, int)));
+  }
+}
+
+
+void CSVReaderDialog::configureFromReader(QVBoxLayout* vBoxLayout)
+{
+  bool addToWidget = false;
   if (m_reader != nullptr)
   {
-    m_tableWidget = new QTableWidget(m_reader->countLines(), m_reader->countHeaderColumns());
+    if (m_tableWidget == nullptr)
+    {
+      m_tableWidget = new QTableWidget(m_reader->countLines(), m_reader->countHeaderColumns());
+      addToWidget = (vBoxLayout != nullptr);
+    }
+    else
+    {
+      m_tableWidget->setRowCount(0);
+      m_tableWidget->setColumnCount(0);
+    }
+
+    m_tableWidget->setRowCount(m_reader->countLines());
+    m_tableWidget->setColumnCount(m_reader->countHeaderColumns());
+
     m_tableWidget->setHorizontalHeaderLabels(m_reader->getHeader().toStringList());
     for (int row=0; row<m_reader->countLines(); ++row)
     {
@@ -390,10 +417,17 @@ void CSVReaderDialog::creatFieldsGroupBox()
         m_tableWidget->setItem(row, col, newItem);
       }
     }
-    vBox->addWidget(m_tableWidget);
+    if (addToWidget){
+      vBoxLayout->addWidget(m_tableWidget);
+    }
+
+    // Set the expected types.
+    m_FieldType.clear();
+    for (int i=0; i<m_reader->countHeaderColumns(); ++i)
+    {
+      // TODO: Set to use signed types rather than unsigned?
+      m_FieldType.append(m_reader->guessColumnType(i));
+    }
   }
-  m_fieldsGroupBox->setLayout(vBox);
-  connect(m_tableWidget, SIGNAL(itemSelectionChanged()), this, SLOT(tableSelectionChanged()));
-  connect(m_tableWidget, SIGNAL(currentCellChanged(int, int, int, int)), this, SLOT(tableCellChanged(int, int, int, int)));
 }
 

@@ -6,6 +6,7 @@
 #include "csvreader.h"
 #include "csvwriter.h"
 #include "constants.h"
+#include "sqldialog.h"
 
 #include <QMessageBox>
 #include <QStringList>
@@ -59,6 +60,7 @@ void MainWindow::setupMenuBar()
   menu->addAction(tr("Create &Schema"), this, SLOT(createSchema()));
   menu->addAction(tr("&View Schema"), this, SLOT(getSchema()));
   menu->addAction(tr("&Read CSV"), this, SLOT(readCSV()));
+  menu->addAction(tr("&SQL Window"), this, SLOT(openSQLWindow()));
 
   menu = menuBar()->addMenu(tr("&Help"));
 
@@ -255,5 +257,14 @@ void MainWindow::readCSV()
       }
     }
 #endif
+  }
+}
+
+void MainWindow::openSQLWindow()
+{
+  if (createDBWorker())
+  {
+    SQLDialog sqlDialog(*m_db);
+    sqlDialog.exec();
   }
 }
