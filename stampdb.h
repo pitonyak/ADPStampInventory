@@ -113,6 +113,8 @@ public:
    */
   void pathToDB(const QString& fullpath);
 
+  QSqlDatabase& getDB() { return m_db; }
+
 signals:
 
 public slots:

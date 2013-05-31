@@ -12,6 +12,7 @@
 #include <QTableWidget>
 #include <QTextCursor>
 #include <QTextBlock>
+#include <QSqlQuery>
 
 SQLDialog::SQLDialog(StampDB &db, QWidget *parent) :
   QDialog(parent), m_db(db), m_textEdit(nullptr), m_tableWidget(nullptr), m_statusBar(nullptr)
@@ -95,5 +96,16 @@ void SQLDialog::sqlButtonPressed()
   {
     // TODO: Get current line (paragraph) and process
     ScrollMessageBox::information(this, "No Selection", cursor.block().text());
+    QSqlDatabase& db = m_db.getDB();
+    QSqlQuery query(db);
+    if (!query.exec(cursor.block().text()))
+    {
+      m_statusBar->showMessage(query.lastError().text());
+    }
+    else
+    {
+      m_statusBar->showMessage("query worked");
+      // Handle things here!
+    }
   }
 }

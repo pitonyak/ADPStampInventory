@@ -196,7 +196,7 @@ bool StampDB::createSchema()
     QRegExp tableNameRegExp("create\\s+table\\s+(\\w+)");
     tableNameRegExp.setCaseSensitivity(Qt::CaseInsensitive);
 
-    QSqlQuery query;
+    QSqlQuery query(m_db);
     QStringList tables = m_db.tables(QSql::Tables);
     ret = true;
     for (int i=0; i<m_desiredSchemaDDLList->size() && ret; ++i) {
