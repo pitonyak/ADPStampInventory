@@ -115,26 +115,42 @@ bool MainWindow::createDBWorker()
     }
     QString path = settings.value(Constants::Settings_DBPath, "").toString();
     if (path.isEmpty()) {
-      QString fileReadPath = QFileDialog::getExistingDirectory(this, "Select DB Path", path);
-      if (fileReadPath.isEmpty()) {
+      path = QFileDialog::getExistingDirectory(this, "Select DB Path", path);
+      if (path.isEmpty()) {
         return false;
       }
-      settings.setValue(Constants::Settings_DBPath, fileReadPath);
-      path = QDir::cleanPath(fileReadPath + QDir::separator() + dbName);
+      settings.setValue(Constants::Settings_DBPath, path);
+    } else {
+
     }
     m_db = new StampDB(this);
-    m_db->pathToDB(path);
+    m_db->pathToDB(QDir::cleanPath(path + QDir::separator() + dbName));
   }
   if (!m_db->openDB()) {
     QMessageBox msgBox;
-    msgBox.setText(tr("Error creating database %1").arg(m_db->pathToDB()));
+    msgBox.setText(tr("Error creating database '%1'\n Would you like to set select a new path and try again?").arg(m_db->pathToDB()));
     msgBox.setInformativeText(m_db->lastError().text());
-    msgBox.setStandardButtons(QMessageBox::Ok);
-    msgBox.setDefaultButton(QMessageBox::Ok);
-    msgBox.exec();
+    msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+    msgBox.setDefaultButton(QMessageBox::Yes);
+    int pressed_btn = msgBox.exec();
 
     delete m_db;
     m_db = nullptr;
+
+    // There was an error, so give the user the chance to select the location.
+    if (pressed_btn == QMessageBox::Yes) {
+      QSettings settings;
+      QString path = settings.value(Constants::Settings_DBPath, "").toString();
+      if (!path.isEmpty()) {
+        settings.setValue(Constants::Settings_DBPath, "");
+      }
+      bool rc = createDBWorker();
+      if (!rc) {
+        // Failure, so simply restore the initial value.
+        settings.setValue(Constants::Settings_DBPath, path);
+      }
+      return rc;
+    }
 
     return false;
   }

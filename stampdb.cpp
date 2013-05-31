@@ -229,12 +229,12 @@ bool StampDB::createSchema()
         ret = query.exec(ddl);
         if (!ret) {
           QMessageBox msgBox;
-          msgBox.setText(tr("Schema Error creating table '%1'").arg(tableNameRegExp.cap(1)));
+          msgBox.setText(tr("Schema Error creating table '%1'").arg(tableName));
           msgBox.setInformativeText(tr("Error:%1\nDDL:%2").arg(m_db.lastError().text(), ddl));
           msgBox.setStandardButtons(QMessageBox::Ok);
           msgBox.setDefaultButton(QMessageBox::Ok);
           msgBox.exec();
-          query.exec(QString("DROP TABLE %1").arg(tableNameRegExp.cap(1)));
+          query.exec(QString("DROP TABLE %1").arg(tableName));
         }
       }
     }
