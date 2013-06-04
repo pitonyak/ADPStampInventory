@@ -13,6 +13,7 @@
 #include <QTextCursor>
 #include <QTextBlock>
 #include <QSqlQuery>
+#include <QSqlRecord>
 
 SQLDialog::SQLDialog(StampDB &db, QWidget *parent) :
   QDialog(parent), m_db(db), m_textEdit(nullptr), m_tableWidget(nullptr), m_statusBar(nullptr)
@@ -90,22 +91,73 @@ void SQLDialog::sqlButtonPressed()
   else if (cursor.hasSelection())
   {
     // TODO: Handle selected text
-    ScrollMessageBox::information(this, "Simple Selection", cursor.selectedText());
+    //ScrollMessageBox::information(this, "Simple Selection", cursor.selectedText());
+    executeSql(cursor.selectedText());
   }
   else
   {
     // TODO: Get current line (paragraph) and process
-    ScrollMessageBox::information(this, "No Selection", cursor.block().text());
-    QSqlDatabase& db = m_db.getDB();
-    QSqlQuery query(db);
-    if (!query.exec(cursor.block().text()))
-    {
-      m_statusBar->showMessage(query.lastError().text());
-    }
-    else
-    {
-      m_statusBar->showMessage("query worked");
-      // Handle things here!
-    }
+    //ScrollMessageBox::information(this, "No Selection", cursor.block().text());
+    executeSql(cursor.block().text());
   }
 }
+
+
+//select * from dealer
+//select * from country
+
+//INSERT INTO  'country' ('id', 'name', 'a3') VALUES (0, 'Unknown', '')
+//INSERT INTO  'country' ('id', 'name', 'a3') VALUES (1, 'Canada', 'CAN')
+//insert into dealer (id, updated, name, contact, address1, address2, address3, address4, phone, fax, comment, email, web) values (2,'2005-04-01T09:33:00','David Alex','David Alex','P.O. BOX 2176','Glenview, IL 60025','','','708-998-8147','','Beautiful stuff','','')
+
+void SQLDialog::executeSql(const QString& sqlString)
+{
+  QSqlDatabase& db = m_db.getDB();
+  QSqlQuery query(db);
+  if (!query.exec(sqlString))
+  {
+    m_statusBar->showMessage(query.lastError().text());
+  }
+  else
+  {
+    m_statusBar->showMessage("query worked");
+    if (query.isSelect() && m_tableWidget != nullptr)
+    {
+      QSqlRecord rec = query.record();
+
+      int numCols = rec.count();
+      int numRows = query.size() + 1;
+
+      m_tableWidget->clear();
+      m_tableWidget->setColumnCount(numCols);
+      m_tableWidget->setRowCount(numRows);
+
+      QStringList fieldNames;
+      int i;
+      for (i=0; i<rec.count(); ++i)
+      {
+        fieldNames << rec.fieldName(i);
+      }
+      m_tableWidget->setHorizontalHeaderLabels(fieldNames);
+
+      int row=0;
+      while (query.isActive() && query.next())
+      {
+        for (int col=0; col<numCols; ++col)
+        {
+          QTableWidgetItem *newItem = new  QTableWidgetItem(query.value(col).toString());
+          if (numRows <= row)
+          {
+            numRows = row + 1;
+            m_tableWidget->setRowCount(numRows);
+          }
+          m_tableWidget->setItem(row, col, newItem);
+        }
+        ++row;
+        //ScrollMessageBox::information(this, "Got a row!", QString("Have row %1 and size is %2").arg(row).arg(query.size()));
+      }
+    }
+    // Handle things here!
+  }
+}
+

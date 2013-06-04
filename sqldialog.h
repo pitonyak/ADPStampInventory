@@ -17,6 +17,8 @@ public:
 
   QString getSqlText() const;
 
+  void executeSql(const QString& sqlString);
+
 signals:
   
 public slots:

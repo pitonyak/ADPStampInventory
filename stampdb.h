@@ -10,6 +10,7 @@
 class QSqlRecord;
 class QSqlField;
 class QStringList;
+class CSVReader;
 
 //**************************************************************************
 /*! \class StampDB
@@ -112,6 +113,10 @@ public:
    *  \param [in] fullpath Full path to the datasource, which includes the file name.
    */
   void pathToDB(const QString& fullpath);
+
+  QString getClosestTableName(const QString& aName);
+
+  bool loadCSV(CSVReader& reader, const QString& tableName);
 
   QSqlDatabase& getDB() { return m_db; }
 

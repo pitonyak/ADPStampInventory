@@ -106,10 +106,11 @@ public:
    *
    * \param [in] value Value to search for.
    * \param [in] from First location to search.
+   * \param [in] cs Case sensitivity flag, is the search case sensitive.
    * \returns Index that value is found, or -1 if not found.
    *
    ***************************************************************************/
-  int indexOf(const QString& value, const int from = 0) const;
+  int indexOf(const QString& value, const int from = 0, const Qt::CaseSensitivity cs = Qt::CaseInsensitive) const;
 
   //**************************************************************************
   /*! \brief Get a specific object. If the index is out of range, an error occurs.

@@ -182,7 +182,6 @@ void MainWindow::getSchema() {
 void MainWindow::readCSV()
 {
   QString defaultExtension = tr("CSV files (*.csv)");
-  // TODO: Save the last read directory and use it here!
   QSettings settings;
   QString lastReadDir = settings.value(Constants::Settings_LastCSVDirOpen).toString();
   qDebug(qPrintable(QString("Read:(%1)").arg(lastReadDir)));
@@ -257,6 +256,20 @@ void MainWindow::readCSV()
       }
     }
 #endif
+
+    //??ScrollMessageBox::information(0, "Schema", QString("Table %1\n\n%2").arg(tableName, bigFieldString));
+    if (!createDBWorker()) {
+      // TODO: Error message here!
+      return;
+    }
+
+    QString tableName = m_db->getClosestTableName(fileInfo.baseName());
+    if (tableName.isEmpty())
+    {
+      // TODO: Error message here! Table Not Found
+      return;
+    }
+
   }
 }
 

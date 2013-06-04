@@ -624,3 +624,20 @@ void CSVReader::guessColumnTypes()
   }
   qDebug(qPrintable(s));
 }
+
+
+int CSVReader::getHeaderIndexByName(const QString& name) const
+{
+  return getHeader().indexOf(name, 0, Qt::CaseInsensitive);
+}
+
+QList<int> CSVReader::getHeaderIndexByName(const QStringList& names) const
+{
+  QList<int> indexList;
+  for (int i=0; i<names.size(); ++i)
+  {
+    indexList << getHeaderIndexByName(names[i]);
+  }
+  return indexList;
+}
+

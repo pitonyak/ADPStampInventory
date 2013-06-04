@@ -1,5 +1,6 @@
 #include "stampdb.h"
 #include "scrollmessagebox.h"
+#include "csvreader.h"
 
 #include <QFile>
 #include <QDir>
@@ -448,6 +449,73 @@ const QMap<QString, QSqlRecord>& StampDB::tableMap()
     }
   }
   return *m_tableMap;
+}
+
+
+QString StampDB::getClosestTableName(const QString& aName)
+{
+  if (openDB())
+  {
+
+    QStringList tables = m_db.tables(QSql::Tables);
+    // ??
+    ScrollMessageBox::information(0, "Tables", tables.join("\n"));
+    int i = tables.indexOf(aName);
+    if (i >= 0)
+    {
+      return tables[i];
+    }
+    for (i =0; i<tables.size(); ++i)
+    {
+      if (aName.compare(tables[i], Qt::CaseInsensitive) == 0)
+      {
+        return tables[i];
+      }
+    }
+  }
+  return "";
+}
+
+bool StampDB::loadCSV(CSVReader& reader, const QString& tableName)
+{
+  if (!openDB())
+  {
+    return false;
+  }
+  QString useTableName = getClosestTableName(tableName);
+  QSqlRecord record = m_db.record(useTableName);
+  QStringList fieldNames;
+  int i;
+  for (i=0; i<record.count(); ++i)
+  {
+    fieldNames << record.fieldName(i);
+  }
+
+  if (fieldNames.size() == 0)
+  {
+    return false;
+  }
+
+  QList<int> csvColumnIndex = reader.getHeaderIndexByName(fieldNames);
+  int numberOfColumnMatches = 0;
+  for (int i=0; i<csvColumnIndex.size(); ++i)
+  {
+    if (csvColumnIndex[i] >= 0)
+    {
+      ++numberOfColumnMatches;
+    }
+  }
+
+  if (numberOfColumnMatches == 0)
+  {
+    return false;
+  }
+
+  // TODO: Verify that a column is not repeated, ie, two CSV columns match to the same DB column.
+
+
+
+  return true;
 }
 
 

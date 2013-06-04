@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QStringList>
+#include <QList>
 #include "csvcontroller.h"
 
 //**************************************************************************
@@ -167,8 +168,13 @@ public:
   QString toString(bool brief = true) const;
 
   void setColumnType(const int i, const QMetaType::Type t);
+
   QMetaType::Type guessColumnType(const int i);
+
   void guessColumnTypes();
+
+  int getHeaderIndexByName(const QString& name) const;
+  QList<int> getHeaderIndexByName(const QStringList& names) const;
 
 signals:
 

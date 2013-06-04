@@ -41,11 +41,11 @@ int CSVLine::count() const
   return m_columns.count();
 }
 
-int CSVLine::indexOf(const QString& value, const int from) const
+int CSVLine::indexOf(const QString& value, const int from, const Qt::CaseSensitivity cs) const
 {
   for (int i=from; i<m_columns.count(); ++i)
   {
-    if (value.compare(m_columns[i].getValue(), Qt::CaseInsensitive) == 0)
+    if (value.compare(m_columns[i].getValue(), cs) == 0)
     {
       return i;
     }
