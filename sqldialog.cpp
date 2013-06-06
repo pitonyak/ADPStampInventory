@@ -120,41 +120,60 @@ void SQLDialog::executeSql(const QString& sqlString)
   }
   else
   {
-    m_statusBar->showMessage("query worked");
-    if (query.isSelect() && m_tableWidget != nullptr)
+    if (query.isSelect())
     {
-      QSqlRecord rec = query.record();
-
-      int numCols = rec.count();
-      int numRows = query.size() + 1;
-
-      m_tableWidget->clear();
-      m_tableWidget->setColumnCount(numCols);
-      m_tableWidget->setRowCount(numRows);
-
-      QStringList fieldNames;
-      int i;
-      for (i=0; i<rec.count(); ++i)
+      if (m_tableWidget == nullptr)
       {
-        fieldNames << rec.fieldName(i);
+        m_statusBar->showMessage(tr("Select not displayed because table widget is null"));
       }
-      m_tableWidget->setHorizontalHeaderLabels(fieldNames);
-
-      int row=0;
-      while (query.isActive() && query.next())
+      else
       {
-        for (int col=0; col<numCols; ++col)
+        QSqlRecord rec = query.record();
+
+        int numCols = rec.count();
+        int numRows = query.size() + 1;
+
+        m_tableWidget->clear();
+        m_tableWidget->setColumnCount(numCols);
+        m_tableWidget->setRowCount(numRows);
+
+        QStringList fieldNames;
+        int i;
+        for (i=0; i<rec.count(); ++i)
         {
-          QTableWidgetItem *newItem = new  QTableWidgetItem(query.value(col).toString());
-          if (numRows <= row)
-          {
-            numRows = row + 1;
-            m_tableWidget->setRowCount(numRows);
-          }
-          m_tableWidget->setItem(row, col, newItem);
+          fieldNames << rec.fieldName(i);
         }
-        ++row;
-        //ScrollMessageBox::information(this, "Got a row!", QString("Have row %1 and size is %2").arg(row).arg(query.size()));
+        m_tableWidget->setHorizontalHeaderLabels(fieldNames);
+
+        int row=0;
+        while (query.isActive() && query.next())
+        {
+          for (int col=0; col<numCols; ++col)
+          {
+            QTableWidgetItem *newItem = new  QTableWidgetItem(query.value(col).toString());
+            if (numRows <= row)
+            {
+              numRows = row + 1;
+              m_tableWidget->setRowCount(numRows);
+            }
+            m_tableWidget->setItem(row, col, newItem);
+          }
+          ++row;
+          //ScrollMessageBox::information(this, "Got a row!", QString("Have row %1 and size is %2").arg(row).arg(query.size()));
+        }
+        m_statusBar->showMessage(QString(tr("Read %1 records")).arg(row));
+      }
+    }
+    else
+    {
+      int numAffected = query.numRowsAffected();
+      if (numAffected >= 0)
+      {
+        m_statusBar->showMessage(QString(tr("Successful query with %1 rows arrected")).arg(numAffected));
+      }
+      else
+      {
+        m_statusBar->showMessage(QString(tr("Successful query!")));
       }
     }
     // Handle things here!
