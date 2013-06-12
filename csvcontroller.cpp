@@ -195,7 +195,7 @@ bool CSVController::isHexDigit(const QChar& c) const
     return c.isDigit() || ('a' <= c && c <= 'f') || ('A' <= c && c <= 'F');
 }
 
-uint CSVController::hexToUnicode(const QChar& c) const
+uint CSVController::hexDigitToDecimalValue(const QChar& c) const
 {
     if (c.isDigit())
     {

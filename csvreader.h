@@ -5,6 +5,7 @@
 #include <QStringList>
 #include <QList>
 #include "csvcontroller.h"
+#include "typemapper.h"
 
 //**************************************************************************
 /*! \class CSVReader
@@ -34,7 +35,8 @@ public:
   enum CSVReadMode {MODE_ERROR, MODE_RECORD_START, MODE_COLUMN_START, MODE_COLUMN_READ, MODE_COLUMN_END};
 
 
-  explicit CSVReader(QObject *parent = 0);
+  explicit CSVReader(QObject *parent = nullptr);
+  explicit CSVReader(const TypeMapper::ColumnConversionPreferences preferences, QObject *parent = nullptr);
   virtual ~CSVReader();
 
   bool setStreamFromPath(const QString& fullPath);
@@ -169,9 +171,15 @@ public:
 
   void setColumnType(const int i, const QMetaType::Type t);
 
-  QMetaType::Type guessColumnType(const int i);
+  QMetaType::Type guessColumnType(const int i, TypeMapper::ColumnConversionPreferences flags=TypeMapper::PreferNone);
 
-  void guessColumnTypes();
+  //**************************************************************************
+  //! Look at the read data and guess the column types based on the data present.
+  /*!
+   * \param
+   *
+   ***************************************************************************/
+  void guessColumnTypes(TypeMapper::ColumnConversionPreferences flags=TypeMapper::PreferNone);
 
   int getHeaderIndexByName(const QString& name) const;
   QList<int> getHeaderIndexByName(const QStringList& names) const;
@@ -214,6 +222,8 @@ private:
    *
    ***************************************************************************/
   void endOfColumnReached(const QString& columnValue, bool wasDelimited);
+
+  TypeMapper::ColumnConversionPreferences m_conversionPreferences;
 
   QList<QMetaType::Type> * m_columnTypes;
 

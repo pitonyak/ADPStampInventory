@@ -85,7 +85,6 @@ public:
    ***************************************************************************/
   QChar getRecordDelimiter() const;
 
-
   //**************************************************************************
   /*! \brief Return the character used to start a line as a comment; defaults to "#".
    *
@@ -107,10 +106,23 @@ public:
    ***************************************************************************/
   bool getRecordDelimiterIsDefault() const;
 
+  /*! \returns True if comments are allowed. */
   bool getUseComments() const;
+
+  /*! \returns If True, leading and trailing white space is removed. */
   bool getTrimSpaces() const;
+
+  /*! \returns If True, all internal sequences of white space are replaced by a single space. Leading and trailing white space is removed. */
   bool getCompactSpaces() const;
+
+  /*! \returns If True, empty lines are ignored. */
   bool getSkipEmptyLines() const;
+
+  //**************************************************************************
+  /*! \brief Not implemented, but, if True, multiple delimiters should be treated as a single delimiter. For example, if tab is the delimiter, four tabs is treated the same as one tab.
+   *
+   * \returns State of the merge delimiters flag.
+   ***************************************************************************/
   bool getMergeDelimiters() const;
 
   QList<QChar> getColumnDelimiters() const;
@@ -186,11 +198,41 @@ public:
    ***************************************************************************/
   bool isSkipWS(const QChar c) const;
 
+  //**************************************************************************
+  /*! \brief Checks to see if the parameter is the escape character.
+   *
+   * \param [in] c Character to compare.
+   * \returns true if c is the escape character.
+   *
+   ***************************************************************************/
   bool isEscapeCharacter(QChar c) const;
 
+  //**************************************************************************
+  /*! \brief Checks to see if the parameter is a valid octal digit of 0, 1, 2, 3, 4, 5, 6, or 7.
+   *
+   * \param [in] c Character to compare.
+   * \returns true if c is a valid octal digit.
+   *
+   ***************************************************************************/
   bool isOctDigit(const QChar& c) const;
+
+  //**************************************************************************
+  /*! \brief Checks to see if the parameter is a valid hex digit of 0-9, a-f, or A-F.
+   *
+   * \param [in] c Character to compare.
+   * \returns true if c is a valid hex digit.
+   *
+   ***************************************************************************/
   bool isHexDigit(const QChar& c) const;
-  uint hexToUnicode(const QChar& c) const;
+
+  //**************************************************************************
+  /*! \brief Converts a hex digit (0-9, a-f, or A-F) to the corresponding numeric values of 0-15.
+   *
+   * \param [in] c Character to convert.
+   * \returns Corresponding numeric value from the hex digit.
+   *
+   ***************************************************************************/
+  uint hexDigitToDecimalValue(const QChar& c) const;
 
 signals:
   void textDelimiterChanged(QChar);

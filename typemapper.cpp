@@ -3,7 +3,7 @@
 #include <QDateTime>
 
 TypeMapper::TypeMapper(QObject *parent) :
-    QObject(parent)
+  QObject(parent)
 {
     initialize();
 }
@@ -52,7 +52,7 @@ void TypeMapper::initialize()
     m_NumList.append(QMetaType::Double);
 }
 
-QMetaType::Type TypeMapper::guessType(const QString& s)
+QMetaType::Type TypeMapper::guessType(const QString& s, const ColumnConversionPreferences preferences)
 {
     QString simple = s.simplified();
     if (simple.length() == 0)
@@ -60,39 +60,50 @@ QMetaType::Type TypeMapper::guessType(const QString& s)
         return QMetaType::Void;
     }
     QVariant x(simple);
-    if (s.contains('-'))
+    bool hasMinus = s.contains('-');
+    if (hasMinus || ((preferences & (PreferSigned | PreferUnsigned)) == PreferSigned))
     {
         // This is NOT a non-negative integer.
+        // There is not type QVariant::Long
         if (QVariant::fromValue(x).convert(QVariant::Int))
         {
-            return QMetaType::Int;
+          return ((preferences & (PreferLong | PreferInt)) == PreferLong) ? QMetaType::LongLong : QMetaType::Int;
         }
         else if (QVariant::fromValue(x).convert(QVariant::LongLong))
         {
             return QMetaType::LongLong;
         }
     }
-    else
+
+    if (!hasMinus)
     {
         if (QVariant::fromValue(x).convert(QVariant::UInt))
         {
-            return QMetaType::UInt;
+            return ((preferences & (PreferLong | PreferInt)) == PreferLong) ? QMetaType::ULongLong : QMetaType::UInt;
         }
         else if (QVariant::fromValue(x).convert(QVariant::ULongLong))
         {
             return QMetaType::ULongLong;
         }
     }
+
     if (QVariant::fromValue(x).convert(QVariant::Double))
     {
         return QMetaType::Double;
     }
-    // TODO: This fails for "01/01/12 01:01:01" and I expected it to pass.
+
+    // This fails for "01/01/12 01:01:01" and I expected it to pass.
     if (QVariant::fromValue(x).convert(QVariant::DateTime))
     {
         return QMetaType::QDateTime;
     }
+
     if (QDateTime::fromString(simple, "MM/dd/yyyy hh:mm:ss").isValid())
+    {
+        return QMetaType::QDateTime;
+    }
+
+    if (QDateTime::fromString(simple, "yyyy-MM-ddThh:mm:ss").isValid())
     {
         return QMetaType::QDateTime;
     }

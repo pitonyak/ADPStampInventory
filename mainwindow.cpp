@@ -209,7 +209,7 @@ void MainWindow::readCSV()
     qDebug(qPrintable(QString("Setting Path:(%1)").arg(fileInfo.absolutePath())));
     settings.setValue(Constants::Settings_LastCSVDirOpen, fileInfo.absolutePath());
   }
-  CSVReader reader;
+  CSVReader reader(TypeMapper::PreferSigned | TypeMapper::PreferInt);
   if (!reader.setStreamFromPath(fileReadPath))
   {
     ScrollMessageBox::information(this, "ERROR", QString(tr("Read: Failed to open CSV file %1")).arg(fileReadPath));

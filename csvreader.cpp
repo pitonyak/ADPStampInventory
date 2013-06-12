@@ -15,8 +15,20 @@
 #endif
 
 
+
 CSVReader::CSVReader(QObject *parent) :
     CSVController(parent),
+    m_conversionPreferences(TypeMapper::PreferSigned | TypeMapper::PreferInt),
+    m_columnTypes(nullptr),
+    m_hasLastChar(false),
+    m_lastChar(0)
+{
+    setReaderDefaults();
+}
+
+CSVReader::CSVReader(const TypeMapper::ColumnConversionPreferences preferences, QObject *parent) :
+    CSVController(parent),
+    m_conversionPreferences(preferences),
     m_columnTypes(nullptr),
     m_hasLastChar(false),
     m_lastChar(0)
@@ -148,7 +160,7 @@ void CSVReader::endOfColumnReached(const QString& columnValue, bool wasDelimited
 {
     QString temp = getTrimSpaces() ? columnValue.trimmed() : columnValue;
     QString value = getCompactSpaces() ? temp.simplified() : temp;
-    QMetaType::Type guessedType = wasDelimited ? QMetaType::QString : CSVColumn::guessType(value);
+    QMetaType::Type guessedType = wasDelimited ? QMetaType::QString : CSVColumn::guessType(value, m_conversionPreferences);
     m_lines.last().append(CSVColumn(value, wasDelimited, guessedType));
 }
 
@@ -417,7 +429,7 @@ bool CSVReader::readNextRecord(bool clearBeforeReading)
                         moveToNextChar();
                         while (hasChar() && cLen < 4 && isHexDigit(currentChar()));
                         {
-                            c = c * 16 + hexToUnicode(currentChar());
+                            c = c * 16 + hexDigitToDecimalValue(currentChar());
                             moveToNextChar();
                             ++cLen;
                         }
@@ -434,7 +446,7 @@ bool CSVReader::readNextRecord(bool clearBeforeReading)
                                 // Hex number
                                 while (hasChar() && cLen < 2 && isHexDigit(currentChar()));
                                 {
-                                    c = c * 16 + hexToUnicode(currentChar());
+                                    c = c * 16 + hexDigitToDecimalValue(currentChar());
                                     moveToNextChar();
                                     ++cLen;
                                 }
@@ -577,16 +589,16 @@ void CSVReader::setColumnType(const int i, const QMetaType::Type t)
   }
 }
 
-QMetaType::Type CSVReader::guessColumnType(const int i)
+QMetaType::Type CSVReader::guessColumnType(const int i, TypeMapper::ColumnConversionPreferences flags)
 {
   if (m_columnTypes == nullptr)
   {
-    guessColumnTypes();
+    guessColumnTypes(flags);
   }
   return (m_columnTypes == nullptr) || (i < 0) || (i > m_columnTypes->size()) ? QMetaType::Void : m_columnTypes->at(i);
 }
 
-void CSVReader::guessColumnTypes()
+void CSVReader::guessColumnTypes(TypeMapper::ColumnConversionPreferences flags)
 {
   if (m_columnTypes == nullptr)
   {

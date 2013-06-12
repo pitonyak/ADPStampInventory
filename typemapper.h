@@ -20,7 +20,18 @@
 class TypeMapper : public QObject
 {
     Q_OBJECT
+  Q_ENUMS(ColumnConversionPreference)
+
 public:
+
+  enum ColumnConversionPreference {
+    PreferNone = 0x0,
+    PreferSigned = 0x1,
+    PreferUnsigned = 0x2,
+    PreferInt = 0x10,
+    PreferLong = 0x20
+  };
+  Q_DECLARE_FLAGS(ColumnConversionPreferences, ColumnConversionPreference)
 
   /*! \brief Constructor
    *
@@ -52,7 +63,7 @@ public:
      *  \param [in] s String to parse.
      *  \return Guessed type.
      */
-    QMetaType::Type guessType(const QString& s);
+    QMetaType::Type guessType(const QString& s, const ColumnConversionPreferences preferences);
 
     /*! \brief Given two types, which type allows more data to be represented.
      *
@@ -86,10 +97,13 @@ private:
      *  \return
      */
     void initialize();
+
     QMap<QMetaType::Type, QVariant::Type> m_typeMap;
     QList<QMetaType::Type> m_NumList;
     QList<QMetaType::Type> m_UNumList;
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(TypeMapper::ColumnConversionPreferences)
 
 inline QVariant::Type TypeMapper::metaToVariantType(const QMetaType::Type metaType) const
 {

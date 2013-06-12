@@ -69,9 +69,9 @@ QString CSVColumn::toString(bool brief) const
   return brief ? value : QString(tr("(%1, %2)")).arg(value).arg(getTypeAsString());
 }
 
-QMetaType::Type CSVColumn::guessType(const QString& s)
+QMetaType::Type CSVColumn::guessType(const QString& s, const TypeMapper::ColumnConversionPreferences preference)
 {
-  return m_typeMap.guessType(s);
+  return m_typeMap.guessType(s, preference);
 }
 
 bool CSVColumn::canConvertToVariant() const
