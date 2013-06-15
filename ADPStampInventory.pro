@@ -40,7 +40,19 @@ SOURCES += main.cpp\
     csvcolumn.cpp \
     typemapper.cpp \
     constants.cpp \
-    sqldialog.cpp
+    sqldialog.cpp \
+    simpleloggerroutinginfo.cpp \
+    simpleloggeradp.cpp \
+    logroutinginfotablemodel.cpp \
+    logroutinginfodialog.cpp \
+    logmessagequeue.cpp \
+    logmessagecontainer.cpp \
+    logconfigdialog.cpp \
+    checkboxonlydelegate.cpp \
+    xmlutility.cpp \
+    messagecomponenttablemodel.cpp \
+    linkbackfilterdelegate.cpp \
+    qtenummapper.cpp
 
 HEADERS  += mainwindow.h \
     stampdb.h \
@@ -56,9 +68,23 @@ HEADERS  += mainwindow.h \
     csvcolumn.h \
     typemapper.h \
     constants.h \
-    sqldialog.h
+    sqldialog.h \
+    simpleloggerroutinginfo.h \
+    simpleloggeradp.h \
+    logroutinginfotablemodel.h \
+    logroutinginfodialog.h \
+    logmessagequeue.h \
+    logmessagecontainer.h \
+    logconfigdialog.h \
+    checkboxonlydelegate.h \
+    xmlutility.h \
+    messagecomponenttablemodel.h \
+    linkbackfilterdelegate.h \
+    globals.h \
+    qtenummapper.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    logroutinginfodialog.ui
 
 
 
