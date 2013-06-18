@@ -117,7 +117,7 @@ bool MainWindow::createDBWorker()
     }
     QString path = settings.value(Constants::Settings_DBPath, "").toString();
     if (path.isEmpty()) {
-      path = QFileDialog::getExistingDirectory(this, "Select DB Path", path);
+      path = QFileDialog::getExistingDirectory(nullptr, "Select DB Path", path);
       if (path.isEmpty()) {
         return false;
       }
@@ -185,7 +185,7 @@ void MainWindow::readCSV()
   QSettings settings;
   QString lastReadDir = settings.value(Constants::Settings_LastCSVDirOpen).toString();
   qDebug(qPrintable(QString("Read:(%1)").arg(lastReadDir)));
-  QString fileReadPath = QFileDialog::getOpenFileName(this, "Import CSV", lastReadDir, tr("Text files (*.txt);;CSV files (*.csv);;All files (*.*)"), &defaultExtension);
+  QString fileReadPath = QFileDialog::getOpenFileName(nullptr, "Import CSV", lastReadDir, tr("Text files (*.txt);;CSV files (*.csv);;All files (*.*)"), &defaultExtension);
   if (fileReadPath.isEmpty()) {
     // Nothing to do
     return;
@@ -226,7 +226,7 @@ void MainWindow::readCSV()
     dlg.exec();
     // This next code, if enabled, writes the CSV file.
 #if 0
-    QString fileWritePath = QFileDialog::getSaveFileName(this, "Export CSV", lastReadDir, tr("Text files (*.txt);;CSV files (*.csv);;All files (*.*)"), &defaultExtension);
+    QString fileWritePath = QFileDialog::getSaveFileName(nullptr, "Export CSV", lastReadDir, tr("Text files (*.txt);;CSV files (*.csv);;All files (*.*)"), &defaultExtension);
     if (!fileWritePath.isEmpty())
     {
       CSVWriter writer;
