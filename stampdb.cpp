@@ -12,6 +12,7 @@
 #include <QMessageBox>
 #include <QVariant>
 #include <QMap>
+#include <QSqlDriver>
 
 #if defined(__GNUC__)
 #if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 6)
@@ -483,37 +484,132 @@ bool StampDB::loadCSV(CSVReader& reader, const QString& tableName)
     return false;
   }
   QString useTableName = getClosestTableName(tableName);
+  if (tableName.isEmpty())
+  {
+    ScrollMessageBox::information(nullptr, "ERROR", QString(tr("Failed to find a table with a name close to the CSV filename %1")).arg(tableName));
+    return false;
+  }
+
   QSqlRecord record = m_db.record(useTableName);
   QStringList fieldNames;
+  QString tmp;
   int i;
   for (i=0; i<record.count(); ++i)
   {
     fieldNames << record.fieldName(i);
+    tmp += record.fieldName(i) + "\n";
   }
+
+  // TODO ?? Remove
+  ScrollMessageBox::information(nullptr, "FIELDS", tmp);
 
   if (fieldNames.size() == 0)
   {
+    ScrollMessageBox::information(nullptr, "WARN", QString(tr("Table %1 has no fields.")).arg(useTableName));
     return false;
   }
 
+  tmp = "";
+
   QList<int> csvColumnIndex = reader.getHeaderIndexByName(fieldNames);
   int numberOfColumnMatches = 0;
-  for (int i=0; i<csvColumnIndex.size(); ++i)
+  for (int iCol=0; iCol<csvColumnIndex.size(); ++iCol)
   {
-    if (csvColumnIndex[i] >= 0)
+    tmp += QString("(%1) => %2 \n").arg(fieldNames[iCol]).arg(csvColumnIndex[iCol]);
+    if (csvColumnIndex[iCol] >= 0)
     {
       ++numberOfColumnMatches;
     }
   }
+  // TODO ?? Remove
+  ScrollMessageBox::information(nullptr, "FIELDS", tmp);
 
   if (numberOfColumnMatches == 0)
   {
+    ScrollMessageBox::information(nullptr, "WARN", QString(tr("No column names in the CSV file match column names in Table %1.")).arg(useTableName));
     return false;
   }
 
   // TODO: Verify that a column is not repeated, ie, two CSV columns match to the same DB column.
 
+  // TODO: build the prepared statement
+  // Use positional rather than named
+  QString q1 = QString("INSERT INTO %1 (").arg(useTableName);
+  QString q2 = ") VALUES (";
+  bool firstLine = true;
+  for (int iCol=0; iCol<csvColumnIndex.size(); ++iCol)
+  {
+    // Verify that a column in the DB has a corresponding entry
+    // in the CSV file
+    if (0 <= csvColumnIndex[iCol])
+    {
+      if (firstLine)
+      {
+        firstLine = false;
+        q2 += "?";
+      }
+      else
+      {
+        q1 += ", ";
+        q2 += ", ?";
+      }
+      q1 += fieldNames[iCol];
+    }
+  }
+  q2 += ")";
 
+  QSqlQuery q;
+  if (!q.prepare(q1 + q2))
+  {
+    ScrollMessageBox::information(nullptr, "ERROR", QString(tr("Prepare statement failed for (%1).")).arg(q1+q2));
+    return false;
+  }
+
+  bool useTransactions = m_db.driver()->hasFeature(QSqlDriver::Transactions);
+  if (useTransactions && !m_db.transaction())
+  {
+    ScrollMessageBox::information(nullptr, "ERROR", tr("Failed to begin a transaction."));
+    return false;
+  }
+  int iRow;
+  for (iRow=0; iRow < reader.countLines() || reader.readNextRecord(false); ++iRow)
+  {
+    const CSVLine& readLine = reader.getLine(iRow);
+    qDebug("Adding line");
+
+    for (int iCol=0; i<csvColumnIndex.size(); ++iCol)
+    {
+      // Verify that a column in the DB has a corresponding entry
+      // in the CSV file
+      if (0 <= csvColumnIndex[iCol])
+      {
+        // verify that the CSV file has at least
+        // that many columns in the current line.
+        if (csvColumnIndex[iCol] < readLine.count())
+        {
+          const CSVColumn& c = readLine[csvColumnIndex[iCol]];
+          QVariant v = c.toVariant();
+          // TODO
+          // Insert this into the prepared statement
+        }
+        else
+        {
+          // TODO
+          // Insert a null value!
+        }
+      }
+    }
+  }
+
+  if (useTransactions && !m_db.commit())
+  {
+    ScrollMessageBox::information(nullptr, "ERROR", QString(tr("Failed to begin end the transaction after reading %1 rows.")).arg(iRow));
+    return false;
+  }
+  else
+  {
+    ScrollMessageBox::information(nullptr, "INFO", QString(tr("Added %1 rows to table %2.")).arg(iRow).arg(useTableName));
+  }
 
   return true;
 }

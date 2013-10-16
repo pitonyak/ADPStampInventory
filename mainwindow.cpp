@@ -28,10 +28,15 @@ MainWindow::MainWindow(QWidget *parent) :
   initializeSettings();
   ui->setupUi(this);
   setupMenuBar();
+  setWindowTitle(tr("Stamp Inventory"));
+  QSettings settings;
+  restoreGeometry(settings.value(Constants::Settings_MainWindowGeometry).toByteArray());
 }
 
 MainWindow::~MainWindow()
 {
+  QSettings settings;
+  settings.setValue(Constants::Settings_MainWindowGeometry, saveGeometry());
   delete ui;
 }
 
@@ -55,12 +60,13 @@ void MainWindow::setupMenuBar()
 
   menu = menuBar()->addMenu(tr("&Edit"));
 
-  menu = menuBar()->addMenu(tr("&Database"));
+  menu = menuBar()->addMenu(tr("&Tools"));
   menu->addAction(tr("&Create DB"), this, SLOT(createDB()));
   menu->addAction(tr("Create &Schema"), this, SLOT(createSchema()));
   menu->addAction(tr("&View Schema"), this, SLOT(getSchema()));
   menu->addAction(tr("&Read CSV"), this, SLOT(readCSV()));
   menu->addAction(tr("&SQL Window"), this, SLOT(openSQLWindow()));
+  menu->addAction(tr("Configure"), this, SLOT(configure()));
 
   menu = menuBar()->addMenu(tr("&Help"));
 
@@ -222,7 +228,7 @@ void MainWindow::readCSV()
   {
     reader.readNLines(30);
     reader.guessColumnTypes();
-    CSVReaderDialog dlg(&reader);
+    CSVReaderDialog dlg(&reader, this);
     dlg.exec();
     // This next code, if enabled, writes the CSV file.
 #if 0
@@ -259,17 +265,19 @@ void MainWindow::readCSV()
 
     //??ScrollMessageBox::information(0, "Schema", QString("Table %1\n\n%2").arg(tableName, bigFieldString));
     if (!createDBWorker()) {
-      // TODO: Error message here!
+      // An error message was probably already displayed
+      ScrollMessageBox::information(this, "ERROR", tr("Failed to create or access the database."));
       return;
     }
 
-    QString tableName = m_db->getClosestTableName(fileInfo.baseName());
-    if (tableName.isEmpty())
+    // The previous line worked, so this should not be null.
+    if (m_db != nullptr)
     {
-      // TODO: Error message here! Table Not Found
-      return;
+      if (!m_db->loadCSV(reader, fileInfo.baseName()))
+      {
+        // TODO: Error message, failed to load CSV file.
+      }
     }
-
   }
 }
 
@@ -280,4 +288,9 @@ void MainWindow::openSQLWindow()
     SQLDialog sqlDialog(*m_db);
     sqlDialog.exec();
   }
+}
+
+void MainWindow::configure()
+{
+
 }

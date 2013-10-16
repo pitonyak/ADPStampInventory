@@ -35,6 +35,7 @@ public:
 
   static QString Settings_SQLDialogGeometry;
   static QString Settings_LastSQLDialogString;
+  static QString Settings_MainWindowGeometry;
 
 
 };
