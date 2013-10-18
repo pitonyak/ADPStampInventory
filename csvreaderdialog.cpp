@@ -248,6 +248,18 @@ void CSVReaderDialog::tableCellChanged(int currentRow, int currentColumn, int pr
   }
 }
 
+void CSVReaderDialog::columnTypeChanged(const QString& text)
+{
+  int iCol = getCurrentColumn();
+  //?? Save the type for the column if it is a known type.
+  qDebug(qPrintable(QString("New type %1 for column %2").arg(text).arg(getCurrentColumn())));
+}
+
+int CSVReaderDialog::getCurrentColumn() const
+{
+  return (m_tableWidget != nullptr) ? m_tableWidget->currentColumn() : -1;
+}
+
 void CSVReaderDialog::tableSelectionChanged()
 {
   qDebug("Table selection changed");
@@ -384,6 +396,10 @@ void CSVReaderDialog::creatFieldsGroupBox()
   {
     connect(m_tableWidget, SIGNAL(itemSelectionChanged()), this, SLOT(tableSelectionChanged()));
     connect(m_tableWidget, SIGNAL(currentCellChanged(int, int, int, int)), this, SLOT(tableCellChanged(int, int, int, int)));
+  }
+  if (m_columnType != nullptr)
+  {
+    connect(m_columnType, SIGNAL(currentTextChanged(QString)), this, SLOT(columnTypeChanged(QString)));
   }
 }
 

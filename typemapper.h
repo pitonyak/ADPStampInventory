@@ -83,6 +83,10 @@ public:
      */
     QMetaType::Type toSignedInteger(const QMetaType::Type metaType1) const;
 
+    QVariant getNullVariant(QVariant::Type aType) const;
+
+    QVariant getNullVariant(QMetaType::Type aType) const;
+
 signals:
 
 public slots:
@@ -114,5 +118,16 @@ inline bool TypeMapper::hasMetaTypeEnry(const QMetaType::Type metaType) const
 {
     return m_typeMap.contains(metaType);
 }
+
+inline QVariant TypeMapper::getNullVariant(QVariant::Type aType) const
+{
+  return QVariant(aType);
+}
+
+inline QVariant TypeMapper::getNullVariant(QMetaType::Type aType) const
+{
+  return getNullVariant(metaToVariantType(aType));
+}
+
 
 #endif // TYPEMAPPER_H

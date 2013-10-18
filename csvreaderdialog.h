@@ -51,6 +51,7 @@ public slots:
 
   void tableCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
   void tableSelectionChanged();
+  void columnTypeChanged(const QString& text);
 
 
 private:
@@ -58,6 +59,7 @@ private:
   void createImportGroupBox();
   void createSeparatorOptionsGroupBox();
   void creatFieldsGroupBox();
+  int getCurrentColumn() const;
 
   QGroupBox* m_importGroupBox;
   QGroupBox* m_separatorOptionsGroupBox;

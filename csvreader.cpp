@@ -638,6 +638,18 @@ void CSVReader::guessColumnTypes(TypeMapper::ColumnConversionPreferences flags)
 }
 
 
+QMetaType::Type CSVReader::getColumnType(const int i) const
+{
+  return (m_columnTypes != nullptr && 0 <= i && i<m_columnTypes->size()) ? m_columnTypes->at(i) : QMetaType::Void;
+}
+
+QVariant CSVReader::getNullVariant(const int i) const
+{
+  TypeMapper typeMapper;
+  return typeMapper.getNullVariant(getColumnType(i));
+}
+
+
 int CSVReader::getHeaderIndexByName(const QString& name) const
 {
   return getHeader().indexOf(name, 0, Qt::CaseInsensitive);

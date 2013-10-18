@@ -226,10 +226,13 @@ void MainWindow::readCSV()
   }
   else
   {
-    reader.readNLines(30);
+    reader.readNLines(200);
     reader.guessColumnTypes();
     CSVReaderDialog dlg(&reader, this);
-    dlg.exec();
+    if (dlg.exec() == QDialog::Rejected)
+    {
+      return;
+    }
     // This next code, if enabled, writes the CSV file.
 #if 0
     QString fileWritePath = QFileDialog::getSaveFileName(nullptr, "Export CSV", lastReadDir, tr("Text files (*.txt);;CSV files (*.csv);;All files (*.*)"), &defaultExtension);

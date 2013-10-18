@@ -176,10 +176,13 @@ public:
   //**************************************************************************
   //! Look at the read data and guess the column types based on the data present.
   /*!
-   * \param
+   * \param flags
    *
    ***************************************************************************/
   void guessColumnTypes(TypeMapper::ColumnConversionPreferences flags=TypeMapper::PreferNone);
+
+  QMetaType::Type getColumnType(const int i) const;
+  QVariant getNullVariant(const int i) const;
 
   int getHeaderIndexByName(const QString& name) const;
   QList<int> getHeaderIndexByName(const QStringList& names) const;
