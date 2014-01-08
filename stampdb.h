@@ -114,11 +114,34 @@ public:
    */
   void pathToDB(const QString& fullpath);
 
+  /*! \brief Search for a table name in a case-insensitive way.
+   *
+   * If a table name matches with the exact case, it is returned. If not,
+   * a case insensitive search is performed.
+   *
+   *  \param [in] aName Name of the table to find.
+   *
+   *  \return The exact table name as used by the system.
+   */
   QString getClosestTableName(const QString& aName);
 
+  /*! \brief Read an already opened CSV file into an existing table.
+   *
+   *
+   *
+   *
+   *  \param [in,out] reader
+   *
+   *  \param [in] tableName Name of the table that will receive the CSV data.
+   *
+   *  \return True on success, false on failure.
+   */
   bool loadCSV(CSVReader& reader, const QString& tableName);
 
   QSqlDatabase& getDB() { return m_db; }
+
+  bool executeQuery(const QString& sqlSelect, QList<QSqlRecord>& records, const QString& keyField, QHash<int, int>& keys);
+
 
 signals:
 

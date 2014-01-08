@@ -102,14 +102,6 @@ void SQLDialog::sqlButtonPressed()
   }
 }
 
-
-//select * from dealer
-//select * from country
-
-//INSERT INTO  'country' ('id', 'name', 'a3') VALUES (0, 'Unknown', '')
-//INSERT INTO  'country' ('id', 'name', 'a3') VALUES (1, 'Canada', 'CAN')
-//insert into dealer (id, updated, name, contact, address1, address2, address3, address4, phone, fax, comment, email, web) values (2,'2005-04-01T09:33:00','David Alex','David Alex','P.O. BOX 2176','Glenview, IL 60025','','','708-998-8147','','Beautiful stuff','','')
-
 void SQLDialog::executeSql(const QString& sqlString)
 {
   QSqlDatabase& db = m_db.getDB();

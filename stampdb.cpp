@@ -476,6 +476,51 @@ QString StampDB::getClosestTableName(const QString& aName)
   return "";
 }
 
+bool StampDB::executeQuery(const QString& sqlSelect, QList<QSqlRecord>& records, const QString &keyField, QHash<int, int> &keys)
+{
+    if (!openDB())
+    {
+      return false;
+    }
+
+    QSqlDatabase& db = getDB();
+    QSqlQuery query(db);
+    if (!query.exec(sqlSelect))
+    {
+        ScrollMessageBox::information(nullptr, "ERROR", query.lastError().text());
+        return false;
+    }
+    else if (query.isSelect())
+    {
+
+        int keyIndex = query.record().indexOf(keyField);
+        int recordKey = -1;
+
+        while (query.isActive() && query.next())
+        {
+            QSqlRecord rec = query.record();
+            if (keyIndex >= 0)
+            {
+                recordKey = rec.value(keyIndex).Int;
+                if (keys.contains(recordKey)) {
+                    // I really do not expect this, but, do it anyway.
+                    records[keys[recordKey]] = rec;
+                } else {
+                    keys.insert(recordKey, records.size());
+                    records.append(rec);
+                }
+                records.append(rec);
+            } else {
+                records.append(rec);
+            }
+        }
+    } else {
+        // query.numRowsAffected();
+    }
+    return true;
+}
+
+
 bool StampDB::loadCSV(CSVReader& reader, const QString& tableName)
 {
   if (!openDB())
@@ -519,6 +564,15 @@ bool StampDB::loadCSV(CSVReader& reader, const QString& tableName)
     return false;
   }
 
+  QString sGetAll = QString("SELECT * FROM %1").arg(useTableName);
+  QList<QSqlRecord> records;
+  const QString keyField = "id";
+  QHash<int, int> keys;
+  int csvKeyColumn = -1;
+  if (!executeQuery(sGetAll, records, keyField, keys)) {
+      // TODO: how to deal with an error?
+  }
+
   // TODO: Verify that a column is not repeated, ie, two CSV columns match to the same DB column.
 
   // TODO: build the prepared statement
@@ -543,6 +597,9 @@ bool StampDB::loadCSV(CSVReader& reader, const QString& tableName)
         q2 += ", ?";
       }
       q1 += fieldNames[iCol];
+      if (csvKeyColumn < 0 && fieldNames[iCol].compare(keyField, Qt::CaseInsensitive) == 0) {
+          csvKeyColumn = iCol;
+      }
     }
   }
   q2 += ")";
@@ -563,12 +620,26 @@ bool StampDB::loadCSV(CSVReader& reader, const QString& tableName)
   }
 
   int numRowsAdded = 0;
+  int numRowsSkipped = 0;
   int numErrors = 0;
   QString errorMessage;
   int iRow;
+  int csvKeyValue;
   for (iRow=0; iRow < reader.countLines() || reader.readNextRecord(false); ++iRow)
   {
+    csvKeyValue = -1;
     const CSVLine& readLine = reader.getLine(iRow);
+    if (csvKeyColumn >= 0 && csvKeyColumn < readLine.count())
+    {
+        const CSVColumn& c = readLine[csvKeyColumn];
+        QVariant v = c.toVariant();
+        bool ok = true;
+        csvKeyValue = v.toInt(&ok);
+        if (!ok) {
+            csvKeyValue = -1;
+        }
+    }
+
     //qDebug("Adding line");
 
     for (int iCol=0; iCol<csvColumnIndex.size(); ++iCol)
@@ -586,13 +657,13 @@ bool StampDB::loadCSV(CSVReader& reader, const QString& tableName)
           QVariant v = c.toVariant();
           // Insert this into the prepared statement
           q.bindValue(iCol, v);
-          qDebug(qPrintable(QString("G: %1 %2 %3").arg(iRow).arg(iCol).arg(v.toString())));
+          //qDebug(qPrintable(QString("G: %1 %2 %3").arg(iRow).arg(iCol).arg(v.toString())));
         }
         else
         {
           // Get a null value based on the expected type for the column.
           q.bindValue(iCol, reader.getNullVariant(csvColumnIndex[iCol]));
-          qDebug(qPrintable(QString("N: %1 %2 NULL").arg(iRow).arg(iCol)));
+          //qDebug(qPrintable(QString("N: %1 %2 NULL").arg(iRow).arg(iCol)));
         }
       }
       else
@@ -600,18 +671,24 @@ bool StampDB::loadCSV(CSVReader& reader, const QString& tableName)
         qDebug(qPrintable(QString("E: %1 %2").arg(iRow).arg(iCol)));
       }
     }
-    if (q.exec())
+    if (csvKeyValue < 0 || !keys.contains(csvKeyValue))
     {
-      ++numRowsAdded;
-    }
-    else
-    {
-      if (numErrors > 0)
-      {
-        errorMessage += "\n";
-      }
-      errorMessage += QString("Row %1 : %2").arg(iRow).arg(q.lastError().text());
-      ++numErrors;
+        if (q.exec())
+        {
+          ++numRowsAdded;
+        }
+        else
+        {
+          if (numErrors > 0)
+          {
+            errorMessage += "\n";
+          }
+          errorMessage += QString("Row %1 : %2").arg(iRow).arg(q.lastError().text());
+          ++numErrors;
+        }
+    } else {
+        // TODO: use an update instead!
+        ++numRowsSkipped;
     }
   }
 
@@ -624,13 +701,16 @@ bool StampDB::loadCSV(CSVReader& reader, const QString& tableName)
   {
     if (numRowsAdded > 0)
     {
-      ScrollMessageBox::information(nullptr, "INFO", QString(tr("Added %1 rows with %2 errors to table %3.")).arg(iRow).arg(numErrors).arg(useTableName));
+      ScrollMessageBox::information(nullptr, "INFO", QString(tr("Added %1 rows with %2 errors to table %3.")).arg(numRowsAdded).arg(numErrors).arg(useTableName));
     }
     ScrollMessageBox::information(nullptr, "ERROR", errorMessage);
   }
   else
   {
-    ScrollMessageBox::information(nullptr, "INFO", QString(tr("Added %1 rows to table %2.")).arg(iRow).arg(useTableName));
+    ScrollMessageBox::information(nullptr, "INFO", QString(tr("Added %1 rows to table %2.")).arg(numRowsAdded).arg(useTableName));
+  }
+  if (numRowsSkipped > 0) {
+      ScrollMessageBox::information(nullptr, "INFO", QString(tr("Skipped %1 rows")).arg(numRowsSkipped));
   }
 
   return true;
