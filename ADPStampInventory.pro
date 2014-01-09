@@ -52,7 +52,12 @@ SOURCES += main.cpp\
     xmlutility.cpp \
     messagecomponenttablemodel.cpp \
     linkbackfilterdelegate.cpp \
-    qtenummapper.cpp
+    qtenummapper.cpp \
+    dataobjectbase.cpp \
+    dataobjectcountry.cpp \
+    dataobjectdealer.cpp \
+    dataobjectcatalogtype.cpp \
+    dataobjectvaluetype.cpp
 
 HEADERS  += mainwindow.h \
     stampdb.h \
@@ -81,7 +86,12 @@ HEADERS  += mainwindow.h \
     messagecomponenttablemodel.h \
     linkbackfilterdelegate.h \
     globals.h \
-    qtenummapper.h
+    qtenummapper.h \
+    dataobjectbase.h \
+    dataobjectcountry.h \
+    dataobjectdealer.h \
+    dataobjectcatalogtype.h \
+    dataobjectvaluetype.h
 
 FORMS    += mainwindow.ui \
     logroutinginfodialog.ui
