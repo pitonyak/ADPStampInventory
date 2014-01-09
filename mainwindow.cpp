@@ -64,7 +64,8 @@ void MainWindow::setupMenuBar()
   menu->addAction(tr("&Create DB"), this, SLOT(createDB()));
   menu->addAction(tr("Create &Schema"), this, SLOT(createSchema()));
   menu->addAction(tr("&View Schema"), this, SLOT(getSchema()));
-  menu->addAction(tr("&Read CSV"), this, SLOT(readCSV()));
+  menu->addAction(tr("&Import CSV"), this, SLOT(readCSV()));
+  menu->addAction(tr("&Export CSV"), this, SLOT(exportCSV()));
   menu->addAction(tr("&SQL Window"), this, SLOT(openSQLWindow()));
   menu->addAction(tr("Configure"), this, SLOT(configure()));
 
@@ -274,15 +275,61 @@ void MainWindow::readCSV()
     }
 
     // The previous line worked, so this should not be null.
-    if (m_db != nullptr)
+    if (m_db != nullptr && !m_db->loadCSV(reader, fileInfo.baseName()))
     {
-      if (!m_db->loadCSV(reader, fileInfo.baseName()))
-      {
-        // TODO: Error message, failed to load CSV file.
-      }
+      ScrollMessageBox::information(this, "ERROR", tr("Failed to load the CSV file into the database."));
     }
   }
 }
+
+void MainWindow::exportCSV()
+{
+    if (!createDBWorker()) {
+        return;
+    }
+
+    QSettings settings;
+    QString lastWriteDir = settings.value(Constants::Settings_LastCSVDirWrite).toString();
+    if (lastWriteDir.isEmpty()) {
+        lastWriteDir = settings.value(Constants::Settings_LastCSVDirOpen).toString();
+    }
+    QDir writeDir = lastWriteDir;
+
+    QString fileWritePath = QFileDialog::getExistingDirectory(nullptr, tr("Export To CSV"), lastWriteDir);
+    if (fileWritePath.isEmpty()) {
+        return;
+    }
+
+    QStringList tableNames = m_db->getTableNames();
+    QStringList existingFiles;
+    for (int i=0; i<tableNames.count(); ++i)
+    {
+        if (QFile::exists(writeDir.filePath(tableNames.at(i) + ".csv"))) {
+            existingFiles.append(tableNames.at(i) + ".csv");
+        }
+    }
+    if (QFile::exists(writeDir.filePath("stamps.ddl"))) {
+        existingFiles.append("stamps.ddl");
+    }
+    if (existingFiles.count() > 0)
+    {
+        if (ScrollMessageBox::question(this, "WARNING", QString(tr("The following files will be overwritten:\n%1")).arg(existingFiles.join("\n"))) != QDialogButtonBox::No)
+        {
+            return;
+        }
+    }
+    ScrollMessageBox::information(this, "hello", tr("Ready to go!"));
+    settings.setValue(Constants::Settings_LastCSVDirWrite, writeDir.canonicalPath());
+
+    //m_db->
+
+    // TODO: Get list of tables
+
+    // choose output directory
+
+    // export each table.
+}
+
 
 void MainWindow::openSQLWindow()
 {

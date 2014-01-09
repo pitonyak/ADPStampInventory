@@ -86,18 +86,15 @@ void SQLDialog::sqlButtonPressed()
   if (cursor.hasComplexSelection())
   {
     // TODO: Error? Iterate over selections
+    //ScrollMessageBox::information(this, "Simple Selection", cursor.selectedText());
     ScrollMessageBox::information(this, "Complex Selection", "??");
   }
   else if (cursor.hasSelection())
   {
-    // TODO: Handle selected text
-    //ScrollMessageBox::information(this, "Simple Selection", cursor.selectedText());
     executeSql(cursor.selectedText());
   }
   else
   {
-    // TODO: Get current line (paragraph) and process
-    //ScrollMessageBox::information(this, "No Selection", cursor.block().text());
     executeSql(cursor.block().text());
   }
 }
@@ -153,6 +150,7 @@ void SQLDialog::executeSql(const QString& sqlString)
           ++row;
           //ScrollMessageBox::information(this, "Got a row!", QString("Have row %1 and size is %2").arg(row).arg(query.size()));
         }
+        m_tableWidget->resizeColumnsToContents();
         m_statusBar->showMessage(QString(tr("Read %1 records")).arg(row));
       }
     }

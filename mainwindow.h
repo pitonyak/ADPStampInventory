@@ -26,6 +26,7 @@ public slots:
     void createSchema();
     void getSchema();
     void readCSV();
+    void exportCSV();
     void openSQLWindow();
     void configure();
 

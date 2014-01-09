@@ -11,6 +11,7 @@ class QSqlRecord;
 class QSqlField;
 class QStringList;
 class CSVReader;
+class QDir;
 
 //**************************************************************************
 /*! \class StampDB
@@ -93,6 +94,8 @@ public:
 
   /*! \brief Initizlize (if needed) m_tableMap and return a reference.
    *
+   * TODO: Not currently used, remove this!
+   *
    *  \return Reference to m_tableMap
    */
   const QMap<QString, QSqlRecord>& tableMap();
@@ -125,6 +128,10 @@ public:
    */
   QString getClosestTableName(const QString& aName);
 
+  QStringList getTableNames(const bool ignoreSystemTables=true);
+
+  QStringList getDDLForExport();
+
   /*! \brief Read an already opened CSV file into an existing table.
    *
    *
@@ -138,9 +145,14 @@ public:
    */
   bool loadCSV(CSVReader& reader, const QString& tableName);
 
+  bool exportToCSV(const QDir& outputDir, const bool overwrite=false);
+
   QSqlDatabase& getDB() { return m_db; }
 
   bool executeQuery(const QString& sqlSelect, QList<QSqlRecord>& records, const QString& keyField, QHash<int, int>& keys);
+
+  QStringList getOneColumnAsString(const QString& sqlSelect);
+
 
 
 signals:

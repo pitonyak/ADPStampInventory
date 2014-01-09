@@ -21,7 +21,7 @@ public:
     //**************************************************************************
     //! Default Constructor
     /*!
-     * \param [in] parent This is a QObject, so you can set a parent that will control the lifetime of this object.
+     * \param [in,out] parent This is a QObject, so you can set a parent that will control the lifetime of this object.
      ***************************************************************************/
     explicit CheckBoxOnlyDelegate(QObject *parent = 0);
 

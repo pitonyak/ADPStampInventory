@@ -1,6 +1,7 @@
 #include "stampdb.h"
 #include "scrollmessagebox.h"
 #include "csvreader.h"
+#include "csvwriter.h"
 
 #include <QFile>
 #include <QDir>
@@ -13,6 +14,7 @@
 #include <QVariant>
 #include <QMap>
 #include <QSqlDriver>
+#include <QTextStream>
 
 #if defined(__GNUC__)
 #if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 6)
@@ -52,7 +54,7 @@ StampDB::StampDB(QObject *parent) :
                              " fax varchar(32),"
                              " comment varchar(100),"
                              " email varchar(75),"
-                             " web varchar(100))";
+                             " website varchar(100))";
 
   *m_desiredSchemaDDLList << "CREATE TABLE stamplocation("
                              " id INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -332,7 +334,7 @@ QString StampDB::getSchema(const QSqlField& field) const
 
 const QMap<QString, QSqlRecord>& StampDB::tableMap()
 {
-  if (!m_tableMap) {
+  if (m_tableMap == nullptr) {
 
 /**
     QMap<QString, QVariant::Type> sqlTypeToVariantType;
@@ -391,10 +393,10 @@ const QMap<QString, QSqlRecord>& StampDB::tableMap()
         return *m_tableMap;
 
       } else {
-        QString tableName = m_outerDDLRegExp->cap(1);
+        //??QString tableName = m_outerDDLRegExp->cap(1);
         QString bigFieldString = m_outerDDLRegExp->cap(2);
         QStringList fieldStrings = bigFieldString.split(recordSplitRegExp, QString::SkipEmptyParts);
-        QSqlRecord currentRecord;
+        //??QSqlRecord currentRecord;
         for (int currentFieldIndex=0; currentFieldIndex<fieldStrings.size(); ++currentFieldIndex)
         {
           // Get the current field and then remove any reference to Primary Key.
@@ -452,6 +454,23 @@ const QMap<QString, QSqlRecord>& StampDB::tableMap()
   return *m_tableMap;
 }
 
+QStringList StampDB::getTableNames(const bool ignoreSystemTables)
+{
+    if (!ignoreSystemTables)
+    {
+        return m_db.tables(QSql::Tables);
+    }
+
+    QString sql = "SELECT tbl_name FROM sqlite_master WHERE type='table' and tbl_name<>'sqlite_sequence' order by tbl_name";
+    return getOneColumnAsString(sql);
+}
+
+QStringList StampDB::getDDLForExport()
+{
+    QString sql = "SELECT sql FROM sqlite_master WHERE type='table' and tbl_name<>'sqlite_sequence' order by tbl_name";
+    return getOneColumnAsString(sql);
+}
+
 
 QString StampDB::getClosestTableName(const QString& aName)
 {
@@ -474,6 +493,31 @@ QString StampDB::getClosestTableName(const QString& aName)
     }
   }
   return "";
+}
+
+QStringList StampDB::getOneColumnAsString(const QString& sqlSelect)
+{
+    QStringList colStrings;
+    if (openDB())
+    {
+        QSqlDatabase& db = getDB();
+        QSqlQuery query(db);
+
+        if (!query.exec(sqlSelect))
+        {
+            ScrollMessageBox::information(nullptr, "ERROR", query.lastError().text());
+        }
+        else if (query.isSelect())
+        {
+
+            while (query.isActive() && query.next())
+            {
+                colStrings.append(query.record().value(0).toString());
+            }
+        }
+    }
+
+    return colStrings;
 }
 
 bool StampDB::executeQuery(const QString& sqlSelect, QList<QSqlRecord>& records, const QString &keyField, QHash<int, int> &keys)
@@ -501,15 +545,16 @@ bool StampDB::executeQuery(const QString& sqlSelect, QList<QSqlRecord>& records,
             QSqlRecord rec = query.record();
             if (keyIndex >= 0)
             {
-                recordKey = rec.value(keyIndex).Int;
+                bool ok = false;
+                recordKey = rec.value(keyIndex).toInt(&ok);
                 if (keys.contains(recordKey)) {
+
                     // I really do not expect this, but, do it anyway.
                     records[keys[recordKey]] = rec;
                 } else {
                     keys.insert(recordKey, records.size());
                     records.append(rec);
                 }
-                records.append(rec);
             } else {
                 records.append(rec);
             }
@@ -520,6 +565,70 @@ bool StampDB::executeQuery(const QString& sqlSelect, QList<QSqlRecord>& records,
     return true;
 }
 
+
+bool StampDB::exportToCSV(const QDir& outputDir, const bool overwrite)
+{
+    QFile ddlFile(outputDir.filePath("stamps.ddl"));
+    if (ddlFile.exists() && overwrite) {
+        if (!ddlFile.remove()) {
+            ScrollMessageBox::information(nullptr, "ERROR", QString(tr("Failed to remove file %1")).arg(ddlFile.fileName()));
+        }
+    }
+    if (!ddlFile.exists())
+    {
+        QStringList ddl = getDDLForExport();
+        if (!ddlFile.open(QIODevice::WriteOnly | QIODevice::Text))
+        {
+            ScrollMessageBox::information(nullptr, "ERROR", QString(tr("Failed to open file %1 for writing.")).arg(ddlFile.fileName()));
+        }
+        // TODO:
+        QTextStream out(&ddlFile);
+        out << ddl.join("\n");
+        ddlFile.close();
+    }
+
+    QStringList tableNames = getTableNames(true);
+    for (int iTable=0; iTable < tableNames.count(); ++iTable)
+    {
+        QFile file(outputDir.filePath("stamps.ddl"));
+        if (file.exists() && overwrite) {
+            if (!file.remove()) {
+                ScrollMessageBox::information(nullptr, "ERROR", QString(tr("Failed to remove file %1")).arg(file.fileName()));
+            }
+        }
+        if (!file.exists())
+        {
+            CSVWriter writer;
+            if (!writer.setStreamFromPath(file.fileName()))
+            {
+              ScrollMessageBox::information(nullptr, "ERROR", QString(tr("Write: Failed to open CSV file %1")).arg(file.fileName()));
+            }
+            else
+            {
+                // TODO: Get the data and write the CSV file.
+#if 0
+              writer.setHeader(reader.getHeader());
+              writer.writeHeader();
+              int maxLines = 100;
+              for (int i=0; i<maxLines && reader.readNextRecord(false); ++i)
+              {
+                const CSVLine& readLine = reader.getLine(i);
+                CSVLine newLine;
+                for (int k=0; k<readLine.count(); ++k)
+                {
+                  const CSVColumn& c = readLine[k];
+                  QVariant v = c.toVariant();
+                  newLine.append(CSVColumn(v.toString(), c.isQualified(), c.getType()));
+                }
+                //writer.write(reader.getLine(i));
+                writer.write(newLine);
+              }
+#endif
+            }
+        }
+    }
+    return true;
+}
 
 bool StampDB::loadCSV(CSVReader& reader, const QString& tableName)
 {
@@ -549,6 +658,7 @@ bool StampDB::loadCSV(CSVReader& reader, const QString& tableName)
   }
 
   QList<int> csvColumnIndex = reader.getHeaderIndexByName(fieldNames);
+  QString sError;
   int numberOfColumnMatches = 0;
   for (int iCol=0; iCol<csvColumnIndex.size(); ++iCol)
   {
@@ -556,6 +666,20 @@ bool StampDB::loadCSV(CSVReader& reader, const QString& tableName)
     {
       ++numberOfColumnMatches;
     }
+    else
+    {
+        if (!sError.isEmpty())
+        {
+            sError += "\n";
+        }
+        sError += QString(tr("No match found for field %1")).arg(fieldNames.at(iCol));
+    }
+  }
+
+  if (!sError.isEmpty())
+  {
+      ScrollMessageBox::information(nullptr, "WARN", sError);
+      sError.clear();
   }
 
   if (numberOfColumnMatches == 0)
@@ -692,25 +816,31 @@ bool StampDB::loadCSV(CSVReader& reader, const QString& tableName)
     }
   }
 
+  QString status = "INFO";
+  sError = QString(tr("Added %1 / %2 rows into table %3")).arg(numRowsAdded).arg(iRow).arg(useTableName);
+
+  if (numRowsSkipped > 0) {
+      sError += "\n";
+      sError += QString(tr("Skipped %1 records.")).arg(numRowsSkipped);
+      status = "WARN";
+  }
+
+  if (numErrors > 0)
+  {
+      sError += "\n";
+      sError += QString(tr("Had %1 errors.")).arg(numErrors);
+      status = "ERROR";
+  }
+
+
   if (useTransactions && !m_db.commit())
   {
     ScrollMessageBox::information(nullptr, "ERROR", QString(tr("Failed to begin end the transaction after reading %1 rows: %2")).arg(iRow).arg(q.lastError().text()));
     return false;
   }
-  else if (numErrors > 0)
-  {
-    if (numRowsAdded > 0)
-    {
-      ScrollMessageBox::information(nullptr, "INFO", QString(tr("Added %1 rows with %2 errors to table %3.")).arg(numRowsAdded).arg(numErrors).arg(useTableName));
-    }
-    ScrollMessageBox::information(nullptr, "ERROR", errorMessage);
-  }
   else
   {
-    ScrollMessageBox::information(nullptr, "INFO", QString(tr("Added %1 rows to table %2.")).arg(numRowsAdded).arg(useTableName));
-  }
-  if (numRowsSkipped > 0) {
-      ScrollMessageBox::information(nullptr, "INFO", QString(tr("Skipped %1 rows")).arg(numRowsSkipped));
+    ScrollMessageBox::information(nullptr, status, sError);
   }
 
   return true;

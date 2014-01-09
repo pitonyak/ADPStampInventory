@@ -30,6 +30,9 @@ public:
   /*! Settings Name to access the directory last used to read a CSV file. */
   static QString Settings_LastCSVDirOpen;
 
+  /*! Last place a CSV Export was done */
+  static QString Settings_LastCSVDirWrite;
+
   /*! Settings Name to access  */
   static QString Settings_CSVDialogGeometry;
 
