@@ -11,6 +11,7 @@ class DataObjectBase : public QObject
 public:
     explicit DataObjectBase(QObject *parent = 0, const int id=-1);
     DataObjectBase(const DataObjectBase& obj);
+    virtual ~DataObjectBase() {}
 
     int getId() const;
 
@@ -21,6 +22,9 @@ public:
     int compare(const DataObjectBase& obj) const;
 
     bool operator==(const DataObjectBase& obj) const;
+
+    virtual DataObjectBase* newInstance(QObject *parent = 0, const int id=-1);
+    virtual DataObjectBase* clone();
 
 signals:
     
@@ -34,5 +38,15 @@ private:
 inline int DataObjectBase::getId() const { return m_Id; }
 
 inline void DataObjectBase::setId(const int id) { m_Id = id; }
+
+inline DataObjectBase* DataObjectBase::newInstance(QObject *parent, const int id)
+{
+  return new DataObjectBase(parent, id);
+}
+
+inline DataObjectBase* DataObjectBase::clone()
+{
+  return new DataObjectBase(this);
+}
 
 #endif // DATAOBJECTBASE_H

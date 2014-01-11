@@ -22,10 +22,22 @@ public:
 
     bool operator==(const DataObjectCatalogType& obj) const;
 
+    virtual DataObjectBase* newInstance(QObject *parent = 0, const int id=-1);
+    virtual DataObjectBase* clone();
+
 private:
     QString m_Name;
     QString m_Description;
-
 };
+
+inline DataObjectBase* DataObjectCatalogType::newInstance(QObject *parent, const int id)
+{
+  return new DataObjectCatalogType(parent, id);
+}
+
+inline DataObjectBase* DataObjectCatalogType::clone()
+{
+  return new DataObjectCatalogType(this);
+}
 
 #endif // DATAOBJECTCATALOGTYPE_H

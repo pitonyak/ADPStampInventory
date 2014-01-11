@@ -57,7 +57,13 @@ SOURCES += main.cpp\
     dataobjectcountry.cpp \
     dataobjectdealer.cpp \
     dataobjectcatalogtype.cpp \
-    dataobjectvaluetype.cpp
+    dataobjectvaluetype.cpp \
+    dataobjectcatalog.cpp \
+    dataobjectstamplocation.cpp \
+    dataobjectinventory.cpp \
+    dataobjectvaluesource.cpp \
+    genericdataobject.cpp \
+    genericdatacollection.cpp
 
 HEADERS  += mainwindow.h \
     stampdb.h \
@@ -91,7 +97,13 @@ HEADERS  += mainwindow.h \
     dataobjectcountry.h \
     dataobjectdealer.h \
     dataobjectcatalogtype.h \
-    dataobjectvaluetype.h
+    dataobjectvaluetype.h \
+    dataobjectcatalog.h \
+    dataobjectstamplocation.h \
+    dataobjectinventory.h \
+    dataobjectvaluesource.h \
+    genericdataobject.h \
+    genericdatacollection.h
 
 FORMS    += mainwindow.ui \
     logroutinginfodialog.ui

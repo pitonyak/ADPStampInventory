@@ -326,17 +326,10 @@ public slots:
 
   void setSkipEmptyLines(const bool skipEmptyLines = true);
   void setMergeDelimiters(const bool mergeDelimiters = false);
-  /**
-    void setHeaderNames(const QStringList& headers);
-    void setHeaderTypes(const QList<QVariant::Type>& types);
-    void addHeader(const QString& headerName);
-    void addHeader(const QString& headerName, const QVariant::Type& headerType);
-    void addHeader(const QVariant::Type& headerType);
-    QString getHeaderName(int i) const;
-    QVariant::Type getHeaderType(int i) const;
-    void clearHeaderNames();
-    void clearHeaderTypes();
-    **/
+
+  void addHeader(const QString& headerName, const QMetaType::Type headerType);
+  QString getHeaderName(int i) const;
+  QMetaType::Type getHeaderType(int i) const;
 
   void setHeader(const CSVLine& header);
 

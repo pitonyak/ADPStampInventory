@@ -2,6 +2,16 @@
 #include "scrollmessagebox.h"
 #include "csvreader.h"
 #include "csvwriter.h"
+#include "dataobjectbase.h"
+#include "dataobjectcatalog.h"
+#include "dataobjectcatalogtype.h"
+#include "dataobjectcountry.h"
+#include "dataobjectdealer.h"
+#include "dataobjectinventory.h"
+#include "dataobjectstamplocation.h"
+#include "dataobjectvaluesource.h"
+#include "dataobjectvaluetype.h"
+#include "genericdatacollection.h"
 
 #include <QFile>
 #include <QDir>
@@ -15,6 +25,7 @@
 #include <QMap>
 #include <QSqlDriver>
 #include <QTextStream>
+#include <QList>
 
 #if defined(__GNUC__)
 #if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 6)
@@ -255,7 +266,6 @@ QString StampDB::getSchema() const
       s += "\n\n";
     }
     const QString tableName = tables.at(i);
-    //s += getSchema(m_db.record(tableName));
     s += getSchema(tableName, m_db.record(tableName));
   }
   return s;
@@ -465,12 +475,94 @@ QStringList StampDB::getTableNames(const bool ignoreSystemTables)
     return getOneColumnAsString(sql);
 }
 
+QStringList StampDB::getColumnNames(const QString& tableName)
+{
+  QStringList columnNames;
+  if (openDB())
+  {
+    QSqlRecord record = m_db.record(tableName);
+    for (int i=0; i<record.count(); ++i) {
+      columnNames.append(record.field(i).name());
+    }
+  }
+  return columnNames;
+}
+
 QStringList StampDB::getDDLForExport()
 {
     QString sql = "SELECT sql FROM sqlite_master WHERE type='table' and tbl_name<>'sqlite_sequence' order by tbl_name";
     return getOneColumnAsString(sql);
 }
 
+DataObjectBase* StampDB::getEmptyObjectByTableName(const QString& tableName)
+{
+  if (tableName.compare("catalog", Qt::CaseInsensitive)) {
+    return new DataObjectCatalog();
+  } else if (tableName.compare("catalogtype", Qt::CaseInsensitive)) {
+    return new DataObjectCatalogType();
+  } else if (tableName.compare("country", Qt::CaseInsensitive)) {
+    return new DataObjectCountry();
+  } else if (tableName.compare("dealer", Qt::CaseInsensitive)) {
+    return new DataObjectDealer();
+  } else if (tableName.compare("inventory", Qt::CaseInsensitive)) {
+    return new DataObjectInventory();
+  } else if (tableName.compare("stamplocation", Qt::CaseInsensitive)) {
+    return new DataObjectStampLocation();
+  } else if (tableName.compare("valuesource", Qt::CaseInsensitive)) {
+    return new DataObjectValueSource();
+  } else if (tableName.compare("valuetype", Qt::CaseInsensitive)) {
+    return new DataObjectValueType();
+  }
+  return nullptr;
+}
+
+GenericDataCollection *StampDB::readTableName(const QString& tableName)
+{
+  return readTableSql(QString("select * from %1 order by ID").arg(tableName));
+}
+
+GenericDataCollection* StampDB::readTableSql(const QString& sql)
+{
+  if (openDB())
+  {
+    qDebug(qPrintable(QString("Reading table using [%1]").arg(sql)));
+    QSqlDatabase& db = getDB();
+    QSqlQuery query(db);
+
+    if (!query.exec(sql))
+    {
+        ScrollMessageBox::information(nullptr, "ERROR", query.lastError().text());
+    }
+    else if (query.isSelect())
+    {
+      GenericDataCollection* collection = new GenericDataCollection();
+
+      // Set the property names and types in order!
+      for (int i=0; i<query.record().count(); ++i)
+      {
+        collection->appendPropertyName(query.record().fieldName(i));
+        collection->appendPropertyType(query.record().field(i).type());
+      }
+      int iCount = 0;
+      while (query.isActive() && query.next())
+      {
+        GenericDataObject* gdo = new GenericDataObject(collection);
+        for (int i=0; i<query.record().count(); ++i)
+        {
+          if (!query.record().isNull(i))
+          {
+            gdo->setValue(collection->getPropertyName(i), query.record().value(i));
+          }
+        }
+        collection->appendObject(gdo->getInt("id"), gdo);
+        //qDebug(qPrintable(QString("Appended record %1 with ID %2 with %3 records").arg(++iCount).arg(gdo->getInt("id")).arg(collection->getObjectCount())));
+      }
+      return collection;
+    }
+  }
+
+  return nullptr;
+}
 
 QString StampDB::getClosestTableName(const QString& aName)
 {
@@ -509,7 +601,6 @@ QStringList StampDB::getOneColumnAsString(const QString& sqlSelect)
         }
         else if (query.isSelect())
         {
-
             while (query.isActive() && query.next())
             {
                 colStrings.append(query.record().value(0).toString());
@@ -581,7 +672,6 @@ bool StampDB::exportToCSV(const QDir& outputDir, const bool overwrite)
         {
             ScrollMessageBox::information(nullptr, "ERROR", QString(tr("Failed to open file %1 for writing.")).arg(ddlFile.fileName()));
         }
-        // TODO:
         QTextStream out(&ddlFile);
         out << ddl.join("\n");
         ddlFile.close();
@@ -590,7 +680,7 @@ bool StampDB::exportToCSV(const QDir& outputDir, const bool overwrite)
     QStringList tableNames = getTableNames(true);
     for (int iTable=0; iTable < tableNames.count(); ++iTable)
     {
-        QFile file(outputDir.filePath("stamps.ddl"));
+      QFile file(outputDir.filePath(tableNames.at(iTable) + ".csv"));
         if (file.exists() && overwrite) {
             if (!file.remove()) {
                 ScrollMessageBox::information(nullptr, "ERROR", QString(tr("Failed to remove file %1")).arg(file.fileName()));
@@ -605,25 +695,18 @@ bool StampDB::exportToCSV(const QDir& outputDir, const bool overwrite)
             }
             else
             {
-                // TODO: Get the data and write the CSV file.
-#if 0
-              writer.setHeader(reader.getHeader());
-              writer.writeHeader();
-              int maxLines = 100;
-              for (int i=0; i<maxLines && reader.readNextRecord(false); ++i)
+              //ScrollMessageBox::information(nullptr, "INFO", QString(tr("ready to read from table %1")).arg(tableNames.at(iTable)));
+              GenericDataCollection* gdo = readTableName(tableNames.at(iTable));
+              //ScrollMessageBox::information(nullptr, "INFO", QString(tr("read %1 records from table ")).arg(gdo->getObjectCount()));
+              if (gdo == nullptr)
               {
-                const CSVLine& readLine = reader.getLine(i);
-                CSVLine newLine;
-                for (int k=0; k<readLine.count(); ++k)
-                {
-                  const CSVColumn& c = readLine[k];
-                  QVariant v = c.toVariant();
-                  newLine.append(CSVColumn(v.toString(), c.isQualified(), c.getType()));
-                }
-                //writer.write(reader.getLine(i));
-                writer.write(newLine);
+                ScrollMessageBox::information(nullptr, "ERROR", QString(tr("Failed to load table %1 for export")).arg(tableNames.at(iTable)));
               }
-#endif
+              else
+              {
+                gdo->exportToCSV(writer);
+                delete gdo;
+              }
             }
         }
     }

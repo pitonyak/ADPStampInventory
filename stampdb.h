@@ -6,12 +6,15 @@
 #include <QtSql/QSqlDatabase>
 #include <QtSql/QSqlError>
 #include <QMap>
+#include <QList>
 
 class QSqlRecord;
 class QSqlField;
 class QStringList;
 class CSVReader;
 class QDir;
+class DataObjectBase;
+class GenericDataCollection;
 
 //**************************************************************************
 /*! \class StampDB
@@ -27,7 +30,10 @@ class StampDB : public QObject
 {
   Q_OBJECT
 public:
-  /*! Constructor */
+  /*! \brief Constructor
+   *
+   *  \param [in, out] parent The object's owner. The parent's destructor destroys this object.
+   */
   explicit StampDB(QObject *parent = 0);
 
   /*! Destructor */
@@ -130,7 +136,15 @@ public:
 
   QStringList getTableNames(const bool ignoreSystemTables=true);
 
+  QStringList getColumnNames(const QString& tableName);
+
   QStringList getDDLForExport();
+
+  GenericDataCollection* readTableName(const QString& tableName);
+
+  GenericDataCollection* readTableSql(const QString& sql);
+
+  DataObjectBase* getEmptyObjectByTableName(const QString& tableName);
 
   /*! \brief Read an already opened CSV file into an existing table.
    *

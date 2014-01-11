@@ -295,53 +295,17 @@ const CSVLine& CSVController::getLine(int index) const
     return m_lines[index];
 }
 
-
-/**
-void CSVController::setHeaderNames(const QStringList& headers)
+void CSVController::addHeader(const QString& headerName, const QMetaType::Type headerType)
 {
-    m_headerNames.clear();
-    m_headerNames.append(headers);
-}
-
-void CSVController::setHeaderTypes(const QList<QVariant::Type>& types)
-{
-    m_headerTypes.clear();
-    m_headerTypes.append(types);
-}
-
-void CSVController::addHeader(const QString& headerName)
-{
-    m_headerNames.append(headerName);
-}
-
-void CSVController::addHeader(const QString& headerName, const QVariant::Type& headerType)
-{
-    addHeader(headerType);
-    addHeader(headerName);
-}
-
-void CSVController::addHeader(const QVariant::Type& headerType)
-{
-    m_headerTypes.append(headerType);
+  m_header.append(CSVColumn(headerName, true, headerType));
 }
 
 QString CSVController::getHeaderName(int i) const
 {
-    return 0<=i && i<m_headerNames.count() ? m_headerNames[i] : QString();
+  return 0<=i && i<m_header.count() ? m_header[i].getValue() : "";
 }
 
-QVariant::Type CSVController::getHeaderType(int i) const
+QMetaType::Type CSVController::getHeaderType(int i) const
 {
-    return 0<=i && i<m_headerTypes.count() ? m_headerTypes[i] : QVariant::Invalid;
+  return 0<=i && i<m_header.count() ? m_header[i].getType() : QMetaType::Void;
 }
-
-void CSVController::clearHeaderNames()
-{
-    m_headerNames.clear();
-}
-
-void CSVController::clearHeaderTypes()
-{
-    m_headerTypes.clear();
-}
-**/

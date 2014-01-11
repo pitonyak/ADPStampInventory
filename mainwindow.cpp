@@ -191,7 +191,6 @@ void MainWindow::readCSV()
   QString defaultExtension = tr("CSV files (*.csv)");
   QSettings settings;
   QString lastReadDir = settings.value(Constants::Settings_LastCSVDirOpen).toString();
-  qDebug(qPrintable(QString("Read:(%1)").arg(lastReadDir)));
   QString fileReadPath = QFileDialog::getOpenFileName(nullptr, "Import CSV", lastReadDir, tr("Text files (*.txt);;CSV files (*.csv);;All files (*.*)"), &defaultExtension);
   if (fileReadPath.isEmpty()) {
     // Nothing to do
@@ -289,16 +288,16 @@ void MainWindow::exportCSV()
     }
 
     QSettings settings;
-    QString lastWriteDir = settings.value(Constants::Settings_LastCSVDirWrite).toString();
-    if (lastWriteDir.isEmpty()) {
-        lastWriteDir = settings.value(Constants::Settings_LastCSVDirOpen).toString();
+    QString lastWritePath = settings.value(Constants::Settings_LastCSVDirWrite).toString();
+    if (lastWritePath.isEmpty()) {
+        lastWritePath = settings.value(Constants::Settings_LastCSVDirOpen).toString();
     }
-    QDir writeDir = lastWriteDir;
 
-    QString fileWritePath = QFileDialog::getExistingDirectory(nullptr, tr("Export To CSV"), lastWriteDir);
+    QString fileWritePath = QFileDialog::getExistingDirectory(nullptr, tr("Export To CSV"), lastWritePath);
     if (fileWritePath.isEmpty()) {
         return;
     }
+    QDir writeDir = fileWritePath;
 
     QStringList tableNames = m_db->getTableNames();
     QStringList existingFiles;
@@ -313,21 +312,14 @@ void MainWindow::exportCSV()
     }
     if (existingFiles.count() > 0)
     {
-        if (ScrollMessageBox::question(this, "WARNING", QString(tr("The following files will be overwritten:\n%1")).arg(existingFiles.join("\n"))) != QDialogButtonBox::No)
+        if (ScrollMessageBox::question(this, "WARNING", QString(tr("OVerwrite the following files:\n%1")).arg(existingFiles.join("\n"))) != QDialogButtonBox::Yes)
         {
             return;
         }
     }
-    ScrollMessageBox::information(this, "hello", tr("Ready to go!"));
     settings.setValue(Constants::Settings_LastCSVDirWrite, writeDir.canonicalPath());
 
-    //m_db->
-
-    // TODO: Get list of tables
-
-    // choose output directory
-
-    // export each table.
+    m_db->exportToCSV(writeDir.canonicalPath(), false);
 }
 
 

@@ -51,12 +51,16 @@ public:
    */
     QVariant::Type metaToVariantType(const QMetaType::Type metaType) const;
 
+    QMetaType::Type variantTypeToMetaType(const QVariant::Type metaType) const;
+
     /*! \brief Determine if this class knows the type.
      *
      *  \param [in] metaType Type of interest.
      *  \return True if the type is known by this class, false otherwise.
      */
-    bool hasMetaTypeEnry(const QMetaType::Type metaType) const;
+    bool hasMetaTypeEntry(const QMetaType::Type metaType) const;
+
+    bool hasVariantTypeEntry(const QVariant::Type metaType) const;
 
     /*! \brief Try to parse the string and guess the type.
      *
@@ -102,7 +106,8 @@ private:
      */
     void initialize();
 
-    QMap<QMetaType::Type, QVariant::Type> m_typeMap;
+    QMap<QMetaType::Type, QVariant::Type> m_typeMapMetaToVariant;
+    QMap<QVariant::Type, QMetaType::Type> m_typeMapVariantToMeta;
     QList<QMetaType::Type> m_NumList;
     QList<QMetaType::Type> m_UNumList;
 };
@@ -111,13 +116,24 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(TypeMapper::ColumnConversionPreferences)
 
 inline QVariant::Type TypeMapper::metaToVariantType(const QMetaType::Type metaType) const
 {
-    return hasMetaTypeEnry(metaType) ? m_typeMap[metaType] : QVariant::Invalid;
+    return hasMetaTypeEntry(metaType) ? m_typeMapMetaToVariant[metaType] : QVariant::Invalid;
 }
 
-inline bool TypeMapper::hasMetaTypeEnry(const QMetaType::Type metaType) const
+inline QMetaType::Type TypeMapper::variantTypeToMetaType(const QVariant::Type metaType) const
 {
-    return m_typeMap.contains(metaType);
+  return hasVariantTypeEntry(metaType) ? m_typeMapVariantToMeta[metaType] : QMetaType::Void;
 }
+
+inline bool TypeMapper::hasMetaTypeEntry(const QMetaType::Type metaType) const
+{
+    return m_typeMapMetaToVariant.contains(metaType);
+}
+
+inline bool TypeMapper::hasVariantTypeEntry(const QVariant::Type metaType) const
+{
+  return m_typeMapVariantToMeta.contains(metaType);
+}
+
 
 inline QVariant TypeMapper::getNullVariant(QVariant::Type aType) const
 {

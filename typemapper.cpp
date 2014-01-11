@@ -10,31 +10,58 @@ TypeMapper::TypeMapper(QObject *parent) :
 
 void TypeMapper::initialize()
 {
-    m_typeMap.insert(QMetaType::Void, QVariant::Invalid);
-    m_typeMap.insert(QMetaType::Bool, QVariant::Bool);
-    m_typeMap.insert(QMetaType::Int, QVariant::Int);
-    m_typeMap.insert(QMetaType::UInt, QVariant::UInt);
-    m_typeMap.insert(QMetaType::Double, QVariant::Double);
-    m_typeMap.insert(QMetaType::QChar, QVariant::Char);
-    m_typeMap.insert(QMetaType::QString, QVariant::String);
-    m_typeMap.insert(QMetaType::QByteArray, QVariant::ByteArray);
+    m_typeMapMetaToVariant.insert(QMetaType::Void, QVariant::Invalid);
+    m_typeMapMetaToVariant.insert(QMetaType::Bool, QVariant::Bool);
+    m_typeMapMetaToVariant.insert(QMetaType::Int, QVariant::Int);
+    m_typeMapMetaToVariant.insert(QMetaType::UInt, QVariant::UInt);
+    m_typeMapMetaToVariant.insert(QMetaType::Double, QVariant::Double);
+    m_typeMapMetaToVariant.insert(QMetaType::QChar, QVariant::Char);
+    m_typeMapMetaToVariant.insert(QMetaType::QString, QVariant::String);
+    m_typeMapMetaToVariant.insert(QMetaType::QByteArray, QVariant::ByteArray);
 
-    m_typeMap.insert(QMetaType::Long, QVariant::LongLong);
-    m_typeMap.insert(QMetaType::LongLong, QVariant::LongLong);
-    m_typeMap.insert(QMetaType::Short, QVariant::Int);
-    m_typeMap.insert(QMetaType::Char, QVariant::Char);
-    m_typeMap.insert(QMetaType::ULong, QVariant::ULongLong);
-    m_typeMap.insert(QMetaType::ULongLong, QVariant::ULongLong);
-    m_typeMap.insert(QMetaType::UShort, QVariant::UInt);
-    m_typeMap.insert(QMetaType::UChar, QVariant::UInt);
-    m_typeMap.insert(QMetaType::Float, QVariant::Double);
+    m_typeMapMetaToVariant.insert(QMetaType::Long, QVariant::LongLong);
+    m_typeMapMetaToVariant.insert(QMetaType::LongLong, QVariant::LongLong);
+    m_typeMapMetaToVariant.insert(QMetaType::Short, QVariant::Int);
+    m_typeMapMetaToVariant.insert(QMetaType::Char, QVariant::Char);
+    m_typeMapMetaToVariant.insert(QMetaType::ULong, QVariant::ULongLong);
+    m_typeMapMetaToVariant.insert(QMetaType::ULongLong, QVariant::ULongLong);
+    m_typeMapMetaToVariant.insert(QMetaType::UShort, QVariant::UInt);
+    m_typeMapMetaToVariant.insert(QMetaType::UChar, QVariant::UInt);
+    m_typeMapMetaToVariant.insert(QMetaType::Float, QVariant::Double);
 
-    m_typeMap.insert(QMetaType::QDate, QVariant::Date);
-    m_typeMap.insert(QMetaType::QTime, QVariant::Time);
-    m_typeMap.insert(QMetaType::QStringList, QVariant::StringList);
-    m_typeMap.insert(QMetaType::QUrl, QVariant::Url);
-    m_typeMap.insert(QMetaType::QDateTime, QVariant::DateTime);
-    m_typeMap.insert(QMetaType::QImage, QVariant::Image);
+    m_typeMapMetaToVariant.insert(QMetaType::QDate, QVariant::Date);
+    m_typeMapMetaToVariant.insert(QMetaType::QTime, QVariant::Time);
+    m_typeMapMetaToVariant.insert(QMetaType::QStringList, QVariant::StringList);
+    m_typeMapMetaToVariant.insert(QMetaType::QUrl, QVariant::Url);
+    m_typeMapMetaToVariant.insert(QMetaType::QDateTime, QVariant::DateTime);
+    m_typeMapMetaToVariant.insert(QMetaType::QImage, QVariant::Image);
+
+    m_typeMapVariantToMeta.insert(QVariant::Invalid, QMetaType::Void);
+    m_typeMapVariantToMeta.insert(QVariant::Bool, QMetaType::Bool);
+    m_typeMapVariantToMeta.insert(QVariant::Int, QMetaType::Int);
+    m_typeMapVariantToMeta.insert(QVariant::UInt, QMetaType::UInt);
+    m_typeMapVariantToMeta.insert(QVariant::Double, QMetaType::Double);
+    m_typeMapVariantToMeta.insert(QVariant::Char, QMetaType::QChar);
+    m_typeMapVariantToMeta.insert(QVariant::String, QMetaType::QString);
+    m_typeMapVariantToMeta.insert(QVariant::ByteArray, QMetaType::QByteArray);
+
+    //m_typeMapVariantToMeta.insert(QVariant::LongLong, QMetaType::Long);
+    m_typeMapVariantToMeta.insert(QVariant::LongLong, QMetaType::LongLong);
+    m_typeMapVariantToMeta.insert(QVariant::Int, QMetaType::Short);
+    m_typeMapVariantToMeta.insert(QVariant::Char, QMetaType::Char);
+    //m_typeMapVariantToMeta.insert(QVariant::ULongLong, QMetaType::ULong);
+    m_typeMapVariantToMeta.insert(QVariant::ULongLong, QMetaType::ULongLong);
+    m_typeMapVariantToMeta.insert(QVariant::UInt, QMetaType::UShort);
+    //m_typeMapVariantToMeta.insert(QVariant::UInt, QMetaType::UChar);
+    m_typeMapVariantToMeta.insert(QVariant::Double, QMetaType::Float);
+
+    m_typeMapVariantToMeta.insert(QVariant::Date, QMetaType::QDate);
+    m_typeMapVariantToMeta.insert(QVariant::Time, QMetaType::QTime);
+    m_typeMapVariantToMeta.insert(QVariant::StringList, QMetaType::QStringList);
+    m_typeMapVariantToMeta.insert(QVariant::Url, QMetaType::QUrl);
+    m_typeMapVariantToMeta.insert(QVariant::DateTime, QMetaType::QDateTime);
+    m_typeMapVariantToMeta.insert(QVariant::Image, QMetaType::QImage);
+
 
     m_NumList.append(QMetaType::Short);
     m_UNumList.append(QMetaType::UShort);
@@ -187,3 +214,4 @@ QMetaType::Type TypeMapper::toSignedInteger(const QMetaType::Type metaType1) con
   int pos1InUNumList = m_UNumList.indexOf(metaType1);
   return (pos1InUNumList >= 0) ? m_NumList[pos1InUNumList] : metaType1;
 }
+

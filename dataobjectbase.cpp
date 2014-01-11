@@ -30,3 +30,4 @@ bool DataObjectBase::operator==(const DataObjectBase& obj) const
 {
     return getId() == obj.getId();
 }
+

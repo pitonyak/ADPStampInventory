@@ -1,0 +1,82 @@
+#include "genericdatacollection.h"
+#include "csvwriter.h"
+
+#include <QMetaType>
+
+GenericDataCollection::GenericDataCollection(QObject *parent) :
+  QObject(parent)
+{
+}
+
+void GenericDataCollection::appendObject(const int id, GenericDataObject* obj)
+{
+  removeObject(id);
+  if (obj != nullptr)
+  {
+    m_objects.insert(id, obj);
+  }
+}
+
+void GenericDataCollection::removeObject(const int id)
+{
+  if (hasObject(id))
+  {
+    delete m_objects.take(id);
+  }
+}
+
+bool GenericDataCollection::exportToCSV(CSVWriter& writer) const
+{
+  writer.clearHeader();
+  for (int i=0; i<getPropertNames().count(); ++i)
+  {
+    writer.addHeader(getPropertyName(i), CSVColumn::variantTypeToMetaType(getPropertyType(i)));
+  }
+  writer.writeHeader();
+
+  QList<int> objKeys = m_objects.keys();
+  qSort(objKeys.begin(), objKeys.end());
+
+  for (int idx=objKeys.count() - 1; idx >= 0; --idx)
+  {
+    CSVLine newLine;
+    GenericDataObject* obj = m_objects.value(objKeys[idx]);
+    for (int i=0; i<getPropertNames().count(); ++i)
+    {
+      if (obj->hasValue(getPropertyName(i)))
+      {
+        QMetaType::Type columnType = CSVColumn::variantTypeToMetaType(getPropertyType(i));
+        bool qualified = (columnType == QMetaType::QString);
+        newLine.append(CSVColumn(obj->getString(getPropertyName(i)), qualified, columnType));
+      }
+      else
+      {
+        newLine.append(CSVColumn("", false, QMetaType::QString));
+      }
+    }
+    writer.write(newLine);
+  }
+#if 0
+  QHashIterator<int, GenericDataObject*> iterator(m_objects);
+  while (iterator.hasNext())
+  {
+    iterator.next();
+    CSVLine newLine;
+    for (int i=0; i<getPropertNames().count(); ++i)
+    {
+      if (iterator.value()->hasValue(getPropertyName(i)))
+      {
+        QMetaType::Type columnType = CSVColumn::variantTypeToMetaType(getPropertyType(i));
+        bool qualified = (columnType == QMetaType::QString);
+        newLine.append(CSVColumn(iterator.value()->getString(getPropertyName(i)), qualified, columnType));
+      }
+      else
+      {
+        newLine.append(CSVColumn("", false, QMetaType::QString));
+      }
+    }
+    writer.write(newLine);
+  }
+#endif
+  return true;
+}

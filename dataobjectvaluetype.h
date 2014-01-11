@@ -18,8 +18,21 @@ public:
 
     bool operator==(const DataObjectValueType& obj) const;
 
+    virtual DataObjectBase* newInstance(QObject *parent = 0, const int id=-1);
+    virtual DataObjectBase* clone();
+
 private:
     QString m_Description;
 };
+
+inline DataObjectBase* DataObjectValueType::newInstance(QObject *parent, const int id)
+{
+  return new DataObjectValueType(parent, id);
+}
+
+inline DataObjectBase* DataObjectValueType::clone()
+{
+  return new DataObjectValueType(this);
+}
 
 #endif // DATAOBJECTVALUETYPE_H

@@ -74,6 +74,12 @@ QMetaType::Type CSVColumn::guessType(const QString& s, const TypeMapper::ColumnC
   return m_typeMap.guessType(s, preference);
 }
 
+QMetaType::Type CSVColumn::variantTypeToMetaType(const QVariant::Type metaType)
+{
+  return m_typeMap.variantTypeToMetaType(metaType);
+}
+
+
 bool CSVColumn::canConvertToVariant() const
 {
   return QVariant::fromValue(m_value).canConvert(m_typeMap.metaToVariantType(m_type));

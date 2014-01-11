@@ -65,6 +65,8 @@ public:
 
     bool operator==(const DataObjectDealer& obj) const;
 
+    virtual DataObjectBase* newInstance(QObject *parent = 0, const int id=-1);
+    virtual DataObjectBase* clone();
 
 private:
     QDateTime m_Updated;
@@ -80,5 +82,15 @@ private:
     QString m_Email;
     QString m_Website;
 };
+
+inline DataObjectBase* DataObjectDealer::newInstance(QObject *parent, const int id)
+{
+  return new DataObjectDealer(parent, id);
+}
+
+inline DataObjectBase* DataObjectDealer::clone()
+{
+  return new DataObjectDealer(this);
+}
 
 #endif // DATAOBJECTDEALER_H

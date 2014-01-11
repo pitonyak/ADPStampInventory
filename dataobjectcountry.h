@@ -22,9 +22,22 @@ public:
 
     bool operator==(const DataObjectCountry& obj) const;
 
+    virtual DataObjectBase* newInstance(QObject *parent = 0, const int id=-1);
+    virtual DataObjectBase* clone();
+
 private:
     QString m_Name;
     QString m_A3;
 };
+
+inline DataObjectBase* DataObjectCountry::newInstance(QObject *parent, const int id)
+{
+  return new DataObjectCountry(parent, id);
+}
+
+inline DataObjectBase* DataObjectCountry::clone()
+{
+  return new DataObjectCountry(this);
+}
 
 #endif // DATAOBJECTCOUNTRY_H
