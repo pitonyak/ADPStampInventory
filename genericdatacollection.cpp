@@ -34,10 +34,11 @@ bool GenericDataCollection::exportToCSV(CSVWriter& writer) const
   }
   writer.writeHeader();
 
+  // Export the data ordered by ID
   QList<int> objKeys = m_objects.keys();
-  qSort(objKeys.begin(), objKeys.end());
+  qSort(objKeys);
 
-  for (int idx=objKeys.count() - 1; idx >= 0; --idx)
+  for (int idx=0; idx < objKeys.count(); ++idx)
   {
     CSVLine newLine;
     GenericDataObject* obj = m_objects.value(objKeys[idx]);
