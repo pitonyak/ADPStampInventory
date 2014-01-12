@@ -63,7 +63,8 @@ SOURCES += main.cpp\
     dataobjectinventory.cpp \
     dataobjectvaluesource.cpp \
     genericdataobject.cpp \
-    genericdatacollection.cpp
+    genericdatacollection.cpp \
+    tableeditorgenericgrid.cpp
 
 HEADERS  += mainwindow.h \
     stampdb.h \
@@ -103,7 +104,8 @@ HEADERS  += mainwindow.h \
     dataobjectinventory.h \
     dataobjectvaluesource.h \
     genericdataobject.h \
-    genericdatacollection.h
+    genericdatacollection.h \
+    tableeditorgenericgrid.h
 
 FORMS    += mainwindow.ui \
     logroutinginfodialog.ui
