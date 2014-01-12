@@ -7,31 +7,34 @@ GenericDataObject::GenericDataObject(QObject *parent) :
 
 const QVariant& GenericDataObject::getValue(const QString& name) const
 {
-  return m_properties.value(name);
+  return m_properties.value(name.toLower());
 }
 
 void GenericDataObject::setValue(const QString &name, const QVariant& value)
 {
-  m_properties.insert(name, value);
+  m_properties.insert(name.toLower(), value);
 }
 
 QString GenericDataObject::getString(const QString& name) const
 {
-  return hasValue(name) ? m_properties.value(name).toString() : "";
+  QString lower = name.toLower();
+  return hasValueNoCase(lower) ? m_properties.value(lower).toString() : "";
 }
 
 QString GenericDataObject::getString(const QString& name, const QString& defaultValue) const
 {
-  return hasValue(name) ? m_properties.value(name).toString() : defaultValue;
+  QString lower = name.toLower();
+  return hasValueNoCase(lower) ? m_properties.value(lower).toString() : defaultValue;
 }
 
 
 int GenericDataObject::getInt(const QString& name, const int defaultValue) const
 {
-  if (hasValue(name))
+  QString lower = name.toLower();
+  if (hasValueNoCase(lower))
   {
     bool ok = false;
-    int i = m_properties.value(name).toInt(&ok);
+    int i = m_properties.value(lower).toInt(&ok);
     if (ok)
     {
       return i;
@@ -42,10 +45,11 @@ int GenericDataObject::getInt(const QString& name, const int defaultValue) const
 
 double GenericDataObject::getDouble(const QString& name, const double defaultValue) const
 {
-  if (hasValue(name))
+  QString lower = name.toLower();
+  if (hasValueNoCase(lower))
   {
     bool ok = false;
-    double i = m_properties.value(name).toDouble(&ok);
+    double i = m_properties.value(lower).toDouble(&ok);
     if (ok)
     {
       return i;
@@ -56,22 +60,26 @@ double GenericDataObject::getDouble(const QString& name, const double defaultVal
 
 QDate GenericDataObject::getDate(const QString& name) const
 {
-  return hasValue(name) ? m_properties.value(name).toDate() : QDate::currentDate();
+  QString lower = name.toLower();
+  return hasValueNoCase(lower) ? m_properties.value(lower).toDate() : QDate::currentDate();
 }
 
 QDate GenericDataObject::getDate(const QString& name, const QDate& defaultValue) const
 {
-  return hasValue(name) ? m_properties.value(name).toDate() : defaultValue;
+  QString lower = name.toLower();
+  return hasValueNoCase(lower) ? m_properties.value(lower).toDate() : defaultValue;
 }
 
 
 QDateTime GenericDataObject::getDateTime(const QString& name) const
 {
-  return hasValue(name) ? m_properties.value(name).toDateTime() : QDateTime::currentDateTime();
+  QString lower = name.toLower();
+  return hasValueNoCase(lower) ? m_properties.value(lower).toDateTime() : QDateTime::currentDateTime();
 }
 
 QDateTime GenericDataObject::getDateTime(const QString& name, const QDateTime& defaultValue) const
 {
-  return hasValue(name) ? m_properties.value(name).toDateTime() : defaultValue;
+  QString lower = name.toLower();
+  return hasValueNoCase(lower) ? m_properties.value(lower).toDateTime() : defaultValue;
 }
 

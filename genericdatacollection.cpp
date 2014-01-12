@@ -25,6 +25,31 @@ void GenericDataCollection::removeObject(const int id)
   }
 }
 
+QVariant::Type GenericDataCollection::getPropertyType(const QString& name) const
+{
+  QString lowerCaseName = name.toLower();
+  return m_LowerCasePropertyNameMap.contains(lowerCaseName) ? m_propertyTypes.at(m_LowerCasePropertyNameMap.value(lowerCaseName)) : QVariant::Invalid;
+}
+
+QString GenericDataCollection::getPropertyName(const QString& name) const
+{
+  QString lowerCaseName = name.toLower();
+  return m_LowerCasePropertyNameMap.contains(lowerCaseName) ? m_propertyNames.at(m_LowerCasePropertyNameMap.value(lowerCaseName)) : "";
+}
+
+bool GenericDataCollection::appendPropertyName(const QString& name, const QVariant::Type pType)
+{
+  QString lowerCaseName = name.toLower();
+  if (m_LowerCasePropertyNameMap.contains(lowerCaseName))
+  {
+    return false;
+  }
+  m_LowerCasePropertyNameMap.insert(lowerCaseName, m_propertyNames.count());
+  m_propertyNames.append(name);
+  m_propertyTypes.append(pType);
+  return true;
+}
+
 bool GenericDataCollection::exportToCSV(CSVWriter& writer) const
 {
   writer.clearHeader();

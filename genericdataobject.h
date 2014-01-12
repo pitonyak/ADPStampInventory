@@ -29,7 +29,8 @@ public:
    *  \param [in] name Property name of interest.
    *  \return True if there is a value for this property. Note that null values are generally not added and this is how you can test for that.
    */
-  inline bool hasValue(const QString& name) const { return m_properties.contains(name); }
+  inline bool hasValue(const QString& name) const { return m_properties.contains(name.toLower()); }
+  inline bool hasValueNoCase(const QString& name) const { return m_properties.contains(name); }
 
   /*! \brief Get the value associated to the name.
    *

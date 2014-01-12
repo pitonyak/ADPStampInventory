@@ -182,7 +182,6 @@ void MainWindow::getSchema() {
   if (createDBWorker()) {
     QString s = m_db->getSchema();
     ScrollMessageBox::information(this, "Schema", s);
-    m_db->tableMap();
   }
 }
 

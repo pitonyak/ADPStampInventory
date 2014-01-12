@@ -97,15 +97,6 @@ public:
    */
   QString getSchema(const QSqlField& field) const;
 
-
-  /*! \brief Initizlize (if needed) m_tableMap and return a reference.
-   *
-   * TODO: Not currently used, remove this!
-   *
-   *  \return Reference to m_tableMap
-   */
-  const QMap<QString, QSqlRecord>& tableMap();
-
   QSqlError lastError();
 
   /*! \brief Returns the full path to the datasource, which includes the file name.
@@ -142,6 +133,15 @@ public:
 
   GenericDataCollection* readTableName(const QString& tableName);
 
+  /*! \brief Execute SQL and create a table.
+   *
+   *
+   *
+   *
+   *  \param [in] sql
+   *
+   *  \return
+   */
   GenericDataCollection* readTableSql(const QString& sql);
 
   DataObjectBase* getEmptyObjectByTableName(const QString& tableName);

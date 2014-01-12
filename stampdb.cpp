@@ -339,131 +339,6 @@ QString StampDB::getSchema(const QSqlField& field) const
   return s;
 }
 
-
-//"CREATE TABLE bookvalues( id INTEGER PRIMARY KEY AUTOINCREMENT, catalogid INTEGER, sourceid INTEGER, valuetypeid INTEGER, bookvalue FLOAT)
-
-const QMap<QString, QSqlRecord>& StampDB::tableMap()
-{
-  if (m_tableMap == nullptr) {
-
-/**
-    QMap<QString, QVariant::Type> sqlTypeToVariantType;
-    QStringList sqlTypeList;
-    sqlTypeList << "NATIONAL CHARACTER VARYING(n)";
-    sqlTypeList << "NVARCHAR(n)";
-    sqlTypeList << "NATIONAL CHARACTER(n)";
-    sqlTypeList << "NCHAR(n)";
-    sqlTypeList << "CHARACTER VARYING(n)";
-    sqlTypeList << "VARCHAR(n)";
-    sqlTypeList << "CHARACTER(n)";
-    sqlTypeList << "CHAR(n)";
-    sqlTypeList << "BIT VARYING(n)";
-    sqlTypeList << "BIT(n)";
-    sqlTypeList << "TIMESTAMP WITH TIME ZONE";
-    sqlTypeList << "TIMESTAMPTZ";
-    sqlTypeList << "TIMESTAMP";
-    sqlTypeList << "TIME WITH TIME ZONE";
-    sqlTypeList << "TIMETZ";
-    sqlTypeList << "TIME";
-    sqlTypeList << "DATE";
-    sqlTypeList << "INTEGER";
-    sqlTypeList << "SMALLINT";
-    sqlTypeList << "FLOAT";
-    sqlTypeList << "REAL";
-    sqlTypeList << "DOUBLE PRECISION";
-    sqlTypeList << "DOUBLE";
-    sqlTypeList << "NUMERIC(precision, scale)";
-    sqlTypeList << "DECIMAL(precision, scale)";
-**/
-
-    QRegExp fieldLengthRegExp("\\(\\d+\\)");
-    QRegExp recordSplitRegExp("\\s*,\\s*");
-    QRegExp fieldAndTypeRegExp("^\\s*(\\w+)\\s+(\\w+)");
-
-    QRegExp primaryKeyRegExp("PRIMARY\\S+KEY\\s*(ASC)?(DESC)?");
-    QRegExp collateRegExp("COLLATE\\s+([a-z]+)");
-    QRegExp notNullRegExp("NOT\\s+NULL");
-    primaryKeyRegExp.setCaseSensitivity(Qt::CaseInsensitive);
-    collateRegExp.setCaseSensitivity(Qt::CaseInsensitive);
-    notNullRegExp.setCaseSensitivity(Qt::CaseInsensitive);
-    //QRegExp defaultRegExp("DEFAULT\\s+(signed-number|literal-value|\\(expr\\))");
-
-    m_tableMap = new QMap<QString, QSqlRecord>();
-
-    for (int i=0; i<m_desiredSchemaDDLList->size(); ++i) {
-      const QString& ddl = m_desiredSchemaDDLList->at(i);
-      if (m_outerDDLRegExp->indexIn(ddl) == -1) {
-
-        QMessageBox msgBox;
-        msgBox.setText(tr("Schema Error: DDL not recognized"));
-        msgBox.setInformativeText(ddl);
-        msgBox.setStandardButtons(QMessageBox::Ok);
-        msgBox.setDefaultButton(QMessageBox::Ok);
-        msgBox.exec();
-        return *m_tableMap;
-
-      } else {
-        //??QString tableName = m_outerDDLRegExp->cap(1);
-        QString bigFieldString = m_outerDDLRegExp->cap(2);
-        QStringList fieldStrings = bigFieldString.split(recordSplitRegExp, QString::SkipEmptyParts);
-        //??QSqlRecord currentRecord;
-        for (int currentFieldIndex=0; currentFieldIndex<fieldStrings.size(); ++currentFieldIndex)
-        {
-          // Get the current field and then remove any reference to Primary Key.
-          QString fieldString = fieldStrings.at(currentFieldIndex);
-          fieldString = fieldString.replace(primaryKeyRegExp, "");
-          bool isAuto = fieldString.contains("AUTOINCREMENT", Qt::CaseInsensitive);
-          if (isAuto) {
-            fieldString = fieldString.replace("AUTOINCREMENT", "", Qt::CaseInsensitive);
-          }
-          int fieldLength = -1;
-          bool containsFieldLength = fieldLengthRegExp.indexIn(fieldString) != -1;
-          if (containsFieldLength) {
-            fieldLength = fieldLengthRegExp.cap(1).toInt();
-            fieldString = fieldString.replace(fieldLengthRegExp, "");
-          }
-          bool notNull = fieldString.contains(notNullRegExp);
-          if (notNull) {
-            fieldString = fieldString.replace(notNullRegExp, "");
-          }
-          if (fieldString.contains(notNullRegExp)) {
-            fieldString = fieldString.replace(collateRegExp, "");
-          }
-
-          if (fieldAndTypeRegExp.indexIn(fieldString) < 0) {
-            // Error message
-          } else {
-            QSqlField field(fieldAndTypeRegExp.cap(1));
-            QString fieldType = fieldAndTypeRegExp.cap(2);
-            field.setAutoValue(isAuto);
-            field.setRequired(notNull);
-
-            // set length for VarChar
-            // set Precision if specified on numbers.
-          }
-
-
-        }
-        //ScrollMessageBox::information(0, "Schema", QString("Table %1\n\n%2").arg(tableName, bigFieldString));
-        //return *m_tableMap;
-        /**
-                ret = query.exec(ddl);
-                if (!ret) {
-                    QMessageBox msgBox;
-                    msgBox.setText(tr("Schema Error creating table '%1'").arg(tableNameRegExp.cap(1)));
-                    msgBox.setInformativeText(tr("Error:%1\nDDL:%2").arg(m_db.lastError().text(), ddl));
-                    msgBox.setStandardButtons(QMessageBox::Ok);
-                    msgBox.setDefaultButton(QMessageBox::Ok);
-                    msgBox.exec();
-                    query.exec(QString("DROP TABLE %1").arg(tableNameRegExp.cap(1)));
-                }
-                **/
-      }
-    }
-  }
-  return *m_tableMap;
-}
-
 QStringList StampDB::getTableNames(const bool ignoreSystemTables)
 {
     if (!ignoreSystemTables)
@@ -538,11 +413,23 @@ GenericDataCollection* StampDB::readTableSql(const QString& sql)
       GenericDataCollection* collection = new GenericDataCollection();
 
       // Set the property names and types in order!
+      QStringList duplicateColumns;
       for (int i=0; i<query.record().count(); ++i)
       {
-        collection->appendPropertyName(query.record().fieldName(i));
-        collection->appendPropertyType(query.record().field(i).type());
+        if (!collection->appendPropertyName(query.record().fieldName(i), query.record().field(i).type()))
+        {
+          duplicateColumns.append(query.record().fieldName(i));
+        }
       }
+      if (duplicateColumns.count() > 0)
+      {
+        ScrollMessageBox::information(nullptr, "ERROR", QString(tr("Problem converting the following SQL\n\n%1\n\nThe following columns are duplicated:\n%2")).arg(sql).arg(duplicateColumns.join("\n")));
+        delete collection;
+        return nullptr;
+      }
+
+      bool hasIdColumn = collection->hasProperty("id");
+      QString idString = hasIdColumn ? collection->getPropertyName("id") : "";
       int iCount = 0;
       while (query.isActive() && query.next())
       {
@@ -554,8 +441,8 @@ GenericDataCollection* StampDB::readTableSql(const QString& sql)
             gdo->setValue(collection->getPropertyName(i), query.record().value(i));
           }
         }
-        collection->appendObject(gdo->getInt("id"), gdo);
-        //qDebug(qPrintable(QString("Appended record %1 with ID %2 with %3 records").arg(++iCount).arg(gdo->getInt("id")).arg(collection->getObjectCount())));
+        collection->appendObject(hasIdColumn ? gdo->getInt(idString) : iCount, gdo);
+        ++iCount;
       }
       return collection;
     }
