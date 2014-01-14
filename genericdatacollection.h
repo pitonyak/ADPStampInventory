@@ -29,7 +29,12 @@ public:
    *
    *  \param [in, out] parent The object's owner. The parent's destructor destroys this object.
    */
-  explicit GenericDataCollection(QObject *parent = 0);
+  explicit GenericDataCollection(QObject *parent = nullptr);
+
+    /*! \brief Copy Constructor.
+     *  \param [in] obj Object that is copied.
+     */
+    GenericDataCollection(const GenericDataCollection& obj);
 
   /*! \brief Get a property name.
    *  \param [in] i Index of the property name of interest. Must be a valid index.
@@ -148,27 +153,36 @@ public:
    */
   const GenericDataObject* getObjectByValue(const QString& name, const QString& compareValue, const Qt::CaseSensitivity sensitive = Qt::CaseInsensitive) const;
 
+  void clear();
+
+  void clearSortOrder();
+  void addSortField(const QString name);
+  int getSortFieldCount() const;
+  const QString& getSortField(const int i) const;
+  const QStringList& getSortFields() const;
+
+  /*! \brief Assignment operator. The copied objects set the parent to be this object.
+   *  \param [in] obj Object that is be copied.
+   */
+  const GenericDataCollection& operator=(const GenericDataCollection& obj);
+
+  int valueCount() const;
+
 signals:
 
 public slots:
 
 private:
-  /*! \brief Copy Constructor. Do not implement and make private so it cannot be called.
-   *  \param [in] obj Object that would be copied.
-   */
-  GenericDataCollection(const GenericDataCollection& obj);
-
-  /*! \brief Assignment operator. Do not implement and make private so it cannot be called.
-   *  \param [in] obj Object that would be copied.
-   */
-  const GenericDataCollection& operator=(const GenericDataCollection& obj);
-
   QStringList m_propertyNames;
   QList<QVariant::Type> m_propertyTypes;
   QHash<int, GenericDataObject*> m_objects;
 
   /*! \brief Provides a fast way to map to the actual property name in a case insensitive way. */
   QHash<QString, int> m_LowerCasePropertyNameMap;
+
+  /*! \brief lower case list of field names against which an object should be sorted. */
+  QStringList m_sortOrder;
+  QList<GenericDataObject*> m_sortedList;
 };
 
 inline const QStringList& GenericDataCollection::getPropertNames() const
@@ -259,6 +273,36 @@ inline QDateTime GenericDataCollection::getDateTime(const int id, const QString&
 inline const QString& GenericDataCollection::getPropertyName(const int i) const
 {
   return m_propertyNames.at(i);
+}
+
+inline int GenericDataCollection::valueCount() const
+{
+    return m_objects.count();
+}
+
+inline void GenericDataCollection::clearSortOrder()
+{
+    m_sortOrder.clear();
+}
+
+inline void GenericDataCollection::addSortField(const QString name)
+{
+    m_sortOrder.append(name.toLower());
+}
+
+inline int GenericDataCollection::getSortFieldCount() const
+{
+    return m_sortOrder.count();
+}
+
+inline const QString& GenericDataCollection::getSortField(const int i) const
+{
+    return m_sortOrder.at(i);
+}
+
+inline const QStringList &GenericDataCollection::getSortFields() const
+{
+    return m_sortOrder;
 }
 
 #endif // GENERICDATACOLLECTION_H

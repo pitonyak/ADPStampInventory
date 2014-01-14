@@ -250,7 +250,7 @@ void CSVReaderDialog::tableCellChanged(int currentRow, int currentColumn, int pr
 
 void CSVReaderDialog::columnTypeChanged(const QString& text)
 {
-  int iCol = getCurrentColumn();
+  //int iCol = getCurrentColumn();
   //?? Save the type for the column if it is a known type.
   qDebug(qPrintable(QString("New type %1 for column %2").arg(text).arg(getCurrentColumn())));
 }

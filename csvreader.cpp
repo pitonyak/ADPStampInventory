@@ -598,8 +598,11 @@ QMetaType::Type CSVReader::guessColumnType(const int i, TypeMapper::ColumnConver
   return (m_columnTypes == nullptr) || (i < 0) || (i > m_columnTypes->size()) ? QMetaType::Void : m_columnTypes->at(i);
 }
 
-void CSVReader::guessColumnTypes(TypeMapper::ColumnConversionPreferences flags)
+void CSVReader::guessColumnTypes(TypeMapper::ColumnConversionPreferences flags )
 {
+    // Portable method to avoid "unused parameter" warning.
+    (void) flags;
+
   if (m_columnTypes == nullptr)
   {
     m_columnTypes = new QList<QMetaType::Type>();

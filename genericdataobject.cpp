@@ -1,11 +1,14 @@
 #include "genericdataobject.h"
+#include "genericdatacollection.h"
+
+#include <QUuid>
 
 GenericDataObject::GenericDataObject(QObject *parent) :
   QObject(parent)
 {
 }
 
-GenericDataObject::GenericDataObject(const GenericDataObject& obj) : QObject(nullptr)
+GenericDataObject::GenericDataObject(const GenericDataObject& obj, QObject *parent) : QObject(parent)
 {
   GenericDataObject::operator=(obj);
 }
@@ -94,3 +97,101 @@ const GenericDataObject& GenericDataObject::operator=(const GenericDataObject& o
   }
   return *this;
 }
+
+bool GenericDataObject::operator<(const GenericDataObject& obj) const
+{
+    return compare(obj) < 0;
+}
+
+int GenericDataObject::compare(const GenericDataObject& obj, Qt::CaseSensitivity sensitive) const
+{
+    const GenericDataCollection* p = dynamic_cast<const GenericDataCollection*>(parent());
+    if (p == nullptr)
+    {
+        p = dynamic_cast<const GenericDataCollection*>(obj.parent());
+    }
+    if (p == nullptr)
+    {
+        qDebug(qPrintable(QString(tr("Parent is not set in a generic data object compare"))));
+        return 0;
+    }
+    return compare(obj, p->getSortFields(), sensitive);
+}
+
+int GenericDataObject::compare(const GenericDataObject& obj, const QStringList& fields, Qt::CaseSensitivity sensitive) const
+{
+    int rc = 0;
+    for (int i=0; rc==0 && i<fields.count(); ++i)
+    {
+        if (!obj.hasValueNoCase(fields.at(i)))
+        {
+            if (hasValueNoCase(fields.at(i)))
+            {
+                return 1;
+            }
+        }
+        else if (!hasValueNoCase(fields.at(i)))
+        {
+            return -1;
+        }
+        else
+        {
+            QVariant v1 = getValue(fields.at(i));
+            QVariant v2 = obj.getValue(fields.at(i));
+            if (v1.type() != v2.type())
+            {
+                // This should never happen.
+                qDebug(qPrintable(QString(tr("Comparing two variants of different types in column : %1")).arg(fields.at(i))));
+                rc = v1.toString().compare(v2.toString(), sensitive);
+            }
+            else if (v1 != v2)
+            {
+                switch (v1.type())
+                {
+                case QVariant::Int:
+                    rc = v1.toInt() < v2.toInt() ? -1 : 1;
+                    break;
+                case QVariant::String:
+                    rc = v1.toString().compare(v2.toString(), sensitive);
+                    break;
+                case QVariant::Double:
+                    rc = v1.toDouble() < v2.toDouble() ? -1 : 1;
+                    break;
+                case QVariant::Date:
+                    rc = v1.toDate() < v2.toDate() ? -1 : 1;
+                    break;
+                case QVariant::DateTime:
+                    rc = v1.toDateTime() < v2.toDateTime() ? -1 : 1;
+                    break;
+                case QVariant::LongLong:
+                    rc = v1.toLongLong() < v2.toLongLong() ? -1 : 1;
+                    break;
+                case QVariant::ULongLong:
+                    rc = v1.toULongLong() < v2.toULongLong() ? -1 : 1;
+                    break;
+                case QVariant::UInt:
+                    rc = v1.toUInt() < v2.toUInt() ? -1 : 1;
+                    break;
+                case QVariant::Time:
+                    rc = v1.toTime() < v2.toTime() ? -1 : 1;
+                    break;
+                case QVariant::Uuid:
+                    rc = v1.toUuid() < v2.toUuid() ? -1 : 1;
+                    break;
+                case QVariant::Char:
+                    rc = v1.toChar() < v2.toChar() ? -1 : 1;
+                    break;
+                case QVariant::Bool:
+                    rc = v1.toBool() < v2.toBool() ? -1 : 1;
+                    break;
+                default:
+                    qDebug(qPrintable(QString(tr("Comparing two unsupported types in column : %1")).arg(fields.at(i))));
+                    rc = v1.toString().compare(v2.toString(), sensitive);
+                    break;
+                }
+            }
+        }
+    }
+    return rc;
+}
+

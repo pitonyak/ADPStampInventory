@@ -8,6 +8,12 @@ GenericDataCollection::GenericDataCollection(QObject *parent) :
 {
 }
 
+GenericDataCollection::GenericDataCollection(const GenericDataCollection& obj) :
+    QObject(nullptr)
+{
+    operator=(obj);
+}
+
 void GenericDataCollection::appendObject(const int id, GenericDataObject* obj)
 {
   removeObject(id);
@@ -146,4 +152,38 @@ int GenericDataCollection::countValues(const QString& name, const QString& compa
   return iCount;
 }
 
+void GenericDataCollection::clear()
+{
+    QHashIterator<int, GenericDataObject*> i(m_objects);
+    while (i.hasNext())
+    {
+        i.next();
+        delete i.value();
+    }
+    m_objects.clear();
+    m_propertyNames.clear();
+    m_propertyTypes.clear();
+    m_LowerCasePropertyNameMap.clear();
+}
 
+const GenericDataCollection& GenericDataCollection::operator=(const GenericDataCollection& obj)
+{
+    if (this != &obj)
+    {
+        clear();
+        m_propertyNames = obj.m_propertyNames;
+        m_propertyTypes = obj.m_propertyTypes;
+        m_LowerCasePropertyNameMap = obj.m_LowerCasePropertyNameMap;
+
+        QHashIterator<int, GenericDataObject*> i(obj.m_objects);
+        while (i.hasNext())
+        {
+            i.next();
+            if (i.value() != nullptr)
+            {
+                m_objects.insert(i.key(), i.value()->clone(this));
+            }
+        }
+    }
+    return *this;
+}

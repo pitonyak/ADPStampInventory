@@ -23,13 +23,14 @@ public:
   /*! \brief Constructor
    *  \param [in, out] parent The object's owner. The parent's destructor destroys this object.
    */
-  explicit GenericDataObject(QObject *parent = 0);
+  explicit GenericDataObject(QObject *parent = nullptr);
 
   /*! \brief Replace all of the "properties" in this object. The properties are the only thing that is copied.
    *  \param [in] obj Object from which the properties are copied.
+   *  \param [in, out] parent The object's owner. The parent's destructor destroys this object.
    */
-  GenericDataObject(const GenericDataObject& obj);
-  
+  GenericDataObject(const GenericDataObject& obj, QObject *parent = nullptr);
+
   /*! \brief Determine if the property was set. Tests based on the lower case value of the property name.
    *  \param [in] name Property name of interest.
    *  \return True if there is a value for this property. Note that null values are generally not added and this is how you can test for that.
@@ -117,10 +118,11 @@ public:
    */
   virtual const GenericDataObject& operator=(const GenericDataObject& obj);
 
-  /*! \brief Return a new object containing the same properties as this object. Parent is not copied. You own the pointer.
-   *  \return Cloned copy of this object.
+  /*! \brief Return a new object containing the same properties as this object. Parent is not copied, you must provide it if you want it. You own the pointer.
+   *  \param [in, out] parent The object's owner. The parent's destructor destroys this object.
+   *  \return Cloned copy of this object; you own the object (unless the parent does).
    */
-  virtual GenericDataObject* clone() const;
+  virtual GenericDataObject* clone(QObject *parent = nullptr) const;
 
   /*! \brief Does this object contain the named property with the specified string value.
    *  \param [in] lowerCaseName Lower case name of the property of interest.
@@ -129,6 +131,12 @@ public:
    *  \return True if the property exists with the compare value, false otherwise.
    */
   bool valueIs(const QString& lowerCaseName, const QString& compareValue, const Qt::CaseSensitivity sensitive = Qt::CaseInsensitive) const;
+
+  int compare(const GenericDataObject& obj, Qt::CaseSensitivity sensitive=Qt::CaseInsensitive) const;
+  int compare(const GenericDataObject& obj, const QStringList &fields, Qt::CaseSensitivity sensitive=Qt::CaseInsensitive) const;
+  bool operator<(const GenericDataObject& obj) const;
+
+  // TODO: Create a generic object filter!
 
 signals:
   
@@ -158,9 +166,9 @@ inline bool GenericDataObject::hasValueNoCase(const QString& name) const
   return m_properties.contains(name);
 }
 
-inline GenericDataObject* GenericDataObject::clone() const
+inline GenericDataObject* GenericDataObject::clone(QObject *parent) const
 {
-  return new GenericDataObject(*this);
+    return new GenericDataObject(*this, parent);
 }
 
 inline bool GenericDataObject::valueIs(const QString& lowerCaseName, const QString& compareValue, const Qt::CaseSensitivity sensitive) const
