@@ -5,14 +5,9 @@ GenericDataObject::GenericDataObject(QObject *parent) :
 {
 }
 
-const QVariant& GenericDataObject::getValue(const QString& name) const
+GenericDataObject::GenericDataObject(const GenericDataObject& obj) : QObject(nullptr)
 {
-  return m_properties.value(name.toLower());
-}
-
-void GenericDataObject::setValue(const QString &name, const QVariant& value)
-{
-  m_properties.insert(name.toLower(), value);
+  GenericDataObject::operator=(obj);
 }
 
 QString GenericDataObject::getString(const QString& name) const
@@ -83,3 +78,19 @@ QDateTime GenericDataObject::getDateTime(const QString& name, const QDateTime& d
   return hasValueNoCase(lower) ? m_properties.value(lower).toDateTime() : defaultValue;
 }
 
+
+const GenericDataObject& GenericDataObject::operator=(const GenericDataObject& obj)
+{
+  // Note that the parent object is NOT copied.
+  if (this != &obj)
+  {
+    m_properties.clear();
+    QHashIterator<QString, QVariant> i(obj.m_properties);
+    while (i.hasNext())
+    {
+      i.next();
+      m_properties.insert(i.key(), i.value());
+    }
+  }
+  return *this;
+}

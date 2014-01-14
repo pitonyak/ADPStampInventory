@@ -106,3 +106,44 @@ bool GenericDataCollection::exportToCSV(CSVWriter& writer) const
 #endif
   return true;
 }
+
+const GenericDataObject* GenericDataCollection::getObjectByValue(const QString& name, const QString& compareValue, const Qt::CaseSensitivity sensitive) const
+{
+  QString lowerCaseName = name.toLower();
+  if (m_LowerCasePropertyNameMap.contains(lowerCaseName))
+  {
+    QHashIterator<int, GenericDataObject*> i(m_objects);
+    while (i.hasNext())
+    {
+      i.next();
+      if (i.value() != nullptr && i.value()->valueIs(lowerCaseName, compareValue, sensitive))
+      {
+        return i.value();
+      }
+    }
+  }
+
+  return nullptr;
+}
+
+int GenericDataCollection::countValues(const QString& name, const QString& compareValue, const Qt::CaseSensitivity sensitive) const
+{
+  int iCount = 0;
+  QString lowerCaseName = name.toLower();
+  if (m_LowerCasePropertyNameMap.contains(lowerCaseName))
+  {
+    QHashIterator<int, GenericDataObject*> i(m_objects);
+    while (i.hasNext())
+    {
+      i.next();
+      if (i.value() != nullptr && i.value()->valueIs(lowerCaseName, compareValue, sensitive))
+      {
+        ++iCount;
+      }
+    }
+  }
+
+  return iCount;
+}
+
+

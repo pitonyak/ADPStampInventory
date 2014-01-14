@@ -24,13 +24,23 @@ public:
    *  \param [in, out] parent The object's owner. The parent's destructor destroys this object.
    */
   explicit GenericDataObject(QObject *parent = 0);
+
+  /*! \brief Replace all of the "properties" in this object. The properties are the only thing that is copied.
+   *  \param [in] obj Object from which the properties are copied.
+   */
+  GenericDataObject(const GenericDataObject& obj);
   
-  /*! \brief Determine if the property was set.
+  /*! \brief Determine if the property was set. Tests based on the lower case value of the property name.
    *  \param [in] name Property name of interest.
    *  \return True if there is a value for this property. Note that null values are generally not added and this is how you can test for that.
    */
-  inline bool hasValue(const QString& name) const { return m_properties.contains(name.toLower()); }
-  inline bool hasValueNoCase(const QString& name) const { return m_properties.contains(name); }
+  inline bool hasValue(const QString& name) const;
+
+  /*! \brief Determine if the property was set.
+   *  \param [in] name Lowercase version of the property name of interest.
+   *  \return True if there is a value for this property. Note that null values are generally not added and this is how you can test for that.
+   */
+  inline bool hasValueNoCase(const QString& name) const;
 
   /*! \brief Get the value associated to the name.
    *
@@ -40,7 +50,7 @@ public:
    *  \param [in] name Property name of interest.
    *  \return Return the property value, or, a defaultly constructed object if it does not.
    */
-  const QVariant& getValue(const QString& name) const;
+  const QVariant getValue(const QString& name) const;
 
   /*! \brief Set the value for a named property.
    *  \param [in] name Property name of interest.
@@ -101,6 +111,25 @@ public:
    */
   QDateTime getDateTime(const QString& name, const QDateTime& defaultValue) const;
 
+  /*! \brief Replace all of the "properties" in this object. The properties are the only thing that is copied.
+   *  \param [in] obj Object from which the properties are copied.
+   *  \return Reference to this object.
+   */
+  virtual const GenericDataObject& operator=(const GenericDataObject& obj);
+
+  /*! \brief Return a new object containing the same properties as this object. Parent is not copied. You own the pointer.
+   *  \return Cloned copy of this object.
+   */
+  virtual GenericDataObject* clone() const;
+
+  /*! \brief Does this object contain the named property with the specified string value.
+   *  \param [in] lowerCaseName Lower case name of the property of interest.
+   *  \param [in] compareValue Value against which to compare.
+   *  \param [in] sensitive Case sensitivity, default is NOT case sensitive.
+   *  \return True if the property exists with the compare value, false otherwise.
+   */
+  bool valueIs(const QString& lowerCaseName, const QString& compareValue, const Qt::CaseSensitivity sensitive = Qt::CaseInsensitive) const;
+
 signals:
   
 public slots:
@@ -108,5 +137,35 @@ public slots:
 private:
   QHash<QString, QVariant> m_properties;
 };
+
+inline const QVariant GenericDataObject::getValue(const QString& name) const
+{
+  return m_properties.value(name.toLower());
+}
+
+inline void GenericDataObject::setValue(const QString &name, const QVariant& value)
+{
+  m_properties.insert(name.toLower(), value);
+}
+
+inline bool GenericDataObject::hasValue(const QString& name) const
+{
+  return hasValueNoCase(name.toLower());
+}
+
+inline bool GenericDataObject::hasValueNoCase(const QString& name) const
+{
+  return m_properties.contains(name);
+}
+
+inline GenericDataObject* GenericDataObject::clone() const
+{
+  return new GenericDataObject(*this);
+}
+
+inline bool GenericDataObject::valueIs(const QString& lowerCaseName, const QString& compareValue, const Qt::CaseSensitivity sensitive) const
+{
+  return hasValueNoCase(lowerCaseName) && (m_properties.value(lowerCaseName).toString().compare(compareValue, sensitive) == 0);
+}
 
 #endif // GENERICDATAOBJECT_H

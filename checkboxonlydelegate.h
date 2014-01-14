@@ -11,7 +11,7 @@
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2011-2013
+ * \date 2011-2014
  ***************************************************************************/
 
 class CheckBoxOnlyDelegate : public QStyledItemDelegate
@@ -21,7 +21,7 @@ public:
     //**************************************************************************
     //! Default Constructor
     /*!
-     * \param [in,out] parent This is a QObject, so you can set a parent that will control the lifetime of this object.
+     * \param [in] parent This is a QObject, so you can set a parent that will control the lifetime of this object.
      ***************************************************************************/
     explicit CheckBoxOnlyDelegate(QObject *parent = 0);
 

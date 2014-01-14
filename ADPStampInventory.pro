@@ -64,7 +64,11 @@ SOURCES += main.cpp\
     dataobjectvaluesource.cpp \
     genericdataobject.cpp \
     genericdatacollection.cpp \
-    tableeditorgenericgrid.cpp
+    tableeditorgenericgrid.cpp \
+    genericdatacollectiontablemodel.cpp \
+    actiontrackerobject.cpp \
+    actiontrackerobjectbase.cpp \
+    actiontracker.cpp
 
 HEADERS  += mainwindow.h \
     stampdb.h \
@@ -105,7 +109,11 @@ HEADERS  += mainwindow.h \
     dataobjectvaluesource.h \
     genericdataobject.h \
     genericdatacollection.h \
-    tableeditorgenericgrid.h
+    tableeditorgenericgrid.h \
+    genericdatacollectiontablemodel.h \
+    actiontrackerobject.h \
+    actiontrackerobjectbase.h \
+    actiontracker.h
 
 FORMS    += mainwindow.ui \
     logroutinginfodialog.ui
