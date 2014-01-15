@@ -68,7 +68,8 @@ SOURCES += main.cpp\
     genericdatacollectiontablemodel.cpp \
     actiontrackerobject.cpp \
     actiontrackerobjectbase.cpp \
-    actiontracker.cpp
+    actiontracker.cpp \
+    comparer.cpp
 
 HEADERS  += mainwindow.h \
     stampdb.h \
@@ -113,7 +114,8 @@ HEADERS  += mainwindow.h \
     genericdatacollectiontablemodel.h \
     actiontrackerobject.h \
     actiontrackerobjectbase.h \
-    actiontracker.h
+    actiontracker.h \
+    comparer.h
 
 FORMS    += mainwindow.ui \
     logroutinginfodialog.ui
