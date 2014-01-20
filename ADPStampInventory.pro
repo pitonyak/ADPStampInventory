@@ -71,7 +71,8 @@ SOURCES += main.cpp\
     actiontracker.cpp \
     comparer.cpp \
     tablefieldevalnode.cpp \
-    tablefieldbinarytreeevalnode.cpp
+    tablefieldbinarytreeevalnode.cpp \
+    valuefilter.cpp
 
 HEADERS  += mainwindow.h \
     stampdb.h \
@@ -119,7 +120,8 @@ HEADERS  += mainwindow.h \
     actiontracker.h \
     comparer.h \
     tablefieldevalnode.h \
-    tablefieldbinarytreeevalnode.h
+    tablefieldbinarytreeevalnode.h \
+    valuefilter.h
 
 FORMS    += mainwindow.ui \
     logroutinginfodialog.ui
