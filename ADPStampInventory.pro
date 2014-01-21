@@ -74,7 +74,8 @@ SOURCES += main.cpp\
     tablefieldbinarytreeevalnode.cpp \
     valuefilter.cpp \
     valuecomparer.cpp \
-    tablesortfield.cpp
+    tablesortfield.cpp \
+    genericdataobjectlessthan.cpp
 
 HEADERS  += mainwindow.h \
     stampdb.h \
@@ -125,7 +126,8 @@ HEADERS  += mainwindow.h \
     tablefieldbinarytreeevalnode.h \
     valuefilter.h \
     valuecomparer.h \
-    tablesortfield.h
+    tablesortfield.h \
+    genericdataobjectlessthan.h
 
 FORMS    += mainwindow.ui \
     logroutinginfodialog.ui

@@ -7,7 +7,7 @@ GenericDataCollectionTableModel::GenericDataCollectionTableModel(QObject *parent
 
 int GenericDataCollectionTableModel::rowCount( const QModelIndex & parent) const
 {
-    return parent.isValid() ? 0 : m_collection.valueCount();
+    return parent.isValid() ? 0 : m_collection.rowCount();
 }
 
 int GenericDataCollectionTableModel::columnCount( const QModelIndex &) const

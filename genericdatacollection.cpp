@@ -187,3 +187,34 @@ const GenericDataCollection& GenericDataCollection::operator=(const GenericDataC
     }
     return *this;
 }
+
+
+bool GenericDataCollection::addSortField(const QString& name, const TableSortField::SortOrder order, Qt::CaseSensitivity sensitive)
+{
+    if (!hasProperty(name))
+    {
+        return false;
+    }
+    m_sortFields.append(new TableSortField(this, name.toLower(), m_LowerCasePropertyNameMap.value(name.toLower()), order, sensitive));
+    return true;
+}
+
+void GenericDataCollection::clearSortFields()
+{
+    qDeleteAll(m_sortFields);
+    m_sortFields.clear();
+}
+
+void GenericDataCollection::sort()
+{
+    m_sortedIDs = m_objects.keys();
+    if (m_sortFields.count() == 0)
+    {
+        qSort(m_sortedIDs);
+    }
+    else
+    {
+        // TODO: Use the fields.
+        // https://qt-project.org/forums/viewthread/4978
+    }
+}

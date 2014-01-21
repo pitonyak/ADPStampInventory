@@ -156,18 +156,19 @@ public:
 
   void clear();
 
-  void clearSortOrder();
-  void addSortField(const QString name);
+  void clearSortFields();
+  bool addSortField(const QString& name, const TableSortField::SortOrder order=TableSortField::Ascending, Qt::CaseSensitivity sensitive=Qt::CaseInsensitive);
   int getSortFieldCount() const;
-  const QString& getSortField(const int i) const;
-  const QStringList& getSortFields() const;
+  TableSortField* getSortField(const int i) const;
+  const QList<TableSortField*>& getSortFields() const;
 
   /*! \brief Assignment operator. The copied objects set the parent to be this object.
    *  \param [in] obj Object that is be copied.
    */
   const GenericDataCollection& operator=(const GenericDataCollection& obj);
 
-  int valueCount() const;
+  int rowCount() const;
+  void sort();
 
 signals:
 
@@ -183,6 +184,9 @@ private:
 
   /*! \brief lower case list of field names against which an object should be sorted. */
   QList<TableSortField*> m_sortFields;
+
+  // TODO: Deal with sync issues!
+  QList<int> m_sortedIDs;
 };
 
 inline const QStringList& GenericDataCollection::getPropertNames() const
@@ -275,9 +279,25 @@ inline const QString& GenericDataCollection::getPropertyName(const int i) const
   return m_propertyNames.at(i);
 }
 
-inline int GenericDataCollection::valueCount() const
+inline int GenericDataCollection::rowCount() const
 {
     return m_objects.count();
 }
+
+inline int GenericDataCollection::getSortFieldCount() const
+{
+    return m_sortFields.count();
+}
+
+inline TableSortField * GenericDataCollection::getSortField(const int i) const
+{
+    return m_sortFields.at(i);
+}
+
+inline const QList<TableSortField*>& GenericDataCollection::getSortFields() const
+{
+    return m_sortFields;
+}
+
 
 #endif // GENERICDATACOLLECTION_H
