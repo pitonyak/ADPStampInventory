@@ -2,6 +2,7 @@
 #define GENERICDATACOLLECTION_H
 
 #include "genericdataobject.h"
+#include "tablesortfield.h"
 
 #include <QObject>
 #include <QStringList>
@@ -181,8 +182,7 @@ private:
   QHash<QString, int> m_LowerCasePropertyNameMap;
 
   /*! \brief lower case list of field names against which an object should be sorted. */
-  QStringList m_sortOrder;
-  QList<GenericDataObject*> m_sortedList;
+  QList<TableSortField*> m_sortFields;
 };
 
 inline const QStringList& GenericDataCollection::getPropertNames() const
@@ -278,31 +278,6 @@ inline const QString& GenericDataCollection::getPropertyName(const int i) const
 inline int GenericDataCollection::valueCount() const
 {
     return m_objects.count();
-}
-
-inline void GenericDataCollection::clearSortOrder()
-{
-    m_sortOrder.clear();
-}
-
-inline void GenericDataCollection::addSortField(const QString name)
-{
-    m_sortOrder.append(name.toLower());
-}
-
-inline int GenericDataCollection::getSortFieldCount() const
-{
-    return m_sortOrder.count();
-}
-
-inline const QString& GenericDataCollection::getSortField(const int i) const
-{
-    return m_sortOrder.at(i);
-}
-
-inline const QStringList &GenericDataCollection::getSortFields() const
-{
-    return m_sortOrder;
 }
 
 #endif // GENERICDATACOLLECTION_H

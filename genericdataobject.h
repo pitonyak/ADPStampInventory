@@ -7,6 +7,7 @@
 #include <QVariant>
 #include <QDate>
 #include <QDateTime>
+#include "tablesortfield.h"
 
 //**************************************************************************
 /*! \class GenericDataObject
@@ -132,9 +133,9 @@ public:
    */
   bool valueIs(const QString& lowerCaseName, const QString& compareValue, const Qt::CaseSensitivity sensitive = Qt::CaseInsensitive) const;
 
-  int compare(const GenericDataObject& obj, Qt::CaseSensitivity sensitive=Qt::CaseInsensitive) const;
+  int compare(const GenericDataObject& obj, const QList<TableSortField*>& sortFields) const;
   int compare(const GenericDataObject& obj, const QStringList &fields, Qt::CaseSensitivity sensitive=Qt::CaseInsensitive) const;
-  bool operator<(const GenericDataObject& obj) const;
+  bool lessThan(const GenericDataObject& obj, const QList<TableSortField *> &sortFields) const;
 
   // TODO: Create a generic object filter!
 

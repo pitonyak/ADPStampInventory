@@ -98,24 +98,39 @@ const GenericDataObject& GenericDataObject::operator=(const GenericDataObject& o
   return *this;
 }
 
-bool GenericDataObject::operator<(const GenericDataObject& obj) const
+bool GenericDataObject::lessThan(const GenericDataObject& obj, const QList<TableSortField *> &sortFields) const
 {
-    return compare(obj) < 0;
+    return compare(obj, sortFields) < 0;
 }
 
-int GenericDataObject::compare(const GenericDataObject& obj, Qt::CaseSensitivity sensitive) const
+int GenericDataObject::compare(const GenericDataObject& obj, const QList<TableSortField *> &sortFields) const
 {
-    const GenericDataCollection* p = dynamic_cast<const GenericDataCollection*>(parent());
-    if (p == nullptr)
+    int rc = 0;
+    for (int i=0; rc==0 && i<sortFields.count(); ++i)
     {
-        p = dynamic_cast<const GenericDataCollection*>(obj.parent());
+        const TableSortField* sortField = sortFields.at(i);
+        if (sortField != nullptr)
+        {
+            if (!obj.hasValueNoCase(sortField->fieldName()))
+            {
+                if (hasValueNoCase(sortField->fieldName()))
+                {
+                    return sortField->isAscending() ? 1 : -1;
+                }
+            }
+            else if (!hasValueNoCase(sortField->fieldName()))
+            {
+                return sortField->isAscending() ? -1 : 1;
+            }
+            else
+            {
+                QVariant v1 = getValue(sortField->fieldName());
+                QVariant v2 = obj.getValue(sortField->fieldName());
+                rc = sortField->valueCompare(v1, v2);
+            }
+        }
     }
-    if (p == nullptr)
-    {
-        qDebug(qPrintable(QString(tr("Parent is not set in a generic data object compare"))));
-        return 0;
-    }
-    return compare(obj, p->getSortFields(), sensitive);
+    return rc;
 }
 
 int GenericDataObject::compare(const GenericDataObject& obj, const QStringList& fields, Qt::CaseSensitivity sensitive) const
