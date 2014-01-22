@@ -106,9 +106,10 @@ bool GenericDataObject::lessThan(const GenericDataObject& obj, const QList<Table
 int GenericDataObject::compare(const GenericDataObject& obj, const QList<TableSortField *> &sortFields) const
 {
     int rc = 0;
-    for (int i=0; rc==0 && i<sortFields.count(); ++i)
+    QListIterator<TableSortField*> i(sortFields);
+    while (rc == 0 && i.hasNext())
     {
-        const TableSortField* sortField = sortFields.at(i);
+        const TableSortField* sortField = i.next();
         if (sortField != nullptr)
         {
             if (!obj.hasValueNoCase(sortField->fieldName()))
