@@ -8,6 +8,16 @@
 
 class QTextStream;
 
+/**************************************************************************
+ * \class TableFieldBinaryTreeEvalNode
+ * \brief Wrap a TableFieldEvalNode into a tree with a parent and children.
+ *
+ * Despite the name, this need not be a binary tree. The children are traversed from left to right (first to last added).
+ *
+ * \author Andrew Pitonyak
+ * \copyright Andrew Pitonyak, but you may use without restriction.
+ * \date 2011-2014
+ ***************************************************************************/
 class TableFieldBinaryTreeEvalNode : public QObject
 {
     Q_OBJECT
@@ -40,23 +50,52 @@ public:
 
     void setNode(TableFieldEvalNode* node);
     void setTreeParent(TableFieldBinaryTreeEvalNode* node);
+
+    /*! \brief Get the node type. */
+    TableFieldEvalNode::OperatorType nodeType() const;
+
+    /*! \brief Get the node value. */
+    const QString& nodeValue() const;
+
+    /*! \brief Get the node priority. */
     int nodePriority() const;
 
-    TableFieldEvalNode::OperatorType nodeType() const;
-    const QString nodeValue() const;
 
+
+    /*! \brief Shortcut to determine if the operator is infix  (a + b). */
     bool isInfix() const;
+
+    /*! \brief Shortcut to determine if the operator is prefix (+ a). */
     bool isPrefix() const;
+
+    /*! \brief Shortcut to determine if the operator is suffix (a b +). */
     bool isSuffix() const;
+
+    /*! \brief Shortcut to determine if the operator is suffix or prefix. */
     bool isSuffixOrPrefix() const;
+
+    /*! \brief Shortcut to determine if the operator has no mode. */
     bool hasNoMode() const;
 
+    /*! \brief Shortcut to determine if the operator is NOT. */
     bool isNot() const;
+
+    /*! \brief Shortcut to determine if the operator is AND. */
     bool isAnd() const;
+
+    /*! \brief Shortcut to determine if the operator is OR. */
     bool isOr() const;
+
+    /*! \brief Shortcut to determine if the operator is (. */
     bool isLeftParen() const;
+
+    /*! \brief Shortcut to determine if the operator is ). */
     bool isRightParen() const;
+
+    /*! \brief Shortcut to determine if the operator is a value against which to compare. */
     bool isValue() const;
+
+    /*! \brief Shortcut to determine if the operator has no type (probably an error during evaluation will occur). */
     bool isNoType() const;
 
 signals:
@@ -64,14 +103,44 @@ signals:
 public slots:
 
 private:
+    //**************************************************************************
+    /*! Copy constructor.
+     *  \param [in] obj Object to copy.
+     ***************************************************************************/
     TableFieldBinaryTreeEvalNode(const TableFieldBinaryTreeEvalNode&);
+
+    //**************************************************************************
+    /*! \brief Assignment operator.
+     *
+     *  \param [in] obj Object to copy.
+     *  \return Reference to this object.
+     ***************************************************************************/
     const TableFieldBinaryTreeEvalNode& operator=(const TableFieldBinaryTreeEvalNode&);
 
+    //**************************************************************************
+    /*! \brief Delete the parameter object if this object is the parent of the parameter object.
+     *
+     *  \param [in] obj Object to delete if "this" object is the parent of obj.
+     *  \return True if the parameter object was deleted.
+     ***************************************************************************/
     virtual bool deleteIfIAmParent(TableFieldEvalNode* obj) const;
+
+    //**************************************************************************
+    /*! \brief Pop the top operator and then any values as needed.
+     *
+     *  \param [in,out] values Stack of values against which to operate.
+     *  \param [in,out] operators Stack of operators that are in process.
+     *  \return True if this level evaluates to true, false otherwise.
+     ***************************************************************************/
     static bool processOneTreeLevel(QStack<TableFieldBinaryTreeEvalNode*>& values, QStack<TableFieldBinaryTreeEvalNode*>& operators);
 
+    /*! \brief Parent object. */
     TableFieldBinaryTreeEvalNode* m_treeParent;
+
+    /*! \brief Node object. */
     TableFieldEvalNode* m_node;
+
+    /*! \brief List of children, process first to last. */
     QVector<TableFieldBinaryTreeEvalNode*> m_children;
 };
 

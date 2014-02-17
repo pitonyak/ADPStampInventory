@@ -60,29 +60,88 @@ public:
      ***************************************************************************/
     static int operatorPriority(const OperatorType oType);
 
+    /*! \brief Shortcut to determine if the operator is infix  (a + b). */
     bool isInfix() const;
+
+    /*! \brief Shortcut to determine if the operator is prefix (+ a). */
     bool isPrefix() const;
+
+    /*! \brief Shortcut to determine if the operator is suffix (a b +). */
     bool isSuffix() const;
+
+    /*! \brief Shortcut to determine if the operator is suffix or prefix. */
     bool isSuffixOrPrefix() const;
+
+    /*! \brief Shortcut to determine if the operator has no mode. */
     bool hasNoMode() const;
 
+    /*! \brief Shortcut to determine if the operator is NOT. */
     bool isNot() const;
+
+    /*! \brief Shortcut to determine if the operator is AND. */
     bool isAnd() const;
+
+    /*! \brief Shortcut to determine if the operator is OR. */
     bool isOr() const;
+
+    /*! \brief Shortcut to determine if the operator is (. */
     bool isLeftParen() const;
+
+    /*! \brief Shortcut to determine if the operator is ). */
     bool isRightParen() const;
+
+    /*! \brief Shortcut to determine if the operator is a value against which to compare. */
     bool isValue() const;
+
+    /*! \brief Shortcut to determine if the operator has no type (probably an error during evaluation will occur). */
     bool isNoType() const;
 
+    //**************************************************************************
+    /*! \brief Assignment operator.
+     *
+     *  \param [in] obj Object to copy.
+     *  \return Reference to this object.
+     ***************************************************************************/
     const TableFieldEvalNode& operator=(const TableFieldEvalNode& obj);
     
+    /*! \brief Get the node type. */
     OperatorType nodeType() const;
+
+    /*! \brief Get the node value. */
     const QString& nodeValue() const;
+
+    /*! \brief Get the node priority. */
     int nodePriority() const;
 
+    //**************************************************************************
+    /*! Set the node type.
+     *
+     *  \param [in] aType Node type.
+     *  \param [in] fillRest If true, the node value is set to a nice value for pretty printing and the node priority is set.
+     ***************************************************************************/
     void setType(const OperatorType aType, bool fillRest = false);
+
+    //**************************************************************************
+    /*! Set the node type.
+     *
+     *  \param [in] aType Node type.
+     *  \param [in] aValue Set the node value.
+     *  \param [in] fillRest If true, the node priority is set.
+     ***************************************************************************/
     void setType(const OperatorType aType, const QString& aValue, bool fillRest = false);
+
+    //**************************************************************************
+    /*! Set the node value.
+     *
+     *  \param [in] aValue Set the node value.
+     ***************************************************************************/
     void setValue(const QString& aValue);
+
+    //**************************************************************************
+    /*! Set the node priority.
+     *
+     *  \param [in] aPriority Set the node priority.
+     ***************************************************************************/
     void setPriority(int aPriority);
 
 signals:
@@ -90,8 +149,13 @@ signals:
 public slots:
     
 private:
+    /*! \brief AND, OR, NOT, Value, parenthesis, etc.. */
     OperatorType m_type;
+
+    /*! \brief Priority for this operator during evaluation. */
     int m_priority;
+
+    /*! \brief In case a value is required. TODO: Should this be a variant? */
     QString m_value;
 };
 

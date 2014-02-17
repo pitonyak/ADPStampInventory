@@ -70,12 +70,23 @@ public:
      ***************************************************************************/
     virtual ~TableSortField();
 
+    /*! \brief Set the field index, defaults to -1 if no parameter. */
     void setFieldIndex(int index=-1);
+
+    /*! \brief Set the sort order, defaults to ascending if no parameter. */
     void setSortOrder(TableSortField::SortOrder order = TableSortField::Ascending);
+
+    /*! \brief Set the field name. */
     void setFieldName(const QString& name);
 
+
+    /*! \return The field index. */
     int fieldIndex() const;
+
+    /*! \return Current sort order (ascending or descending). */
     TableSortField::SortOrder sortOrder() const;
+
+    /*! \return Field name. */
     const QString& fieldName() const;
 
     //**************************************************************************
@@ -169,16 +180,37 @@ public:
      ***************************************************************************/
     int valueCompare(const QVariant& v1, const QVariant& v2) const;
 
-    bool isAscending() const { return m_sortOrder == Ascending; }
-    bool isDescending() const { return m_sortOrder == Descending; }
+    //**************************************************************************
+    /*! \brief Shortcut to determine if this should sort ascending.
+     *  \return true if sort should be in ascending order.
+     ***************************************************************************/
+    bool isAscending() const;
 
-    const TableSortField& operator=(const TableSortField& obj);
+    //**************************************************************************
+    /*! \brief Shortcut to determine if this will sort descending.
+     *  \return true if sort will be in descending order.
+     ***************************************************************************/
+     bool isDescending() const;
+
+     //**************************************************************************
+     /*! \brief Assignment operator.
+      *
+      *  \param [in] obj Object to copy.
+      *  \return Reference to this object.
+      ***************************************************************************/
+     const TableSortField& operator=(const TableSortField& obj);
 
 private:
     /*! \brief comparer is created and owned by this class. */
     ValueComparer* m_comparer;
+
+    /*! \brief Numeric index of the field in a table (second column, for example). */
     int m_fieldIndex;
+
+    /*! \brief  Ascending or Descending */
     SortOrder m_sortOrder;
+
+    /*! \brief name of the field */
     QString m_fieldName;
 };
 
@@ -256,5 +288,16 @@ inline int TableSortField::valueCompare(const QVariant& v1, const QVariant& v2) 
 {
     return m_sortOrder == TableSortField::Ascending ? m_comparer->valueCompare(v1, v2) : m_comparer->valueCompare(v1, v2) * -1 ;
 }
+
+inline bool TableSortField::isAscending() const
+{
+    return m_sortOrder == Ascending;
+}
+
+inline bool TableSortField::isDescending() const
+{
+    return m_sortOrder == Descending;
+}
+
 
 #endif // TABLESORTFIELD_H
