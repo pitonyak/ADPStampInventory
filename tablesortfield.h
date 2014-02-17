@@ -9,6 +9,12 @@
 /*! \class TableSortField
  * \brief Provide a method to sort columns in a field.
  *
+ *  Identifies a field name, field index, order (ascending / descending), and a comparer to use.
+ *  The comparer provides the actual comparison capability, which includes desired case sensitivity.
+ *
+ *  The field index assumes that the field names are in a particular order.
+ *
+ *  This class contains numerous helper methods that wrap calls to the comparer.
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
@@ -169,6 +175,7 @@ public:
     const TableSortField& operator=(const TableSortField& obj);
 
 private:
+    /*! \brief comparer is created and owned by this class. */
     ValueComparer* m_comparer;
     int m_fieldIndex;
     SortOrder m_sortOrder;
