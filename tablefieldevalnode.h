@@ -107,7 +107,7 @@ public:
     /*! \brief Get the node type. */
     OperatorType nodeType() const;
 
-    /*! \brief Get the node value. */
+    /*! \brief Get the node value, which is a proxy for "name" that maps to a boolean value passed in later. */
     const QString& nodeValue() const;
 
     /*! \brief Get the node priority. */

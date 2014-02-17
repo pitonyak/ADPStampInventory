@@ -44,6 +44,11 @@ public:
      ***************************************************************************/
     static TableFieldBinaryTreeEvalNode* buildTree(QList<TableFieldEvalNode *>& list, QObject *headNodeParent = nullptr);
 
+    // TODO: This must be changed.
+    // Currently, the node value is a name that indexes into this hash table, which is
+    // used to associate to a true / false table. What should occur, is that we map to a series of
+    // Evaluators that know how to perform the requested comparisons as they are needed so that
+    // short circuit evaluation can occur rather than performing every check every time.
     bool testEvaluator(const QHash<QString, bool>& vals) const;
 
     void addChild(TableFieldBinaryTreeEvalNode* child);
@@ -126,11 +131,11 @@ private:
     virtual bool deleteIfIAmParent(TableFieldEvalNode* obj) const;
 
     //**************************************************************************
-    /*! \brief Pop the top operator and then any values as needed.
+    /*! \brief Pop the top operator and then any values as needed to help build an evaluation tree.
      *
      *  \param [in,out] values Stack of values against which to operate.
      *  \param [in,out] operators Stack of operators that are in process.
-     *  \return True if this level evaluates to true, false otherwise.
+     *  \return True if an error is found.
      ***************************************************************************/
     static bool processOneTreeLevel(QStack<TableFieldBinaryTreeEvalNode*>& values, QStack<TableFieldBinaryTreeEvalNode*>& operators);
 
