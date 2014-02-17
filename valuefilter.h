@@ -13,7 +13,7 @@ class QRegExp;
 
 //**************************************************************************
 /*! \class ValueFilter
- * \brief Filter to decide if a specific file or directory matches some criteria.
+ * \brief Filter to decide if a specific value, file, or directory matches some criteria.
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
  * \date 2011-2013
@@ -98,7 +98,7 @@ public:
      ***************************************************************************/
     bool passes(const QFileInfo& fileInfo) const;
     bool passes(const int value) const;
-    //bool passes(const bool value) const;
+    bool passes(const bool value) const;
     bool passes(const double value) const;
     bool passes(const qlonglong value) const;
     bool passes(const qulonglong value) const;
@@ -247,6 +247,15 @@ private:
      *  \return Returns the value if the invert filter result flag is clear, and the inverse if it is set.
      ***************************************************************************/
     bool invertIfNeeded(const bool value) const;
+
+    //**************************************************************************
+    /*! \brief Compare a boolean value to "Y" or "N".
+     *
+     *  \param [in] value to compare.
+     *  \return True if the "Y" / "N" values matches the filter.
+     ***************************************************************************/
+    bool compareValues(const bool value) const;
+
     bool compareValues(const qlonglong value) const;
     bool compareValues(const qulonglong value) const;
     bool compareValues(const double value) const;
@@ -421,6 +430,11 @@ inline bool ValueFilter::passes(const int value) const
     return invertIfNeeded(compareValues((qlonglong)value));
 }
 
+inline bool ValueFilter::passes(const bool value) const
+{
+    return invertIfNeeded(compareValues(value));
+}
+
 inline bool ValueFilter::passes(const double value) const
 {
     return invertIfNeeded(compareValues(value));
@@ -460,8 +474,5 @@ inline bool ValueFilter::passes(const QChar& value) const
 {
     return invertIfNeeded(compareValues(value));
 }
-
-
-
 
 #endif // VALUEFILTER_H

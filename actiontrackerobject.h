@@ -3,6 +3,17 @@
 
 #include "actiontrackerobjectbase.h"
 
+//**************************************************************************
+//! Tracks actions that can be undone. The tracked object is the template class.
+/*!
+ * This represents a single action and it includes a single object on which the action was performed.
+ * TODO: Who owns the tracked object?
+ *
+ * \author Andrew Pitonyak
+ * \copyright Andrew Pitonyak, but you may use without restriction.
+ * \date 2014
+ ***************************************************************************/
+
 template<class T>
 class ActionTrackerObject : ActionTrackerObjectBase
 {

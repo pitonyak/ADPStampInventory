@@ -1,25 +1,25 @@
 #include "tablesortfield.h"
 
 TableSortField::TableSortField(QObject *parent) : QObject(parent),
-    m_comparer(nullptr), m_fieldIndex(-1), m_caseSensitive(Qt::CaseInsensitive), m_sortOrder(Ascending)
+    m_comparer(nullptr), m_fieldIndex(-1), m_sortOrder(Ascending)
 {
-    m_comparer = new ValueComparer(m_caseSensitive);
+    m_comparer = new ValueComparer(Qt::CaseInsensitive);
 }
 
 TableSortField::TableSortField(const TableSortField& obj, QObject *parent) : QObject(parent)
 {
-    m_comparer = new ValueComparer(obj.caseSensitive());
+    m_comparer = new ValueComparer(obj.caseSensitivity());
     operator=(obj);
 }
 
 TableSortField::TableSortField(const QString name, int index, SortOrder order, Qt::CaseSensitivity sensitive) : QObject(nullptr),
-    m_comparer(nullptr), m_fieldIndex(index), m_caseSensitive(sensitive), m_sortOrder(order), m_fieldName(name)
+    m_comparer(nullptr), m_fieldIndex(index), m_sortOrder(order), m_fieldName(name)
 {
-    m_comparer = new ValueComparer(m_caseSensitive);
+    m_comparer = new ValueComparer(sensitive);
 }
 
 TableSortField::TableSortField(QObject *parent, const QString name, int index, SortOrder order, Qt::CaseSensitivity sensitive) : QObject(parent),
-    m_comparer(nullptr), m_fieldIndex(index), m_caseSensitive(sensitive), m_sortOrder(order), m_fieldName(name)
+    m_comparer(nullptr), m_fieldIndex(index), m_sortOrder(order), m_fieldName(name)
 {
     m_comparer = new ValueComparer(sensitive);
 }
@@ -40,7 +40,7 @@ const TableSortField& TableSortField::operator=(const TableSortField& obj)
     {
         *m_comparer = *obj.m_comparer;
         setFieldIndex(obj.fieldIndex());
-        setCase(obj.caseSensitive());
+        setCase(obj.caseSensitivity());
         setSortOrder(obj.sortOrder());
         setFieldName(obj.fieldName());
     }

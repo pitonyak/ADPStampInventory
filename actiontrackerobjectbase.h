@@ -1,6 +1,17 @@
 #ifndef ACTIONTRACKEROBJECTBASE_H
 #define ACTIONTRACKEROBJECTBASE_H
 
+//**************************************************************************
+//! Base class to track "actions".
+/*!
+ * This represents a single action. This object tracks only the action type.
+ * See the derived class ActionTrackerObject, which is a template class that contains
+ * a reference to the tracked object.
+ *
+ * \author Andrew Pitonyak
+ * \copyright Andrew Pitonyak, but you may use without restriction.
+ * \date 2014
+ ***************************************************************************/
 class ActionTrackerObjectBase
 {
 public:

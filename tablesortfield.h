@@ -5,6 +5,15 @@
 #include <QString>
 #include "valuecomparer.h"
 
+//**************************************************************************
+/*! \class TableSortField
+ * \brief Provide a method to sort columns in a field.
+ *
+ *
+ * \author Andrew Pitonyak
+ * \copyright Andrew Pitonyak, but you may use without restriction.
+ * \date 2013-2014
+ ***************************************************************************/
 class TableSortField : public QObject
 {
     Q_OBJECT
@@ -12,29 +21,146 @@ class TableSortField : public QObject
 public:
     enum SortOrder {Ascending, Descending};
 
+    //**************************************************************************
+    /*! \brief Default constructor with the specified parent.
+     *
+     *  All objects owned by the parent are destroyed in the destructor.
+     *  \param [in] parent The object's owner.
+     ***************************************************************************/
     explicit TableSortField(QObject *parent = nullptr);
+
+    //**************************************************************************
+    /*! \brief Constructor copied from the specified filter object.
+     *
+     *  All objects owned by the parent are destroyed in the destructor.
+     *  \param [in] filter This filter object is copied into this object.
+     *  \param [in] parent The object's owner.
+     ***************************************************************************/
     explicit TableSortField(const TableSortField& obj, QObject *parent = nullptr);
+
+    //**************************************************************************
+    /*! \brief Constructor
+     *
+     *  \param [in] name Field name.
+     *  \param [in] index Field index. Defaults to -1.
+     *  \param [in] order How to sort, Ascending or Descending. Defaults to Ascending.
+     *  \param [in] sensitive Case sensitivity. Defaults to case insensitive.
+     ***************************************************************************/
     TableSortField(const QString name, int index=-1, SortOrder order=Ascending, Qt::CaseSensitivity sensitive=Qt::CaseInsensitive);
+
+    //**************************************************************************
+    /*! \brief Constructor
+     *
+     *  \param [in] parent The object's owner.
+     *  \param [in] name Field name.
+     *  \param [in] index Field index. Defaults to -1.
+     *  \param [in] order How to sort, Ascending or Descending. Defaults to Ascending.
+     *  \param [in] sensitive Case sensitivity. Defaults to case insensitive.
+     ***************************************************************************/
     TableSortField(QObject *parent, const QString name, int index=-1, SortOrder order=Ascending, Qt::CaseSensitivity sensitive=Qt::CaseInsensitive);
 
+    //**************************************************************************
+    /*! \brief Destructor to delete the comparer.
+     ***************************************************************************/
     virtual ~TableSortField();
 
     void setFieldIndex(int index=-1);
-    void setCase(Qt::CaseSensitivity sensitive=Qt::CaseInsensitive);
     void setSortOrder(TableSortField::SortOrder order = TableSortField::Ascending);
     void setFieldName(const QString& name);
 
     int fieldIndex() const;
-    Qt::CaseSensitivity caseSensitive() const;
     TableSortField::SortOrder sortOrder() const;
     const QString& fieldName() const;
 
+    //**************************************************************************
+    /*! \brief Get the case sensitivity.
+     *
+     *  \return The case sensitivity.
+     ***************************************************************************/
+    Qt::CaseSensitivity caseSensitivity() const;
+
+    //**************************************************************************
+    /*! \brief Set the case sensitivity.
+     *
+     *  \param [in] caseSensitive Sets the case sensitivity; defaults to CaseInsensitive.
+     ***************************************************************************/
+    void setCase(const Qt::CaseSensitivity caseSensitive = Qt::CaseInsensitive);
+
+    //**************************************************************************
+    /*! \brief Thin wrapper to call the corresponding function on the contained comparer.
+     *
+     * Comparer must not be null.
+     *
+     *  \param [in] v1 First object to compare
+     *  \param [in] v2 Second object to compare
+     *  \return true if v1 < v2
+     ***************************************************************************/
     bool lessThan(const QVariant& v1, const QVariant& v2) const;
+
+    //**************************************************************************
+    /*! \brief Thin wrapper to call the corresponding function on the contained comparer.
+     *
+     * Comparer must not be null.
+     *
+     *  \param [in] v1 First object to compare
+     *  \param [in] v2 Second object to compare
+     *  \return true if v1 <= v2
+     ***************************************************************************/
     bool lessThanEqual(const QVariant& v1, const QVariant& v2) const;
+
+    //**************************************************************************
+    /*! \brief Thin wrapper to call the corresponding function on the contained comparer.
+     *
+     * Comparer must not be null.
+     *
+     *  \param [in] v1 First object to compare
+     *  \param [in] v2 Second object to compare
+     *  \return true if v1 == v2
+     ***************************************************************************/
     bool equal(const QVariant& v1, const QVariant& v2) const;
+
+    //**************************************************************************
+    /*! \brief Thin wrapper to call the corresponding function on the contained comparer.
+     *
+     * Comparer must not be null.
+     *
+     *  \param [in] v1 First object to compare
+     *  \param [in] v2 Second object to compare
+     *  \return true if v1 != v2
+     ***************************************************************************/
     bool notEqual(const QVariant& v1, const QVariant& v2) const;
+
+    //**************************************************************************
+    /*! \brief Thin wrapper to call the corresponding function on the contained comparer.
+     *
+     * Comparer must not be null.
+     *
+     *  \param [in] v1 First object to compare
+     *  \param [in] v2 Second object to compare
+     *  \return true if v1 > v2
+     ***************************************************************************/
     bool greaterThan(const QVariant& v1, const QVariant& v2) const;
+
+    //**************************************************************************
+    /*! \brief Thin wrapper to call the corresponding function on the contained comparer.
+     *
+     * Comparer must not be null.
+     *
+     *  \param [in] v1 First object to compare
+     *  \param [in] v2 Second object to compare
+     *  \return true if v1 >= v2
+     ***************************************************************************/
     bool greaterThanEqual(const QVariant& v1, const QVariant& v2) const;
+
+    //**************************************************************************
+    /*! \brief Thin wrapper to call the corresponding function on the contained comparer.
+     *
+     * Comparer must not be null.
+     *
+     *  \param [in] v1 First object to compare
+     *  \param [in] v2 Second object to compare
+     *  \return -1 (v1 < v2), 0 (v1 == v2), or 1 (v1 > v2)
+     ***************************************************************************/
     int valueCompare(const QVariant& v1, const QVariant& v2) const;
 
     bool isAscending() const { return m_sortOrder == Ascending; }
@@ -45,7 +171,6 @@ public:
 private:
     ValueComparer* m_comparer;
     int m_fieldIndex;
-    Qt::CaseSensitivity m_caseSensitive;
     SortOrder m_sortOrder;
     QString m_fieldName;
 };
@@ -57,7 +182,6 @@ inline void TableSortField::setFieldIndex(int index)
 
 inline void TableSortField::setCase(Qt::CaseSensitivity sensitive)
 {
-    m_caseSensitive = sensitive;
     m_comparer->setSensitivity(sensitive);
 }
 
@@ -76,9 +200,9 @@ inline int TableSortField::fieldIndex() const
     return m_fieldIndex;
 }
 
-inline Qt::CaseSensitivity TableSortField::caseSensitive() const
+inline Qt::CaseSensitivity TableSortField::caseSensitivity() const
 {
-    return m_caseSensitive;
+    return m_comparer->caseSensitivity();
 }
 
 inline TableSortField::SortOrder TableSortField::sortOrder() const

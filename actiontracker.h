@@ -5,6 +5,14 @@
 
 #include <QVector>
 
+//**************************************************************************
+//! Array of tracked objects in the order that the objects were added.
+/*!
+ *
+ * \author Andrew Pitonyak
+ * \copyright Andrew Pitonyak, but you may use without restriction.
+ * \date 2014
+ ***************************************************************************/
 template <class T>
 class ActionTracker : QVector< ActionTrackerObject<T> >
 {

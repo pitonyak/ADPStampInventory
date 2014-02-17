@@ -496,6 +496,10 @@ bool ValueFilter::compareValues(const double value) const
   return false;
 }
 
+bool ValueFilter::compareValues(const bool value) const
+{
+  return compareValues(value ? "Y" : "N");
+}
 
 bool ValueFilter::compareValues(const qlonglong value) const
 {
