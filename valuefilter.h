@@ -69,8 +69,8 @@ public:
     explicit ValueFilter(const ValueFilter& filter, QObject *parent);
 
     //**************************************************************************
-    /*! \brief Destructor in case I need any special clean-up. */
-    //**************************************************************************
+    /*! \brief Destructor in case I need any special clean-up.
+     **************************************************************************/
     ~ValueFilter();
 
     //**************************************************************************

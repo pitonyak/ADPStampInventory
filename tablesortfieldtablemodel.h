@@ -1,27 +1,29 @@
-#ifndef GENERICDATACOLLECTIONTABLEMODEL_H
-#define GENERICDATACOLLECTIONTABLEMODEL_H
+#ifndef TABLESORTFIELDTABLEMODEL_H
+#define TABLESORTFIELDTABLEMODEL_H
 
-#include "genericdatacollection.h"
 
+#include "tablesortfield.h"
+#include "typemapper.h"
 #include <QAbstractTableModel>
+#include <QList>
 
 //**************************************************************************
-/*! \class GenericDataCollectionTableModel
+/*! \class TableSortFieldTableModel
  *
  * \brief Table model for a GenericDataCollection.
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
  * \date 2013-2014
  ***************************************************************************/
-class GenericDataCollectionTableModel : public QAbstractTableModel
+class TableSortFieldTableModel : public QAbstractTableModel
 {
   Q_OBJECT
 public:
     /*! \brief Constructor
      *  \param [in, out] parent The object's owner. The parent's destructor destroys this object.
      */
-  explicit GenericDataCollectionTableModel(QObject *parent = nullptr);
-  
+  explicit TableSortFieldTableModel(QObject *parent = nullptr);
+
     //**************************************************************************
     /*! \brief Returns the flags used to describe the item identified by the index.
      *
@@ -76,12 +78,12 @@ public:
     int columnCount( const QModelIndex &parent = QModelIndex() ) const;
 
 signals:
-  
+
 public slots:
 
 private:
-    GenericDataCollection m_collection;
-
+    QList<TableSortField*> m_collection;
+    TypeMapper m_mapper;
 };
 
-#endif // GENERICDATACOLLECTIONTABLEMODEL_H
+#endif // TABLESORTFIELDTABLEMODEL_H

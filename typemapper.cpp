@@ -2,6 +2,7 @@
 #include <QDate>
 #include <QDateTime>
 
+
 TypeMapper::TypeMapper(QObject *parent) :
   QObject(parent)
 {
@@ -11,6 +12,7 @@ TypeMapper::TypeMapper(QObject *parent) :
 void TypeMapper::initialize()
 {
     m_typeMapMetaToVariant.insert(QMetaType::Void, QVariant::Invalid);
+    m_typeMapMetaToVariant.insert(QMetaType::UnknownType, QVariant::Invalid);
     m_typeMapMetaToVariant.insert(QMetaType::Bool, QVariant::Bool);
     m_typeMapMetaToVariant.insert(QMetaType::Int, QVariant::Int);
     m_typeMapMetaToVariant.insert(QMetaType::UInt, QVariant::UInt);
@@ -18,6 +20,10 @@ void TypeMapper::initialize()
     m_typeMapMetaToVariant.insert(QMetaType::QChar, QVariant::Char);
     m_typeMapMetaToVariant.insert(QMetaType::QString, QVariant::String);
     m_typeMapMetaToVariant.insert(QMetaType::QByteArray, QVariant::ByteArray);
+
+    m_typeMapMetaToVariant.insert(QMetaType::QBitArray, QVariant::BitArray);
+    m_typeMapMetaToVariant.insert(QMetaType::QBitmap, QVariant::Bitmap);
+    m_typeMapMetaToVariant.insert(QMetaType::QBrush, QVariant::Brush);
 
     m_typeMapMetaToVariant.insert(QMetaType::Long, QVariant::LongLong);
     m_typeMapMetaToVariant.insert(QMetaType::LongLong, QVariant::LongLong);
@@ -36,7 +42,7 @@ void TypeMapper::initialize()
     m_typeMapMetaToVariant.insert(QMetaType::QDateTime, QVariant::DateTime);
     m_typeMapMetaToVariant.insert(QMetaType::QImage, QVariant::Image);
 
-    m_typeMapVariantToMeta.insert(QVariant::Invalid, QMetaType::Void);
+    m_typeMapVariantToMeta.insert(QVariant::Invalid, QMetaType::UnknownType);
     m_typeMapVariantToMeta.insert(QVariant::Bool, QMetaType::Bool);
     m_typeMapVariantToMeta.insert(QVariant::Int, QMetaType::Int);
     m_typeMapVariantToMeta.insert(QVariant::UInt, QMetaType::UInt);
@@ -44,6 +50,12 @@ void TypeMapper::initialize()
     m_typeMapVariantToMeta.insert(QVariant::Char, QMetaType::QChar);
     m_typeMapVariantToMeta.insert(QVariant::String, QMetaType::QString);
     m_typeMapVariantToMeta.insert(QVariant::ByteArray, QMetaType::QByteArray);
+
+    m_typeMapVariantToMeta.insert(QVariant::BitArray, QMetaType::QBitArray);
+    m_typeMapVariantToMeta.insert(QVariant::Bitmap, QMetaType::QBitmap);
+    m_typeMapVariantToMeta.insert(QVariant::Brush, QMetaType::QBrush);
+    m_typeMapVariantToMeta.insert(QVariant::Color, QMetaType::QColor);
+    m_typeMapVariantToMeta.insert(QVariant::Cursor, QMetaType::QCursor);
 
     //m_typeMapVariantToMeta.insert(QVariant::LongLong, QMetaType::Long);
     m_typeMapVariantToMeta.insert(QVariant::LongLong, QMetaType::LongLong);
@@ -77,6 +89,152 @@ void TypeMapper::initialize()
 
     m_NumList.append(QMetaType::Float);
     m_NumList.append(QMetaType::Double);
+
+    m_MetaToName.insert(QMetaType::Void,"Void");
+    m_MetaToName.insert(QMetaType::Bool,"Boolean");
+    m_MetaToName.insert(QMetaType::Int,"Int");
+    m_MetaToName.insert(QMetaType::UInt,"Unsigned Int");
+    m_MetaToName.insert(QMetaType::Double,"Double");
+    m_MetaToName.insert(QMetaType::QChar,"Char");
+    m_MetaToName.insert(QMetaType::QString,"Text");
+    m_MetaToName.insert(QMetaType::QByteArray,"ByteArray");
+    m_MetaToName.insert(QMetaType::VoidStar,"Void *");
+    m_MetaToName.insert(QMetaType::Long,"Long");
+    m_MetaToName.insert(QMetaType::LongLong,"LongLong");
+    m_MetaToName.insert(QMetaType::Short,"Short");
+    m_MetaToName.insert(QMetaType::Char,"Char");
+    m_MetaToName.insert(QMetaType::ULong,"Unsigned Long");
+    m_MetaToName.insert(QMetaType::ULongLong,"Unsigned LongLong");
+    m_MetaToName.insert(QMetaType::UShort,"Unsigned Short");
+    m_MetaToName.insert(QMetaType::SChar,"Signed Char");
+    m_MetaToName.insert(QMetaType::UChar,"Unsigned Char");
+    m_MetaToName.insert(QMetaType::Float,"Float");
+    m_MetaToName.insert(QMetaType::QObjectStar,"Object *");
+    m_MetaToName.insert(QMetaType::QVariant,"Variant");
+    m_MetaToName.insert(QMetaType::QCursor,"Cursor");
+    m_MetaToName.insert(QMetaType::QDate,"Date");
+    m_MetaToName.insert(QMetaType::QSize,"Size");
+    m_MetaToName.insert(QMetaType::QTime,"Time");
+    m_MetaToName.insert(QMetaType::QVariantList,"VariantList");
+    m_MetaToName.insert(QMetaType::QPolygon,"Polygon");
+    m_MetaToName.insert(QMetaType::QPolygonF,"PolygonF");
+    m_MetaToName.insert(QMetaType::QColor,"Color");
+    m_MetaToName.insert(QMetaType::QSizeF,"SizeF");
+    m_MetaToName.insert(QMetaType::QRectF,"RectF");
+    m_MetaToName.insert(QMetaType::QLine,"Line");
+    m_MetaToName.insert(QMetaType::QTextLength,"TextLength");
+    m_MetaToName.insert(QMetaType::QStringList,"StringList");
+    m_MetaToName.insert(QMetaType::QVariantMap,"VariantMap");
+    m_MetaToName.insert(QMetaType::QVariantHash,"VariantHash");
+    m_MetaToName.insert(QMetaType::QIcon,"Icon");
+    m_MetaToName.insert(QMetaType::QPen,"Pen");
+    m_MetaToName.insert(QMetaType::QLineF,"LineF");
+    m_MetaToName.insert(QMetaType::QTextFormat,"TextFormat");
+    m_MetaToName.insert(QMetaType::QRect,"Rect");
+    m_MetaToName.insert(QMetaType::QPoint,"Point");
+    m_MetaToName.insert(QMetaType::QUrl,"Url");
+    m_MetaToName.insert(QMetaType::QRegExp,"RegExp");
+    m_MetaToName.insert(QMetaType::QRegularExpression,"RegularExpression");
+    m_MetaToName.insert(QMetaType::QDateTime,"DateTime");
+    m_MetaToName.insert(QMetaType::QPointF,"PointF");
+    m_MetaToName.insert(QMetaType::QPalette,"Palette");
+    m_MetaToName.insert(QMetaType::QFont,"Font");
+    m_MetaToName.insert(QMetaType::QBrush,"Brush");
+    m_MetaToName.insert(QMetaType::QRegion,"Region");
+    m_MetaToName.insert(QMetaType::QBitArray,"BitArray");
+    m_MetaToName.insert(QMetaType::QImage,"Image");
+    m_MetaToName.insert(QMetaType::QKeySequence,"KeySequence");
+    m_MetaToName.insert(QMetaType::QSizePolicy,"SizePolicy");
+    m_MetaToName.insert(QMetaType::QPixmap,"Pixmap");
+    m_MetaToName.insert(QMetaType::QLocale,"Locale");
+    m_MetaToName.insert(QMetaType::QBitmap,"Bitmap");
+    m_MetaToName.insert(QMetaType::QMatrix,"Matrix");
+    m_MetaToName.insert(QMetaType::QTransform,"Transform");
+    m_MetaToName.insert(QMetaType::QMatrix4x4,"Matrix4x4");
+    m_MetaToName.insert(QMetaType::QVector2D,"Vector2D");
+    m_MetaToName.insert(QMetaType::QVector3D,"Vector3D");
+    m_MetaToName.insert(QMetaType::QVector4D,"Vector4D");
+    m_MetaToName.insert(QMetaType::QQuaternion,"Quaternion");
+    m_MetaToName.insert(QMetaType::QEasingCurve,"EasingCurve");
+    m_MetaToName.insert(QMetaType::QJsonValue,"JsonValue");
+    m_MetaToName.insert(QMetaType::QJsonObject,"JsonObject");
+    m_MetaToName.insert(QMetaType::QJsonArray,"JsonArray");
+    m_MetaToName.insert(QMetaType::QJsonDocument,"JsonDocument");
+    m_MetaToName.insert(QMetaType::QModelIndex,"ModelIndex");
+    m_MetaToName.insert(QMetaType::QUuid,"Uuid");
+    m_MetaToName.insert(QMetaType::User,"User type");
+    m_MetaToName.insert(QMetaType::UnknownType,"Unknown");
+
+    m_VariantToName.insert(QVariant::Invalid, "Unknown");
+    m_VariantToName.insert(QVariant::BitArray, "BitArray");
+    m_VariantToName.insert(QVariant::Bitmap, "Bitmap");
+    m_VariantToName.insert(QVariant::Bool, "Boolean");
+    m_VariantToName.insert(QVariant::Brush, "Brush");
+    m_VariantToName.insert(QVariant::ByteArray, "ByteArray");
+    m_VariantToName.insert(QVariant::Char, "Char");
+    m_VariantToName.insert(QVariant::Color, "Color");
+    m_VariantToName.insert(QVariant::Cursor, "Cursor");
+    m_VariantToName.insert(QVariant::Date, "Date");
+    m_VariantToName.insert(QVariant::DateTime, "DateTime");
+    m_VariantToName.insert(QVariant::Double, "ouble");
+    m_VariantToName.insert(QVariant::EasingCurve, "EasingCurve");
+    m_VariantToName.insert(QVariant::Uuid, "Uuid");
+    m_VariantToName.insert(QVariant::ModelIndex, "ModelIndex");
+    m_VariantToName.insert(QVariant::Font, "Font");
+    m_VariantToName.insert(QVariant::Hash, "VariantHash");
+    m_VariantToName.insert(QVariant::Icon, "Icon");
+    m_VariantToName.insert(QVariant::Image, "Image");
+    m_VariantToName.insert(QVariant::Int, "Int");
+    m_VariantToName.insert(QVariant::KeySequence, "KeySequence");
+    m_VariantToName.insert(QVariant::Line, "Line");
+    m_VariantToName.insert(QVariant::LineF, "LineF");
+    m_VariantToName.insert(QVariant::List, "VariantList");
+    m_VariantToName.insert(QVariant::Locale, "Locale");
+    m_VariantToName.insert(QVariant::LongLong, "longlong");
+    m_VariantToName.insert(QVariant::Map, "VariantMap");
+    m_VariantToName.insert(QVariant::Matrix, "Matrix");
+    m_VariantToName.insert(QVariant::Transform, "Transform");
+    m_VariantToName.insert(QVariant::Matrix4x4, "Matrix4x4");
+    m_VariantToName.insert(QVariant::Palette, "Palette");
+    m_VariantToName.insert(QVariant::Pen, "Pen");
+    m_VariantToName.insert(QVariant::Pixmap, "Pixmap");
+    m_VariantToName.insert(QVariant::Point, "Point");
+    m_VariantToName.insert(QVariant::PointF, "PointF");
+    m_VariantToName.insert(QVariant::Polygon, "Polygon");
+    m_VariantToName.insert(QVariant::PolygonF, "PolygonF");
+    m_VariantToName.insert(QVariant::Quaternion, "Quaternion");
+    m_VariantToName.insert(QVariant::Rect, "Rect");
+    m_VariantToName.insert(QVariant::RectF, "RectF");
+    m_VariantToName.insert(QVariant::RegExp, "RegExp");
+    m_VariantToName.insert(QVariant::RegularExpression, "RegularExpression");
+    m_VariantToName.insert(QVariant::Region, "Region");
+    m_VariantToName.insert(QVariant::Size, "Size");
+    m_VariantToName.insert(QVariant::SizeF, "SizeF");
+    m_VariantToName.insert(QVariant::SizePolicy, "SizePolicy");
+    m_VariantToName.insert(QVariant::String, "String");
+    m_VariantToName.insert(QVariant::StringList, "StringList");
+    m_VariantToName.insert(QVariant::TextFormat, "TextFormat");
+    m_VariantToName.insert(QVariant::TextLength, "TextLength");
+    m_VariantToName.insert(QVariant::Time, "Time");
+    m_VariantToName.insert(QVariant::UInt, "Unsigned Int");
+    m_VariantToName.insert(QVariant::ULongLong, "Unsigned LongLong");
+    m_VariantToName.insert(QVariant::Url, "Url");
+    m_VariantToName.insert(QVariant::Vector2D, "Vector2D");
+    m_VariantToName.insert(QVariant::Vector3D, "Vector3D");
+    m_VariantToName.insert(QVariant::Vector4D, "Vector4D");
+    m_VariantToName.insert(QVariant::UserType, "User");
+
+    QMapIterator<QMetaType::Type, QString> metaNameIterator(m_MetaToName);
+    while (metaNameIterator.hasNext()) {
+        metaNameIterator.next();
+        m_NameToMetaTo.insert(metaNameIterator.value().toLower(), metaNameIterator.key());
+    }
+
+    QMapIterator<QVariant::Type, QString> variantNameIterator(m_VariantToName);
+    while (variantNameIterator.hasNext()) {
+        variantNameIterator.next();
+        m_NameToVariant.insert(variantNameIterator.value().toLower(), variantNameIterator.key());
+    }
 }
 
 QMetaType::Type TypeMapper::guessType(const QString& s, const ColumnConversionPreferences preferences)

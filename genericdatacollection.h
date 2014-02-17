@@ -13,7 +13,7 @@ class CSVWriter;
 
 //**************************************************************************
 /*! \class GenericDataCollection
- * \brief Collection of generic objects with named properties.
+ * \brief Collection of generic objects with named and typed properties.
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
@@ -49,17 +49,53 @@ public:
    */
   QString getPropertyName(const QString& name) const;
 
+  /*! \brief Get the property names.
+   *  \return List of property names in index order.
+   */
   const QStringList& getPropertNames() const;
+
+  /*! \brief Determine if a particular property exists.
+   *  \param [in] name Case insensitive property name desired.
+   *  \return True if the property exists, false otherwise.
+   */
   bool hasProperty(const QString& name) const;
+
+  /*! \brief Get the number of property names.
+   *  \return Number of property names.
+   */
   int getPropertyNameCount() const;
 
+  /*! \brief Add a property name and type.
+   *  \param [in] name Case insensitive property name desired.
+   *  \param [in] pType Property type for this name.
+   *  \return True if the property is added, and false if it already exists.
+   */
   bool appendPropertyName(const QString& name, const QVariant::Type pType);
 
+  /*! \brief Get a properties type based on its name.
+   *  \param [in] name Case insensitive property name desired.
+   *  \return Properties type if the name exists, and QVariant::Invalid if it does not.
+   */
   QVariant::Type getPropertyType(const QString& name) const;
+
+  /*! \brief Get a properties type based on its index.
+   *  \param [in] i Index of the property name (the column).
+   *  \return Properties type. If the index is out of bounds, well, it had better not be out of bounds.
+   */
   QVariant::Type getPropertyType(const int i) const;
 
+  /*! \brief Add an object with the specified integer ID. Null objects are ignored. This class owns and deletes the object. The sorted ID list is not updated.
+   *  \param [in] id Objects integer ID.
+   *  \param [in, out] obj Pointer to an object.
+   */
   void appendObject(const int id, GenericDataObject* obj);
+
+  /*! \brief Delete an object from the list based on its ID. The sorted ID list is not updated.
+   *  \param [in] id Objects integer ID.
+   */
   void removeObject(const int);
+
+  // TODO: Deal with the sorted list.
 
   bool exportToCSV(CSVWriter& writer) const;
 
@@ -175,17 +211,23 @@ signals:
 public slots:
 
 private:
+  /*! \brief In-order list of property names using what ever case is desired. This list is assumed to not have duplicate names based on case. */
   QStringList m_propertyNames;
+
+  /*! \brief In-order list of property types. */
   QList<QVariant::Type> m_propertyTypes;
+
+  /*! \brief Map an integer ID to a specific object. */
   QHash<int, GenericDataObject*> m_objects;
 
   /*! \brief Provides a fast way to map to the actual property name in a case insensitive way. */
   QHash<QString, int> m_LowerCasePropertyNameMap;
 
-  /*! \brief lower case list of field names against which an object should be sorted. */
+  /*! \brief List of field names against which an object should be sorted. */
   QList<TableSortField*> m_sortFields;
 
   // TODO: Deal with sync issues!
+  /*! \brief IDs in some sorted order for record traversal. So, you sort this list and then traverse it. */
   QList<int> m_sortedIDs;
 };
 

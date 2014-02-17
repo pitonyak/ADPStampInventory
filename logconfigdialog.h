@@ -22,7 +22,17 @@ class LogConfigDialog : public QDialog
 {
   Q_OBJECT
 public:
+    //**************************************************************************
+    /*! \brief Default constructor with the specified parent.
+     *
+     *  All objects owned by the parent are destroyed in the destructor.
+     *  \param [in] parent The object's owner.
+     ***************************************************************************/
   explicit LogConfigDialog(QWidget *parent = 0);
+
+    //**************************************************************************
+    /*! \brief Destructor in case I need any special clean-up.
+     **************************************************************************/
   ~LogConfigDialog();
 
   void configureDialog(const SimpleLoggerADP& logger);

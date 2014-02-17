@@ -116,6 +116,12 @@ public:
      */
     QVariant getNullVariant(QMetaType::Type metaType) const;
 
+    QString getMetaName(QMetaType::Type aType) const;
+    QString getVariantName(QVariant::Type aType) const;
+
+    QMetaType::Type getMetaType(const QString& name) const;
+    QVariant::Type getVariantType(const QString& name) const;
+
 signals:
 
 public slots:
@@ -136,6 +142,13 @@ private:
 
     /*! \brief List of unsigned signed numeric types from smallest (unsigned short) to largest (unsigned long long) for use with conversions. */
     QList<QMetaType::Type> m_UNumList;
+
+    QMap<QMetaType::Type, QString> m_MetaToName;
+    QMap<QVariant::Type, QString> m_VariantToName;
+
+    QMap<QString, QMetaType::Type> m_NameToMetaTo;
+    QMap<QString, QVariant::Type> m_NameToVariant;
+
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(TypeMapper::ColumnConversionPreferences)
@@ -169,6 +182,26 @@ inline QVariant TypeMapper::getNullVariant(QVariant::Type variantType) const
 inline QVariant TypeMapper::getNullVariant(QMetaType::Type metaType) const
 {
   return getNullVariant(metaToVariantType(metaType));
+}
+
+inline QString TypeMapper::getMetaName(QMetaType::Type aType) const
+{
+    return m_MetaToName.value(aType);
+}
+
+inline QString TypeMapper::getVariantName(QVariant::Type aType) const
+{
+    return m_VariantToName.value(aType);
+}
+
+inline QMetaType::Type TypeMapper::getMetaType(const QString& name) const
+{
+    return m_NameToMetaTo.contains(name.toLower()) ? m_NameToMetaTo.value(name.toLower()) : QMetaType::UnknownType;
+}
+
+inline QVariant::Type TypeMapper::getVariantType(const QString& name) const
+{
+    return m_NameToVariant.contains(name.toLower()) ? m_NameToVariant.value(name.toLower()) : QVariant::Invalid;
 }
 
 

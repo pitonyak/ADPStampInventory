@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QString>
+#include <QMetaEnum>
 #include "valuecomparer.h"
 
 //**************************************************************************
@@ -79,6 +80,8 @@ public:
     /*! \brief Set the field name. */
     void setFieldName(const QString& name);
 
+    /*! \brief Set the field type. */
+    void setFieldType(const QMetaType::Type metaType=QMetaType::UnknownType);
 
     /*! \return The field index. */
     int fieldIndex() const;
@@ -88,6 +91,10 @@ public:
 
     /*! \return Field name. */
     const QString& fieldName() const;
+
+    /*! \return Field type. */
+    QMetaType::Type fieldType() const;
+
 
     //**************************************************************************
     /*! \brief Get the case sensitivity.
@@ -212,6 +219,8 @@ private:
 
     /*! \brief name of the field */
     QString m_fieldName;
+
+    QMetaType::Type m_MetaType;
 };
 
 inline void TableSortField::setFieldIndex(int index)
@@ -234,6 +243,11 @@ inline void TableSortField::setFieldName(const QString& name)
     m_fieldName = name;
 }
 
+inline void TableSortField::setFieldType(const QMetaType::Type metaType)
+{
+    m_MetaType = metaType;
+}
+
 inline int TableSortField::fieldIndex() const
 {
     return m_fieldIndex;
@@ -252,6 +266,11 @@ inline TableSortField::SortOrder TableSortField::sortOrder() const
 inline const QString& TableSortField::fieldName() const
 {
     return m_fieldName;
+}
+
+inline QMetaType::Type TableSortField::fieldType() const
+{
+    return m_MetaType;
 }
 
 inline bool TableSortField::lessThan(const QVariant& v1, const QVariant& v2) const

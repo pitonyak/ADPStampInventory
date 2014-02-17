@@ -1,7 +1,7 @@
 #include "tablesortfield.h"
 
 TableSortField::TableSortField(QObject *parent) : QObject(parent),
-    m_comparer(nullptr), m_fieldIndex(-1), m_sortOrder(Ascending)
+    m_comparer(nullptr), m_fieldIndex(-1), m_sortOrder(Ascending), m_MetaType(QMetaType::UnknownType)
 {
     m_comparer = new ValueComparer(Qt::CaseInsensitive);
 }
@@ -43,6 +43,7 @@ const TableSortField& TableSortField::operator=(const TableSortField& obj)
         setCase(obj.caseSensitivity());
         setSortOrder(obj.sortOrder());
         setFieldName(obj.fieldName());
+        setFieldType(obj.fieldType());
     }
     return *this;
 }
