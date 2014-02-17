@@ -55,7 +55,7 @@ public:
     TableFieldEvalNode::OperatorType nodeType() const;
 
     /*! \brief Get the node value. */
-    const QString& nodeValue() const;
+    const QString nodeValue() const;
 
     /*! \brief Get the node priority. */
     int nodePriority() const;
