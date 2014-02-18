@@ -24,6 +24,45 @@ void TypeMapper::initialize()
     m_typeMapMetaToVariant.insert(QMetaType::QBitArray, QVariant::BitArray);
     m_typeMapMetaToVariant.insert(QMetaType::QBitmap, QVariant::Bitmap);
     m_typeMapMetaToVariant.insert(QMetaType::QBrush, QVariant::Brush);
+    m_typeMapMetaToVariant.insert(QMetaType::QColor, QVariant::Color);
+    m_typeMapMetaToVariant.insert(QMetaType::QCursor, QVariant::Cursor);
+    m_typeMapMetaToVariant.insert(QMetaType::QEasingCurve, QVariant::EasingCurve);
+    m_typeMapMetaToVariant.insert(QMetaType::QUuid, QVariant::Uuid);
+    m_typeMapMetaToVariant.insert(QMetaType::QModelIndex, QVariant::ModelIndex);
+    m_typeMapMetaToVariant.insert(QMetaType::QFont, QVariant::Font);
+    m_typeMapMetaToVariant.insert(QMetaType::QVariantHash, QVariant::Hash);
+    m_typeMapMetaToVariant.insert(QMetaType::QIcon, QVariant::Icon);
+    m_typeMapMetaToVariant.insert(QMetaType::QKeySequence, QVariant::KeySequence);
+    m_typeMapMetaToVariant.insert(QMetaType::QLine, QVariant::Line);
+    m_typeMapMetaToVariant.insert(QMetaType::QLineF, QVariant::LineF);
+    m_typeMapMetaToVariant.insert(QMetaType::QVariantList, QVariant::List);
+    m_typeMapMetaToVariant.insert(QMetaType::QLocale, QVariant::Locale);
+    m_typeMapMetaToVariant.insert(QMetaType::QVariantMap, QVariant::Map);
+    m_typeMapMetaToVariant.insert(QMetaType::QMatrix, QVariant::Matrix);
+    m_typeMapMetaToVariant.insert(QMetaType::QTransform, QVariant::Transform);
+    m_typeMapMetaToVariant.insert(QMetaType::QMatrix4x4, QVariant::Matrix4x4);
+    m_typeMapMetaToVariant.insert(QMetaType::QPalette, QVariant::Palette);
+    m_typeMapMetaToVariant.insert(QMetaType::QPen, QVariant::Pen);
+    m_typeMapMetaToVariant.insert(QMetaType::QPixmap, QVariant::Pixmap);
+    m_typeMapMetaToVariant.insert(QMetaType::QPoint, QVariant::Point);
+    m_typeMapMetaToVariant.insert(QMetaType::QPointF, QVariant::PointF);
+    m_typeMapMetaToVariant.insert(QMetaType::QPolygon, QVariant::Polygon);
+    m_typeMapMetaToVariant.insert(QMetaType::QPolygonF, QVariant::PolygonF);
+    m_typeMapMetaToVariant.insert(QMetaType::QQuaternion, QVariant::Quaternion);
+    m_typeMapMetaToVariant.insert(QMetaType::QRect, QVariant::Rect);
+    m_typeMapMetaToVariant.insert(QMetaType::QRectF, QVariant::RectF);
+    m_typeMapMetaToVariant.insert(QMetaType::QRegExp, QVariant::RegExp);
+    m_typeMapMetaToVariant.insert(QMetaType::QRegularExpression, QVariant::RegularExpression);
+    m_typeMapMetaToVariant.insert(QMetaType::QRegion, QVariant::Region);
+    m_typeMapMetaToVariant.insert(QMetaType::QSize, QVariant::Size);
+    m_typeMapMetaToVariant.insert(QMetaType::QSizeF, QVariant::SizeF);
+    m_typeMapMetaToVariant.insert(QMetaType::QSizePolicy, QVariant::SizePolicy);
+    m_typeMapMetaToVariant.insert(QMetaType::QTextFormat, QVariant::TextFormat);
+    m_typeMapMetaToVariant.insert(QMetaType::QTextLength, QVariant::TextLength);
+    m_typeMapMetaToVariant.insert(QMetaType::QVector2D, QVariant::Vector2D);
+    m_typeMapMetaToVariant.insert(QMetaType::QVector3D, QVariant::Vector3D);
+    m_typeMapMetaToVariant.insert(QMetaType::QVector4D, QVariant::Vector4D);
+    m_typeMapMetaToVariant.insert(QMetaType::User, QVariant::UserType);
 
     m_typeMapMetaToVariant.insert(QMetaType::Long, QVariant::LongLong);
     m_typeMapMetaToVariant.insert(QMetaType::LongLong, QVariant::LongLong);
@@ -51,11 +90,11 @@ void TypeMapper::initialize()
     m_typeMapVariantToMeta.insert(QVariant::String, QMetaType::QString);
     m_typeMapVariantToMeta.insert(QVariant::ByteArray, QMetaType::QByteArray);
 
-    m_typeMapVariantToMeta.insert(QVariant::BitArray, QMetaType::QBitArray);
-    m_typeMapVariantToMeta.insert(QVariant::Bitmap, QMetaType::QBitmap);
-    m_typeMapVariantToMeta.insert(QVariant::Brush, QMetaType::QBrush);
-    m_typeMapVariantToMeta.insert(QVariant::Color, QMetaType::QColor);
-    m_typeMapVariantToMeta.insert(QVariant::Cursor, QMetaType::QCursor);
+    //m_typeMapVariantToMeta.insert(QVariant::BitArray, QMetaType::QBitArray);
+    //m_typeMapVariantToMeta.insert(QVariant::Bitmap, QMetaType::QBitmap);
+    //m_typeMapVariantToMeta.insert(QVariant::Brush, QMetaType::QBrush);
+    //m_typeMapVariantToMeta.insert(QVariant::Color, QMetaType::QColor);
+    //m_typeMapVariantToMeta.insert(QVariant::Cursor, QMetaType::QCursor);
 
     //m_typeMapVariantToMeta.insert(QVariant::LongLong, QMetaType::Long);
     m_typeMapVariantToMeta.insert(QVariant::LongLong, QMetaType::LongLong);
@@ -235,6 +274,16 @@ void TypeMapper::initialize()
         variantNameIterator.next();
         m_NameToVariant.insert(variantNameIterator.value().toLower(), variantNameIterator.key());
     }
+
+    // Fill in the variant to meta map where the variant type has no values.
+    QMapIterator<QMetaType::Type, QVariant::Type> typeMapMetaToVariantIterator(m_typeMapMetaToVariant);
+    while (typeMapMetaToVariantIterator.hasNext()) {
+        typeMapMetaToVariantIterator.next();
+        if (!m_typeMapVariantToMeta.contains(typeMapMetaToVariantIterator.value())) {
+            m_typeMapVariantToMeta.insert(typeMapMetaToVariantIterator.value(), typeMapMetaToVariantIterator.key());
+        }
+    }
+
 }
 
 QMetaType::Type TypeMapper::guessType(const QString& s, const ColumnConversionPreferences preferences)
