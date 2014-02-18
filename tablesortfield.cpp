@@ -1,5 +1,9 @@
 #include "tablesortfield.h"
 
+const QString s_Ascending = "Ascending";
+const QString s_Descending = "Descending";
+
+
 TableSortField::TableSortField(QObject *parent) : QObject(parent),
     m_comparer(nullptr), m_fieldIndex(-1), m_sortOrder(Ascending), m_MetaType(QMetaType::UnknownType)
 {
@@ -46,4 +50,23 @@ const TableSortField& TableSortField::operator=(const TableSortField& obj)
         setFieldType(obj.fieldType());
     }
     return *this;
+}
+
+
+QString TableSortField::sortOrderToName(const SortOrder sortOrder)
+{
+    return sortOrder == TableSortField::Ascending ? "Ascending" : "Descending";
+}
+
+TableSortField::SortOrder TableSortField::sortOrderFromName(const QString& name)
+{
+    return name.compare("Descending", Qt::CaseInsensitive) == 0 ? TableSortField::Descending : TableSortField::Ascending;
+}
+
+QStringList TableSortField::sortOrderNames()
+{
+    QStringList list;
+    list << "Ascending";
+    list << "Descending";
+    return list;
 }

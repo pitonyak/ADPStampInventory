@@ -207,6 +207,24 @@ public:
       ***************************************************************************/
      const TableSortField& operator=(const TableSortField& obj);
 
+     //**************************************************************************
+     /*! \brief Get the sort order name from the enum.
+      *
+      *  \param [in] sortOrder Value to convert
+      *  \return Return the name for the sort order value.
+      ***************************************************************************/
+     static QString sortOrderToName(const SortOrder sortOrder);
+
+     //**************************************************************************
+     /*! \brief Get the sort order value from the name. If the name is not known, returns Ascending.
+      *
+      *  \param [in] name Sort order name to evalute in a case insensitive way "Ascending" or "Descending".
+      *  \return Sort order value from the name.
+      ***************************************************************************/
+     static SortOrder sortOrderFromName(const QString& name);
+
+     static QStringList sortOrderNames();
+
 private:
     /*! \brief comparer is created and owned by this class. */
     ValueComparer* m_comparer;

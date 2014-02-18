@@ -66,5 +66,11 @@ void QtEnumMapper::initialize()
   (*regExpPatterns)[QRegExp::FixedString] = "Fixed String";
   (*regExpPatterns)[QRegExp::W3CXmlSchema11] = "W3C XML Schema";
   m_valueToName["PatternSyntax"] = regExpPatterns;
+
+  // Names match those in the XmlUtility class.
+  QMap<int, QString>* caseNames = new QMap<int, QString>();
+  (*caseNames)[Qt::CaseInsensitive] = "CaseInsensitive";
+  (*caseNames)[Qt::CaseSensitive] = "CaseSensitive";
+  m_valueToName["CaseSensitivity"] = regExpPatterns;
 }
 

@@ -1,4 +1,5 @@
 #include "tablesortfieldtablemodel.h"
+#include "xmlutility.h"
 
 #define TypeColumn 0
 #define NameColumn 1
@@ -37,11 +38,10 @@ bool TableSortFieldTableModel::setData ( const QModelIndex & index, const QVaria
       field->setFieldName(value.toString());
       break;
     case OrderColumn:
-      // TODO:
+      field->setSortOrder(field->sortOrderFromName(value.toString()));
       break;
     case CaseColumn:
-        // TODO
-      //info.setRouting(SimpleLoggerRoutingInfo::RouteFile, value.toBool());
+      field->setCase(XMLUtility::stringToCase(value.toString()));
       break;
     default:
       // No other column is setable here!
@@ -70,12 +70,10 @@ QVariant TableSortFieldTableModel::data( const QModelIndex &index, int role ) co
       return field->fieldName();
       break;
     case OrderColumn:
-        //??
-      return field->sortOrder();
+      return field->sortOrderToName(field->sortOrder());
       break;
     case CaseColumn:
-        //??
-      return field->caseSensitivity();
+      return XMLUtility::caseToString(field->caseSensitivity());
       break;
     default:
       // No other column is valid
