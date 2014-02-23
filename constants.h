@@ -40,6 +40,9 @@ public:
   static QString Settings_LastSQLDialogString;
   static QString Settings_MainWindowGeometry;
 
+  static QString Settings_SortFieldDlgGeometry;
+  static QString Settings_FilterFieldDlgGeometry;
+
 
 };
 

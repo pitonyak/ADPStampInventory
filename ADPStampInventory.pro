@@ -76,7 +76,8 @@ SOURCES += main.cpp\
     valuecomparer.cpp \
     tablesortfield.cpp \
     genericdataobjectlessthan.cpp \
-    tablesortfieldtablemodel.cpp
+    tablesortfieldtablemodel.cpp \
+    tablesortfielddialog.cpp
 
 HEADERS  += mainwindow.h \
     stampdb.h \
@@ -129,7 +130,8 @@ HEADERS  += mainwindow.h \
     valuecomparer.h \
     tablesortfield.h \
     genericdataobjectlessthan.h \
-    tablesortfieldtablemodel.h
+    tablesortfieldtablemodel.h \
+    tablesortfielddialog.h
 
 FORMS    += mainwindow.ui \
     logroutinginfodialog.ui

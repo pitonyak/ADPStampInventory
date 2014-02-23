@@ -11,6 +11,10 @@ QString Constants::Settings_SQLDialogGeometry = "sqlDialogGeometry";
 QString Constants::Settings_LastSQLDialogString = "sqlDialogLastString";
 QString Constants::Settings_MainWindowGeometry = "MainWindowGeometry";
 
+QString Constants::Settings_SortFieldDlgGeometry = "SortFieldDlgGeometry";
+QString Constants::Settings_FilterFieldDlgGeometry = "FilterFieldDlgGeometry";
+
+
 Constants::Constants()
 {
 }
