@@ -77,12 +77,28 @@ public:
      ***************************************************************************/
     int columnCount( const QModelIndex &parent = QModelIndex() ) const;
 
+    void updateRow(int row, const TableSortField& field);
+    void insertRow(int row, const TableSortField& field);
+    void copyRow(int row);
+    void removeRow(int row);
+    void clear();
+    void moveRowUp(int row);
+    void moveRowDown(int row);
+    int count() const;
+
 signals:
 
 public slots:
 
+public:
+    static const int numColumns;
+    static const int nameColumn;
+    static const int ascendingColumn;
+    static const int typeColumn;
+    static const int caseColumn;
+
 private:
-    QList<TableSortField*> m_collection;
+    QList<TableSortField> m_collection;
     TypeMapper m_mapper;
 };
 

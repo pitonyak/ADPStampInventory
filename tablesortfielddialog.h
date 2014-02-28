@@ -6,6 +6,9 @@
 #include "tablesortfieldtablemodel.h"
 #include "genericdatacollection.h"
 
+class QTableView;
+class QLineEdit;
+
 //**************************************************************************
 /*! \class TableSortFieldDialog
  *
@@ -32,14 +35,25 @@ public:
   /*! \brief Destructor saves dialog geometry. */
   virtual ~TableSortFieldDialog();
 
+  void setConfigFilePath(const QString& path);
+  QString getConfigFilePath() const;
+
+  int getSelectedRoW() const;
+
 
 signals:
 
 public slots:
+  void delSelectedRow();
+  void copyRow();
+  void addRow();
+  void loadConfiguration();
+  void saveConfiguration();
 
 private:
   /*! \brief Set list columns, delegates, and initial values. */
   void initialize();
+  void buildDialog();
 
   /*! \brief Get the index of the current row. */
   int getSelectedRow() const;
@@ -50,8 +64,11 @@ private:
   /*! \brief Return True if a row is currently selected. */
   bool isRowSelected() const;
 
-
+  /*! \brief Identifies the columns and the types. */
   const GenericDataCollection* m_dataCollection;
+  QTableView* m_tableView;
+  QLineEdit* m_configFilePath;
+  TableSortFieldTableModel* m_tableModel;
 };
 
 #endif // TABLESORTFIELDDIALOG_H
