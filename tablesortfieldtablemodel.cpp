@@ -34,13 +34,15 @@ bool TableSortFieldTableModel::setData ( const QModelIndex & index, const QVaria
     {
     case typeColumn:
       // Read-only field, this should not happen.
-      field.setFieldType(m_mapper.getMetaType(value.toString()));
+      // field.setFieldType(m_mapper.getMetaType(value.toString()));
+      return false;
       break;
     case nameColumn:
       field.setFieldName(value.toString());
       if (m_dataCollection != nullptr)
       {
-        field.setFieldType(m_mapper.variantTypeToMetaType(m_dataCollection->getPropertyType(field.fieldName())));
+        field.setFieldType(m_dataCollection->getPropertyTypeMeta(field.fieldName()));
+        field.setFieldIndex(m_dataCollection->getPropertyIndex(field.fieldName()));
       }
       break;
     case ascendingColumn:
@@ -97,10 +99,23 @@ QVariant TableSortFieldTableModel::data( const QModelIndex &index, int role ) co
     case nameColumn:
       {
         QStringList qsl;
-        qsl << data(index, Qt::DisplayRole).toString();
+        QString sName = data(index, Qt::DisplayRole).toString();
+        qsl << sName;
+        qsl << sName;
         if (m_dataCollection != nullptr)
         {
-          qsl << m_dataCollection->getPropertNames();
+          for (int i=0; i<m_dataCollection->getPropertyNameCount(); ++i)
+          {
+            bool found_it = false;
+            for (int j=0; j<m_collection.count() && !found_it; ++j)
+            {
+              found_it = m_collection.at(j).fieldName().compare(m_dataCollection->getPropertyName(i), Qt::CaseInsensitive) == 0;
+            }
+            if (!found_it)
+            {
+              qsl << m_dataCollection->getPropertyName(i);
+            }
+          }
         }
         return qsl;
       }
@@ -277,3 +292,15 @@ int TableSortFieldTableModel::count() const
 {
   return m_collection.count();
 }
+
+bool TableSortFieldTableModel::hasFieldName(const QString& name) const
+{
+  for (int i=0; i<m_collection.size(); ++i)
+  {
+    if (name.compare(m_collection.at(i).fieldName(), Qt::CaseInsensitive) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+

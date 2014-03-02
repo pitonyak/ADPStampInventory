@@ -44,7 +44,7 @@ void GenericDataCollection::removeObject(const int id)
   }
 }
 
-QVariant::Type GenericDataCollection::getPropertyType(const QString& name) const
+QVariant::Type GenericDataCollection::getPropertyTypeVariant(const QString& name) const
 {
   QString lowerCaseName = name.toLower();
   return m_LowerCasePropertyNameMap.contains(lowerCaseName) ? m_propertyTypes.at(m_LowerCasePropertyNameMap.value(lowerCaseName)) : QVariant::Invalid;
@@ -54,6 +54,11 @@ QString GenericDataCollection::getPropertyName(const QString& name) const
 {
   QString lowerCaseName = name.toLower();
   return m_LowerCasePropertyNameMap.contains(lowerCaseName) ? m_propertyNames.at(m_LowerCasePropertyNameMap.value(lowerCaseName)) : "";
+}
+
+int GenericDataCollection::getPropertyIndex(const QString& name) const
+{
+  return m_LowerCasePropertyNameMap.value(name.toLower(), -1);
 }
 
 bool GenericDataCollection::appendPropertyName(const QString& name, const QVariant::Type pType)
@@ -74,7 +79,7 @@ bool GenericDataCollection::exportToCSV(CSVWriter& writer) const
   writer.clearHeader();
   for (int i=0; i<getPropertNames().count(); ++i)
   {
-    writer.addHeader(getPropertyName(i), CSVColumn::variantTypeToMetaType(getPropertyType(i)));
+    writer.addHeader(getPropertyName(i), CSVColumn::variantTypeToMetaType(getPropertyTypeVariant(i)));
   }
   writer.writeHeader();
 
@@ -90,7 +95,7 @@ bool GenericDataCollection::exportToCSV(CSVWriter& writer) const
     {
       if (obj->hasValue(getPropertyName(i)))
       {
-        QMetaType::Type columnType = CSVColumn::variantTypeToMetaType(getPropertyType(i));
+        QMetaType::Type columnType = CSVColumn::variantTypeToMetaType(getPropertyTypeVariant(i));
         bool qualified = (columnType == QMetaType::QString);
         newLine.append(CSVColumn(obj->getString(getPropertyName(i)), qualified, columnType));
       }

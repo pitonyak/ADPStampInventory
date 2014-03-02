@@ -1,4 +1,7 @@
 #include "tablesortfield.h"
+#include "typemapper.h"
+
+#include <QXmlStreamWriter>
 
 const QString s_Ascending = "Ascending";
 const QString s_Descending = "Descending";
@@ -52,21 +55,44 @@ const TableSortField& TableSortField::operator=(const TableSortField& obj)
     return *this;
 }
 
-
 QString TableSortField::sortOrderToName(const SortOrder sortOrder)
 {
-    return sortOrder == TableSortField::Ascending ? "Ascending" : "Descending";
+    return sortOrder == TableSortField::Ascending ? s_Ascending : s_Descending;
 }
 
 TableSortField::SortOrder TableSortField::sortOrderFromName(const QString& name)
 {
-    return name.compare("Descending", Qt::CaseInsensitive) == 0 ? TableSortField::Descending : TableSortField::Ascending;
+    return name.compare(s_Descending, Qt::CaseInsensitive) == 0 ? TableSortField::Descending : TableSortField::Ascending;
 }
 
 QStringList TableSortField::sortOrderNames()
 {
     QStringList list;
-    list << "Ascending";
-    list << "Descending";
+    list << s_Ascending;
+    list << s_Descending;
     return list;
+}
+
+QXmlStreamWriter& TableSortField::write(QXmlStreamWriter& writer) const
+{
+  TypeMapper mapper;
+  writer.writeStartElement("TableSortField");
+  writer.writeAttribute("Name", m_fieldName);
+  writer.writeAttribute("Index", QString("%1").arg(m_fieldIndex));
+  writer.writeAttribute("CaseSensitive", m_comparer != nullptr && m_comparer->caseSensitivity() == Qt::CaseSensitive ? "True" : "False");
+  writer.writeAttribute("Type", mapper.getMetaName(m_MetaType));
+  writer.writeAttribute(s_Ascending, isAscending() ? "True" : "False");
+  writer.writeEndElement();
+  return writer;
+}
+
+QXmlStreamWriter& TableSortField::write(QList<TableSortField> list, QXmlStreamWriter& writer)
+{
+  writer.writeStartElement("TableSortFields");
+  for (int i=0; i<list.count(); ++i)
+  {
+    list.at(i).write(writer);
+  }
+  writer.writeEndElement();
+  return writer;
 }

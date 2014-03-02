@@ -12,8 +12,7 @@ QtEnumMapper::~QtEnumMapper()
   while (i.hasNext())
   {
     i.next();
-    // TODO: ??
-    //delete i.value();
+    delete i.value();
   }
   m_valueToName.clear();
 }
@@ -49,12 +48,11 @@ QString QtEnumMapper::enumToString(const QString& typeName, const int value, con
 
 const QMap<int, QString> *QtEnumMapper::getEnumData(const QString &typeName) const
 {
-  QString upperCaseName = typeName.toUpper();
-  if (m_valueToName.contains(upperCaseName))
-  {
-    return m_valueToName.value(upperCaseName);
+  const QMap<int, QString> * rc = m_valueToName.value(typeName, nullptr);
+  if (rc == nullptr) {
+    rc = m_valueToName.value(typeName.toUpper(), nullptr);
   }
-  return nullptr;
+  return rc;
 }
 
 void QtEnumMapper::initialize()
@@ -72,6 +70,6 @@ void QtEnumMapper::initialize()
   QMap<int, QString>* caseNames = new QMap<int, QString>();
   (*caseNames)[Qt::CaseInsensitive] = "CaseInsensitive";
   (*caseNames)[Qt::CaseSensitive] = "CaseSensitive";
-  m_valueToName["CaseSensitivity"] = regExpPatterns;
+  m_valueToName["CaseSensitivity"] = caseNames;
 }
 

@@ -3,11 +3,13 @@
 
 #include "genericdataobject.h"
 #include "tablesortfield.h"
+#include "typemapper.h"
 
 #include <QObject>
 #include <QStringList>
 #include <QHash>
 #include <QVariant>
+#include <QMetaType>
 
 class CSVWriter;
 
@@ -43,13 +45,19 @@ public:
    *  \param [in] i Index of the property name of interest. Must be a valid index.
    *  \return Property at index i.
    */
-  const QString& getPropertyName(const int i) const;
+  const QString getPropertyName(const int i) const;
 
   /*! \brief Get a property name using a case insensitive search
    *  \param [in] name Case insensitive property name desired.
    *  \return Property name used by the generic objects or "" if the property is not present.
    */
   QString getPropertyName(const QString& name) const;
+
+  /*! \brief Get a properties index
+   *  \param [in] name Case insensitive property name desired.
+   *  \return Index of the property, or, -1 if the property is not present.
+   */
+  int getPropertyIndex(const QString& name) const;
 
   /*! \brief Get the property names.
    *  \return List of property names in index order.
@@ -78,13 +86,26 @@ public:
    *  \param [in] name Case insensitive property name desired.
    *  \return Properties type if the name exists, and QVariant::Invalid if it does not.
    */
-  QVariant::Type getPropertyType(const QString& name) const;
+  QVariant::Type getPropertyTypeVariant(const QString& name) const;
 
   /*! \brief Get a properties type based on its index.
    *  \param [in] i Index of the property name (the column).
-   *  \return Properties type. If the index is out of bounds, well, it had better not be out of bounds.
+   *  \return Properties type or Invalid if the index is out of bounds.
    */
-  QVariant::Type getPropertyType(const int i) const;
+  QVariant::Type getPropertyTypeVariant(const int i) const;
+
+  /*! \brief Get a properties type based on its name.
+   *  \param [in] name Case insensitive property name desired.
+   *  \return Properties type if the name exists, QMetaType::Void if it does not.
+   */
+  QMetaType::Type getPropertyTypeMeta(const QString& name) const;
+
+  /*! \brief Get a properties type based on its index.
+   *  \param [in] i Index of the property name (the column).
+   *  \return Properties type and QMetaType::Void if the index is out of bounds.
+   */
+  QMetaType::Type getPropertyTypeMeta(const int i) const;
+
 
   /*! \brief Add an object with the specified integer ID. Null objects are ignored. This class owns and deletes the object. The sorted ID list is not updated.
    *  \param [in] id Objects integer ID.
@@ -239,6 +260,8 @@ private:
   // TODO: Deal with sync issues!
   /*! \brief IDs in some sorted order for record traversal. So, you sort this list and then traverse it. */
   QList<int> m_sortedIDs;
+
+  TypeMapper m_mapper;
 };
 
 inline const QStringList& GenericDataCollection::getPropertNames() const
@@ -256,9 +279,19 @@ inline int GenericDataCollection::getPropertyNameCount() const
   return m_propertyNames.count();
 }
 
-inline QVariant::Type GenericDataCollection::getPropertyType(const int i) const
+inline QVariant::Type GenericDataCollection::getPropertyTypeVariant(const int i) const
 {
-  return m_propertyTypes.at(i);
+  return (0 >= 0 && i < m_propertyTypes.size()) ? m_propertyTypes.at(i) : QVariant::Invalid;
+}
+
+inline QMetaType::Type GenericDataCollection::getPropertyTypeMeta(const QString& name) const
+{
+  return m_mapper.variantTypeToMetaType(getPropertyTypeVariant(name));
+}
+
+inline QMetaType::Type GenericDataCollection::getPropertyTypeMeta(const int i) const
+{
+  return m_mapper.variantTypeToMetaType(getPropertyTypeVariant(i));
 }
 
 inline int GenericDataCollection::getObjectCount() const
@@ -326,9 +359,9 @@ inline QDateTime GenericDataCollection::getDateTime(const int id, const QString&
   return hasObject(id) ? m_objects.value(id)->getDateTime(name) : defaultValue;
 }
 
-inline const QString& GenericDataCollection::getPropertyName(const int i) const
+inline const QString GenericDataCollection::getPropertyName(const int i) const
 {
-  return m_propertyNames.at(i);
+  return (0 <= i && i < m_propertyNames.size()) ? m_propertyNames.at(i) : "";
 }
 
 inline int GenericDataCollection::rowCount() const

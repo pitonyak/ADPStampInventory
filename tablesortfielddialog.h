@@ -2,6 +2,7 @@
 #define TABLESORTFIELDDIALOG_H
 
 #include <QDialog>
+#include <QItemSelection>
 
 #include "tablesortfieldtablemodel.h"
 #include "genericdatacollection.h"
@@ -39,17 +40,17 @@ public:
   void setConfigFilePath(const QString& path);
   QString getConfigFilePath() const;
 
-  int getSelectedRoW() const;
-
-
 signals:
 
 public slots:
   void delSelectedRow();
   void copyRow();
   void addRow();
+  void rowUp();
+  void rowDown();
   void loadConfiguration();
   void saveConfiguration();
+  void selectionChanged( const QItemSelection & selected, const QItemSelection & deselected );
 
 private:
   /*! \brief Set list columns, delegates, and initial values. */
@@ -64,6 +65,11 @@ private:
 
   /*! \brief Return True if a row is currently selected. */
   bool isRowSelected() const;
+
+  QPushButton* m_upButton;
+  QPushButton* m_downButton;
+  QPushButton* m_addButton;
+  QPushButton* m_deleteButton;
 
   /*! \brief Identifies the columns and the types. */
   const GenericDataCollection* m_dataCollection;

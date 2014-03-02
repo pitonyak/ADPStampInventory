@@ -6,6 +6,8 @@
 #include <QMetaEnum>
 #include "valuecomparer.h"
 
+class QXmlStreamWriter;
+
 //**************************************************************************
 /*! \class TableSortField
  * \brief Provide a method to sort columns in a field.
@@ -222,6 +224,10 @@ public:
       *  \return Sort order value from the name.
       ***************************************************************************/
      static SortOrder sortOrderFromName(const QString& name);
+
+     QXmlStreamWriter& write(QXmlStreamWriter& writer) const;
+
+     static QXmlStreamWriter& write(QList<TableSortField> list, QXmlStreamWriter& writer);
 
      static QStringList sortOrderNames();
 

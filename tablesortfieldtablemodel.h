@@ -79,6 +79,16 @@ public:
      ***************************************************************************/
     int columnCount( const QModelIndex &parent = QModelIndex() ) const;
 
+    //**************************************************************************
+    /*! \brief Determine if a particular field name is in the list (case insensitive).
+     *
+     *  \param [in] name Field name of interest.
+     *  \return Returns true if the field is in the list.
+     ***************************************************************************/
+    bool hasFieldName(const QString& name) const;
+
+    const QList<TableSortField>& getList() const;
+
     void updateRow(int row, const TableSortField& field);
     void insertRow(int row, const TableSortField& field);
     void copyRow(int row);
@@ -104,5 +114,10 @@ private:
     QList<TableSortField> m_collection;
     TypeMapper m_mapper;
 };
+
+inline const QList<TableSortField>& TableSortFieldTableModel::getList() const
+{
+  return m_collection;
+}
 
 #endif // TABLESORTFIELDTABLEMODEL_H

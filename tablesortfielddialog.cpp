@@ -18,7 +18,8 @@
 #include <QDialogButtonBox>
 
 TableSortFieldDialog::TableSortFieldDialog(const GenericDataCollection *dataCollection, QWidget *parent) :
-  QDialog(parent), m_dataCollection(dataCollection), m_tableView(nullptr), m_configFilePath(nullptr), m_tableModel(nullptr)
+  QDialog(parent), m_upButton(nullptr), m_downButton(nullptr), m_addButton(nullptr), m_deleteButton(nullptr),
+  m_dataCollection(dataCollection), m_tableView(nullptr), m_configFilePath(nullptr), m_tableModel(nullptr)
 {
   buildDialog();
 }
@@ -76,24 +77,33 @@ void TableSortFieldDialog::delSelectedRow()
   if (isRowSelected())
   {
     m_tableModel->removeRow(getSelectedRow());
+    enableButtons();
   }
 }
 
 void TableSortFieldDialog::copyRow()
 {
   m_tableModel->copyRow(getSelectedRow());
+  enableButtons();
 }
 
 void TableSortFieldDialog::addRow()
 {
-  // TODO: Choose the next unused column
-  TableSortField field;
-  if (m_dataCollection != nullptr && m_dataCollection->getPropertyNameCount() > 0)
+  if (m_dataCollection == nullptr) {
+    return;
+  }
+  for (int i=0; i<m_dataCollection->getPropertyNameCount(); ++i)
   {
-    field.setFieldName(m_dataCollection->getPropertyName(0));
-    field.setFieldIndex(0);
-    field.setFieldType(m_mapper.variantTypeToMetaType(m_dataCollection->getPropertyType(0)));
-    m_tableModel->insertRow(getSelectedRow(), field);
+    if (!m_tableModel->hasFieldName(m_dataCollection->getPropertyName(i)))
+    {
+      TableSortField field;
+      field.setFieldName(m_dataCollection->getPropertyName(i));
+      field.setFieldIndex(i);
+      field.setFieldType(m_mapper.variantTypeToMetaType(m_dataCollection->getPropertyTypeVariant(i)));
+      m_tableModel->insertRow(getSelectedRow(), field);
+      enableButtons();
+      return;
+    }
   }
 }
 
@@ -122,10 +132,18 @@ void TableSortFieldDialog::loadConfiguration()
         //SimpleLoggerADP logger;
         //logger.read(reader);
         //configureDialog(logger);
+        enableButtons();
       }
       file.close();
     }
   }
+}
+
+void TableSortFieldDialog::selectionChanged( const QItemSelection & selected, const QItemSelection & deselected )
+{
+  (void)selected;
+  (void)deselected;
+  enableButtons();
 }
 
 void TableSortFieldDialog::saveConfiguration()
@@ -161,16 +179,24 @@ void TableSortFieldDialog::saveConfiguration()
       else
       {
         writer.setAutoFormatting(true);
-        // TODO:
-        //SimpleLoggerADP logger;
-        //configureLogger(logger);
-        //logger.write(writer);
+        TableSortField::write(m_tableModel->getList(), writer);
       }
       file.close();
     }
   }
 }
 
+void TableSortFieldDialog::rowUp()
+{
+  m_tableModel->moveRowUp(getSelectedRow());
+  enableButtons();
+}
+
+void TableSortFieldDialog::rowDown()
+{
+  m_tableModel->moveRowDown(getSelectedRow());
+  enableButtons();
+}
 
 void TableSortFieldDialog::buildDialog()
 {
@@ -208,12 +234,23 @@ void TableSortFieldDialog::buildDialog()
   button = new QPushButton(tr("Add"));
   connect(button, SIGNAL(clicked()), this, SLOT(addRow()));
   vLayout->addWidget(button);
-  button = new QPushButton(tr("Copy"));
-  connect(button, SIGNAL(clicked()), this, SLOT(copyRow()));
-  vLayout->addWidget(button);
+  m_addButton = button;
+
   button = new QPushButton(tr("Delete"));
   connect(button, SIGNAL(clicked()), this, SLOT(delSelectedRow()));
   vLayout->addWidget(button);
+  m_deleteButton = button;
+
+  button = new QPushButton(tr("Up"));
+  connect(button, SIGNAL(clicked()), this, SLOT(rowUp()));
+  vLayout->addWidget(button);
+  m_upButton = button;
+
+  button = new QPushButton(tr("Down"));
+  connect(button, SIGNAL(clicked()), this, SLOT(rowDown()));
+  vLayout->addWidget(button);
+  m_downButton = button;
+
   vLayout->addStretch();
   hLayout->addLayout(vLayout);
 
@@ -257,68 +294,20 @@ void TableSortFieldDialog::buildDialog()
       }
     }
   }
-}
-
-void TableSortFieldDialog::initialize()
-{
-#if 0
-  ui->setupUi(this);
-  ui->componentTableView->setModel(&m_messageComponentTableModel);
-  LinkBackFilterDelegate* delegate = new LinkBackFilterDelegate(ui->componentTableView);
-  ui->componentTableView->setItemDelegate(delegate);
-  ui->componentTableView->setColumnWidth(m_messageComponentTableModel.fieldColumn, 240);
-  ui->componentTableView->setColumnWidth(m_messageComponentTableModel.stringColumn, 240);
-
-  connect(ui->componentTableView->selectionModel(), SIGNAL(currentChanged ( const QModelIndex &, const QModelIndex &)), this, SLOT(currentMessageCategoryRowChanged ( const QModelIndex &, const QModelIndex &)));
-  connect(ui->copyCompButton, SIGNAL(clicked(bool)), this, SLOT( copyMessageCategory()));
-  connect(ui->insertCompButton, SIGNAL(clicked(bool)), this, SLOT(insertMessageCategory()));
-  connect(ui->upCompButton, SIGNAL(clicked(bool)), this, SLOT(upMessageCategory()));
-  connect(ui->downCompButton, SIGNAL(clicked(bool)), this, SLOT(downMessageCategory()));
-  connect(ui->delCompButton, SIGNAL(clicked(bool)), this, SLOT(delMessageCategory()));
-
-  connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(closeRequested()));
-  connect(ui->testButton, SIGNAL(clicked(bool)), this, SLOT(testMessage()));
-
-  ui->locCaseSensitive->addItem(tr("Case Sensitive"), Qt::CaseSensitive);
-  ui->locCaseSensitive->addItem(tr("Case Insensitive"), Qt::CaseInsensitive);
-  ui->locCaseSensitive->setToolTip(tr("Set location regular expression case sensitivity."));
-
-  ui->msgCaseSensitive->addItem(tr("Case Sensitive"), Qt::CaseSensitive);
-  ui->msgCaseSensitive->addItem(tr("Case Insensitive"), Qt::CaseInsensitive);
-  ui->msgCaseSensitive->setToolTip(tr("Set location regular expression case sensitivity."));
-
-  ui->locSyntax->addItem(tr("Perl No Greedy"), QRegExp::RegExp);
-  ui->locSyntax->addItem(tr("Perl Greedy"), QRegExp::RegExp2);
-  ui->locSyntax->addItem(tr("Wildcard"), QRegExp::Wildcard);
-  ui->locSyntax->addItem(tr("Wildcard Unix"), QRegExp::WildcardUnix);
-  ui->locSyntax->addItem(tr("String"), QRegExp::FixedString);
-  ui->locSyntax->addItem(tr("W3C XML"), QRegExp::W3CXmlSchema11);
-  ui->locSyntax->setToolTip(tr("Set location regular expression pattern syntax."));
-
-  ui->msgSyntax->addItem(tr("Perl No Greedy"), QRegExp::RegExp);
-  ui->msgSyntax->addItem(tr("Perl Greedy"), QRegExp::RegExp2);
-  ui->msgSyntax->addItem(tr("Wildcard"), QRegExp::Wildcard);
-  ui->msgSyntax->addItem(tr("Wildcard Unix"), QRegExp::WildcardUnix);
-  ui->msgSyntax->addItem(tr("String"), QRegExp::FixedString);
-  ui->msgSyntax->addItem(tr("W3C XML"), QRegExp::W3CXmlSchema11);
-  ui->locSyntax->setToolTip(tr("Set unformatted message regular expression pattern syntax."));
-
-  ui->locRegExpEdit->setToolTip(tr("Match location filename:line_number must match the regular expression; use to filter by filename or line number."));
-  ui->msgRegExpEdit->setToolTip(tr("Match based on the unformatted message text."));
-
-  ui->nameEdit->setToolTip(tr("User recognizable name for this object to pick it out in a list."));
-#endif
+  connect(m_tableView->selectionModel(), SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)), this, SLOT(selectionChanged(const QItemSelection &, const QItemSelection &)));
   enableButtons();
 }
 
 void TableSortFieldDialog::enableButtons()
 {
-  //int count = m_messageComponentTableModel.messageComponentCount();
-  //int row = count > 0 ? getSelectedCatRow() : -1;
-  //bool b = count > 0 && row >= 0;
-  //ui->copyCompButton->setEnabled(b);
-  //ui->delCompButton->setEnabled(b);
-  //ui->upCompButton->setEnabled(b && row > 0);
-  //ui->downCompButton->setEnabled(b && row < (count - 1));
+  if (m_dataCollection != nullptr)
+  {
+    int count = m_tableModel->count();
+    int row = count > 0 ? getSelectedRow() : -1;
+    m_upButton->setEnabled(row > 0);
+    m_downButton->setEnabled(row >= 0 && row < (count - 1));
+    m_deleteButton->setEnabled(row >= 0);
+    m_addButton->setEnabled(count < m_dataCollection->getPropertyNameCount());
+  }
 }
 
