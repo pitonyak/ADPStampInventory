@@ -1,6 +1,6 @@
 #include "tablesortfieldtablemodel.h"
 #include "xmlutility.h"
-
+#include "genericdatacollection.h"
 
 const int TableSortFieldTableModel::nameColumn = 0;
 const int TableSortFieldTableModel::ascendingColumn = 1;
@@ -9,8 +9,8 @@ const int TableSortFieldTableModel::typeColumn = 3;
 const int TableSortFieldTableModel::numColumns = 4;
 
 
-TableSortFieldTableModel::TableSortFieldTableModel(QObject *parent) :
-  QAbstractTableModel(parent)
+TableSortFieldTableModel::TableSortFieldTableModel(const GenericDataCollection* dataCollection, QObject *parent) :
+  QAbstractTableModel(parent), m_dataCollection(dataCollection)
 {
 }
 
@@ -30,20 +30,24 @@ bool TableSortFieldTableModel::setData ( const QModelIndex & index, const QVaria
   if (role == Qt::EditRole)
   {
     TableSortField& field = m_collection[index.row()];
-    QString s;
     switch (index.column())
     {
     case typeColumn:
+      // Read-only field, this should not happen.
       field.setFieldType(m_mapper.getMetaType(value.toString()));
       break;
     case nameColumn:
       field.setFieldName(value.toString());
+      if (m_dataCollection != nullptr)
+      {
+        field.setFieldType(m_mapper.variantTypeToMetaType(m_dataCollection->getPropertyType(field.fieldName())));
+      }
       break;
     case ascendingColumn:
-      field.setSortOrder(field.sortOrderFromName(value.toString()));
+      field.setSortOrder(value.toBool() ? TableSortField::Ascending : TableSortField::Descending);
       break;
     case caseColumn:
-      field.setCase(XMLUtility::stringToCase(value.toString()));
+      field.setCase(value.toBool() ? Qt::CaseSensitive : Qt::CaseInsensitive);
       break;
     default:
       // No other column is setable here!
@@ -66,16 +70,16 @@ QVariant TableSortFieldTableModel::data( const QModelIndex &index, int role ) co
     switch (index.column())
     {
     case typeColumn:
-      m_mapper.getMetaName(field.fieldType());
+      return m_mapper.getMetaName(field.fieldType());
       break;
     case nameColumn:
       return field.fieldName();
       break;
     case ascendingColumn:
-      return field.sortOrderToName(field.sortOrder());
+      return (field.sortOrder() == TableSortField::Ascending);
       break;
     case caseColumn:
-      return XMLUtility::caseToString(field.caseSensitivity());
+      return (field.caseSensitivity() == Qt::CaseSensitive);
       break;
     default:
       // No other column is valid
@@ -87,16 +91,25 @@ QVariant TableSortFieldTableModel::data( const QModelIndex &index, int role ) co
     switch (index.column())
     {
     case typeColumn:
-      m_mapper.getMetaName(field.fieldType());
+      // Cannot edit the type column.
+      return m_mapper.getMetaName(field.fieldType());
       break;
     case nameColumn:
-      return field.fieldName();
+      {
+        QStringList qsl;
+        qsl << data(index, Qt::DisplayRole).toString();
+        if (m_dataCollection != nullptr)
+        {
+          qsl << m_dataCollection->getPropertNames();
+        }
+        return qsl;
+      }
       break;
     case ascendingColumn:
-      return field.sortOrder();
+      return (field.sortOrder() == TableSortField::Ascending) ? true : false;
       break;
     case caseColumn:
-      return field.caseSensitivity();
+      return (field.caseSensitivity() == Qt::CaseSensitive) ? true : false;
       break;
     default:
       break;
@@ -114,10 +127,10 @@ QVariant TableSortFieldTableModel::data( const QModelIndex &index, int role ) co
       return tr("Field name.");
       break;
     case ascendingColumn:
-      return tr("Sort order, Ascending / Descending.");
+      return tr("Sort order, Ascending (checked) or Descending.");
       break;
     case caseColumn:
-      return tr("Case sensitive or insensitive.");
+      return tr("Case sensitive (checked) or insensitive.");
       break;
     default:
       return QVariant();
@@ -135,13 +148,31 @@ QVariant TableSortFieldTableModel::headerData( int section, Qt::Orientation orie
   {
     return QVariant();
   }
-  const char* headers[] = {"Type", "Name", "Order", "Case"};
   if (orientation == Qt::Vertical)
   {
     return section + 1;
   }
 
-  return (section < (int)(sizeof(headers)/sizeof(*headers))) ? QString(tr(headers[section])) : QVariant();
+  switch (section)
+  {
+  case typeColumn:
+    return "Type";
+    break;
+  case nameColumn:
+    return "Field";
+    break;
+  case ascendingColumn:
+    return "Ascending";
+    break;
+  case caseColumn:
+    return "Case Sensitive";
+    break;
+  default:
+    return QVariant();
+    break;
+  }
+
+  return QVariant();
 }
 
 Qt::ItemFlags TableSortFieldTableModel::flags( const QModelIndex &index ) const
@@ -152,6 +183,8 @@ Qt::ItemFlags TableSortFieldTableModel::flags( const QModelIndex &index ) const
   switch (index.column())
   {
   case typeColumn :
+    return Qt::ItemIsSelectable | Qt::ItemIsEnabled;
+    break;
   case nameColumn :
   case ascendingColumn :
   case caseColumn :

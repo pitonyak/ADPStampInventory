@@ -3,6 +3,8 @@
 #include <QApplication>
 #include <QEvent>
 #include <QMouseEvent>
+#include <QComboBox>
+#include <QCheckBox>
 
 CheckBoxOnlyDelegate::CheckBoxOnlyDelegate(QObject *parent) :
     QStyledItemDelegate(parent)

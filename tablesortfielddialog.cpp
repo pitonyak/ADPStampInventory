@@ -20,14 +20,31 @@
 TableSortFieldDialog::TableSortFieldDialog(const GenericDataCollection *dataCollection, QWidget *parent) :
   QDialog(parent), m_dataCollection(dataCollection), m_tableView(nullptr), m_configFilePath(nullptr), m_tableModel(nullptr)
 {
+  buildDialog();
 }
 
 TableSortFieldDialog::~TableSortFieldDialog()
 {
   QSettings settings;
   settings.setValue(Constants::Settings_SortFieldDlgGeometry, saveGeometry());
+  settings.setValue(Constants::SortFieldConfigDialogLastConfigPath, getConfigFilePath());
 
-  // TODO: Save column widths as I do in logconfigdialog.cpp
+    if (m_tableView != nullptr)
+    {
+      QString s;
+      for (int i=0; i<TableSortFieldTableModel::numColumns; ++i)
+      {
+        if (s.length() > 0)
+        {
+          s = s + QString(",%1").arg(m_tableView->columnWidth(i));
+        }
+        else
+        {
+          s = QString("%1").arg(m_tableView->columnWidth(i));
+        }
+      }
+      settings.setValue(Constants::SortFieldConfigDialogRoutingColumnWidths, s);
+    }
 
 }
 
@@ -69,8 +86,15 @@ void TableSortFieldDialog::copyRow()
 
 void TableSortFieldDialog::addRow()
 {
+  // TODO: Choose the next unused column
   TableSortField field;
-  m_tableModel->insertRow(getSelectedRow(), field);
+  if (m_dataCollection != nullptr && m_dataCollection->getPropertyNameCount() > 0)
+  {
+    field.setFieldName(m_dataCollection->getPropertyName(0));
+    field.setFieldIndex(0);
+    field.setFieldType(m_mapper.variantTypeToMetaType(m_dataCollection->getPropertyType(0)));
+    m_tableModel->insertRow(getSelectedRow(), field);
+  }
 }
 
 void TableSortFieldDialog::loadConfiguration()
@@ -162,53 +186,42 @@ void TableSortFieldDialog::buildDialog()
 
   vLayout = new QVBoxLayout();
   vLayout->addWidget(new QLabel(tr("Configuration File: ")));
-  vLayout->addWidget(new QLabel(tr("Log File: ")));
   hLayout->addLayout(vLayout);
 
   vLayout = new QVBoxLayout();
   vLayout->addWidget(m_configFilePath);
   hLayout->addLayout(vLayout);
 
-  vLayout = new QVBoxLayout();
   button = new QPushButton(tr("Load"));
-  connect(button, SIGNAL(clicked()), this, SLOT(loadLogConfiguration()));
-  vLayout->addWidget(button);
-  button = new QPushButton(tr("Select"));
-  connect(button, SIGNAL(clicked()), this, SLOT(selectLogFile()));
-  vLayout->addWidget(button);
-  hLayout->addLayout(vLayout);
+  connect(button, SIGNAL(clicked()), this, SLOT(loadConfiguration()));
+  hLayout->addWidget(button);
 
-  vLayout = new QVBoxLayout();
   button = new QPushButton(tr("Save"));
-  connect(button, SIGNAL(clicked()), this, SLOT(saveLogConfiguration()));
-  vLayout->addWidget(button);
-  vLayout->addStretch();
-  hLayout->addLayout(vLayout);
+  connect(button, SIGNAL(clicked()), this, SLOT(saveConfiguration()));
+  hLayout->addWidget(button);
 
   fLayout->addRow(hLayout);
 
   hLayout = new QHBoxLayout();
   vLayout = new QVBoxLayout();
-  vLayout->addWidget(new QLabel(tr("Routings:")));
-  button = new QPushButton(tr("Edit"));
-  connect(button, SIGNAL(clicked()), this, SLOT(editSelectedRouting()));
-  vLayout->addWidget(button);
+  vLayout->addWidget(new QLabel(tr("Sort Fields:")));
   button = new QPushButton(tr("Add"));
-  connect(button, SIGNAL(clicked()), this, SLOT(addRouting()));
+  connect(button, SIGNAL(clicked()), this, SLOT(addRow()));
   vLayout->addWidget(button);
   button = new QPushButton(tr("Copy"));
-  connect(button, SIGNAL(clicked()), this, SLOT(copyRouting()));
+  connect(button, SIGNAL(clicked()), this, SLOT(copyRow()));
   vLayout->addWidget(button);
   button = new QPushButton(tr("Delete"));
-  connect(button, SIGNAL(clicked()), this, SLOT(delSelectedRouting()));
+  connect(button, SIGNAL(clicked()), this, SLOT(delSelectedRow()));
   vLayout->addWidget(button);
   vLayout->addStretch();
   hLayout->addLayout(vLayout);
 
   m_tableView = new QTableView();
-  m_tableModel = new TableSortFieldTableModel();
+  m_tableModel = new TableSortFieldTableModel(m_dataCollection);
   m_tableView->setModel(m_tableModel);
 
+  // Parameter sets the owning parent that will delete the delegate.
   LinkBackFilterDelegate* delegate = new LinkBackFilterDelegate(m_tableView);
   m_tableView->setItemDelegate(delegate);
 
@@ -228,9 +241,9 @@ void TableSortFieldDialog::buildDialog()
   setLayout(fLayout);
 
   QSettings settings;
-  restoreGeometry(settings.value("Settings_FilterFieldDlgGeometry").toByteArray());
-  setConfigFilePath(settings.value("SortFieldConfigDialogLastConfigPath").toString());
-  QString s = settings.value("SortFieldConfigDialogRoutingColumnWidths").toString();
+  restoreGeometry(settings.value(Constants::Settings_SortFieldDlgGeometry).toByteArray());
+  setConfigFilePath(settings.value(Constants::SortFieldConfigDialogLastConfigPath).toString());
+  QString s = settings.value(Constants::SortFieldConfigDialogRoutingColumnWidths).toString();
   if (s.length() > 0)
   {
     QStringList list = s.split(',');

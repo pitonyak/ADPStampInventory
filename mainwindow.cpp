@@ -331,7 +331,13 @@ void MainWindow::openSQLWindow()
   }
 }
 
+#include "genericdatacollection.h"
+#include "tablesortfielddialog.h"
+
 void MainWindow::configure()
 {
-
+  GenericDataCollection gdc;
+  gdc.makeDummy();
+  TableSortFieldDialog dlg(&gdc);
+  dlg.exec();
 }

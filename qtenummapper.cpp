@@ -12,7 +12,8 @@ QtEnumMapper::~QtEnumMapper()
   while (i.hasNext())
   {
     i.next();
-    delete i.value();
+    // TODO: ??
+    //delete i.value();
   }
   m_valueToName.clear();
 }

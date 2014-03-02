@@ -7,6 +7,8 @@
 #include <QAbstractTableModel>
 #include <QList>
 
+class GenericDataCollection;
+
 //**************************************************************************
 /*! \class TableSortFieldTableModel
  *
@@ -22,7 +24,7 @@ public:
     /*! \brief Constructor
      *  \param [in, out] parent The object's owner. The parent's destructor destroys this object.
      */
-  explicit TableSortFieldTableModel(QObject *parent = nullptr);
+  explicit TableSortFieldTableModel(const GenericDataCollection* dataCollection, QObject *parent = nullptr);
 
     //**************************************************************************
     /*! \brief Returns the flags used to describe the item identified by the index.
@@ -98,6 +100,7 @@ public:
     static const int caseColumn;
 
 private:
+    const GenericDataCollection* m_dataCollection;
     QList<TableSortField> m_collection;
     TypeMapper m_mapper;
 };

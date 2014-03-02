@@ -16,6 +16,7 @@ LinkBackFilterDelegate::LinkBackFilterDelegate(QObject *parent) :
 QWidget *LinkBackFilterDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem & option,
                                               const QModelIndex &index) const
 {
+  qDebug("Creating an editor in LinkBackFilterDelegate");
   if (!index.isValid())
   {
     return nullptr;

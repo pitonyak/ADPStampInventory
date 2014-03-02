@@ -14,6 +14,19 @@ GenericDataCollection::GenericDataCollection(const GenericDataCollection& obj) :
     operator=(obj);
 }
 
+void GenericDataCollection::makeDummy()
+{
+  QStringList nameList;
+  nameList << "Id" << "Name" << "Date" << "Time" << "Double" << "Bool";
+  QList<QVariant::Type> typeList;
+  typeList << QVariant::Int << QVariant::String << QVariant::Date << QVariant::Time
+              << QVariant::Double << QVariant::Bool;
+  for (int i=0; i<nameList.size(); ++i)
+  {
+    appendPropertyName(nameList.value(i), typeList.value(i));
+  }
+}
+
 void GenericDataCollection::appendObject(const int id, GenericDataObject* obj)
 {
   removeObject(id);

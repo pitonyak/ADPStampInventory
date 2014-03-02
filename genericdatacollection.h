@@ -37,6 +37,8 @@ public:
      */
     GenericDataCollection(const GenericDataCollection& obj);
 
+    void makeDummy();
+
   /*! \brief Get a property name.
    *  \param [in] i Index of the property name of interest. Must be a valid index.
    *  \return Property at index i.
@@ -107,19 +109,28 @@ public:
    */
   bool hasObject(const int id) const;
 
+  /*! \brief Get a generic data object with the specified ID.
+   *  \param [in] id Unique object identifier.
+   *  \return The object if it exists and null if it does not.
+   */
   const GenericDataObject* getObjectById (const int id) const;
+
+  /*! \brief Get a generic data object with the specified ID.
+   *  \param [in] id Unique object identifier.
+   *  \return The object if it exists and null if it does not.
+   */
   GenericDataObject* getObjectById (const int id);
 
   bool hasValue(const int id, const QString& name) const;
 
-  /*! \brief Get the proprety as a string.
+  /*! \brief Get the property as a string.
    *  \param [in] id Unique object identifier.
    *  \param [in] name Property name of interest.
    *  \return Return the property as a string value. Return "" if the property does not exist.
    */
   QString getString(const int id, const QString& name) const;
 
-  /*! \brief Get the proprety as a string.
+  /*! \brief Get the property as a string.
    *  \param [in] id Unique object identifier.
    *  \param [in] name Property name of interest.
    *  \param [in] defaultValue Returned if the property does not exist.
@@ -128,14 +139,14 @@ public:
   QString getString(const int id, const QString& name, const QString& defaultValue) const;
 
 
-  /*! \brief Get the proprety as an int.
+  /*! \brief Get the property as an int.
    *  \param [in] id Unique object identifier.
    *  \param [in] name Property name of interest.
    *  \return Return the property as an int value or defaultValue if the property does not exist.
    */
   int getInt(const int id, const QString& name, const int defaultValue = -1) const;
 
-  /*! \brief Get the proprety as a double;
+  /*! \brief Get the property as a double;
    *  \param [in] id Unique object identifier.
    *  \param [in] name Property name of interest.
    *  \param [in] defaultValue Returned if the property does not exist.
@@ -143,15 +154,14 @@ public:
    */
   double getDouble(const int id, const QString& name, const double defaultValue = 0.0) const;
 
-
-  /*! \brief Get the proprety as a QDate.
+  /*! \brief Get the property as a QDate.
    *  \param [in] id Unique object identifier.
    *  \param [in] name Property name of interest.
    *  \return Return the property as an Date value or the current date if the property does not exist.
    */
   QDate getDate(const int id, const QString& name) const;
 
-  /*! \brief Get the proprety as a QDate
+  /*! \brief Get the property as a QDate
    *  \param [in] id Unique object identifier.
    *  \param [in] name Property name of interest.
    *  \param [in] defaultValue Returned if the property does not exist.
@@ -159,14 +169,14 @@ public:
    */
   QDate getDate(const int id, const QString& name, const QDate& defaultValue) const;
 
-  /*! \brief Get the proprety as a QDateTime
+  /*! \brief Get the property as a QDateTime
    *  \param [in] id Unique object identifier.
    *  \param [in] name Property name of interest.
    *  \return Return the property as an DateTime value or the current date and time if the property does not exist.
    */
   QDateTime getDateTime(const int id, const QString& name) const;
 
-  /*! \brief Get the proprety as a QDateTime
+  /*! \brief Get the property as a QDateTime
    *  \param [in] id Unique object identifier.
    *  \param [in] name Property name of interest.
    *  \param [in] defaultValue Returned if the property does not exist.

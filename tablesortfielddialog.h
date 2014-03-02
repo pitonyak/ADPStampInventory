@@ -5,6 +5,7 @@
 
 #include "tablesortfieldtablemodel.h"
 #include "genericdatacollection.h"
+#include "typemapper.h"
 
 class QTableView;
 class QLineEdit;
@@ -69,6 +70,7 @@ private:
   QTableView* m_tableView;
   QLineEdit* m_configFilePath;
   TableSortFieldTableModel* m_tableModel;
+  TypeMapper m_mapper;
 };
 
 #endif // TABLESORTFIELDDIALOG_H
