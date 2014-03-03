@@ -7,6 +7,7 @@
 #include "valuecomparer.h"
 
 class QXmlStreamWriter;
+class QXmlStreamReader;
 
 //**************************************************************************
 /*! \class TableSortField
@@ -227,7 +228,8 @@ public:
 
      QXmlStreamWriter& write(QXmlStreamWriter& writer) const;
 
-     static QXmlStreamWriter& write(QList<TableSortField> list, QXmlStreamWriter& writer);
+     static QXmlStreamWriter& write(const QList<TableSortField>& list, QXmlStreamWriter& writer);
+     static QXmlStreamReader& read(QList<TableSortField>& list, QXmlStreamReader& reader);
 
      static QStringList sortOrderNames();
 

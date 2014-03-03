@@ -263,6 +263,22 @@ void TableSortFieldTableModel::clear()
     endRemoveRows();
   }
 }
+
+void TableSortFieldTableModel::add(const QList<TableSortField>& list)
+{
+  if (list.count() > 0)
+  {
+    int row = m_collection.count();
+    beginInsertRows(QModelIndex(), row, row + list.count() - 1);
+    for (int i=0; i<list.count(); ++i)
+    {
+      m_collection.insert(row + i, list.at(i));
+    }
+    endInsertRows();
+  }
+}
+
+
 void TableSortFieldTableModel::moveRowUp(int row)
 {
   if (0 < row && row < m_collection.count())

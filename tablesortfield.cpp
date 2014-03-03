@@ -1,7 +1,10 @@
 #include "tablesortfield.h"
 #include "typemapper.h"
+#include "xmlutility.h"
 
 #include <QXmlStreamWriter>
+#include <QXmlStreamReader>
+#include <QXmlStreamAttributes>
 
 const QString s_Ascending = "Ascending";
 const QString s_Descending = "Descending";
@@ -86,7 +89,7 @@ QXmlStreamWriter& TableSortField::write(QXmlStreamWriter& writer) const
   return writer;
 }
 
-QXmlStreamWriter& TableSortField::write(QList<TableSortField> list, QXmlStreamWriter& writer)
+QXmlStreamWriter& TableSortField::write(const QList<TableSortField>& list, QXmlStreamWriter& writer)
 {
   writer.writeStartElement("TableSortFields");
   for (int i=0; i<list.count(); ++i)
@@ -95,4 +98,71 @@ QXmlStreamWriter& TableSortField::write(QList<TableSortField> list, QXmlStreamWr
   }
   writer.writeEndElement();
   return writer;
+}
+
+QXmlStreamReader& TableSortField::read(QList<TableSortField>& list, QXmlStreamReader& reader)
+{
+  TypeMapper mapper;
+  QString name;
+  while (!reader.atEnd() && !reader.isEndElement()) {
+    if (reader.isStartElement())
+    {
+      name = reader.name().toString();
+      if (QString::compare(name, "TableSortFields", Qt::CaseInsensitive) == 0) {
+        reader.readNext();
+        while (!reader.atEnd())
+        {
+          if (reader.isEndElement())
+          {
+            if (reader.name().toString().compare("TableSortField", Qt::CaseInsensitive) != 0)
+            {
+              return reader;
+            }
+          }
+          else if (reader.isStartElement())
+          {
+            //qDebug(qPrintable(QString("start = %1").arg(reader.name().toString())));
+            if (QString::compare(reader.name().toString(), "TableSortField", Qt::CaseInsensitive) != 0)
+            {
+              reader.raiseError(QObject::tr("Not sort field"));
+            }
+            else
+            {
+              // Read the fields.
+              TableSortField field;
+              QXmlStreamAttributes attr = reader.attributes();
+              if (attr.hasAttribute("Name")) {
+                field.setFieldName(attr.value("Name").toString());
+              }
+              if (attr.hasAttribute("Index")) {
+                bool ok = false;
+                int i = attr.value("Index").toInt(&ok, 10);
+                if (ok) {
+                  field.setFieldIndex(i);
+                }
+              }
+              if (attr.hasAttribute("CaseSensitive")) {
+                field.setCase(XMLUtility::stringToBoolean(attr.value("CaseSensitive").toString()) ? Qt::CaseSensitive : Qt::CaseInsensitive);
+              }
+              if (attr.hasAttribute("Type")) {
+                field.setFieldType(mapper.getMetaType(attr.value("Type").toString()));
+              }
+              if (attr.hasAttribute(s_Ascending)) {
+                //qDebug(qPrintable(QString("ascending = %1").arg(attr.value(s_Ascending).toString())));
+                field.setSortOrder(XMLUtility::stringToBoolean(attr.value(s_Ascending).toString()) ? Ascending : Descending);
+              }
+              list.append(field);
+              //qDebug(qPrintable(QString("Read field %1").arg(field.fieldName())));
+            }
+          }
+          reader.readNext();
+        }
+        return reader;
+      } else {
+        reader.raiseError(QObject::tr("Not sort fields"));
+      }
+    }
+    reader.readNext();
+  }
+  return reader;
 }

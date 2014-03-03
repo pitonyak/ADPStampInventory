@@ -128,10 +128,10 @@ void TableSortFieldDialog::loadConfiguration()
       }
       else
       {
-        // TODO:Read the file
-        //SimpleLoggerADP logger;
-        //logger.read(reader);
-        //configureDialog(logger);
+        QList<TableSortField> list;
+        TableSortField::read(list, reader);
+        m_tableModel->clear();
+        m_tableModel->add(list);
         enableButtons();
       }
       file.close();

@@ -54,7 +54,6 @@ public slots:
 
 private:
   /*! \brief Set list columns, delegates, and initial values. */
-  void initialize();
   void buildDialog();
 
   /*! \brief Get the index of the current row. */

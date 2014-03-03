@@ -97,6 +97,7 @@ public:
     void moveRowUp(int row);
     void moveRowDown(int row);
     int count() const;
+    void add(const QList<TableSortField>& list);
 
 signals:
 
