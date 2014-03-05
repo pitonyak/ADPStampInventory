@@ -42,6 +42,14 @@ public:
   /*! \brief Destructor saves dialog geometry. */
   virtual ~CSVReaderDialog();
 
+  /*! \brief Configure the table view based on the CSV reqader.
+   *
+   * The vBoxLayout is not null the table widget is added to it,
+   * so, it must not be null the first time it is called, but
+   * should be called each time afterwards.
+   *
+   *  \param [in,out] vBoxLayout Will contain the table widget.
+   */
   void configureFromReader(QVBoxLayout* vBoxLayout = nullptr);
 
 signals:

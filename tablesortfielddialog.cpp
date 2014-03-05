@@ -131,6 +131,10 @@ void TableSortFieldDialog::loadConfiguration()
         QList<TableSortField> list;
         TableSortField::read(list, reader);
         m_tableModel->clear();
+        // Todo: Validate the list against the tables.
+        // Verify that the name, type, and column match.
+        // Validate in the table model, and return an error
+        // message as appropriate.
         m_tableModel->add(list);
         enableButtons();
       }
