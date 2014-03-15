@@ -9,6 +9,9 @@
 /*! \class GenericDataCollectionTableModel
  *
  * \brief Table model for a GenericDataCollection.
+ *
+ * Provides general editing capability, but, you cannot edit a column named "id".
+ *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
  * \date 2013-2014
@@ -20,7 +23,7 @@ public:
     /*! \brief Constructor
      *  \param [in, out] parent The object's owner. The parent's destructor destroys this object.
      */
-  explicit GenericDataCollectionTableModel(QObject *parent = nullptr);
+  explicit GenericDataCollectionTableModel(GenericDataCollection& data, QObject *parent = nullptr);
   
     //**************************************************************************
     /*! \brief Returns the flags used to describe the item identified by the index.
@@ -80,7 +83,7 @@ signals:
 public slots:
 
 private:
-    GenericDataCollection m_collection;
+    GenericDataCollection& m_collection;
 
 };
 

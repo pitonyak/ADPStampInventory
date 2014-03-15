@@ -204,7 +204,7 @@ void TableSortFieldDialog::rowDown()
 
 void TableSortFieldDialog::buildDialog()
 {
-  setWindowTitle(tr("Configure Logging"));
+  setWindowTitle(tr("Configure Sorting"));
   QPushButton* button;
   QVBoxLayout *vLayout;
   QHBoxLayout *hLayout;

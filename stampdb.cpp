@@ -734,11 +734,8 @@ bool StampDB::loadCSV(CSVReader& reader, const QString& tableName)
         }
     }
 
-    //qDebug("Adding line");
-
     for (int iCol=0; iCol<csvColumnIndex.size(); ++iCol)
     {
-      //qDebug("Adding Column");
       // Verify that a column in the DB has a corresponding entry
       // in the CSV file
       if (0 <= csvColumnIndex[iCol])
@@ -751,13 +748,11 @@ bool StampDB::loadCSV(CSVReader& reader, const QString& tableName)
           QVariant v = c.toVariant();
           // Insert this into the prepared statement
           q.bindValue(iCol, v);
-          //qDebug(qPrintable(QString("G: %1 %2 %3").arg(iRow).arg(iCol).arg(v.toString())));
         }
         else
         {
           // Get a null value based on the expected type for the column.
           q.bindValue(iCol, reader.getNullVariant(csvColumnIndex[iCol]));
-          //qDebug(qPrintable(QString("N: %1 %2 NULL").arg(iRow).arg(iCol)));
         }
       }
       else

@@ -7,6 +7,7 @@
 #include "csvwriter.h"
 #include "constants.h"
 #include "sqldialog.h"
+#include "genericdatacollectiontabledialog.h"
 
 #include <QMessageBox>
 #include <QStringList>
@@ -338,6 +339,15 @@ void MainWindow::configure()
 {
   GenericDataCollection gdc;
   gdc.makeDummy();
-  TableSortFieldDialog dlg(&gdc);
+  //TableSortFieldDialog dlg(&gdc);
+  //dlg.exec();
+
+  createDBWorker();
+  GenericDataCollection* gdo = m_db->readTableName("country");
+
+  qDebug(qPrintable(QString("On return, number of rows = %1").arg(gdo->rowCount())));
+
+  GenericDataCollectionTableDialog dlg(*gdo);
   dlg.exec();
+
 }

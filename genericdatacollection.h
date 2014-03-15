@@ -142,6 +142,19 @@ public:
    */
   GenericDataObject* getObjectById (const int id);
 
+  /*! \brief Get a generic data object with the specified ID.
+   *  \param [in] row Row number of an object.
+   *  \return The object if it exists and null if it does not.
+   */
+  const GenericDataObject* getObjectByRow (const int row) const;
+
+  /*! \brief Get a generic data object with the specified ID.
+   *  \param [in] row Row number of an object.
+   *  \return The object if it exists and null if it does not.
+   */
+  GenericDataObject* getObjectByRow (const int row);
+
+
   bool hasValue(const int id, const QString& name) const;
 
   /*! \brief Get the property as a string.
@@ -312,6 +325,16 @@ inline const GenericDataObject* GenericDataCollection::getObjectById (const int 
 inline GenericDataObject* GenericDataCollection::getObjectById (const int id)
 {
   return hasObject(id) ? m_objects.value(id) : nullptr;
+}
+
+inline const GenericDataObject* GenericDataCollection::getObjectByRow(const int row) const
+{
+  return (0 <= row && row < m_sortedIDs.size()) ? m_objects.value(m_sortedIDs.value(row)) : nullptr;
+}
+
+inline GenericDataObject* GenericDataCollection::getObjectByRow (const int row)
+{
+  return (0 <= row && row < m_sortedIDs.size()) ? m_objects.value(m_sortedIDs.value(row)) : nullptr;
 }
 
 inline bool GenericDataCollection::hasValue(const int id, const QString& name) const

@@ -33,6 +33,7 @@ void GenericDataCollection::appendObject(const int id, GenericDataObject* obj)
   if (obj != nullptr)
   {
     m_objects.insert(id, obj);
+    m_sortedIDs.append(id);
   }
 }
 
@@ -40,6 +41,7 @@ void GenericDataCollection::removeObject(const int id)
 {
   if (hasObject(id))
   {
+    m_sortedIDs.removeOne(id);
     delete m_objects.take(id);
   }
 }

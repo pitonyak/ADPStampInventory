@@ -74,7 +74,6 @@ public:
    */
   QString getString(const QString& name, const QString& defaultValue) const;
 
-
   /*! \brief Get the proprety as an int.
    *  \param [in] name Property name of interest.
    *  \return Return the property as an int value or defaultValue if the property does not exist.
