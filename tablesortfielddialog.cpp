@@ -46,7 +46,6 @@ TableSortFieldDialog::~TableSortFieldDialog()
       }
       settings.setValue(Constants::SortFieldConfigDialogRoutingColumnWidths, s);
     }
-
 }
 
 void TableSortFieldDialog::setConfigFilePath(const QString& path)

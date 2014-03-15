@@ -17,7 +17,8 @@ QString Constants::Settings_FilterFieldDlgGeometry = "FilterFieldDlgGeometry";
 QString Constants::SortFieldConfigDialogLastConfigPath = "SortFieldConfigDialogLastConfigPath";
 QString Constants::SortFieldConfigDialogRoutingColumnWidths = "SortFieldConfigDialogRoutingColumnWidths";
 
-
+QString Constants::Settings_GenericDataCollectionDlgGeometry = "GenericDataCollectionDlgGeometry";
+QString Constants::Settings_GenericDataCollectionDlgColumnWidths = "GenericDataCollectionDlgColumnWidths";
 
 Constants::Constants()
 {

@@ -12,7 +12,7 @@ class GenericDataCollectionTableDialog : public QDialog
 {
   Q_OBJECT
 public:
-  explicit GenericDataCollectionTableDialog(GenericDataCollection& data, QWidget *parent = nullptr);
+  explicit GenericDataCollectionTableDialog(const QString& name, GenericDataCollection& data, QWidget *parent = nullptr);
 
   /*! \brief Destructor saves dialog geometry. */
   virtual ~GenericDataCollectionTableDialog();
@@ -41,7 +41,10 @@ private:
   /*! \brief Identifies the columns and the types. */
   GenericDataCollection& m_dataCollection;
   QTableView* m_tableView;
-  //QLineEdit* m_configFilePath;
+
+  /*! \brief Used for saving and restoring dialog sizes. */
+  QString m_name;
+
   GenericDataCollectionTableModel* m_tableModel;
   TypeMapper m_mapper;
 };

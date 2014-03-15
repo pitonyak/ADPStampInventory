@@ -45,6 +45,8 @@ public:
   static QString SortFieldConfigDialogLastConfigPath;
   static QString SortFieldConfigDialogRoutingColumnWidths;
 
+  static QString Settings_GenericDataCollectionDlgGeometry;
+  static QString Settings_GenericDataCollectionDlgColumnWidths;
 
 };
 

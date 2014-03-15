@@ -343,11 +343,12 @@ void MainWindow::configure()
   //dlg.exec();
 
   createDBWorker();
-  GenericDataCollection* gdo = m_db->readTableName("country");
+  QString tableName("country");
+  GenericDataCollection* gdo = m_db->readTableName(tableName);
 
   qDebug(qPrintable(QString("On return, number of rows = %1").arg(gdo->rowCount())));
 
-  GenericDataCollectionTableDialog dlg(*gdo);
+  GenericDataCollectionTableDialog dlg(tableName, *gdo);
   dlg.exec();
 
 }
