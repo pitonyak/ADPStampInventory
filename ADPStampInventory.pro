@@ -78,7 +78,11 @@ SOURCES += main.cpp\
     genericdataobjectlessthan.cpp \
     tablesortfieldtablemodel.cpp \
     tablesortfielddialog.cpp \
-    genericdatacollectiontabledialog.cpp
+    genericdatacollectiontabledialog.cpp \
+    changedobjectbase.cpp \
+    changedobject.cpp \
+    changetrackerbase.cpp \
+    changetracker.cpp
 
 HEADERS  += mainwindow.h \
     stampdb.h \
@@ -133,7 +137,11 @@ HEADERS  += mainwindow.h \
     genericdataobjectlessthan.h \
     tablesortfieldtablemodel.h \
     tablesortfielddialog.h \
-    genericdatacollectiontabledialog.h
+    genericdatacollectiontabledialog.h \
+    changedobjectbase.h \
+    changedobject.h \
+    changetrackerbase.h \
+    changetracker.h
 
 FORMS    += mainwindow.ui \
     logroutinginfodialog.ui

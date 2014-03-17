@@ -4,7 +4,7 @@
 #include <QMetaType>
 
 GenericDataCollection::GenericDataCollection(QObject *parent) :
-  QObject(parent)
+  QObject(parent), m_largestId(0), m_trackChanges(false)
 {
 }
 
@@ -34,6 +34,10 @@ void GenericDataCollection::appendObject(const int id, GenericDataObject* obj)
   {
     m_objects.insert(id, obj);
     m_sortedIDs.append(id);
+    if (id > m_largestId)
+    {
+      m_largestId = id;
+    }
   }
 }
 

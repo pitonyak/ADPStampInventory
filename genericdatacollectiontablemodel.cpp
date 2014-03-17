@@ -22,8 +22,10 @@ bool GenericDataCollectionTableModel::setData ( const QModelIndex & index, const
     GenericDataObject* object = (index.column() < m_collection.getPropertyNameCount()) ? m_collection.getObjectByRow(index.row()) : nullptr;
     if (object != nullptr)
     {
-      // Update the value then return true;
-      object->setValue(m_collection.getPropertyName(index.column()), value);
+      // TODO: Verify that the data really did change!
+      QString name = m_collection.getPropertyName(index.column());
+      object->setValue(name, value);
+      m_changeTracker.push(ChangedObjectBase::Edit, name, object->clone());
       emit dataChanged(index, index);
       return true;
     }

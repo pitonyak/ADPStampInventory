@@ -2,6 +2,7 @@
 #define GENERICDATACOLLECTIONTABLEMODEL_H
 
 #include "genericdatacollection.h"
+#include "changetracker.h"
 
 #include <QAbstractTableModel>
 
@@ -84,7 +85,7 @@ public slots:
 
 private:
     GenericDataCollection& m_collection;
-
+    ChangeTracker<GenericDataObject> m_changeTracker;
 };
 
 #endif // GENERICDATACOLLECTIONTABLEMODEL_H

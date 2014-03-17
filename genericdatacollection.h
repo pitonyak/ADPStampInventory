@@ -108,6 +108,7 @@ public:
 
 
   /*! \brief Add an object with the specified integer ID. Null objects are ignored. This class owns and deletes the object. The sorted ID list is not updated.
+   * The largest ID is set if the ID is greater than the currently set largest ID.
    *  \param [in] id Objects integer ID.
    *  \param [in, out] obj Pointer to an object.
    */
@@ -154,6 +155,8 @@ public:
    */
   GenericDataObject* getObjectByRow (const int row);
 
+  int getLargestId() const;
+  void setLargestId(const int n);
 
   bool hasValue(const int id, const QString& name) const;
 
@@ -250,11 +253,19 @@ public:
   int rowCount() const;
   void sort();
 
+  bool isTrackChanges() const { return m_trackChanges; }
+  void setTrackChanges (const bool b) { m_trackChanges = b; }
+
 signals:
 
 public slots:
 
 private:
+  /*! \brief largest used ID. */
+  int m_largestId;
+
+  bool m_trackChanges;
+
   /*! \brief In-order list of property names using what ever case is desired. This list is assumed to not have duplicate names based on case. */
   QStringList m_propertyNames;
 
@@ -335,6 +346,16 @@ inline const GenericDataObject* GenericDataCollection::getObjectByRow(const int 
 inline GenericDataObject* GenericDataCollection::getObjectByRow (const int row)
 {
   return (0 <= row && row < m_sortedIDs.size()) ? m_objects.value(m_sortedIDs.value(row)) : nullptr;
+}
+
+inline int GenericDataCollection::getLargestId() const
+{
+  return m_largestId;
+}
+
+inline void GenericDataCollection::setLargestId(const int n)
+{
+  m_largestId = n;
 }
 
 inline bool GenericDataCollection::hasValue(const int id, const QString& name) const
