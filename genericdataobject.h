@@ -54,11 +54,17 @@ public:
    *  \param [in] name Property name of interest.
    *  \return Return the property value, or, a defaultly constructed object if it does not.
    */
+  const QVariant getValueNative(const QString& name) const;
+
   const QVariant getValue(const QString& name) const;
+
+  static bool fieldNameMeansDate(const QString& name);
+  static bool fieldNameMeansDateTime(const QString &name);
 
   /*! \brief Set the value for a named property.
    *  \param [in] name Property name of interest.
    */
+  void setValueNative(const QString& name, const QVariant& value);
   void setValue(const QString& name, const QVariant& value);
 
   /*! \brief Get the proprety as a string.
@@ -148,12 +154,12 @@ private:
   QHash<QString, QVariant> m_properties;
 };
 
-inline const QVariant GenericDataObject::getValue(const QString& name) const
+inline const QVariant GenericDataObject::getValueNative(const QString& name) const
 {
   return m_properties.value(name.toLower());
 }
 
-inline void GenericDataObject::setValue(const QString &name, const QVariant& value)
+inline void GenericDataObject::setValueNative(const QString &name, const QVariant& value)
 {
   m_properties.insert(name.toLower(), value);
 }

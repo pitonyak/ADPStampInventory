@@ -3,6 +3,7 @@
 #include <QComboBox>
 #include <typeinfo>
 #include <QCheckBox>
+#include <QDoubleSpinBox>
 
 LinkBackFilterDelegate::LinkBackFilterDelegate(QObject *parent) :
   QStyledItemDelegate(parent)
@@ -75,16 +76,35 @@ void LinkBackFilterDelegate::setEditorData(QWidget *editor, const QModelIndex &i
       comboBox->setCurrentIndex(0);
     }
   }
-  else if (qvar.type() == QVariant::Bool)
+//  else if (qvar.type() == QVariant::Bool)
+//  {
+//    QCheckBox* checkBox = dynamic_cast<QCheckBox*>(editor);
+//    checkBox->setChecked(qvar.toBool());
+//  }
+  else if (QMetaType::Bool == (QMetaType::Type) qvar.type())
   {
     QCheckBox* checkBox = dynamic_cast<QCheckBox*>(editor);
     checkBox->setChecked(qvar.toBool());
   }
   else
   {
+    QStyledItemDelegate::setEditorData(editor, index);
+
+    /**
+    if (QMetaType::Double == (QMetaType::Type) qvar.type()) {
+      QDoubleSpinBox edit = nullptr;
+    }
+    qDebug(qPrintable(QString("Edit type is: %1").arg(qvar.typeName())));
     QString s = qvar.toString();
+    qDebug(qPrintable(QString("s = (%1)").arg(s)));
+    qDebug("1");
     QLineEdit* lineEdit = dynamic_cast<QLineEdit*>(editor);
-    lineEdit->setText(s);
+    if (editor != nullptr && lineEdit == nullptr) {
+      qDebug(typeid(*editor).name());
+    } else {
+      lineEdit->setText(s);
+    }
+    **/
   }
 }
 
@@ -96,16 +116,24 @@ void LinkBackFilterDelegate::setModelData(QWidget *editor, QAbstractItemModel *m
     return;
   }
   QVariant currentModelValue = index.model()->data(index, Qt::DisplayRole);
-  QString s;
   if (dynamic_cast<QComboBox*>(editor) != nullptr)
   {
     QComboBox* comboBox = dynamic_cast<QComboBox*>(editor);
-    s = comboBox->currentText();
+    QString s = comboBox->currentText();
+    if (QString::compare(s, currentModelValue.toString(), Qt::CaseSensitive) != 0)
+    {
+      model->setData(index, s, Qt::EditRole);
+    }
   }
   else if (dynamic_cast<QLineEdit*>(editor) != nullptr)
   {
     QLineEdit* lineEdit = dynamic_cast<QLineEdit*>(editor);
-    s = lineEdit->displayText();
+    QString s = lineEdit->displayText();
+    if (QString::compare(s, currentModelValue.toString(), Qt::CaseSensitive) != 0)
+    {
+      //qDebug(qPrintable(QString("Setting data (%1) current model (%2) index %3").arg(s, currentModelValue.toString(), QString::number(index.column()))));
+      model->setData(index, s, Qt::EditRole);
+    }
   }
   else if (dynamic_cast<QCheckBox*>(editor) != nullptr)
   {
@@ -116,9 +144,8 @@ void LinkBackFilterDelegate::setModelData(QWidget *editor, QAbstractItemModel *m
     }
     return;
   }
-  if (QString::compare(s, currentModelValue.toString(), Qt::CaseSensitive) != 0)
+  else
   {
-    //qDebug(qPrintable(QString("Setting data (%1) current model (%2) index %3").arg(s, currentModelValue.toString(), QString::number(index.column()))));
-    model->setData(index, s, Qt::EditRole);
+    QStyledItemDelegate::setModelData(editor, model, index);
   }
 }

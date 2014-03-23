@@ -15,6 +15,7 @@ public:
   virtual ~ChangeTrackerBase();
 
   int size() const { return m_list.size(); }
+  bool isEmpty() const { return m_list.isEmpty(); }
   void clear();
 
 protected:

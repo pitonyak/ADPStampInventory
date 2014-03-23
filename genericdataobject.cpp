@@ -211,3 +211,49 @@ int GenericDataObject::compare(const GenericDataObject& obj, const QStringList& 
     return rc;
 }
 
+void GenericDataObject::setValue(const QString &name, const QVariant& value)
+{
+  if (fieldNameMeansDate(name))
+  {
+    // m_properties.insert(name.toLower(), value);
+    setValueNative(name, value);
+  }
+  else if (fieldNameMeansDateTime(name))
+  {
+    //const QVariant v = m_properties.value(name.toLower());
+    //return (QMetaType::QDateTime != (QMetaType::Type) v.type()) ? v.toDateTime() : v;
+    setValueNative(name, value);
+  }
+  else
+  {
+    setValueNative(name, value);
+  }
+}
+
+
+const QVariant GenericDataObject::getValue(const QString& name) const
+{
+  if (fieldNameMeansDate(name))
+  {
+    const QVariant v = m_properties.value(name.toLower());
+    return (QMetaType::QDate == (QMetaType::Type) v.type()) ? v : v.toDate();
+  }
+  else if (fieldNameMeansDateTime(name))
+  {
+    const QVariant v = m_properties.value(name.toLower());
+    return (QMetaType::QDateTime != (QMetaType::Type) v.type()) ? v.toDateTime() : v;
+  }
+  return m_properties.value(name.toLower());
+}
+
+bool GenericDataObject::fieldNameMeansDate(const QString &name)
+{
+  return (name.compare("purchasedate", Qt::CaseInsensitive) == 0 ||
+      name.compare("releasedate", Qt::CaseInsensitive) == 0);
+}
+
+bool GenericDataObject::fieldNameMeansDateTime(const QString &name)
+{
+  return (name.compare("updated", Qt::CaseInsensitive) == 0);
+}
+

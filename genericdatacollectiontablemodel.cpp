@@ -1,7 +1,9 @@
 #include "genericdatacollectiontablemodel.h"
 
+#include <QLocale>
+
 GenericDataCollectionTableModel::GenericDataCollectionTableModel(GenericDataCollection &data, QObject *parent) :
-  QAbstractTableModel(parent), m_collection(data)
+  QAbstractTableModel(parent), m_isTracking(true), m_collection(data)
 {
 }
 
@@ -22,10 +24,13 @@ bool GenericDataCollectionTableModel::setData ( const QModelIndex & index, const
     GenericDataObject* object = (index.column() < m_collection.getPropertyNameCount()) ? m_collection.getObjectByRow(index.row()) : nullptr;
     if (object != nullptr)
     {
-      // TODO: Verify that the data really did change!
+      GenericDataObject* originalObject = isTracking() ? object->clone() : nullptr;
       QString name = m_collection.getPropertyName(index.column());
       object->setValue(name, value);
-      m_changeTracker.push(ChangedObjectBase::Edit, name, object->clone());
+      if (isTracking())
+      {
+        m_changeTracker.push(ChangedObjectBase::Edit, name, object->clone(), originalObject);
+      }
       emit dataChanged(index, index);
       return true;
     }
@@ -39,6 +44,19 @@ QVariant GenericDataCollectionTableModel::data( const QModelIndex &index, int ro
   const GenericDataObject* object = (index.column() < m_collection.getPropertyNameCount()) ? m_collection.getObjectByRow(index.row()) : nullptr;
   if (object != nullptr)
   {
+    QString fieldName = m_collection.getPropertyName(index.column());
+    if (role == Qt::DisplayRole)
+    {
+      if (fieldName.compare("paid", Qt::CaseInsensitive) == 0 ||
+          fieldName.compare("facevalue", Qt::CaseInsensitive) == 0 ||
+          fieldName.compare("bookvalue", Qt::CaseInsensitive) == 0)
+      {
+        // TODO: For a face value, can potentially use a better locale for non-US stamps.
+        QLocale locale;
+        return locale.toCurrencyString(object->getValueNative(fieldName).toDouble());
+      }
+    }
+
     if (role == Qt::DisplayRole || role == Qt::EditRole)
     {
       return object->getValue(m_collection.getPropertyName(index.column()));

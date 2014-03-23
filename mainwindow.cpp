@@ -343,7 +343,8 @@ void MainWindow::configure()
   //dlg.exec();
 
   createDBWorker();
-  QString tableName("country");
+  // QString tableName("country");
+  QString tableName("inventory");
   GenericDataCollection* gdo = m_db->readTableName(tableName);
 
   qDebug(qPrintable(QString("On return, number of rows = %1").arg(gdo->rowCount())));

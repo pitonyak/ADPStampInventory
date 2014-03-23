@@ -79,11 +79,17 @@ public:
      ***************************************************************************/
     int columnCount( const QModelIndex &parent = QModelIndex() ) const;
 
+    bool isTracking() const {return m_isTracking;}
+    void setTracking(const bool isTracking) { m_isTracking = isTracking; }
+
+    bool trackerIsEmpty() const { return m_changeTracker.isEmpty(); }
+
 signals:
   
 public slots:
 
 private:
+    bool m_isTracking;
     GenericDataCollection& m_collection;
     ChangeTracker<GenericDataObject> m_changeTracker;
 };

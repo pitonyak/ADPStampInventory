@@ -7,6 +7,7 @@
 
 class QTableView;
 class GenericDataCollectionTableModel;
+class QItemSelection;
 
 class GenericDataCollectionTableDialog : public QDialog
 {
@@ -19,6 +20,7 @@ public:
 signals:
 
 public slots:
+  void selectionChanged( const QItemSelection & selected, const QItemSelection & deselected );
 
 private:
   /*! \brief Set list columns, delegates, and initial values. */
@@ -33,10 +35,10 @@ private:
   /*! \brief Return True if a row is currently selected. */
   bool isRowSelected() const;
 
-  //QPushButton* m_upButton;
-  //QPushButton* m_downButton;
-  //QPushButton* m_addButton;
-  //QPushButton* m_deleteButton;
+  QPushButton* m_duplicateButton;
+  QPushButton* m_addButton;
+  QPushButton* m_deleteButton;
+  QPushButton* m_undoButton;
 
   /*! \brief Identifies the columns and the types. */
   GenericDataCollection& m_dataCollection;
