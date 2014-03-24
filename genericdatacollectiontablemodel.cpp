@@ -91,3 +91,60 @@ Qt::ItemFlags GenericDataCollectionTableModel::flags( const QModelIndex &index )
   }
   return Qt::ItemIsSelectable | Qt::ItemIsEnabled;
 }
+
+ChangedObject<GenericDataObject>* GenericDataCollectionTableModel::popLastChange()
+{
+  return m_changeTracker.isEmpty() ? nullptr : m_changeTracker.pop();
+}
+
+void GenericDataCollectionTableModel::addRow()
+{
+
+}
+
+void GenericDataCollectionTableModel::deleteRow()
+{
+
+}
+
+void GenericDataCollectionTableModel::undoChange()
+{
+  bool trackState = isTracking();
+  setTracking(false);
+  ChangedObject<GenericDataObject>* lastObject = popLastChange();
+  if (lastObject != nullptr)
+  {
+    if (lastObject->getChangeType() == ChangedObjectBase::Add)
+    {
+      // TODO
+    }
+    else if (lastObject->getChangeType() == ChangedObjectBase::Delete)
+    {
+      // TODO
+    }
+    else if (lastObject->getChangeType() == ChangedObjectBase::Edit)
+    {
+      // Info contains the modified field name!
+      GenericDataObject* oldData = lastObject->getOldData();
+      if (oldData != nullptr)
+      {
+        int column = m_collection.getPropertyIndex(lastObject->getChangeInfo());
+        int row = m_collection.getIndexOf(oldData->getInt("id", -1));
+        QModelIndex index =  createIndex(row, column);
+        setData(index, oldData->getValueNative(lastObject->getChangeInfo()));
+      }
+    }
+    else
+    {
+      qDebug("Unknown change type in undo");
+    }
+    delete lastObject;
+  }
+  setTracking(trackState);
+}
+
+void GenericDataCollectionTableModel::duplicateRow()
+{
+
+}
+

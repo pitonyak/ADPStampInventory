@@ -16,6 +16,13 @@ public:
 
   virtual ChangedObjectBase* clone() const { return new ChangedObject<T>(*this); }
 
+  T* getNewData() const { return m_newData; }
+  T* getOldData() const { return m_oldData; }
+
+  T* takeNewData() { T* data = m_newData; m_newData = nullptr; return data; }
+  T* takeOldData() { T* data = m_oldData; m_oldData = nullptr; return data; }
+
+
 private:
   T* m_newData;
   T* m_oldData;
@@ -26,6 +33,10 @@ template <class T> inline ChangedObject<T>::~ChangedObject()
   if (m_newData != nullptr)
   {
     delete m_newData;
+  }
+  if (m_oldData != nullptr)
+  {
+    delete m_oldData;
   }
 }
 

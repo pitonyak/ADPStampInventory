@@ -83,10 +83,15 @@ public:
     void setTracking(const bool isTracking) { m_isTracking = isTracking; }
 
     bool trackerIsEmpty() const { return m_changeTracker.isEmpty(); }
+    ChangedObject<GenericDataObject> *popLastChange();
 
 signals:
   
 public slots:
+    void addRow();
+    void deleteRow();
+    void undoChange();
+    void duplicateRow();
 
 private:
     bool m_isTracking;

@@ -93,6 +93,11 @@ void GenericDataCollectionTableDialog::buildDialog()
   hLayout->addWidget(m_undoButton);
   hLayout->addWidget(buttonBox);
 
+  connect(m_addButton, SIGNAL(clicked()), this, SLOT(addRow()));
+  connect(m_deleteButton, SIGNAL(clicked()), this, SLOT(deleteRow()));
+  connect(m_duplicateButton, SIGNAL(clicked()), this, SLOT(duplicateRow()));
+  connect(m_undoButton, SIGNAL(clicked()), this, SLOT(undoChange()));
+
   vLayout->addLayout(hLayout);
 
   setLayout(vLayout);
@@ -138,3 +143,31 @@ void GenericDataCollectionTableDialog::enableButtons()
   m_deleteButton->setEnabled(somethingSelected);
   m_undoButton->setEnabled(!m_tableModel->trackerIsEmpty());
 }
+
+void GenericDataCollectionTableDialog::addRow()
+{
+  m_tableModel->addRow();
+  enableButtons();
+}
+
+void GenericDataCollectionTableDialog::deleteRow()
+{
+  m_tableModel->deleteRow();
+  enableButtons();
+}
+
+void GenericDataCollectionTableDialog::undoChange()
+{
+  m_tableModel->undoChange();
+  enableButtons();
+}
+
+void GenericDataCollectionTableDialog::duplicateRow()
+{
+  m_tableModel->duplicateRow();
+  enableButtons();
+}
+
+
+
+

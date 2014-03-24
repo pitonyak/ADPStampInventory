@@ -21,6 +21,10 @@ signals:
 
 public slots:
   void selectionChanged( const QItemSelection & selected, const QItemSelection & deselected );
+  void addRow();
+  void deleteRow();
+  void undoChange();
+  void duplicateRow();
 
 private:
   /*! \brief Set list columns, delegates, and initial values. */

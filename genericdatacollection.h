@@ -143,6 +143,9 @@ public:
    */
   GenericDataObject* getObjectById (const int id);
 
+  int getIndexOf(const int id) const;
+
+
   /*! \brief Get a generic data object with the specified ID.
    *  \param [in] row Row number of an object.
    *  \return The object if it exists and null if it does not.
@@ -336,6 +339,11 @@ inline const GenericDataObject* GenericDataCollection::getObjectById (const int 
 inline GenericDataObject* GenericDataCollection::getObjectById (const int id)
 {
   return hasObject(id) ? m_objects.value(id) : nullptr;
+}
+
+inline int GenericDataCollection::getIndexOf(const int id) const
+{
+  return m_sortedIDs.indexOf(id);
 }
 
 inline const GenericDataObject* GenericDataCollection::getObjectByRow(const int row) const
