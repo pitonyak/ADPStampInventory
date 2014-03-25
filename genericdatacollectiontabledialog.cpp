@@ -152,7 +152,8 @@ void GenericDataCollectionTableDialog::addRow()
 
 void GenericDataCollectionTableDialog::deleteRow()
 {
-  m_tableModel->deleteRow();
+  QModelIndexList list = m_tableView->selectionModel()->selectedIndexes();
+  m_tableModel->deleteRows(list);
   enableButtons();
 }
 

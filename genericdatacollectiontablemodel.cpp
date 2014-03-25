@@ -29,7 +29,7 @@ bool GenericDataCollectionTableModel::setData ( const QModelIndex & index, const
       object->setValue(name, value);
       if (isTracking())
       {
-        m_changeTracker.push(ChangedObjectBase::Edit, name, object->clone(), originalObject);
+        m_changeTracker.push(index.row(), index.column(), name, ChangedObjectBase::Edit, object->clone(), originalObject);
       }
       emit dataChanged(index, index);
       return true;
@@ -92,7 +92,7 @@ Qt::ItemFlags GenericDataCollectionTableModel::flags( const QModelIndex &index )
   return Qt::ItemIsSelectable | Qt::ItemIsEnabled;
 }
 
-ChangedObject<GenericDataObject>* GenericDataCollectionTableModel::popLastChange()
+QStack<ChangedObject<GenericDataObject>*> *GenericDataCollectionTableModel::popLastChange()
 {
   return m_changeTracker.isEmpty() ? nullptr : m_changeTracker.pop();
 }
@@ -102,43 +102,107 @@ void GenericDataCollectionTableModel::addRow()
 
 }
 
-void GenericDataCollectionTableModel::deleteRow()
+void GenericDataCollectionTableModel::deleteRows(QModelIndexList& list)
 {
+  QHash<int, int> rowHash;
+  QList<int> rows;
+  for (int i=0; i<list.size(); ++i)
+  {
+    qDebug(qPrintable(QString("Checking entry %1 / %2").arg(i).arg(list.size())));
+    if (!rowHash.contains(list.at(i).row()))
+    {
+      rowHash.insert(list.at(i).row(), i);
+      rows.append(list.at(i).row());
+    }
+  }
+  qSort(rows);
 
+  if (!rows.isEmpty())
+  {
+    QStack<ChangedObject<GenericDataObject>*> * lastChanges = m_isTracking ? new QStack<ChangedObject<GenericDataObject>*>() : nullptr;
+
+    for (int i=rows.size() - 1; i>=0; --i)
+    {
+      int row = rows.at(i);
+      if (m_isTracking)
+      {
+        GenericDataObject* oldData = m_collection.getObjectByRow(row);
+        if (oldData != nullptr)
+        {
+          oldData = oldData->clone();
+        }
+        lastChanges->push(new ChangedObject<GenericDataObject>(row, -1, "", ChangedObjectBase::Delete, nullptr, oldData) );
+      }
+      qDebug(qPrintable(QString("Removing row %1").arg(row)));
+      beginRemoveRows(QModelIndex(), row, row);
+      m_collection.removeRow(row);
+      endRemoveRows();
+    }
+    if (m_isTracking)
+    {
+      m_changeTracker.push(lastChanges);
+    }
+  }
 }
 
 void GenericDataCollectionTableModel::undoChange()
 {
   bool trackState = isTracking();
   setTracking(false);
-  ChangedObject<GenericDataObject>* lastObject = popLastChange();
-  if (lastObject != nullptr)
+  QStack<ChangedObject<GenericDataObject>*> * lastChanges = popLastChange();
+  if (lastChanges != nullptr)
   {
-    if (lastObject->getChangeType() == ChangedObjectBase::Add)
+    while (!lastChanges->isEmpty())
     {
-      // TODO
-    }
-    else if (lastObject->getChangeType() == ChangedObjectBase::Delete)
-    {
-      // TODO
-    }
-    else if (lastObject->getChangeType() == ChangedObjectBase::Edit)
-    {
-      // Info contains the modified field name!
-      GenericDataObject* oldData = lastObject->getOldData();
-      if (oldData != nullptr)
+      ChangedObject<GenericDataObject>* topObject = lastChanges->pop();
+      if (topObject != nullptr)
       {
-        int column = m_collection.getPropertyIndex(lastObject->getChangeInfo());
-        int row = m_collection.getIndexOf(oldData->getInt("id", -1));
-        QModelIndex index =  createIndex(row, column);
-        setData(index, oldData->getValueNative(lastObject->getChangeInfo()));
+        int row = topObject->getRow();
+        int column = topObject->getCol();
+
+        if (topObject->getChangeType() == ChangedObjectBase::Add)
+        {
+          // TODO
+        }
+        else if (topObject->getChangeType() == ChangedObjectBase::Delete)
+        {
+          qDebug("Undo the delete!");
+          GenericDataObject* oldData = topObject->getOldData();
+          qDebug("Got the old data!");
+          if (oldData != nullptr)
+          {
+            qDebug("Got row from top object");
+            qDebug(qPrintable(QString("Inserting row %1").arg(row)));
+            beginInsertRows(QModelIndex(), row, row);
+            qDebug("Ready for insert");
+            m_collection.insertRow(row, topObject->takeOldData());
+            qDebug("Ending insert");
+            endInsertRows();
+            qDebug("done!");
+          }
+        }
+        else if (topObject->getChangeType() == ChangedObjectBase::Edit)
+        {
+          // Info contains the modified field name!
+          GenericDataObject* oldData = topObject->getOldData();
+          if (oldData != nullptr)
+          {
+            // TODO: Try using existing values.
+            column = m_collection.getPropertyIndex(topObject->getChangeInfo());
+            row = m_collection.getIndexOf(oldData->getInt("id", -1));
+            QModelIndex index =  createIndex(row, column);
+            setData(index, oldData->getValueNative(topObject->getChangeInfo()));
+          }
+        }
+        else
+        {
+          qDebug("Unknown change type in undo");
+        }
+        delete topObject;
       }
     }
-    else
-    {
-      qDebug("Unknown change type in undo");
-    }
-    delete lastObject;
+
+    delete lastChanges;
   }
   setTracking(trackState);
 }

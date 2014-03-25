@@ -50,6 +50,35 @@ void GenericDataCollection::removeObject(const int id)
   }
 }
 
+void GenericDataCollection::removeRow(const int i)
+{
+  if (0 <= i && i < m_sortedIDs.size()) {
+    int id = m_sortedIDs.at(i);
+    m_sortedIDs.removeAt(i);
+    delete m_objects.take(id);
+  }
+}
+
+void GenericDataCollection::insertRow(const int i, GenericDataObject *obj)
+{
+  if (obj != nullptr)
+  {
+    int id = obj->getValue("id").toInt();
+    if (i < 0) {
+      delete obj;
+    }
+    else if (i >= m_sortedIDs.size())
+    {
+      appendObject(id, obj);
+    }
+    else
+    {
+      m_sortedIDs.insert(i, id);
+      m_objects.insert(id, obj);
+    }
+  }
+}
+
 QVariant::Type GenericDataCollection::getPropertyTypeVariant(const QString& name) const
 {
   QString lowerCaseName = name.toLower();

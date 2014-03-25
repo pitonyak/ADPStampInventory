@@ -117,7 +117,10 @@ public:
   /*! \brief Delete an object from the list based on its ID. The sorted ID list is not updated.
    *  \param [in] id Objects integer ID.
    */
-  void removeObject(const int);
+  void removeObject(const int id);
+
+  void removeRow(const int i);
+  void insertRow(const int i, GenericDataObject* obj);
 
   // TODO: Deal with the sorted list.
 
