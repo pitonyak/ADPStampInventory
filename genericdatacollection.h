@@ -246,7 +246,7 @@ public:
   void clear();
 
   void clearSortFields();
-  bool addSortField(const QString& name, const TableSortField::SortOrder order=TableSortField::Ascending, Qt::CaseSensitivity sensitive=Qt::CaseInsensitive);
+  bool addSortField(const QString& name, const Qt::SortOrder order=Qt::AscendingOrder, Qt::CaseSensitivity sensitive=Qt::CaseInsensitive);
   int getSortFieldCount() const;
   TableSortField* getSortField(const int i) const;
   const QList<TableSortField*>& getSortFields() const;

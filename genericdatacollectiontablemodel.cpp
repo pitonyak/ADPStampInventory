@@ -1,6 +1,7 @@
 #include "genericdatacollectiontablemodel.h"
 
 #include <QLocale>
+#include <QQueue>
 
 GenericDataCollectionTableModel::GenericDataCollectionTableModel(GenericDataCollection &data, QObject *parent) :
   QAbstractTableModel(parent), m_isTracking(true), m_collection(data)
@@ -97,15 +98,10 @@ QStack<ChangedObject<GenericDataObject>*> *GenericDataCollectionTableModel::popL
   return m_changeTracker.isEmpty() ? nullptr : m_changeTracker.pop();
 }
 
-void GenericDataCollectionTableModel::addRow()
+void GenericDataCollectionTableModel::getRowsAscending(const QModelIndexList& list, QList<int>& rows) const
 {
-
-}
-
-void GenericDataCollectionTableModel::deleteRows(QModelIndexList& list)
-{
+  rows.clear();
   QHash<int, int> rowHash;
-  QList<int> rows;
   for (int i=0; i<list.size(); ++i)
   {
     qDebug(qPrintable(QString("Checking entry %1 / %2").arg(i).arg(list.size())));
@@ -113,9 +109,21 @@ void GenericDataCollectionTableModel::deleteRows(QModelIndexList& list)
     {
       rowHash.insert(list.at(i).row(), i);
       rows.append(list.at(i).row());
+      qDebug(qPrintable(QString(" row = %1 / %2").arg(list.at(i).row()).arg(rows.size())));
     }
   }
   qSort(rows);
+}
+
+void GenericDataCollectionTableModel::addRow()
+{
+
+}
+
+void GenericDataCollectionTableModel::deleteRows(const QModelIndexList &list)
+{
+  QList<int> rows;
+  getRowsAscending(list, rows);
 
   if (!rows.isEmpty())
   {
@@ -162,7 +170,14 @@ void GenericDataCollectionTableModel::undoChange()
 
         if (topObject->getChangeType() == ChangedObjectBase::Add)
         {
-          // TODO
+          qDebug("Undo the add!");
+          //GenericDataObject* newData = topObject->getNewData();
+          //row = m_collection.getIndexOf(newData->getInt("id", -1));
+          qDebug(qPrintable(QString("Delete row %1").arg(row)));
+          beginRemoveRows(QModelIndex(), row, row);
+          m_collection.removeRow(row);
+          endRemoveRows();
+          qDebug("done!");
         }
         else if (topObject->getChangeType() == ChangedObjectBase::Delete)
         {
@@ -171,7 +186,6 @@ void GenericDataCollectionTableModel::undoChange()
           qDebug("Got the old data!");
           if (oldData != nullptr)
           {
-            qDebug("Got row from top object");
             qDebug(qPrintable(QString("Inserting row %1").arg(row)));
             beginInsertRows(QModelIndex(), row, row);
             qDebug("Ready for insert");
@@ -207,8 +221,40 @@ void GenericDataCollectionTableModel::undoChange()
   setTracking(trackState);
 }
 
-void GenericDataCollectionTableModel::duplicateRow()
+void GenericDataCollectionTableModel::duplicateRows(const QModelIndexList& list)
 {
-
+  qDebug(qPrintable(QString("duplicateRows %1").arg(list.size())));
+  QList<int> rows;
+  getRowsAscending(list, rows);
+  QQueue<GenericDataObject*> dataToCopy;
+  for (int i=0; i<rows.size(); ++i)
+  {
+    qDebug(qPrintable(QString("Copying %1").arg(i)));
+    dataToCopy.enqueue(m_collection.getObjectByRow(rows.at(i)));
+  }
+  qDebug(qPrintable(QString("duplicateRows %1").arg(rows.size())));
+  if (!rows.isEmpty())
+  {
+    int largestId = m_collection.getLargestId();
+    QStack<ChangedObject<GenericDataObject>*> * lastChanges = m_isTracking ? new QStack<ChangedObject<GenericDataObject>*>() : nullptr;
+    while (!dataToCopy.isEmpty())
+    {
+      GenericDataObject* oldData = dataToCopy.dequeue();
+      GenericDataObject* newData = oldData->clone();
+      newData->setValue("id", ++largestId);
+      int row = m_collection.getObjectCount();
+      if (m_isTracking)
+      {
+        lastChanges->push(new ChangedObject<GenericDataObject>(row, -1, "", ChangedObjectBase::Add, newData->clone(), nullptr) );
+      }
+      beginInsertRows(QModelIndex(), row, row);
+      m_collection.appendObject(largestId, newData);
+      endInsertRows();
+    }
+    if (m_isTracking)
+    {
+      m_changeTracker.push(lastChanges);
+    }
+  }
 }
 

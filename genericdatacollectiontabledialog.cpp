@@ -13,6 +13,7 @@
 #include <QDialogButtonBox>
 #include <QSettings>
 #include <QItemSelection>
+#include <QSortFilterProxyModel>
 
 GenericDataCollectionTableDialog::GenericDataCollectionTableDialog(const QString& name, GenericDataCollection &data, QWidget *parent) :
   QDialog(parent),
@@ -55,7 +56,13 @@ void GenericDataCollectionTableDialog::buildDialog()
   // Build the primary table.
   m_tableView = new QTableView();
   m_tableModel = new GenericDataCollectionTableModel(m_dataCollection);
-  m_tableView->setModel(m_tableModel);
+
+  m_proxyModel = new QSortFilterProxyModel(this);
+  m_proxyModel->setSourceModel(m_tableModel);
+
+  //??m_tableView->setModel(m_tableModel);
+  m_tableView->setModel(m_proxyModel);
+  m_tableView->setSortingEnabled(true);
 
   qDebug(qPrintable(QString("Num columns %1").arg(m_dataCollection.getPropertyNameCount())));
 
@@ -165,7 +172,10 @@ void GenericDataCollectionTableDialog::undoChange()
 
 void GenericDataCollectionTableDialog::duplicateRow()
 {
-  m_tableModel->duplicateRow();
+  qDebug("DuplicateRow()");
+  QModelIndexList list = m_tableView->selectionModel()->selectedIndexes();
+  m_tableModel->duplicateRows(list);
+  // TODO: Select the first inserted one.
   enableButtons();
 }
 

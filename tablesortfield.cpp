@@ -11,7 +11,7 @@ const QString s_Descending = "Descending";
 
 
 TableSortField::TableSortField(QObject *parent) : QObject(parent),
-    m_comparer(nullptr), m_fieldIndex(-1), m_sortOrder(Ascending), m_MetaType(QMetaType::UnknownType)
+    m_comparer(nullptr), m_fieldIndex(-1), m_sortOrder(Qt::AscendingOrder), m_MetaType(QMetaType::UnknownType)
 {
     m_comparer = new ValueComparer(Qt::CaseInsensitive);
 }
@@ -22,13 +22,13 @@ TableSortField::TableSortField(const TableSortField& obj, QObject *parent) : QOb
     operator=(obj);
 }
 
-TableSortField::TableSortField(const QString name, int index, SortOrder order, Qt::CaseSensitivity sensitive) : QObject(nullptr),
+TableSortField::TableSortField(const QString name, int index, Qt::SortOrder order, Qt::CaseSensitivity sensitive) : QObject(nullptr),
     m_comparer(nullptr), m_fieldIndex(index), m_sortOrder(order), m_fieldName(name)
 {
     m_comparer = new ValueComparer(sensitive);
 }
 
-TableSortField::TableSortField(QObject *parent, const QString name, int index, SortOrder order, Qt::CaseSensitivity sensitive) : QObject(parent),
+TableSortField::TableSortField(QObject *parent, const QString name, int index, Qt::SortOrder order, Qt::CaseSensitivity sensitive) : QObject(parent),
     m_comparer(nullptr), m_fieldIndex(index), m_sortOrder(order), m_fieldName(name)
 {
     m_comparer = new ValueComparer(sensitive);
@@ -58,14 +58,14 @@ const TableSortField& TableSortField::operator=(const TableSortField& obj)
     return *this;
 }
 
-QString TableSortField::sortOrderToName(const SortOrder sortOrder)
+QString TableSortField::sortOrderToName(const Qt::SortOrder sortOrder)
 {
-    return sortOrder == TableSortField::Ascending ? s_Ascending : s_Descending;
+    return sortOrder == Qt::AscendingOrder ? s_Ascending : s_Descending;
 }
 
-TableSortField::SortOrder TableSortField::sortOrderFromName(const QString& name)
+Qt::SortOrder TableSortField::sortOrderFromName(const QString& name)
 {
-    return name.compare(s_Descending, Qt::CaseInsensitive) == 0 ? TableSortField::Descending : TableSortField::Ascending;
+    return name.compare(s_Descending, Qt::CaseInsensitive) == 0 ? Qt::DescendingOrder : Qt::AscendingOrder;
 }
 
 QStringList TableSortField::sortOrderNames()
@@ -149,7 +149,7 @@ QXmlStreamReader& TableSortField::read(QList<TableSortField>& list, QXmlStreamRe
               }
               if (attr.hasAttribute(s_Ascending)) {
                 //qDebug(qPrintable(QString("ascending = %1").arg(attr.value(s_Ascending).toString())));
-                field.setSortOrder(XMLUtility::stringToBoolean(attr.value(s_Ascending).toString()) ? Ascending : Descending);
+                field.setSortOrder(XMLUtility::stringToBoolean(attr.value(s_Ascending).toString()) ? Qt::AscendingOrder : Qt::DescendingOrder);
               }
               list.append(field);
               //qDebug(qPrintable(QString("Read field %1").arg(field.fieldName())));

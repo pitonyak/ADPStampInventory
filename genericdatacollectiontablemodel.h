@@ -83,16 +83,18 @@ public:
     void setTracking(const bool isTracking) { m_isTracking = isTracking; }
 
     bool trackerIsEmpty() const { return m_changeTracker.isEmpty(); }
-    ChangedObject<GenericDataObject> *popLastChangeObject();
     QStack<ChangedObject<GenericDataObject>*> *popLastChange();
+
+    void getRowsAscending(const QModelIndexList &list, QList<int> &rows) const;
+
 
 signals:
   
 public slots:
     void addRow();
-    void deleteRows(QModelIndexList& list);
+    void deleteRows(const QModelIndexList& list);
     void undoChange();
-    void duplicateRow();
+    void duplicateRows(const QModelIndexList& list);
 
 private:
     bool m_isTracking;

@@ -27,9 +27,7 @@ class QXmlStreamReader;
 class TableSortField : public QObject
 {
     Q_OBJECT
-    Q_ENUMS(SortOrder)
 public:
-    enum SortOrder {Ascending, Descending};
 
     //**************************************************************************
     /*! \brief Default constructor with the specified parent.
@@ -56,7 +54,7 @@ public:
      *  \param [in] order How to sort, Ascending or Descending. Defaults to Ascending.
      *  \param [in] sensitive Case sensitivity. Defaults to case insensitive.
      ***************************************************************************/
-    TableSortField(const QString name, int index=-1, SortOrder order=Ascending, Qt::CaseSensitivity sensitive=Qt::CaseInsensitive);
+    TableSortField(const QString name, int index=-1, Qt::SortOrder order=Qt::AscendingOrder, Qt::CaseSensitivity sensitive=Qt::CaseInsensitive);
 
     //**************************************************************************
     /*! \brief Constructor
@@ -67,7 +65,7 @@ public:
      *  \param [in] order How to sort, Ascending or Descending. Defaults to Ascending.
      *  \param [in] sensitive Case sensitivity. Defaults to case insensitive.
      ***************************************************************************/
-    TableSortField(QObject *parent, const QString name, int index=-1, SortOrder order=Ascending, Qt::CaseSensitivity sensitive=Qt::CaseInsensitive);
+    TableSortField(QObject *parent, const QString name, int index=-1, Qt::SortOrder order=Qt::AscendingOrder, Qt::CaseSensitivity sensitive=Qt::CaseInsensitive);
 
     //**************************************************************************
     /*! \brief Destructor to delete the comparer.
@@ -78,7 +76,7 @@ public:
     void setFieldIndex(int index=-1);
 
     /*! \brief Set the sort order, defaults to ascending if no parameter. */
-    void setSortOrder(TableSortField::SortOrder order = TableSortField::Ascending);
+    void setSortOrder(Qt::SortOrder order = Qt::AscendingOrder);
 
     /*! \brief Set the field name. */
     void setFieldName(const QString& name);
@@ -90,7 +88,7 @@ public:
     int fieldIndex() const;
 
     /*! \return Current sort order (ascending or descending). */
-    TableSortField::SortOrder sortOrder() const;
+    Qt::SortOrder sortOrder() const;
 
     /*! \return Field name. */
     const QString& fieldName() const;
@@ -216,7 +214,7 @@ public:
       *  \param [in] sortOrder Value to convert
       *  \return Return the name for the sort order value.
       ***************************************************************************/
-     static QString sortOrderToName(const SortOrder sortOrder);
+     static QString sortOrderToName(const Qt::SortOrder sortOrder);
 
      //**************************************************************************
      /*! \brief Get the sort order value from the name. If the name is not known, returns Ascending.
@@ -224,7 +222,7 @@ public:
       *  \param [in] name Sort order name to evalute in a case insensitive way "Ascending" or "Descending".
       *  \return Sort order value from the name.
       ***************************************************************************/
-     static SortOrder sortOrderFromName(const QString& name);
+     static Qt::SortOrder sortOrderFromName(const QString& name);
 
      QXmlStreamWriter& write(QXmlStreamWriter& writer) const;
 
@@ -241,7 +239,7 @@ private:
     int m_fieldIndex;
 
     /*! \brief  Ascending or Descending */
-    SortOrder m_sortOrder;
+    Qt::SortOrder m_sortOrder;
 
     /*! \brief name of the field */
     QString m_fieldName;
@@ -259,7 +257,7 @@ inline void TableSortField::setCase(Qt::CaseSensitivity sensitive)
     m_comparer->setSensitivity(sensitive);
 }
 
-inline void TableSortField::setSortOrder(TableSortField::SortOrder order)
+inline void TableSortField::setSortOrder(Qt::SortOrder order)
 {
     m_sortOrder = order;
 }
@@ -284,7 +282,7 @@ inline Qt::CaseSensitivity TableSortField::caseSensitivity() const
     return m_comparer->caseSensitivity();
 }
 
-inline TableSortField::SortOrder TableSortField::sortOrder() const
+inline Qt::SortOrder TableSortField::sortOrder() const
 {
     return m_sortOrder;
 }
@@ -301,47 +299,47 @@ inline QMetaType::Type TableSortField::fieldType() const
 
 inline bool TableSortField::lessThan(const QVariant& v1, const QVariant& v2) const
 {
-    return m_sortOrder == TableSortField::Ascending ? m_comparer->lessThan(v1, v2) : m_comparer->greaterThanEqual(v1, v2) ;
+    return m_sortOrder == Qt::AscendingOrder ? m_comparer->lessThan(v1, v2) : m_comparer->greaterThanEqual(v1, v2) ;
 }
 
 inline bool TableSortField::lessThanEqual(const QVariant& v1, const QVariant& v2) const
 {
-    return m_sortOrder == TableSortField::Ascending ? m_comparer->lessThanEqual(v1, v2) : m_comparer->greaterThan(v1, v2) ;
+    return m_sortOrder == Qt::AscendingOrder ? m_comparer->lessThanEqual(v1, v2) : m_comparer->greaterThan(v1, v2) ;
 }
 
 inline bool TableSortField::equal(const QVariant& v1, const QVariant& v2) const
 {
-    return m_sortOrder == TableSortField::Ascending ? m_comparer->equal(v1, v2) : m_comparer->notEqual(v1, v2) ;
+    return m_sortOrder == Qt::AscendingOrder ? m_comparer->equal(v1, v2) : m_comparer->notEqual(v1, v2) ;
 }
 
 inline bool TableSortField::notEqual(const QVariant& v1, const QVariant& v2) const
 {
-    return m_sortOrder == TableSortField::Ascending ? m_comparer->notEqual(v1, v2) : m_comparer->equal(v1, v2) ;
+    return m_sortOrder == Qt::AscendingOrder ? m_comparer->notEqual(v1, v2) : m_comparer->equal(v1, v2) ;
 }
 
 inline bool TableSortField::greaterThan(const QVariant& v1, const QVariant& v2) const
 {
-    return m_sortOrder == TableSortField::Ascending ? m_comparer->greaterThan(v1, v2) : m_comparer->lessThanEqual(v1, v2) ;
+    return m_sortOrder == Qt::AscendingOrder ? m_comparer->greaterThan(v1, v2) : m_comparer->lessThanEqual(v1, v2) ;
 }
 
 inline bool TableSortField::greaterThanEqual(const QVariant& v1, const QVariant& v2) const
 {
-    return m_sortOrder == TableSortField::Ascending ? m_comparer->greaterThanEqual(v1, v2) : m_comparer->lessThan(v1, v2) ;
+    return m_sortOrder == Qt::AscendingOrder ? m_comparer->greaterThanEqual(v1, v2) : m_comparer->lessThan(v1, v2) ;
 }
 
 inline int TableSortField::valueCompare(const QVariant& v1, const QVariant& v2) const
 {
-    return m_sortOrder == TableSortField::Ascending ? m_comparer->valueCompare(v1, v2) : m_comparer->valueCompare(v1, v2) * -1 ;
+    return m_sortOrder == Qt::AscendingOrder ? m_comparer->valueCompare(v1, v2) : m_comparer->valueCompare(v1, v2) * -1 ;
 }
 
 inline bool TableSortField::isAscending() const
 {
-    return m_sortOrder == Ascending;
+    return m_sortOrder == Qt::AscendingOrder;
 }
 
 inline bool TableSortField::isDescending() const
 {
-    return m_sortOrder == Descending;
+    return m_sortOrder == Qt::DescendingOrder;
 }
 
 

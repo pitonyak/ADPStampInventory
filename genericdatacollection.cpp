@@ -242,7 +242,7 @@ const GenericDataCollection& GenericDataCollection::operator=(const GenericDataC
 }
 
 
-bool GenericDataCollection::addSortField(const QString& name, const TableSortField::SortOrder order, Qt::CaseSensitivity sensitive)
+bool GenericDataCollection::addSortField(const QString& name, const Qt::SortOrder order, Qt::CaseSensitivity sensitive)
 {
     if (!hasProperty(name))
     {

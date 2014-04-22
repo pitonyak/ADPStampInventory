@@ -8,6 +8,7 @@
 class QTableView;
 class GenericDataCollectionTableModel;
 class QItemSelection;
+class QSortFilterProxyModel;
 
 class GenericDataCollectionTableDialog : public QDialog
 {
@@ -52,6 +53,9 @@ private:
   QString m_name;
 
   GenericDataCollectionTableModel* m_tableModel;
+
+  QSortFilterProxyModel* m_proxyModel;
+
   TypeMapper m_mapper;
 };
 

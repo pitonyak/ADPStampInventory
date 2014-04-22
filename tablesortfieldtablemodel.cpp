@@ -46,7 +46,7 @@ bool TableSortFieldTableModel::setData ( const QModelIndex & index, const QVaria
       }
       break;
     case ascendingColumn:
-      field.setSortOrder(value.toBool() ? TableSortField::Ascending : TableSortField::Descending);
+      field.setSortOrder(value.toBool() ? Qt::AscendingOrder : Qt::DescendingOrder);
       break;
     case caseColumn:
       field.setCase(value.toBool() ? Qt::CaseSensitive : Qt::CaseInsensitive);
@@ -78,7 +78,7 @@ QVariant TableSortFieldTableModel::data( const QModelIndex &index, int role ) co
       return field.fieldName();
       break;
     case ascendingColumn:
-      return (field.sortOrder() == TableSortField::Ascending);
+      return (field.sortOrder() == Qt::AscendingOrder);
       break;
     case caseColumn:
       return (field.caseSensitivity() == Qt::CaseSensitive);
@@ -121,7 +121,7 @@ QVariant TableSortFieldTableModel::data( const QModelIndex &index, int role ) co
       }
       break;
     case ascendingColumn:
-      return (field.sortOrder() == TableSortField::Ascending) ? true : false;
+      return (field.sortOrder() == Qt::AscendingOrder) ? true : false;
       break;
     case caseColumn:
       return (field.caseSensitivity() == Qt::CaseSensitive) ? true : false;
