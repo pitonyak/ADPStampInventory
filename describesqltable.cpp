@@ -1,5 +1,6 @@
 #include "describesqltable.h"
 #include "sqlfieldtypemaster.h"
+#include <QXmlStreamWriter>
 
 DescribeSqlTable::DescribeSqlTable()
 {
@@ -10,10 +11,9 @@ DescribeSqlTable::DescribeSqlTable(const DescribeSqlTable& table)
   copy(table);
 }
 
-DescribeSqlTable::DescribeSqlTable(const char* const definitions[], bool idIsAutoInc, const SqlFieldTypeMaster *typemaster)
+DescribeSqlTable::DescribeSqlTable(const QString definitions[], const int n, bool idIsAutoInc, const SqlFieldTypeMaster *typemaster)
 {
   if (definitions != nullptr) {
-    int n = sizeof( definitions ) / sizeof( definitions[0] );
     // first three describe the table
     // Next, groups of 5: Name, View Name, Type, Description, length
     // Find k such that n = 3 + 5 * k
@@ -69,7 +69,7 @@ const DescribeSqlTable& DescribeSqlTable::copy(const DescribeSqlTable& table)
     setName(table.getName());
     setViewName(table.getViewName());
     setDescription(table.getDescription());
-    m_Names = table.getFieldNames();
+    m_names = table.getFieldNames();
     m_fields = table.m_fields;
   }
   return *this;
@@ -78,7 +78,7 @@ const DescribeSqlTable& DescribeSqlTable::copy(const DescribeSqlTable& table)
 QString DescribeSqlTable::getFieldNameByIndex(const int index) const
 {
   if (0 <= index && index < getFieldCount()) {
-    return m_Names.at(index);
+    return m_names.at(index);
   } else {
     qDebug(qPrintable(QString("Field index = %1 is out of range for table %2").arg(index).arg(getName())));
   }
@@ -108,7 +108,7 @@ bool DescribeSqlTable::addField(const DescribeSqlField& field)
     qDebug(qPrintable(QString("Field name = '%1' is already contained in table %2").arg(simpleName).arg(getName())));
     return false;
   } else {
-    m_Names.append(simpleName);
+    m_names.append(simpleName);
     m_fields.insert(simpleName, field);
   }
   return true;
@@ -153,4 +153,21 @@ void DescribeSqlTable::setFieldLink(const QString& name, const QString& linkTabl
   } else {
     qDebug(qPrintable(QString("Field name = '%1' is not found in table %2").arg(simpleName).arg(getName())));
   }
+}
+
+QXmlStreamWriter& DescribeSqlTable::writeXml(QXmlStreamWriter& writer) const
+{
+  writer.writeStartElement("Table");
+  if (!getName().isEmpty())
+    writer.writeAttribute("name", getName());
+  if (!getViewName().isEmpty())
+    writer.writeAttribute("viewname", getViewName());
+  if (!getDescription().isEmpty()) {
+    writer.writeAttribute("description", getDescription());
+  }
+  for (int i=0; i<m_names.size(); ++i) {
+    m_fields.value(m_names.at(i)).writeXml(writer);
+  }
+  writer.writeEndElement();
+  return writer;
 }

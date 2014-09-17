@@ -6,6 +6,8 @@
 #include <QStringList>
 #include <QString>
 
+class QXmlStreamWriter;
+
 class DescribeSqlTables
 {
 public:
@@ -21,8 +23,8 @@ public:
   void setViewName(const QString& viewName) { m_viewName = viewName; }
   void setDescription(const QString& description) { m_description = description; }
 
-  int getTableCount() const { return m_Names.count(); }
-  QStringList getTableNames() const { return m_Names; }
+  int getTableCount() const { return m_names.count(); }
+  QStringList getTableNames() const { return m_names; }
   QString getNameByIndex(const int index) const;
 
   DescribeSqlTable getTableByName(const QString& name) const;
@@ -32,6 +34,8 @@ public:
   const DescribeSqlTables& operator=(const DescribeSqlTables& tables) { return copy(tables); }
 
   static DescribeSqlTables getStampSchema();
+
+  QXmlStreamWriter& writeXml(QXmlStreamWriter& writer) const;
 
 private:
 
@@ -46,7 +50,7 @@ private:
   /*! \brief Describe what the table contains. */
   QString m_description;
 
-  QStringList m_Names;
+  QStringList m_names;
   QHash<QString, DescribeSqlTable> m_tables;
 };
 

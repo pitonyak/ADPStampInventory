@@ -10,6 +10,8 @@
 #include <QString>
 #include "sqlfieldtype.h"
 
+class QXmlStreamWriter;
+
 class DescribeSqlField
 {
 public:
@@ -23,7 +25,7 @@ public:
   SqlFieldType getFieldType() const { return m_fieldType; }
   QString getPreferredTypeName() const { return m_preferredTypeName; }
   QString getLinkTableName() const { return m_linkTable; }
-  QString getLinkeFieldName() const { return m_linkField; }
+  QString getLinkFieldName() const { return m_linkField; }
   bool isAutoIncrement() const { return m_isAutoIncrement; }
   bool isRequired() const { return m_isRequired; }
   bool isKey() const { return m_isKey; }
@@ -43,6 +45,8 @@ public:
   void setFieldLength(const int len) { m_fieldLength = len; }
 
   const DescribeSqlField& operator=(const DescribeSqlField& field) { return copy(field); }
+
+  QXmlStreamWriter& writeXml(QXmlStreamWriter& writer) const;
 
 private:
 

@@ -8,12 +8,14 @@
 #include "constants.h"
 #include "sqldialog.h"
 #include "genericdatacollectiontabledialog.h"
+#include "describesqltables.h"
 
 #include <QMessageBox>
 #include <QStringList>
 #include <QFileDialog>
 #include <QCoreApplication>
 #include <QSettings>
+#include <QXmlStreamWriter>
 
 #if defined(__GNUC__)
 #if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 6)
@@ -363,14 +365,24 @@ void MainWindow::editTable()
   //TableSortFieldDialog dlg(&gdc);
   //dlg.exec();
 
-  createDBWorker();
+  DescribeSqlTables schema =DescribeSqlTables::getStampSchema();
+  QString s;
+  QXmlStreamWriter writer(&s);
+  writer.setAutoFormatting(true);
+  writer.writeStartDocument();
+  schema.writeXml(writer);
+  writer.writeEndDocument();
+
+  qDebug(qPrintable(s));
+
+  //createDBWorker();
   // QString tableName("country");
-  QString tableName("inventory");
+  //QString tableName("inventory");
   // QString tableName("stamplocation");
-  GenericDataCollection* gdo = m_db->readTableName(tableName);
+  //GenericDataCollection* gdo = m_db->readTableName(tableName);
 
-  qDebug(qPrintable(QString("On return, number of rows = %1").arg(gdo->rowCount())));
+  //qDebug(qPrintable(QString("On return, number of rows = %1").arg(gdo->rowCount())));
 
-  GenericDataCollectionTableDialog dlg(tableName, *gdo);
-  dlg.exec();
+  //GenericDataCollectionTableDialog dlg(tableName, *gdo);
+  //dlg.exec();
 }

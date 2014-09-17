@@ -1,5 +1,7 @@
 #include "describesqlfield.h"
 
+#include <QXmlStreamWriter>
+
 DescribeSqlField::DescribeSqlField()
 {
   m_fieldLength = 0;
@@ -22,7 +24,7 @@ const DescribeSqlField& DescribeSqlField::copy(const DescribeSqlField& field)
     setFieldType(field.getFieldType());
     setPreferredTypeName(field.getPreferredTypeName());
     setLinkTableName(field.getLinkTableName());
-    setLinkFieldName(field.getLinkeFieldName());
+    setLinkFieldName(field.getLinkFieldName());
     setIsAutoIncrement(field.isAutoIncrement());
     setIsRequired(field.isRequired());
     setIsKey(field.isKey());
@@ -33,5 +35,37 @@ const DescribeSqlField& DescribeSqlField::copy(const DescribeSqlField& field)
 
 bool DescribeSqlField::isLinkField() const
 {
-  return !getLinkTableName().isEmpty() && !getLinkeFieldName().isEmpty() ;
+  return !getLinkTableName().isEmpty() && !getLinkFieldName().isEmpty() ;
 }
+
+QXmlStreamWriter& DescribeSqlField::writeXml(QXmlStreamWriter& writer) const
+{
+  writer.writeStartElement("Field");
+  if (!getName().isEmpty())
+    writer.writeAttribute("name", getName());
+  if (!getViewName().isEmpty())
+    writer.writeAttribute("viewname", getViewName());
+  if (!getPreferredTypeName().isEmpty()) {
+    writer.writeAttribute("type", getPreferredTypeName());
+  } else if (getFieldType().isValid() && getFieldType().getSupportedNames().size() > 0) {
+    writer.writeAttribute("type", getFieldType().getSupportedNames().at(0));
+  }
+  if (isAutoIncrement())
+    writer.writeAttribute("autoincrement", "true");
+  if (isRequired())
+    writer.writeAttribute("required", "true");
+  if (isKey())
+    writer.writeAttribute("key", "true");
+  if (!getLinkTableName().isEmpty()) {
+    writer.writeStartElement("Link");
+    writer.writeAttribute("table", getLinkTableName());
+    writer.writeAttribute("field", getLinkFieldName());
+    writer.writeEndElement();
+  }
+  if (!getDescription().isEmpty()) {
+    writer.writeAttribute("description", getDescription());
+  }
+  writer.writeEndElement();
+  return writer;
+}
+

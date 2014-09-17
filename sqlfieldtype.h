@@ -172,6 +172,8 @@ public:
      ***************************************************************************/
     bool containsName(const QString& name) const;
 
+    QStringList getSupportedNames() const { return m_supportedNames; }
+
 private:
     QRegExp* firstMatchingRegExp(const QString& aName) const;
 

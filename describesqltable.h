@@ -13,6 +13,7 @@
 #include "describesqlfield.h"
 
 class SqlFieldTypeMaster;
+class QXmlStreamWriter;
 
 class DescribeSqlTable
 {
@@ -20,7 +21,7 @@ public:
   DescribeSqlTable();
   DescribeSqlTable(const DescribeSqlTable& table);
 
-  DescribeSqlTable(const char* const definitions[], bool idIsAutoInc = true ,const SqlFieldTypeMaster* typemaster = nullptr);
+  DescribeSqlTable(const QString definitions[], const int n, bool idIsAutoInc = true ,const SqlFieldTypeMaster* typemaster = nullptr);
 
 
   QString getName() const { return m_name; }
@@ -31,8 +32,8 @@ public:
   void setViewName(const QString& viewName) { m_viewName = viewName; }
   void setDescription(const QString& description) { m_description = description; }
 
-  int getFieldCount() const { return m_Names.count(); }
-  QStringList getFieldNames() const { return m_Names; }
+  int getFieldCount() const { return m_names.count(); }
+  QStringList getFieldNames() const { return m_names; }
   QString getFieldNameByIndex(const int index) const;
 
   DescribeSqlField getFieldByName(const QString& name) const;
@@ -45,6 +46,8 @@ public:
   void setFieldAutoIncrement(const QString& name, bool x);
   void setFieldRequired(const QString& name, bool x);
   void setFieldLink(const QString& name, const QString& linkTableName, const QString& linkFieldName);
+
+  QXmlStreamWriter& writeXml(QXmlStreamWriter& writer) const;
 
 private:
 
@@ -59,7 +62,7 @@ private:
   /*! \brief Describe what the table contains. */
   QString m_description;
 
-  QStringList m_Names;
+  QStringList m_names;
   QHash<QString, DescribeSqlField> m_fields;
 };
 
