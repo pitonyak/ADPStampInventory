@@ -160,6 +160,13 @@ void SqlFieldType::addName(const QString& aName)
     }
 }
 
+bool SqlFieldType::containsName(const QString& aName) const
+{
+    QString simplifiedName = aName.simplified();
+    return !simplifiedName.isEmpty() && !simplifiedName.isNull() && m_supportedNames.contains(simplifiedName, Qt::CaseInsensitive);
+}
+
+
 bool SqlFieldType::isValid()
 {
     return m_qtVariantType != QMetaType::Void;

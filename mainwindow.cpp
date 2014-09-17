@@ -69,6 +69,7 @@ void MainWindow::setupMenuBar()
   menu->addAction(tr("&Export CSV"), this, SLOT(exportCSV()));
   menu->addAction(tr("&SQL Window"), this, SLOT(openSQLWindow()));
   menu->addAction(tr("Configure"), this, SLOT(configure()));
+  menu->addAction(tr("Edit Table"), this, SLOT(editTable()));
 
   menu = menuBar()->addMenu(tr("&Help"));
 
@@ -337,8 +338,8 @@ void MainWindow::openSQLWindow()
 
 void MainWindow::configure()
 {
-  GenericDataCollection gdc;
-  gdc.makeDummy();
+  //GenericDataCollection gdc;
+  //gdc.makeDummy();
   //TableSortFieldDialog dlg(&gdc);
   //dlg.exec();
 
@@ -353,4 +354,23 @@ void MainWindow::configure()
   GenericDataCollectionTableDialog dlg(tableName, *gdo);
   dlg.exec();
 
+}
+
+void MainWindow::editTable()
+{
+  //GenericDataCollection gdc;
+  //gdc.makeDummy();
+  //TableSortFieldDialog dlg(&gdc);
+  //dlg.exec();
+
+  createDBWorker();
+  // QString tableName("country");
+  QString tableName("inventory");
+  // QString tableName("stamplocation");
+  GenericDataCollection* gdo = m_db->readTableName(tableName);
+
+  qDebug(qPrintable(QString("On return, number of rows = %1").arg(gdo->rowCount())));
+
+  GenericDataCollectionTableDialog dlg(tableName, *gdo);
+  dlg.exec();
 }

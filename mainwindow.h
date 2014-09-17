@@ -29,6 +29,7 @@ public slots:
     void exportCSV();
     void openSQLWindow();
     void configure();
+    void editTable();
 
 
 private:

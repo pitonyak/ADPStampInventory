@@ -82,7 +82,11 @@ SOURCES += main.cpp\
     changedobjectbase.cpp \
     changedobject.cpp \
     changetrackerbase.cpp \
-    changetracker.cpp
+    changetracker.cpp \
+    stampschema.cpp \
+    describesqltable.cpp \
+    describesqlfield.cpp \
+    describesqltables.cpp
 
 HEADERS  += mainwindow.h \
     stampdb.h \
@@ -141,7 +145,11 @@ HEADERS  += mainwindow.h \
     changedobjectbase.h \
     changedobject.h \
     changetrackerbase.h \
-    changetracker.h
+    changetracker.h \
+    stampschema.h \
+    describesqltable.h \
+    describesqlfield.h \
+    describesqltables.h
 
 FORMS    += mainwindow.ui \
     logroutinginfodialog.ui

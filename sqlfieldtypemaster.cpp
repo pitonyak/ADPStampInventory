@@ -27,7 +27,20 @@ const SqlFieldType& SqlFieldTypeMaster::findMatch(const QString& ddl) const
     QString simplified = ddl.simplified();
     for (int i=0; i<m_fieldTypes.size(); ++i)
     {
-        if (m_fieldTypes.at(i).ddlMatches(ddl))
+        if (m_fieldTypes.at(i).ddlMatches(simplified))
+        {
+            return m_fieldTypes.at(i);
+        }
+    }
+    return m_invalidField;
+}
+
+const SqlFieldType& SqlFieldTypeMaster::findByName(const QString& name) const
+{
+    QString simplified = name.simplified();
+    for (int i=0; i<m_fieldTypes.size(); ++i)
+    {
+        if (m_fieldTypes.at(i).ddlMatches(simplified))
         {
             return m_fieldTypes.at(i);
         }

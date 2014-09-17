@@ -98,7 +98,6 @@ public:
      ***************************************************************************/
     int length(const QString& ddl) const;
 
-
     //**************************************************************************
     //! Get the QVariant type used to represent this SQL type.
     /*!
@@ -162,6 +161,16 @@ public:
      *
      ***************************************************************************/
     bool isValid();
+
+    //**************************************************************************
+    //! Determine if the provided name is supported by this type object.
+    /*!
+     * \param aName Name that can match the DDL. Names are matched in the order that they are added.
+     *
+     * \returns True if the name (case insensitive) is supported by this type.
+     *
+     ***************************************************************************/
+    bool containsName(const QString& name) const;
 
 private:
     QRegExp* firstMatchingRegExp(const QString& aName) const;
