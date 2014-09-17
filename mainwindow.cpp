@@ -358,6 +358,8 @@ void MainWindow::configure()
 
 }
 
+#include <QXmlStreamReader>
+
 void MainWindow::editTable()
 {
   //GenericDataCollection gdc;
@@ -374,6 +376,24 @@ void MainWindow::editTable()
   writer.writeEndDocument();
 
   qDebug(qPrintable(s));
+
+  QXmlStreamReader reader(s);
+  DescribeSqlTables schema2 = DescribeSqlTables::readXml(reader);
+
+  QString s2;
+  QXmlStreamWriter writer2(&s2);
+  writer2.setAutoFormatting(true);
+  writer2.writeStartDocument();
+  schema2.writeXml(writer2);
+  writer2.writeEndDocument();
+
+  if (s.compare(s2) != 0) {
+      qDebug("Failure, s != s2");
+      qDebug(qPrintable(s2));
+  } else {
+      qDebug("Yeah!, s == s2");
+      qDebug(qPrintable(s2));
+  }
 
   //createDBWorker();
   // QString tableName("country");

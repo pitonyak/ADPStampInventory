@@ -1,10 +1,13 @@
 #include "describesqlfield.h"
+#include "xmlutility.h"
+#include "sqlfieldtypemaster.h"
 
 #include <QXmlStreamWriter>
 
 DescribeSqlField::DescribeSqlField()
 {
   m_fieldLength = 0;
+  m_fieldPrecision = 0;
   m_isAutoIncrement = false;
   m_isKey = false;
   m_isRequired = false;
@@ -29,6 +32,7 @@ const DescribeSqlField& DescribeSqlField::copy(const DescribeSqlField& field)
     setIsRequired(field.isRequired());
     setIsKey(field.isKey());
     setFieldLength(field.getFieldLength());
+    setFieldPrecision(field.getFieldPrecision());
   }
   return *this;
 }
@@ -42,33 +46,72 @@ DescribeSqlField DescribeSqlField::readXml(QXmlStreamReader& reader)
 {
     DescribeSqlField field;
     bool foundFieldTag = false;
+    bool ok;
     while (!reader.atEnd()) {
         if (reader.isStartElement()) {
-            if (reader.name().compare("Field", Qt::CaseInsensitive)) {
+            if (reader.name().compare("Field", Qt::CaseInsensitive) == 0) {
                 if (foundFieldTag) {
                     // Found a second Table tag.
                     break;
                 }
+                foundFieldTag = true;
                 if (reader.attributes().hasAttribute("name"))
                     field.setName(reader.attributes().value("name").toString());
                 if (reader.attributes().hasAttribute("viewname"))
                     field.setViewName(reader.attributes().value("viewname").toString());
                 if (reader.attributes().hasAttribute("description"))
                     field.setDescription(reader.attributes().value("description").toString());
-                // TODO: add the rest of the tags!
+                if (reader.attributes().hasAttribute("type")) {
+                    QString sType = reader.attributes().value("type").toString();
+                    SqlFieldTypeMaster typeMaster;
+                    SqlFieldType fieldType = typeMaster.findByName(sType);
+                    if (!fieldType.isValid()) {
+                        qDebug(qPrintable(QString("Invalid field type found '%1' in field '%2'").arg(sType).arg(field.getName())));
+                    } else {
+                        field.setFieldType(fieldType);
+                        field.setPreferredTypeName(sType);
+                    }
+                }
+                if (reader.attributes().hasAttribute("autoincrement")) {
+                    field.setIsAutoIncrement(XMLUtility::stringToBoolean(reader.attributes().value("autoincrement").toString()));
+                }
+                if (reader.attributes().hasAttribute("required")) {
+                    field.setIsRequired(XMLUtility::stringToBoolean(reader.attributes().value("required").toString()));
+                }
+                if (reader.attributes().hasAttribute("key")) {
+                    field.setIsKey(XMLUtility::stringToBoolean(reader.attributes().value("key").toString()));
+                }
+                if (reader.attributes().hasAttribute("precision")) {
+                    field.setFieldPrecision(reader.attributes().value("precision").toInt(&ok));
+                    if (!ok) {
+                        qDebug(qPrintable(QString("Failed to set field precision '%1' in field '%2'").arg(reader.attributes().value("precision").toString()).arg(field.getName())));
+                    }
+                }
+                if (reader.attributes().hasAttribute("len")) {
+                    field.setFieldLength(reader.attributes().value("len").toInt(&ok));
+                    if (!ok) {
+                        qDebug(qPrintable(QString("Failed to set field length '%1' in field '%2'").arg(reader.attributes().value("len").toString()).arg(field.getName())));
+                    }
+                }
                 reader.readNext();
-            } else if (reader.name().compare("Link", Qt::CaseInsensitive)) {
-                // TODO: Handle links
+            } else if (reader.name().compare("Link", Qt::CaseInsensitive) == 0) {
+                if (reader.attributes().hasAttribute("table") && reader.attributes().hasAttribute("field")) {
+                    field.setLinkTableName(reader.attributes().value("table").toString());
+                    field.setLinkFieldName(reader.attributes().value("field").toString());
+                } else {
+                    qDebug(qPrintable(QString("Link in field '%1' does not reference a table and field").arg(field.getName())));
+                }
                 reader.readNext();
             } else {
-                // Unexpected element, what to do!
-                qDebug(qPrintable(QString("Found unexpected XML element '%1' in field '%2'").arg(reader.name().toString()).arg(field.getName())));
+                // Unexpected element, so obviously we are finished with the Field!
+                // qDebug(qPrintable(QString("Found unexpected XML element '%1' in field '%2'").arg(reader.name().toString()).arg(field.getName())));
                 break;
             }
         } else if (reader.isStartDocument()) {
             reader.readNext();
         } else if (reader.isEndElement()) {
-            if (foundFieldTag && reader.name().compare("Field", Qt::CaseInsensitive)) {
+            //qDebug(qPrintable(QString("End element with name '%1' in field '%2'").arg(reader.name().toString()).arg(field.getName())));
+            if (foundFieldTag && reader.name().compare("Field", Qt::CaseInsensitive) == 0) {
                 reader.readNext();
                 break;
             }
@@ -87,11 +130,13 @@ QXmlStreamWriter& DescribeSqlField::writeXml(QXmlStreamWriter& writer) const
     writer.writeAttribute("name", getName());
   if (!getViewName().isEmpty())
     writer.writeAttribute("viewname", getViewName());
+
   if (!getPreferredTypeName().isEmpty()) {
     writer.writeAttribute("type", getPreferredTypeName());
   } else if (getFieldType().isValid() && getFieldType().getSupportedNames().size() > 0) {
     writer.writeAttribute("type", getFieldType().getSupportedNames().at(0));
   }
+
   if (isAutoIncrement())
     writer.writeAttribute("autoincrement", "true");
   if (isRequired())
@@ -102,14 +147,15 @@ QXmlStreamWriter& DescribeSqlField::writeXml(QXmlStreamWriter& writer) const
       writer.writeAttribute("len", QString::number(getFieldLength()));
   if (getFieldPrecision() > 0)
       writer.writeAttribute("precision", QString::number(getFieldPrecision()));
+  if (!getDescription().isEmpty()) {
+    writer.writeAttribute("description", getDescription());
+  }
+
   if (!getLinkTableName().isEmpty()) {
     writer.writeStartElement("Link");
     writer.writeAttribute("table", getLinkTableName());
     writer.writeAttribute("field", getLinkFieldName());
     writer.writeEndElement();
-  }
-  if (!getDescription().isEmpty()) {
-    writer.writeAttribute("description", getDescription());
   }
   writer.writeEndElement();
   return writer;

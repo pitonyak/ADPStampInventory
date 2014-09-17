@@ -46,6 +46,9 @@ DescribeSqlTable::DescribeSqlTable(const QString definitions[], const int n, boo
       SqlFieldType fieldType = typemaster->findByName(definitions[i++]);
       if (!fieldType.isValid()) {
         qDebug(qPrintable(QString("Cannot build a valid type from '%1'").arg(definitions[i-1])));
+      } else {
+          field.setPreferredTypeName(definitions[i-1]);
+          field.setFieldType(fieldType);
       }
       field.setDescription(definitions[i++]);
       field.setFieldLength(QString(definitions[i++]).toInt(&ok));
@@ -163,11 +166,12 @@ DescribeSqlTable DescribeSqlTable::readXml(QXmlStreamReader& reader)
     bool foundTableTag = false;
     while (!reader.atEnd()) {
         if (reader.isStartElement()) {
-            if (reader.name().compare("Table", Qt::CaseInsensitive)) {
+            if (reader.name().compare("Table", Qt::CaseInsensitive) == 0) {
                 if (foundTableTag) {
                     // Found a second Table tag.
                     break;
                 }
+                foundTableTag = true;
                 if (reader.attributes().hasAttribute("name"))
                     table.setName(reader.attributes().value("name").toString());
                 if (reader.attributes().hasAttribute("viewname"))
@@ -175,21 +179,22 @@ DescribeSqlTable DescribeSqlTable::readXml(QXmlStreamReader& reader)
                 if (reader.attributes().hasAttribute("description"))
                     table.setDescription(reader.attributes().value("description").toString());
                 reader.readNext();
-            } else if (reader.name().compare("Field", Qt::CaseInsensitive)) {
+            } else if (reader.name().compare("Field", Qt::CaseInsensitive) == 0) {
                 DescribeSqlField field = DescribeSqlField::readXml(reader);
+                //qDebug(qPrintable(QString("Add field name = '%1' to table '%2'").arg(field.getName()).arg(table.getName())));
                 if (field.getName().isEmpty() || !table.addField(field)) {
-                    qDebug(qPrintable(QString("Failed to add field name = '%1' to table '%2'").arg(field.getName().arg(table.getName()))));
+                    qDebug(qPrintable(QString("*** Failed to add field name = '%1' to table '%2'").arg(field.getName()).arg(table.getName())));
                     break;
                 }
             } else {
-                // Unexpected element, what to do!
-                qDebug(qPrintable(QString("Found unexpected XML element '%1' in table '%2'").arg(reader.name().toString()).arg(table.getName())));
+                // Unexpected element, finished with Table!
+                // qDebug(qPrintable(QString("Found unexpected XML element '%1' in table '%2'").arg(reader.name().toString()).arg(table.getName())));
                 break;
             }
         } else if (reader.isStartDocument()) {
             reader.readNext();
         } else if (reader.isEndElement()) {
-            if (foundTableTag && reader.name().compare("Table", Qt::CaseInsensitive)) {
+            if (foundTableTag && reader.name().compare("Table", Qt::CaseInsensitive) == 0) {
                 reader.readNext();
                 break;
             }

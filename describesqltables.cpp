@@ -71,11 +71,12 @@ DescribeSqlTables DescribeSqlTables::readXml(QXmlStreamReader& reader)
     bool foundTablesTag = false;
     while (!reader.atEnd()) {
         if (reader.isStartElement()) {
-            if (reader.name().compare("Tables", Qt::CaseInsensitive)) {
+            if (reader.name().compare("Tables", Qt::CaseInsensitive) == 0) {
                 if (foundTablesTag) {
                     // Found a second Tables tag.
                     break;
                 }
+                foundTablesTag = true;
                 if (reader.attributes().hasAttribute("name"))
                     tables.setName(reader.attributes().value("name").toString());
                 if (reader.attributes().hasAttribute("viewname"))
@@ -83,7 +84,7 @@ DescribeSqlTables DescribeSqlTables::readXml(QXmlStreamReader& reader)
                 if (reader.attributes().hasAttribute("description"))
                     tables.setDescription(reader.attributes().value("description").toString());
                 reader.readNext();
-            } else if (reader.name().compare("Table", Qt::CaseInsensitive)) {
+            } else if (reader.name().compare("Table", Qt::CaseInsensitive) == 0) {
                 DescribeSqlTable table = DescribeSqlTable::readXml(reader);
                 if (table.getName().isEmpty() || !tables.addTable(table)) {
                     qDebug(qPrintable(QString("Failed to add Table name = '%1'").arg(table.getName())));
@@ -97,7 +98,7 @@ DescribeSqlTables DescribeSqlTables::readXml(QXmlStreamReader& reader)
         } else if (reader.isStartDocument()) {
             reader.readNext();
         } else if (reader.isEndElement()) {
-            if (foundTablesTag && reader.name().compare("Tables", Qt::CaseInsensitive)) {
+            if (foundTablesTag && reader.name().compare("Tables", Qt::CaseInsensitive) == 0) {
                 reader.readNext();
                 break;
             }
@@ -140,9 +141,6 @@ DescribeSqlTables DescribeSqlTables::getStampSchema()
              "name", "Name", "VARCHAR", "Viewable name such as Air Mail or Postage", "20",
              "description", "Description", "VARCHAR", "Longer descriptive name", "100"};
 
-  //qDebug(qPrintable(QString("n = %1").arg(n)));
-  qDebug(qPrintable(QString("sizeof(catalogType) = %1").arg(sizeof(catalogType))));
-  qDebug(qPrintable(QString("sizeof(catalogType[0]) = %1").arg(sizeof(catalogType[0]))));
   int n=sizeof(catalogType) / sizeof(catalogType[0]);
   schema.addTable(DescribeSqlTable(catalogType, n, true, &typeMaster));
   qDebug("Done with catalog type");
