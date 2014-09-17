@@ -11,6 +11,7 @@
 #include "sqlfieldtype.h"
 
 class QXmlStreamWriter;
+class QXmlStreamReader;
 
 class DescribeSqlField
 {
@@ -31,6 +32,7 @@ public:
   bool isKey() const { return m_isKey; }
   bool isLinkField() const;
   int getFieldLength() const { return m_fieldLength; }
+  int getFieldPrecision() const { return m_fieldPrecision; }
 
   void setName(const QString& name) { m_name = name; }
   void setViewName(const QString& viewName) { m_viewName = viewName; }
@@ -43,10 +45,12 @@ public:
   void setIsRequired(const bool isReq) { m_isRequired = isReq; }
   void setIsKey(const bool isK) { m_isKey = isK; }
   void setFieldLength(const int len) { m_fieldLength = len; }
+  void setFieldPrecision(const int len) { m_fieldPrecision = len; }
 
   const DescribeSqlField& operator=(const DescribeSqlField& field) { return copy(field); }
 
   QXmlStreamWriter& writeXml(QXmlStreamWriter& writer) const;
+  static DescribeSqlField readXml(QXmlStreamReader& reader);
 
 private:
 
@@ -84,6 +88,8 @@ private:
   bool m_isKey;
 
   int m_fieldLength;
+
+  int m_fieldPrecision;
 };
 
 #endif // DESCRIBESQLFIELD_H

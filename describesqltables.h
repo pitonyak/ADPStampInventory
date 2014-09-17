@@ -7,6 +7,7 @@
 #include <QString>
 
 class QXmlStreamWriter;
+class QXmlStreamReader;
 
 class DescribeSqlTables
 {
@@ -36,6 +37,8 @@ public:
   static DescribeSqlTables getStampSchema();
 
   QXmlStreamWriter& writeXml(QXmlStreamWriter& writer) const;
+
+  static DescribeSqlTables readXml(QXmlStreamReader& reader);
 
 private:
 

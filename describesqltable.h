@@ -14,6 +14,7 @@
 
 class SqlFieldTypeMaster;
 class QXmlStreamWriter;
+class QXmlStreamReader;
 
 class DescribeSqlTable
 {
@@ -48,6 +49,7 @@ public:
   void setFieldLink(const QString& name, const QString& linkTableName, const QString& linkFieldName);
 
   QXmlStreamWriter& writeXml(QXmlStreamWriter& writer) const;
+  static DescribeSqlTable readXml(QXmlStreamReader& reader);
 
 private:
 

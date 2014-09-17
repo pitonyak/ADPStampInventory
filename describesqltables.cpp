@@ -2,6 +2,7 @@
 #include "sqlfieldtypemaster.h"
 
 #include <QXmlStreamWriter>
+#include <QXmlStreamReader>
 
 DescribeSqlTables::DescribeSqlTables()
 {
@@ -62,6 +63,50 @@ bool DescribeSqlTables::addTable(const DescribeSqlTable& table)
     m_tables.insert(simpleName, table);
   }
   return true;
+}
+
+DescribeSqlTables DescribeSqlTables::readXml(QXmlStreamReader& reader)
+{
+    DescribeSqlTables tables;
+    bool foundTablesTag = false;
+    while (!reader.atEnd()) {
+        if (reader.isStartElement()) {
+            if (reader.name().compare("Tables", Qt::CaseInsensitive)) {
+                if (foundTablesTag) {
+                    // Found a second Tables tag.
+                    break;
+                }
+                if (reader.attributes().hasAttribute("name"))
+                    tables.setName(reader.attributes().value("name").toString());
+                if (reader.attributes().hasAttribute("viewname"))
+                    tables.setViewName(reader.attributes().value("viewname").toString());
+                if (reader.attributes().hasAttribute("description"))
+                    tables.setDescription(reader.attributes().value("description").toString());
+                reader.readNext();
+            } else if (reader.name().compare("Table", Qt::CaseInsensitive)) {
+                DescribeSqlTable table = DescribeSqlTable::readXml(reader);
+                if (table.getName().isEmpty() || !tables.addTable(table)) {
+                    qDebug(qPrintable(QString("Failed to add Table name = '%1'").arg(table.getName())));
+                    break;
+                }
+            } else {
+                // Unexpected element, what to do!
+                qDebug(qPrintable(QString("Found unexpected XML element %1").arg(reader.name().toString())));
+                break;
+            }
+        } else if (reader.isStartDocument()) {
+            reader.readNext();
+        } else if (reader.isEndElement()) {
+            if (foundTablesTag && reader.name().compare("Tables", Qt::CaseInsensitive)) {
+                reader.readNext();
+                break;
+            }
+            reader.readNext();
+        } else {
+            reader.readNext();
+        }
+    }
+    return tables;
 }
 
 QXmlStreamWriter& DescribeSqlTables::writeXml(QXmlStreamWriter& writer) const
@@ -144,12 +189,12 @@ DescribeSqlTables DescribeSqlTables::getStampSchema()
              "valuetypeid", "Value Type Id", "INTEGER", "Value categorization such as mint or used.", "10",
              "releasedate", "Released", "DATE", "Date the stamp was released MM/DD/YYYY", "10",
              "updated", "Updated", "TIMESTAMP", "Date and time this record was last updated MM/DD/YYYY hh:mm:ss", "19",
-             "facevalue", "Face Value", "DOUBLE", "Denomination on the stamp",
+             "facevalue", "Face Value", "DOUBLE", "Denomination on the stamp", "10",
              "description", "Description", "VARCHAR", "Describe the stamp", "200"};
   n=sizeof(bookValues) / sizeof(bookValues[0]);
   DescribeSqlTable bookValuesTable(bookValues, n, true, &typeMaster);
-  bookValuesTable.setFieldLink("countryid", "country", "id");
-  bookValuesTable.setFieldLink("typeid", "catalogtype", "id");
+  bookValuesTable.setFieldLink("catalogid", "catalog", "id");
+  bookValuesTable.setFieldLink("valuetypeid", "valuetype", "id");
   schema.addTable(bookValuesTable);
 
   QString inventory[] = {"inventory", "Inventory", "Physical stamps I own.",
@@ -204,7 +249,6 @@ DescribeSqlTables DescribeSqlTables::getStampSchema()
   DescribeSqlTable dealerTable(dealer, n, true, &typeMaster);
   schema.addTable(dealerTable);
 
-  //qDebug(qPrintable(QString("Cannot build a length from '%1'").arg(definitions[i-1])));
   return schema;
 }
 

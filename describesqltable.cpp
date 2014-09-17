@@ -1,6 +1,7 @@
 #include "describesqltable.h"
 #include "sqlfieldtypemaster.h"
 #include <QXmlStreamWriter>
+#include <QXmlStreamReader>
 
 DescribeSqlTable::DescribeSqlTable()
 {
@@ -18,13 +19,14 @@ DescribeSqlTable::DescribeSqlTable(const QString definitions[], const int n, boo
     // Next, groups of 5: Name, View Name, Type, Description, length
     // Find k such that n = 3 + 5 * k
     int delta = 5;
+    QString thisTableName = (n < 1) ? "No Table Name Provided" : definitions[0];
     if (n < 3) {
-      qDebug(qPrintable(QString("Cannot build a table with %1 strings").arg(n)));
+      qDebug(qPrintable(QString("Cannot build a table with %1 strings for '%2'").arg(n).arg(thisTableName)));
       return;
     }
     int k = (n - 3) / delta;
     if (n != (k * delta + 3)) {
-      qDebug(qPrintable(QString("Cannot build a table with %1 strings, must be representable as (3 + %2k) for some value of k").arg(n).arg(delta)));
+      qDebug(qPrintable(QString("Cannot build a table with %1 strings, must be representable as (3 + %2k) for some value of k for '%3'").arg(n).arg(delta).arg(thisTableName)));
       return;
     }
     int i = 0;
@@ -153,6 +155,50 @@ void DescribeSqlTable::setFieldLink(const QString& name, const QString& linkTabl
   } else {
     qDebug(qPrintable(QString("Field name = '%1' is not found in table %2").arg(simpleName).arg(getName())));
   }
+}
+
+DescribeSqlTable DescribeSqlTable::readXml(QXmlStreamReader& reader)
+{
+    DescribeSqlTable table;
+    bool foundTableTag = false;
+    while (!reader.atEnd()) {
+        if (reader.isStartElement()) {
+            if (reader.name().compare("Table", Qt::CaseInsensitive)) {
+                if (foundTableTag) {
+                    // Found a second Table tag.
+                    break;
+                }
+                if (reader.attributes().hasAttribute("name"))
+                    table.setName(reader.attributes().value("name").toString());
+                if (reader.attributes().hasAttribute("viewname"))
+                    table.setViewName(reader.attributes().value("viewname").toString());
+                if (reader.attributes().hasAttribute("description"))
+                    table.setDescription(reader.attributes().value("description").toString());
+                reader.readNext();
+            } else if (reader.name().compare("Field", Qt::CaseInsensitive)) {
+                DescribeSqlField field = DescribeSqlField::readXml(reader);
+                if (field.getName().isEmpty() || !table.addField(field)) {
+                    qDebug(qPrintable(QString("Failed to add field name = '%1' to table '%2'").arg(field.getName().arg(table.getName()))));
+                    break;
+                }
+            } else {
+                // Unexpected element, what to do!
+                qDebug(qPrintable(QString("Found unexpected XML element '%1' in table '%2'").arg(reader.name().toString()).arg(table.getName())));
+                break;
+            }
+        } else if (reader.isStartDocument()) {
+            reader.readNext();
+        } else if (reader.isEndElement()) {
+            if (foundTableTag && reader.name().compare("Table", Qt::CaseInsensitive)) {
+                reader.readNext();
+                break;
+            }
+            reader.readNext();
+        } else {
+            reader.readNext();
+        }
+    }
+    return table;
 }
 
 QXmlStreamWriter& DescribeSqlTable::writeXml(QXmlStreamWriter& writer) const
