@@ -355,6 +355,9 @@ QStringList StampDB::getColumnNames(const QString& tableName)
   QStringList columnNames;
   if (openDB())
   {
+    // The QSqlRecord class encapsulates the functionality and characteristics of a
+    // database record (usually a row in a table or view within the database).
+    // Get the values associated with this table.
     QSqlRecord record = m_db.record(tableName);
     for (int i=0; i<record.count(); ++i) {
       columnNames.append(record.field(i).name());
@@ -369,30 +372,7 @@ QStringList StampDB::getDDLForExport()
     return getOneColumnAsString(sql);
 }
 
-/**
-TODO: Remove this?
-DataObjectBase* StampDB::getEmptyObjectByTableName(const QString& tableName)
-{
-  if (tableName.compare("catalog", Qt::CaseInsensitive)) {
-    return new DataObjectCatalog();
-  } else if (tableName.compare("catalogtype", Qt::CaseInsensitive)) {
-    return new DataObjectCatalogType();
-  } else if (tableName.compare("country", Qt::CaseInsensitive)) {
-    return new DataObjectCountry();
-  } else if (tableName.compare("dealer", Qt::CaseInsensitive)) {
-    return new DataObjectDealer();
-  } else if (tableName.compare("inventory", Qt::CaseInsensitive)) {
-    return new DataObjectInventory();
-  } else if (tableName.compare("stamplocation", Qt::CaseInsensitive)) {
-    return new DataObjectStampLocation();
-  } else if (tableName.compare("valuesource", Qt::CaseInsensitive)) {
-    return new DataObjectValueSource();
-  } else if (tableName.compare("valuetype", Qt::CaseInsensitive)) {
-    return new DataObjectValueType();
-  }
-  return nullptr;
-}
-**/
+
 GenericDataCollection *StampDB::readTableName(const QString& tableName)
 {
   return readTableSql(QString("select * from %1 order by ID").arg(tableName));

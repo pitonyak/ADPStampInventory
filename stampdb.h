@@ -127,16 +127,23 @@ public:
 
   QStringList getTableNames(const bool ignoreSystemTables=true);
 
+  /*! \brief Go directly to the DB and get the column names associated with this table.
+   *
+   *  \param [in] aName Name of the table to find.
+   *
+   *  \return List of column names for the specified tables.
+   */
   QStringList getColumnNames(const QString& tableName);
 
+  /**
+   * @brief getDDLForExport Get the DDL for all tables. This method is used to create the DDL file during a CSV export.
+   * @return List of DDL, one entry for each table.
+   */
   QStringList getDDLForExport();
 
   GenericDataCollection* readTableName(const QString& tableName);
 
   /*! \brief Execute SQL and create a table.
-   *
-   *
-   *
    *
    *  \param [in] sql
    *
@@ -144,12 +151,7 @@ public:
    */
   GenericDataCollection* readTableSql(const QString& sql);
 
-  // TODO: DataObjectBase* getEmptyObjectByTableName(const QString& tableName);
-
   /*! \brief Read an already opened CSV file into an existing table.
-   *
-   *
-   *
    *
    *  \param [in,out] reader
    *
@@ -165,6 +167,11 @@ public:
 
   bool executeQuery(const QString& sqlSelect, QList<QSqlRecord>& records, const QString& keyField, QHash<int, int>& keys);
 
+  /*!
+   * @brief getOneColumnAsString Get every value for the first column returned by the SQL statement.
+   * @param sqlSelect SQL statement assumed to select at least one row.
+   * @return List of every value in the first column.
+   */
   QStringList getOneColumnAsString(const QString& sqlSelect);
 
 

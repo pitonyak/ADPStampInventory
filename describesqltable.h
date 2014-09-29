@@ -16,6 +16,14 @@ class SqlFieldTypeMaster;
 class QXmlStreamWriter;
 class QXmlStreamReader;
 
+//**************************************************************************
+/*! \class DescribeSqlTable
+ * \brief Used to describe a table as a collection of fields.
+ *
+ * \author Andrew Pitonyak
+ * \copyright Andrew Pitonyak, but you may use without restriction.
+ * \date September 2014
+ **************************************************************************/
 class DescribeSqlTable
 {
 public:

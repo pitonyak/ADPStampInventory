@@ -13,8 +13,6 @@
 /*! \class GenericDataObject
  * \brief Generic object with named properties.
  *
- * TODO: This object may take the place of the individual data objects.
- *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
  * \date 2012-2014
