@@ -53,15 +53,6 @@ SOURCES += main.cpp\
     messagecomponenttablemodel.cpp \
     linkbackfilterdelegate.cpp \
     qtenummapper.cpp \
-    dataobjectbase.cpp \
-    dataobjectcountry.cpp \
-    dataobjectdealer.cpp \
-    dataobjectcatalogtype.cpp \
-    dataobjectvaluetype.cpp \
-    dataobjectcatalog.cpp \
-    dataobjectstamplocation.cpp \
-    dataobjectinventory.cpp \
-    dataobjectvaluesource.cpp \
     genericdataobject.cpp \
     genericdatacollection.cpp \
     tableeditorgenericgrid.cpp \
@@ -116,15 +107,6 @@ HEADERS  += mainwindow.h \
     linkbackfilterdelegate.h \
     globals.h \
     qtenummapper.h \
-    dataobjectbase.h \
-    dataobjectcountry.h \
-    dataobjectdealer.h \
-    dataobjectcatalogtype.h \
-    dataobjectvaluetype.h \
-    dataobjectcatalog.h \
-    dataobjectstamplocation.h \
-    dataobjectinventory.h \
-    dataobjectvaluesource.h \
     genericdataobject.h \
     genericdatacollection.h \
     tableeditorgenericgrid.h \
