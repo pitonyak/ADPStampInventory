@@ -178,6 +178,7 @@ DescribeSqlTables DescribeSqlTables::getStampSchema()
   DescribeSqlTable catalogTable(catalog, n, true, &typeMaster);
   catalogTable.setFieldLink("countryid", "country", "id");
   catalogTable.setFieldLink("typeid", "catalogtype", "id");
+  catalogTable.setFieldCurrencySymbol("facevalue", "$");
   schema.addTable(catalogTable);
 
   QString bookValues[] = {"bookvalues", "Book Values", "What is each stamp worth.",
@@ -185,14 +186,13 @@ DescribeSqlTables DescribeSqlTables::getStampSchema()
              "catalogid", "Catalog Id", "INTEGER", "Catalog from which the value was pulled", "10",
              "sourceid", "Source Id", "INTEGER", "?? What is this? Remove it?", "10",
              "valuetypeid", "Value Type Id", "INTEGER", "Value categorization such as mint or used.", "10",
-             "releasedate", "Released", "DATE", "Date the stamp was released MM/DD/YYYY", "10",
-             "updated", "Updated", "TIMESTAMP", "Date and time this record was last updated MM/DD/YYYY hh:mm:ss", "19",
-             "facevalue", "Face Value", "DOUBLE", "Denomination on the stamp", "10",
+             "bookvalue", "Book Value", "DOUBLE", "What is this stampe worth", "10",
              "description", "Description", "VARCHAR", "Describe the stamp", "200"};
   n=sizeof(bookValues) / sizeof(bookValues[0]);
   DescribeSqlTable bookValuesTable(bookValues, n, true, &typeMaster);
   bookValuesTable.setFieldLink("catalogid", "catalog", "id");
   bookValuesTable.setFieldLink("valuetypeid", "valuetype", "id");
+  bookValuesTable.setFieldCurrencySymbol("bookvalue", "$");
   schema.addTable(bookValuesTable);
 
   QString inventory[] = {"inventory", "Inventory", "Physical stamps I own.",
@@ -220,6 +220,7 @@ DescribeSqlTables DescribeSqlTables::getStampSchema()
   inventoryTable.setFieldLink("locationid", "location", "id");
   // TODO: Remove type id.
   inventoryTable.setFieldLink("typeid", "catalogtype", "id");
+  inventoryTable.setFieldCurrencySymbol("paid", "$");
   schema.addTable(inventoryTable);
 
   QString location[] = {"location", "Location", "Where is the stamp stored",

@@ -47,6 +47,7 @@ public:
   void setFieldAutoIncrement(const QString& name, bool x);
   void setFieldRequired(const QString& name, bool x);
   void setFieldLink(const QString& name, const QString& linkTableName, const QString& linkFieldName);
+  void setFieldCurrencySymbol(const QString& name, const QString& currencySymbol);
 
   QXmlStreamWriter& writeXml(QXmlStreamWriter& writer) const;
   static DescribeSqlTable readXml(QXmlStreamReader& reader);

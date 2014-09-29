@@ -3,6 +3,16 @@
 
 #include <QObject>
 
+//**************************************************************************
+/*! \class DataObjectBase
+ * \brief Originally intended to have a specific object for each table.
+ *
+ * TODO: Can I remove this?
+ *
+ * \author Andrew Pitonyak
+ * \copyright Andrew Pitonyak, but you may use without restriction.
+ * \date 2012-2014
+ **************************************************************************/
 class DataObjectBase : public QObject
 {
     Q_OBJECT

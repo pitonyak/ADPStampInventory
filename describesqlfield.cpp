@@ -33,6 +33,7 @@ const DescribeSqlField& DescribeSqlField::copy(const DescribeSqlField& field)
     setIsKey(field.isKey());
     setFieldLength(field.getFieldLength());
     setFieldPrecision(field.getFieldPrecision());
+    setCurrencySymbol(field.getCurrencySymbol());
   }
   return *this;
 }
@@ -71,6 +72,9 @@ DescribeSqlField DescribeSqlField::readXml(QXmlStreamReader& reader)
                         field.setFieldType(fieldType);
                         field.setPreferredTypeName(sType);
                     }
+                }
+                if (reader.attributes().hasAttribute("currency")) {
+                    field.setCurrencySymbol(reader.attributes().value("autoincrement").toString());
                 }
                 if (reader.attributes().hasAttribute("autoincrement")) {
                     field.setIsAutoIncrement(XMLUtility::stringToBoolean(reader.attributes().value("autoincrement").toString()));
@@ -137,6 +141,8 @@ QXmlStreamWriter& DescribeSqlField::writeXml(QXmlStreamWriter& writer) const
     writer.writeAttribute("type", getFieldType().getSupportedNames().at(0));
   }
 
+  if (isCurrency())
+    writer.writeAttribute("currency", getCurrencySymbol());
   if (isAutoIncrement())
     writer.writeAttribute("autoincrement", "true");
   if (isRequired())

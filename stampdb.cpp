@@ -2,15 +2,15 @@
 #include "scrollmessagebox.h"
 #include "csvreader.h"
 #include "csvwriter.h"
-#include "dataobjectbase.h"
-#include "dataobjectcatalog.h"
-#include "dataobjectcatalogtype.h"
-#include "dataobjectcountry.h"
-#include "dataobjectdealer.h"
-#include "dataobjectinventory.h"
-#include "dataobjectstamplocation.h"
-#include "dataobjectvaluesource.h"
-#include "dataobjectvaluetype.h"
+//#include "dataobjectbase.h"
+//#include "dataobjectcatalog.h"
+//#include "dataobjectcatalogtype.h"
+//#include "dataobjectcountry.h"
+//#include "dataobjectdealer.h"
+//#include "dataobjectinventory.h"
+//#include "dataobjectstamplocation.h"
+//#include "dataobjectvaluesource.h"
+//#include "dataobjectvaluetype.h"
 #include "genericdatacollection.h"
 
 #include <QFile>
@@ -369,6 +369,8 @@ QStringList StampDB::getDDLForExport()
     return getOneColumnAsString(sql);
 }
 
+/**
+TODO: Remove this?
 DataObjectBase* StampDB::getEmptyObjectByTableName(const QString& tableName)
 {
   if (tableName.compare("catalog", Qt::CaseInsensitive)) {
@@ -390,7 +392,7 @@ DataObjectBase* StampDB::getEmptyObjectByTableName(const QString& tableName)
   }
   return nullptr;
 }
-
+**/
 GenericDataCollection *StampDB::readTableName(const QString& tableName)
 {
   return readTableSql(QString("select * from %1 order by ID").arg(tableName));

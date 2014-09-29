@@ -160,6 +160,17 @@ void DescribeSqlTable::setFieldLink(const QString& name, const QString& linkTabl
   }
 }
 
+void DescribeSqlTable::setFieldCurrencySymbol(const QString& name, const QString& currencySymbol)
+{
+  QString simpleName = name.toLower();
+  if (m_fields.contains(simpleName)) {
+    m_fields[simpleName].setCurrencySymbol(currencySymbol);
+  } else {
+    qDebug(qPrintable(QString("Field name = '%1' is not found in table %2").arg(simpleName).arg(getName())));
+  }
+}
+
+
 DescribeSqlTable DescribeSqlTable::readXml(QXmlStreamReader& reader)
 {
     DescribeSqlTable table;

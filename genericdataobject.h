@@ -46,19 +46,39 @@ public:
    */
   inline bool hasValueNoCase(const QString& name) const;
 
-  /*! \brief Get the value associated to the name.
+  /*! \brief Get the value associated to the name with no checking or smart translations.
    *
    *  A default QVariant object is constructed and returned if a property with that name
    *  does not exist. So, it is best to call hasValue to make sure that you get what you want.
    *
-   *  \param [in] name Property name of interest.
+   *  Ultimately, this method directly accesses m_properties object without making any checks.
+   *
+   *  \param [in] name Property name of interest. Converted to lower case before use.
    *  \return Return the property value, or, a defaultly constructed object if it does not.
    */
   const QVariant getValueNative(const QString& name) const;
 
+  /*! \brief Get the value associated to the name with a check to see if the field name implies a date or time, which will cause the value to be converted to a date or time value.
+   *
+   *  No checks are performed to see if a properties with the given name exists.
+   *
+   *  \param [in] name Property name of interest. Converted to lower case before use.
+   *  \return Return the property value, or, a defaultly constructed object if it does not.
+   */
   const QVariant getValue(const QString& name) const;
 
+  /*! \brief Checks the name against some hard coded names assumed to indicate a date; for example, purchasedate or releasedate.
+   *
+   *  \param [in] name Property name of interest compared in a case insensitive way.
+   *  \return True if the field is a known date field.
+   */
   static bool fieldNameMeansDate(const QString& name);
+
+  /*! \brief Checks the name against some hard coded names assumed to indicate a date/time; for example, updated.
+   *
+   *  \param [in] name Property name of interest compared in a case insensitive way.
+   *  \return True if the field is a known date/time field.
+   */
   static bool fieldNameMeansDateTime(const QString &name);
 
   /*! \brief Set the value for a named property.

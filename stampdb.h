@@ -144,7 +144,7 @@ public:
    */
   GenericDataCollection* readTableSql(const QString& sql);
 
-  DataObjectBase* getEmptyObjectByTableName(const QString& tableName);
+  // TODO: DataObjectBase* getEmptyObjectByTableName(const QString& tableName);
 
   /*! \brief Read an already opened CSV file into an existing table.
    *
