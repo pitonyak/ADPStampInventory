@@ -1,7 +1,10 @@
 #include "genericdataobject.h"
 #include "genericdatacollection.h"
+#include "sqlfieldtype.h"
+#include "typemapper.h"
 
 #include <QUuid>
+#include <QSqlQuery>
 
 GenericDataObject::GenericDataObject(QObject *parent) :
   QObject(parent)
@@ -256,4 +259,125 @@ bool GenericDataObject::fieldNameMeansDateTime(const QString &name)
 {
   return (name.compare("updated", Qt::CaseInsensitive) == 0);
 }
+
+bool GenericDataObject::setBindValue(QSqlQuery& query, const QString& paramName, const QString& fieldName, const SqlFieldType& fieldType, bool missingMeansNull) const
+{
+    QString lower = fieldName.toLower();
+    if (hasValueNoCase(lower)) {
+        query.bindValue(paramName, m_properties.value(lower));
+    } else {
+        if (missingMeansNull) {
+            TypeMapper mapper;
+            query.bindValue(paramName, QVariant(mapper.metaToVariantType(fieldType.qtType())));
+        } else {
+            // Go for default values
+            switch (fieldType.qtType()) {
+            case QMetaType::Bool :
+                query.bindValue(paramName, false);
+                break;
+
+            case QMetaType::Int :
+            case QMetaType::UInt :
+            case QMetaType::Double :
+            case QMetaType::Long :
+            case QMetaType::LongLong :
+            case QMetaType::Short :
+            case QMetaType::ULong :
+            case QMetaType::ULongLong :
+            case QMetaType::UShort :
+            case QMetaType::Float :
+                query.bindValue(paramName, 0);
+                break;
+
+            case QMetaType::QUuid :
+            case QMetaType::QUrl :
+            case QMetaType::QString :
+                query.bindValue(paramName, "");
+                break;
+
+            case QMetaType::QChar :
+            case QMetaType::Char :
+            case QMetaType::SChar :
+            case QMetaType::UChar :
+                query.bindValue(paramName, " ");
+                break;
+
+            case QMetaType::QDate :
+                query.bindValue(paramName, QDate::currentDate());
+                break;
+
+            case QMetaType::QTime :
+                query.bindValue(paramName, QTime::currentTime());
+                break;
+
+            case QMetaType::QDateTime :
+                query.bindValue(paramName, QDateTime::currentDateTime());
+                break;
+
+            case QMetaType::Void :
+            case QMetaType::QByteArray :
+            case QMetaType::VoidStar :
+            case QMetaType::QObjectStar :
+            case QMetaType::QVariant :
+            case QMetaType::QCursor :
+            case QMetaType::QSize :
+            case QMetaType::QVariantList :
+            case QMetaType::QPolygon :
+            case QMetaType::QPolygonF :
+            case QMetaType::QColor :
+            case QMetaType::QSizeF :
+            case QMetaType::QRectF :
+            case QMetaType::QLine :
+            case QMetaType::QTextLength :
+            case QMetaType::QStringList :
+            case QMetaType::QVariantMap :
+            case QMetaType::QVariantHash :
+            case QMetaType::QIcon :
+            case QMetaType::QPen :
+            case QMetaType::QLineF :
+            case QMetaType::QTextFormat :
+            case QMetaType::QRect :
+            case QMetaType::QPoint :
+            case QMetaType::QRegExp :
+            case QMetaType::QRegularExpression :
+            case QMetaType::QPointF :
+            case QMetaType::QPalette :
+            case QMetaType::QFont :
+            case QMetaType::QBrush :
+            case QMetaType::QRegion :
+            case QMetaType::QBitArray :
+            case QMetaType::QImage :
+            case QMetaType::QKeySequence :
+            case QMetaType::QSizePolicy :
+            case QMetaType::QPixmap :
+            case QMetaType::QLocale :
+            case QMetaType::QBitmap :
+            case QMetaType::QMatrix :
+            case QMetaType::QTransform :
+            case QMetaType::QMatrix4x4 :
+            case QMetaType::QVector2D :
+            case QMetaType::QVector3D :
+            case QMetaType::QVector4D :
+            case QMetaType::QQuaternion :
+            case QMetaType::QEasingCurve :
+            case QMetaType::QJsonValue :
+            case QMetaType::QJsonObject :
+            case QMetaType::QJsonArray :
+            case QMetaType::QJsonDocument :
+            case QMetaType::QModelIndex :
+            case QMetaType::User :
+            case QMetaType::UnknownType :
+                // TODO: not supported
+                return false;
+                break;
+
+            default :
+                return false;
+                break;
+            }
+        }
+    }
+    return true;
+}
+
 

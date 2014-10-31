@@ -355,7 +355,8 @@ void MainWindow::configure()
 
       qDebug(qPrintable(QString("On return, number of rows = %1").arg(gdo->rowCount())));
 
-      GenericDataCollectionTableDialog dlg(tableName, *gdo, *m_db);
+      DescribeSqlTables schema = DescribeSqlTables::getStampSchema();
+      GenericDataCollectionTableDialog dlg(tableName, *gdo, *m_db, schema);
       dlg.exec();
   }
 }
@@ -405,10 +406,10 @@ void MainWindow::editTable()
 
       QString tableName = QInputDialog::getItem(this, tr("Choose Table"), tr("Table"), tableNames, 0, false, &ok);
       if (ok && !tableName.isEmpty()) {
-        GenericDataCollection* gdo = m_db->readTableName(tableName);
-        GenericDataCollectionTableDialog dlg(tableName, *gdo, *m_db);
+        GenericDataCollection* data = m_db->readTableName(tableName);
+        GenericDataCollectionTableDialog dlg(tableName, *data, *m_db, schema);
         dlg.exec();
-        delete gdo;
+        delete data;
       }
   }
 

@@ -99,17 +99,17 @@ public:
     int length(const QString& ddl) const;
 
     //**************************************************************************
-    //! Get the QVariant type used to represent this SQL type.
+    //! Get the QMetaType::Type type used to represent this SQL type.
     /*!
-     * \returns QVariant type used to represent this SQL type.
+     * \returns QMetaType::Type type used to represent this SQL type.
      *
      ***************************************************************************/
     QMetaType::Type qtType() const;
 
     //**************************************************************************
-    //! Set the QVariant type used to represent this SQL type.
+    //! Set the QMetaType::Type type used to represent this SQL type.
     /*!
-     * \param qType QVariant type used to represent this SQL type.
+     * \param qType QMetaType::Type type used to represent this SQL type.
      *
      ***************************************************************************/
     void qtType(QMetaType::Type qType);

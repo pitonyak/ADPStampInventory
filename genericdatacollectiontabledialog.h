@@ -10,12 +10,13 @@ class GenericDataCollectionTableModel;
 class QItemSelection;
 class QSortFilterProxyModel;
 class StampDB;
+class DescribeSqlTables;
 
 class GenericDataCollectionTableDialog : public QDialog
 {
   Q_OBJECT
 public:
-  explicit GenericDataCollectionTableDialog(const QString& name, GenericDataCollection& data, StampDB& db, QWidget *parent = nullptr);
+  explicit GenericDataCollectionTableDialog(const QString& name, GenericDataCollection& data, StampDB& db, DescribeSqlTables& schema, QWidget *parent = nullptr);
 
   /*! \brief Destructor saves dialog geometry. */
   virtual ~GenericDataCollectionTableDialog();
@@ -76,6 +77,8 @@ private:
 
   /*! \brief We need this here so that we can persist the DB. */
   StampDB& m_db;
+
+  DescribeSqlTables& m_schema;
 };
 
 #endif // GENERICDATACOLLECTIONTABLEDIALOG_H

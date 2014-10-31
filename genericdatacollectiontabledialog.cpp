@@ -4,6 +4,7 @@
 #include "checkboxonlydelegate.h"
 #include "constants.h"
 #include "stampdb.h"
+#include "describesqltables.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -16,11 +17,12 @@
 #include <QItemSelection>
 #include <QSortFilterProxyModel>
 
-GenericDataCollectionTableDialog::GenericDataCollectionTableDialog(const QString& name, GenericDataCollection &data, StampDB &db, QWidget *parent) :
+GenericDataCollectionTableDialog::GenericDataCollectionTableDialog(const QString& name, GenericDataCollection &data, StampDB &db, DescribeSqlTables& schema, QWidget *parent) :
   QDialog(parent),
   m_duplicateButton(nullptr), m_addButton(nullptr), m_deleteButton(nullptr), m_undoButton(nullptr),
   m_SaveChangesButton(nullptr),
-  m_dataCollection(data), m_tableView(nullptr), m_name(name), m_tableModel(nullptr), m_db(db)
+  m_dataCollection(data), m_tableView(nullptr), m_name(name), m_tableModel(nullptr),
+  m_db(db), m_schema(schema)
 {
   buildDialog();
 }
@@ -161,7 +163,7 @@ void GenericDataCollectionTableDialog::undoChange()
 
 void GenericDataCollectionTableDialog::saveChanges()
 {
-  m_tableModel->saveTrackedChanges(m_name, m_dataCollection, m_db.getDB());
+  m_tableModel->saveTrackedChanges(m_name, m_dataCollection, m_db.getDB(), m_schema);
   enableButtons();
 }
 
@@ -210,8 +212,8 @@ void GenericDataCollectionTableDialog::saveState()
 
 void GenericDataCollectionTableDialog::clickedOK()
 {
-  // TODO: Push changes back into the database.
   saveState();
+  saveChanges();
   accept();
 }
 

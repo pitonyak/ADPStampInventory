@@ -23,7 +23,7 @@ class GenericDataCollection;
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2012-2013
+ * \date 2012-2014
  **************************************************************************/
 
 class StampDB : public QObject

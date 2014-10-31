@@ -32,8 +32,17 @@ public:
   DescribeSqlTable getTableByIndex(const int index) const;
   bool addTable(const DescribeSqlTable& table);
 
+  /*! \brief Perform a deep copy of the parameter into this object.
+   *
+   *  \param [in] tables Object from which to copy.
+   *  \return a reference to this object.
+   */
   const DescribeSqlTables& operator=(const DescribeSqlTables& tables) { return copy(tables); }
 
+  /*! \brief Return a description of how the schema should look.
+   *
+   *  \return A stamp schema object describing the fields and such as desired.
+   */
   static DescribeSqlTables getStampSchema();
 
   QXmlStreamWriter& writeXml(QXmlStreamWriter& writer) const;

@@ -1,4 +1,5 @@
 #include "genericdatacollectiontablemodel.h"
+#include "describesqltables.h"
 
 #include <QLocale>
 #include <QQueue>
@@ -170,12 +171,11 @@ void GenericDataCollectionTableModel::deleteRows(const QModelIndexList &list)
 }
 
 
-bool GenericDataCollectionTableModel::saveTrackedChanges(const QString& tableName, const GenericDataCollection &data, QSqlDatabase &db)
+bool GenericDataCollectionTableModel::saveTrackedChanges(const QString& tableName, const GenericDataCollection &data, QSqlDatabase &db, const DescribeSqlTables& schema)
 {
   bool trackState = isTracking();
   setTracking(false);
   bool errorOccurred = false;
-  // TODO: Do the work!
 
   while (!m_changeTracker.isEmpty() && !errorOccurred)
   {

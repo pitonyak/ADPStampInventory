@@ -7,6 +7,7 @@
 #include <QAbstractTableModel>
 
 class QSqlDatabase;
+class DescribeSqlTables;
 
 //**************************************************************************
 /*! \class GenericDataCollectionTableModel
@@ -92,7 +93,7 @@ public:
     void getRowsAscending(const QModelIndexList &list, QList<int> &rows) const;
 
     // Write tracked changes to the backing DB.
-    bool saveTrackedChanges(const QString& tableName, const GenericDataCollection& data, QSqlDatabase& db);
+    bool saveTrackedChanges(const QString& tableName, const GenericDataCollection& data, QSqlDatabase& db, const DescribeSqlTables& schema);
 
 signals:
   

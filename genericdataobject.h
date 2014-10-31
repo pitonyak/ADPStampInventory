@@ -9,6 +9,9 @@
 #include <QDateTime>
 #include "tablesortfield.h"
 
+class QSqlQuery;
+class SqlFieldType;
+
 //**************************************************************************
 /*! \class GenericDataObject
  * \brief Generic object with named properties.
@@ -163,6 +166,8 @@ public:
   bool lessThan(const GenericDataObject& obj, const QList<TableSortField *> &sortFields) const;
 
   // TODO: Create a generic object filter!
+
+  bool setBindValue(QSqlQuery& query, const QString& paramName, const QString& fieldName, const SqlFieldType& fieldType, bool missingMeansNull=true) const;
 
 signals:
   
