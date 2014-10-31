@@ -18,6 +18,7 @@
 GenericDataCollectionTableDialog::GenericDataCollectionTableDialog(const QString& name, GenericDataCollection &data, QWidget *parent) :
   QDialog(parent),
   m_duplicateButton(nullptr), m_addButton(nullptr), m_deleteButton(nullptr), m_undoButton(nullptr),
+  m_SaveChangesButton(nullptr),
   m_dataCollection(data), m_tableView(nullptr), m_name(name), m_tableModel(nullptr)
 {
   buildDialog();
@@ -25,26 +26,6 @@ GenericDataCollectionTableDialog::GenericDataCollectionTableDialog(const QString
 
 GenericDataCollectionTableDialog::~GenericDataCollectionTableDialog()
 {
-  // save the dialog state.
-  QSettings settings;
-  settings.setValue(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgGeometry).arg(m_name), saveGeometry());
-
-    if (m_tableView != nullptr)
-    {
-      QString s;
-      for (int i=0; i<m_dataCollection.getPropertyNameCount(); ++i)
-      {
-        if (s.length() > 0)
-        {
-          s = s + QString(",%1").arg(m_tableView->columnWidth(i));
-        }
-        else
-        {
-          s = QString("%1").arg(m_tableView->columnWidth(i));
-        }
-      }
-      settings.setValue(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgColumnWidths).arg(m_name), s);
-    }
 }
 
 void GenericDataCollectionTableDialog::buildDialog()
@@ -59,6 +40,7 @@ void GenericDataCollectionTableDialog::buildDialog()
 
   m_proxyModel = new QSortFilterProxyModel(this);
   m_proxyModel->setSourceModel(m_tableModel);
+  m_tableModel->setParentProxyModel(m_proxyModel);
 
   //??m_tableView->setModel(m_tableModel);
   m_tableView->setModel(m_proxyModel);
@@ -86,7 +68,7 @@ void GenericDataCollectionTableDialog::buildDialog()
   vLayout->addWidget(m_tableView, 0, 0);
 
   QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal);
-  connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
+  connect(buttonBox, SIGNAL(accepted()), this, SLOT(clickedOK()));
   connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
 
   hLayout = new QHBoxLayout();
@@ -98,17 +80,19 @@ void GenericDataCollectionTableDialog::buildDialog()
   hLayout->addWidget(m_duplicateButton);
   m_undoButton = new QPushButton(tr("Undo"));
   hLayout->addWidget(m_undoButton);
+  m_SaveChangesButton = new QPushButton(tr("Save Changes"));
+  hLayout->addWidget(m_SaveChangesButton);
   hLayout->addWidget(buttonBox);
 
   connect(m_addButton, SIGNAL(clicked()), this, SLOT(addRow()));
   connect(m_deleteButton, SIGNAL(clicked()), this, SLOT(deleteRow()));
   connect(m_duplicateButton, SIGNAL(clicked()), this, SLOT(duplicateRow()));
   connect(m_undoButton, SIGNAL(clicked()), this, SLOT(undoChange()));
+  connect(m_SaveChangesButton, SIGNAL(clicked()), this, SLOT(saveChanges()));
 
   vLayout->addLayout(hLayout);
 
   setLayout(vLayout);
-
 
   QSettings settings;
   restoreGeometry(settings.value(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgGeometry).arg(m_name)).toByteArray());
@@ -149,6 +133,7 @@ void GenericDataCollectionTableDialog::enableButtons()
   m_addButton->setEnabled(true);
   m_deleteButton->setEnabled(somethingSelected);
   m_undoButton->setEnabled(!m_tableModel->trackerIsEmpty());
+  m_SaveChangesButton->setEnabled(!m_tableModel->trackerIsEmpty());
 }
 
 void GenericDataCollectionTableDialog::addRow()
@@ -159,8 +144,12 @@ void GenericDataCollectionTableDialog::addRow()
 
 void GenericDataCollectionTableDialog::deleteRow()
 {
-  QModelIndexList list = m_tableView->selectionModel()->selectedIndexes();
-  m_tableModel->deleteRows(list);
+  QModelIndexList proxyList = m_tableView->selectionModel()->selectedIndexes();
+  QModelIndexList mappedList;
+  for (int i=0; i<proxyList.count(); ++i) {
+    mappedList.append(m_proxyModel->mapToSource(proxyList.at(i)));
+  }
+  m_tableModel->deleteRows(mappedList);
   enableButtons();
 }
 
@@ -170,13 +159,60 @@ void GenericDataCollectionTableDialog::undoChange()
   enableButtons();
 }
 
+void GenericDataCollectionTableDialog::saveChanges()
+{
+  m_tableModel->saveTrackedChanges(m_name, m_dataCollection);
+  enableButtons();
+}
+
 void GenericDataCollectionTableDialog::duplicateRow()
 {
   qDebug("DuplicateRow()");
-  QModelIndexList list = m_tableView->selectionModel()->selectedIndexes();
-  m_tableModel->duplicateRows(list);
+
+  QModelIndexList proxyList = m_tableView->selectionModel()->selectedIndexes();
+  QModelIndexList mappedList;
+  for (int i=0; i<proxyList.count(); ++i) {
+    mappedList.append(m_proxyModel->mapToSource(proxyList.at(i)));
+  }
+  m_tableModel->duplicateRows(mappedList);
   // TODO: Select the first inserted one.
   enableButtons();
+}
+
+void GenericDataCollectionTableDialog::saveState()
+{
+  // This code used to live in the desructor, but, sometime around September 2014, this code
+  // started failing in the destructor because  the the m_dataCollection no longer contained data
+  // by the time that this objects destructor was called. So, now this is called before the destructor.
+  // save the dialog state.
+  QSettings settings;
+  settings.setValue(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgGeometry).arg(m_name), saveGeometry());
+
+    if (m_tableView != nullptr)
+    {
+      QString s;
+      for (int i=0; i<m_dataCollection.getPropertyNameCount(); ++i)
+      {
+        //qDebug(qPrintable(QString("(%1)(%2)").arg(i).arg(m_tableView->columnWidth(i))));
+        if (s.length() > 0)
+        {
+          s = s + QString(",%1").arg(m_tableView->columnWidth(i));
+        }
+        else
+        {
+          s = QString("%1").arg(m_tableView->columnWidth(i));
+        }
+      }
+      //qDebug(qPrintable(QString("(%1)(%2)").arg(m_name).arg(s)));
+      settings.setValue(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgColumnWidths).arg(m_name), s);
+    }
+}
+
+void GenericDataCollectionTableDialog::clickedOK()
+{
+  // TODO: Push changes back into the database.
+  saveState();
+  accept();
 }
 
 

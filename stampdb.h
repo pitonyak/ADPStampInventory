@@ -141,13 +141,19 @@ public:
    */
   QStringList getDDLForExport();
 
+  /*! \brief Read all data from a table.
+   *
+   *  \param [in] tableName
+   *
+   *  \return a new generic data collection that you now own and must delete (or, nullptr if it fails).
+   */
   GenericDataCollection* readTableName(const QString& tableName);
 
   /*! \brief Execute SQL and create a table.
    *
    *  \param [in] sql
    *
-   *  \return
+   *  \return a new generic data collection that you now own and must delete (or, nullptr if it fails).
    */
   GenericDataCollection* readTableSql(const QString& sql);
 

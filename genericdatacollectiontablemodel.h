@@ -6,6 +6,8 @@
 
 #include <QAbstractTableModel>
 
+class QSortFilterProxyModel;
+
 //**************************************************************************
 /*! \class GenericDataCollectionTableModel
  *
@@ -85,7 +87,13 @@ public:
     bool trackerIsEmpty() const { return m_changeTracker.isEmpty(); }
     QStack<ChangedObject<GenericDataObject>*> *popLastChange();
 
+    // Return an ascending list of rows so that they can be deleted without
+    // changing the row number of another row.
     void getRowsAscending(const QModelIndexList &list, QList<int> &rows) const;
+
+    bool saveTrackedChanges(const QString& tableName, const GenericDataCollection& data);
+
+    void setParentProxyModel(QSortFilterProxyModel* proxyModel);
 
 
 signals:
@@ -100,6 +108,13 @@ private:
     bool m_isTracking;
     GenericDataCollection& m_collection;
     ChangeTracker<GenericDataObject> m_changeTracker;
+    QSortFilterProxyModel* m_proxyModel;
 };
+
+inline void GenericDataCollectionTableModel::setParentProxyModel(QSortFilterProxyModel* proxyModel)
+{
+  m_proxyModel = proxyModel;
+}
+
 
 #endif // GENERICDATACOLLECTIONTABLEMODEL_H

@@ -18,6 +18,9 @@ public:
 
   /*! \brief Destructor saves dialog geometry. */
   virtual ~GenericDataCollectionTableDialog();
+
+  /*! \brief Save the dialogs current state / size. */
+  void virtual saveState();
 signals:
 
 public slots:
@@ -26,6 +29,10 @@ public slots:
   void deleteRow();
   void undoChange();
   void duplicateRow();
+  void saveChanges();
+
+  /*! \brief Call save state before the destructor is called. */
+  void clickedOK();
 
 private:
   /*! \brief Set list columns, delegates, and initial values. */
@@ -44,6 +51,7 @@ private:
   QPushButton* m_addButton;
   QPushButton* m_deleteButton;
   QPushButton* m_undoButton;
+  QPushButton* m_SaveChangesButton;
 
   /*! \brief Identifies the columns and the types. */
   GenericDataCollection& m_dataCollection;

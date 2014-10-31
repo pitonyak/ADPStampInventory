@@ -208,7 +208,7 @@ DescribeSqlTables DescribeSqlTables::getStampSchema()
              "purchasedate", "Purchased", "DATE", "When the stamp was purchased MM/DD/YYYY", "10",
              "paid", "Paid", "DOUBLE", "What did I pay", "10",
              "dealerid", "Dealer", "INTEGER", "From whom did I aquire this stamp.", "10",
-             "locationid", "Location", "INTEGER", "Where is the stamp stored", "10",
+             "locationid", "stamplocation", "INTEGER", "Where is the stamp stored", "10",
              "replace", "Replace", "BIT", "Replace the stamp (true) or not (false)", "5",
              "updated", "Updated", "TIMESTAMP", "Date and time this record was last updated MM/DD/YYYY hh:mm:ss", "19",
              "typeid", "Type Id", "INTEGER", "Stamp type such as Air Mail", "10",
@@ -217,13 +217,13 @@ DescribeSqlTables DescribeSqlTables::getStampSchema()
   DescribeSqlTable inventoryTable(inventory, n, true, &typeMaster);
   inventoryTable.setFieldLink("catalogid", "catalog", "id");
   inventoryTable.setFieldLink("dealerid", "dealer", "id");
-  inventoryTable.setFieldLink("locationid", "location", "id");
+  inventoryTable.setFieldLink("locationid", "stamplocation", "id");
   // TODO: Remove type id.
   inventoryTable.setFieldLink("typeid", "catalogtype", "id");
   inventoryTable.setFieldCurrencySymbol("paid", "$");
   schema.addTable(inventoryTable);
 
-  QString location[] = {"location", "Location", "Where is the stamp stored",
+  QString location[] = {"stamplocation", "Location", "Where is the stamp stored",
              "id", "Id", "INTEGER", "Table Key", "10",
              "name", "Name", "VARCHAR", "Viewable name", "20",
              "description", "Description", "VARCHAR", "Longer descriptive name", "100"};

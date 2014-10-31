@@ -2,9 +2,11 @@
 
 #include <QLocale>
 #include <QQueue>
+#include <QSqlQuery>
+#include <QSortFilterProxyModel>
 
 GenericDataCollectionTableModel::GenericDataCollectionTableModel(GenericDataCollection &data, QObject *parent) :
-  QAbstractTableModel(parent), m_isTracking(true), m_collection(data)
+  QAbstractTableModel(parent), m_isTracking(true), m_collection(data), m_proxyModel(nullptr)
 {
 }
 
@@ -117,12 +119,12 @@ void GenericDataCollectionTableModel::getRowsAscending(const QModelIndexList& li
 
 void GenericDataCollectionTableModel::addRow()
 {
-
 }
 
 void GenericDataCollectionTableModel::deleteRows(const QModelIndexList &list)
 {
   QList<int> rows;
+  // I must delete from the bottom up so that I don't change the order.
   getRowsAscending(list, rows);
 
   if (!rows.isEmpty())
@@ -151,6 +153,166 @@ void GenericDataCollectionTableModel::deleteRows(const QModelIndexList &list)
       m_changeTracker.push(lastChanges);
     }
   }
+}
+
+
+bool GenericDataCollectionTableModel::saveTrackedChanges(const QString& tableName, const GenericDataCollection &data)
+{
+  bool trackState = isTracking();
+  setTracking(false);
+  bool errorOccurred = false;
+  // TODO: Do the work!
+
+  while (!m_changeTracker.isEmpty() && !errorOccurred)
+  {
+    // While persisting changes, start at the bottom and work to the top.
+    // Undo must start at the top and work to the bottom.
+
+    QStack<ChangedObject<GenericDataObject>*> * firstChanges = m_changeTracker.takeAt(0);
+    while (!firstChanges->isEmpty())
+    {
+      for (int i=0; i<firstChanges->size(); ++i) {
+        ChangedObject<GenericDataObject>* bottomObject = firstChanges->at(i);
+        if (bottomObject != nullptr)
+        {
+          if (bottomObject->getChangeType() == ChangedObjectBase::Add)
+          {
+            qDebug("Add record to the DB!");
+            GenericDataObject* newData = bottomObject->getNewData();
+            if (newData != nullptr)
+            {
+              QSqlQuery query;
+              QString s = QString("INSERT INTO %1 (").arg(tableName);
+              QString sValues = " VALUES (";
+              for (int iCol=0; i<data.getPropertNames().count(); ++iCol)
+              {
+                if (iCol > 0) {
+                  s = s.append(", ");
+                  sValues = sValues.append(", ");
+                }
+                s = s.append(data.getPropertyName(iCol));
+                sValues = sValues.append(":").append(data.getPropertyName(iCol));
+              }
+              QString sSQL = s.append(") ").append(sValues).append(")");
+              query.prepare(sSQL);
+              for (int iCol=0; i<data.getPropertNames().count(); ++iCol)
+              {
+                switch (data.getPropertyTypeVariant(iCol))
+                {
+                case QVariant::Bool :
+                case QVariant::Int :
+                case QVariant::UInt :
+                case QVariant::LongLong :
+                case QVariant::ULongLong :
+                    query.bindValue(QString(":%1").arg(data.getPropertyName(iCol)), newData->getInt(data.getPropertyName(iCol)));
+                    break;
+                case QVariant::Char :
+                case QVariant::String :
+                case QVariant::Url :
+                case QVariant::StringList :
+                    query.bindValue(QString(":%1").arg(data.getPropertyName(iCol)), newData->getString(data.getPropertyName(iCol)));
+                    break;
+                case QVariant::Double :
+                    query.bindValue(QString(":%1").arg(data.getPropertyName(iCol)), newData->getDouble(data.getPropertyName(iCol)));
+                    break;
+                case QVariant::QVariant::Date :
+                    query.bindValue(QString(":%1").arg(data.getPropertyName(iCol)), newData->getDate(data.getPropertyName(iCol)));
+                    break;
+                case QVariant::QVariant::DateTime :
+                case QVariant::Time :
+                    query.bindValue(QString(":%1").arg(data.getPropertyName(iCol)), newData->getDateTime(data.getPropertyName(iCol)));
+                    break;
+                default:
+                  qDebug(qPrintable(QString("Type name %1 not supported").arg(QVariant::typeToName(data.getPropertyTypeVariant(iCol)))));
+                }
+              }
+              if (!query.exec())
+              {
+                qDebug("Failed to add row");
+              }
+            }
+            qDebug("done adding row!");
+          }
+          else if (bottomObject->getChangeType() == ChangedObjectBase::Delete)
+          {
+            qDebug("Delete record from the DB!");
+            // TODO: What if referenced by another table.
+            GenericDataObject* oldData = bottomObject->getOldData();
+            if (oldData != nullptr)
+            {
+              QSqlQuery query;
+              // TODO: What if the key field is not id.
+              QString s = QString("INSERT FROM %1 WHERE %2=:id").arg(tableName).arg("id");
+              query.prepare(s);
+              query.bindValue(":id", oldData->getInt("id"));
+              if (!query.exec())
+              {
+                qDebug("Failed to delete row");
+              }
+            }
+          }
+          else if (bottomObject->getChangeType() == ChangedObjectBase::Edit)
+          {
+            // TODO: What if changed a key field referenced by another table.
+            QString fieldName = bottomObject->getChangeInfo();
+
+            // Info contains the modified field name!
+            GenericDataObject* oldData = bottomObject->getOldData();
+            if (oldData != nullptr)
+            {
+              QSqlQuery query;
+              // TODO: What if the key field is not id.
+              QString s = QString("UPDATE %1 SET %2=:%2 WHERE %3=:id").arg(tableName).arg(fieldName).arg("id");
+              query.prepare(s);
+              query.bindValue(":id", oldData->getInt("id"));
+              switch (data.getPropertyTypeVariant(fieldName))
+              {
+              case QVariant::Bool :
+              case QVariant::Int :
+              case QVariant::UInt :
+              case QVariant::LongLong :
+              case QVariant::ULongLong :
+                  query.bindValue(QString(":%1").arg(fieldName), oldData->getInt(fieldName));
+                  break;
+              case QVariant::Char :
+              case QVariant::String :
+              case QVariant::Url :
+              case QVariant::StringList :
+                  query.bindValue(QString(":%1").arg(fieldName), oldData->getString(fieldName));
+                  break;
+              case QVariant::Double :
+                  query.bindValue(QString(":%1").arg(fieldName), oldData->getDouble(fieldName));
+                  break;
+              case QVariant::QVariant::Date :
+                  query.bindValue(QString(":%1").arg(fieldName), oldData->getDate(fieldName));
+                  break;
+              case QVariant::QVariant::DateTime :
+              case QVariant::Time :
+                  query.bindValue(QString(":%1").arg(fieldName), oldData->getDateTime(fieldName));
+                  break;
+              default:
+                qDebug(qPrintable(QString("Type name %1 not supported").arg(QVariant::typeToName(data.getPropertyTypeVariant(fieldName)))));
+              }
+              if (!query.exec())
+              {
+                qDebug("Failed to update row");
+              }
+            }
+          }
+          else
+          {
+            qDebug("Unknown change type in undo");
+          }
+          delete bottomObject;
+        }
+      }
+    }
+
+    delete firstChanges;
+  }
+  m_changeTracker.clear();
+  setTracking(trackState);
+  return errorOccurred;
 }
 
 void GenericDataCollectionTableModel::undoChange()

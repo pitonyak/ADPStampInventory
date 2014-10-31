@@ -16,6 +16,7 @@
 #include <QCoreApplication>
 #include <QSettings>
 #include <QXmlStreamWriter>
+#include <QInputDialog>
 
 #if defined(__GNUC__)
 #if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 6)
@@ -347,7 +348,8 @@ void MainWindow::configure()
 
   createDBWorker();
   // QString tableName("country");
-  QString tableName("inventory");
+  // QString tableName("inventory");
+  QString tableName("stamplocation");
   // QString tableName("stamplocation");
   GenericDataCollection* gdo = m_db->readTableName(tableName);
 
@@ -367,7 +369,8 @@ void MainWindow::editTable()
   //TableSortFieldDialog dlg(&gdc);
   //dlg.exec();
 
-  DescribeSqlTables schema =DescribeSqlTables::getStampSchema();
+  DescribeSqlTables schema = DescribeSqlTables::getStampSchema();
+  /**
   QString s;
   QXmlStreamWriter writer(&s);
   writer.setAutoFormatting(true);
@@ -393,6 +396,19 @@ void MainWindow::editTable()
   } else {
       qDebug("Yeah!, s == s2");
       qDebug(qPrintable(s2));
+  }
+  **/
+
+  QStringList tableNames = schema.getTableNames();
+  bool ok;
+
+  QString tableName = QInputDialog::getItem(this, tr("Choose Table"), tr("Table"), tableNames, 0, false, &ok);
+  if (ok && !tableName.isEmpty()) {
+    createDBWorker();
+    GenericDataCollection* gdo = m_db->readTableName(tableName);
+    GenericDataCollectionTableDialog dlg(tableName, *gdo);
+    dlg.exec();
+    delete gdo;
   }
 
   //createDBWorker();
