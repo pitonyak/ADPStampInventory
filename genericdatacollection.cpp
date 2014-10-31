@@ -4,7 +4,7 @@
 #include <QMetaType>
 
 GenericDataCollection::GenericDataCollection(QObject *parent) :
-  QObject(parent), m_largestId(0), m_trackChanges(false)
+  QObject(parent), m_largestId(-1), m_trackChanges(false)
 {
 }
 
@@ -270,4 +270,48 @@ void GenericDataCollection::sort()
         // TODO: Use the fields.
         // https://qt-project.org/forums/viewthread/4978
     }
+}
+
+GenericDataObject* GenericDataCollection::createEmptyObject() const
+{
+    GenericDataObject* data = new GenericDataObject();
+
+    for (int i=0; i<m_propertyNames.count() && i < m_propertyTypes.count(); ++i) {
+        if (m_propertyNames.at(i).compare("id", Qt::CaseInsensitive) == 0) {
+            data->setValue("id", getLargestId() + 1);
+        } else {
+            switch (m_propertyTypes.at(i))
+            {
+            case QVariant::Bool :
+                data->setValue(m_propertyNames.at(i), false);
+                break;
+            case QVariant::Int :
+            case QVariant::UInt :
+            case QVariant::LongLong :
+            case QVariant::ULongLong :
+                data->setValue(m_propertyNames.at(i), 0);
+                break;
+            case QVariant::Char :
+            case QVariant::String :
+            case QVariant::Url :
+                data->setValue(m_propertyNames.at(i), "");
+                break;
+            case QVariant::Double :
+                data->setValue(m_propertyNames.at(i), 0.0);
+                break;
+            case QVariant::QVariant::Date :
+                data->setValue(m_propertyNames.at(i), QDate::currentDate());
+                break;
+            case QVariant::QVariant::DateTime :
+                data->setValue(m_propertyNames.at(i), QDateTime::currentDateTime());
+                break;
+            case QVariant::Time :
+                data->setValue(m_propertyNames.at(i), QTime::currentTime());
+                break;
+            default:
+              qDebug(qPrintable(QString("Type name %1 not supported").arg(QVariant::typeToName(m_propertyTypes.at(i)))));
+            }
+        }
+    }
+    return data;
 }

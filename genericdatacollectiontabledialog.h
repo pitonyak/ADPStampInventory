@@ -9,12 +9,13 @@ class QTableView;
 class GenericDataCollectionTableModel;
 class QItemSelection;
 class QSortFilterProxyModel;
+class StampDB;
 
 class GenericDataCollectionTableDialog : public QDialog
 {
   Q_OBJECT
 public:
-  explicit GenericDataCollectionTableDialog(const QString& name, GenericDataCollection& data, QWidget *parent = nullptr);
+  explicit GenericDataCollectionTableDialog(const QString& name, GenericDataCollection& data, StampDB& db, QWidget *parent = nullptr);
 
   /*! \brief Destructor saves dialog geometry. */
   virtual ~GenericDataCollectionTableDialog();
@@ -47,24 +48,34 @@ private:
   /*! \brief Return True if a row is currently selected. */
   bool isRowSelected() const;
 
+  /*! \brief Copy the selected rows */
   QPushButton* m_duplicateButton;
+  /*! \brief Add a new row */
   QPushButton* m_addButton;
+  /*! \brief Delete the selected rows */
   QPushButton* m_deleteButton;
+  /*! \brief Undo the last change */
   QPushButton* m_undoButton;
+  /*! \brief Persist pending changes to the DB */
   QPushButton* m_SaveChangesButton;
 
   /*! \brief Identifies the columns and the types. */
   GenericDataCollection& m_dataCollection;
+
+  /*! \brief View presented to the user */
   QTableView* m_tableView;
 
   /*! \brief Used for saving and restoring dialog sizes. */
   QString m_name;
 
+  /*! \brief Actual data model to which changes are made and such. */
   GenericDataCollectionTableModel* m_tableModel;
 
+  /*! \brief Used by the view to allow for sorting and similar. the actual table model is contained inside of this. */
   QSortFilterProxyModel* m_proxyModel;
 
-  TypeMapper m_mapper;
+  /*! \brief We need this here so that we can persist the DB. */
+  StampDB& m_db;
 };
 
 #endif // GENERICDATACOLLECTIONTABLEDIALOG_H

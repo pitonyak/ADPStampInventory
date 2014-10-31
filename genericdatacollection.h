@@ -262,6 +262,9 @@ public:
   bool isTrackChanges() const { return m_trackChanges; }
   void setTrackChanges (const bool b) { m_trackChanges = b; }
 
+  // This will set the ID to be 1 more than the greatest ID present.
+  GenericDataObject* createEmptyObject() const;
+
 signals:
 
 public slots:

@@ -3,6 +3,7 @@
 #include "linkbackfilterdelegate.h"
 #include "checkboxonlydelegate.h"
 #include "constants.h"
+#include "stampdb.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -15,11 +16,11 @@
 #include <QItemSelection>
 #include <QSortFilterProxyModel>
 
-GenericDataCollectionTableDialog::GenericDataCollectionTableDialog(const QString& name, GenericDataCollection &data, QWidget *parent) :
+GenericDataCollectionTableDialog::GenericDataCollectionTableDialog(const QString& name, GenericDataCollection &data, StampDB &db, QWidget *parent) :
   QDialog(parent),
   m_duplicateButton(nullptr), m_addButton(nullptr), m_deleteButton(nullptr), m_undoButton(nullptr),
   m_SaveChangesButton(nullptr),
-  m_dataCollection(data), m_tableView(nullptr), m_name(name), m_tableModel(nullptr)
+  m_dataCollection(data), m_tableView(nullptr), m_name(name), m_tableModel(nullptr), m_db(db)
 {
   buildDialog();
 }
@@ -40,7 +41,6 @@ void GenericDataCollectionTableDialog::buildDialog()
 
   m_proxyModel = new QSortFilterProxyModel(this);
   m_proxyModel->setSourceModel(m_tableModel);
-  m_tableModel->setParentProxyModel(m_proxyModel);
 
   //??m_tableView->setModel(m_tableModel);
   m_tableView->setModel(m_proxyModel);
@@ -161,7 +161,7 @@ void GenericDataCollectionTableDialog::undoChange()
 
 void GenericDataCollectionTableDialog::saveChanges()
 {
-  m_tableModel->saveTrackedChanges(m_name, m_dataCollection);
+  m_tableModel->saveTrackedChanges(m_name, m_dataCollection, m_db.getDB());
   enableButtons();
 }
 

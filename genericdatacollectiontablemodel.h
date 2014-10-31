@@ -6,7 +6,7 @@
 
 #include <QAbstractTableModel>
 
-class QSortFilterProxyModel;
+class QSqlDatabase;
 
 //**************************************************************************
 /*! \class GenericDataCollectionTableModel
@@ -91,10 +91,8 @@ public:
     // changing the row number of another row.
     void getRowsAscending(const QModelIndexList &list, QList<int> &rows) const;
 
-    bool saveTrackedChanges(const QString& tableName, const GenericDataCollection& data);
-
-    void setParentProxyModel(QSortFilterProxyModel* proxyModel);
-
+    // Write tracked changes to the backing DB.
+    bool saveTrackedChanges(const QString& tableName, const GenericDataCollection& data, QSqlDatabase& db);
 
 signals:
   
@@ -108,13 +106,6 @@ private:
     bool m_isTracking;
     GenericDataCollection& m_collection;
     ChangeTracker<GenericDataObject> m_changeTracker;
-    QSortFilterProxyModel* m_proxyModel;
 };
-
-inline void GenericDataCollectionTableModel::setParentProxyModel(QSortFilterProxyModel* proxyModel)
-{
-  m_proxyModel = proxyModel;
-}
-
 
 #endif // GENERICDATACOLLECTIONTABLEMODEL_H

@@ -3,10 +3,9 @@
 #include <QLocale>
 #include <QQueue>
 #include <QSqlQuery>
-#include <QSortFilterProxyModel>
 
 GenericDataCollectionTableModel::GenericDataCollectionTableModel(GenericDataCollection &data, QObject *parent) :
-  QAbstractTableModel(parent), m_isTracking(true), m_collection(data), m_proxyModel(nullptr)
+  QAbstractTableModel(parent), m_isTracking(true), m_collection(data)
 {
 }
 
@@ -119,48 +118,21 @@ void GenericDataCollectionTableModel::getRowsAscending(const QModelIndexList& li
 
 void GenericDataCollectionTableModel::addRow()
 {
-  /***
-  int largestId = m_collection.getLargestId();
+  GenericDataObject* newData = m_collection.createEmptyObject();
   QStack<ChangedObject<GenericDataObject>*> * lastChanges = m_isTracking ? new QStack<ChangedObject<GenericDataObject>*>() : nullptr;
-  GenericDataObject* oldData = nullptr;
-  GenericDataObject* newData = nullptr; // WRONG TODO
-  newData->setValue("id", ++largestId);
+
   int row = m_collection.getObjectCount();
-
-  // ?? What from here!
-
-  QQueue<GenericDataObject*> dataToCopy;
-  for (int i=0; i<rows.size(); ++i)
+  if (m_isTracking)
   {
-    qDebug(qPrintable(QString("Copying %1").arg(i)));
-    dataToCopy.enqueue(m_collection.getObjectByRow(rows.at(i)));
+    lastChanges->push(new ChangedObject<GenericDataObject>(row, -1, "", ChangedObjectBase::Add, newData->clone(), nullptr) );
   }
-  qDebug(qPrintable(QString("duplicateRows %1").arg(rows.size())));
-  if (!rows.isEmpty())
+  beginInsertRows(QModelIndex(), row, row);
+  m_collection.appendObject(newData->getInt("id"), newData);
+  endInsertRows();
+  if (m_isTracking)
   {
-    int largestId = m_collection.getLargestId();
-    QStack<ChangedObject<GenericDataObject>*> * lastChanges = m_isTracking ? new QStack<ChangedObject<GenericDataObject>*>() : nullptr;
-    while (!dataToCopy.isEmpty())
-    {
-      GenericDataObject* oldData = dataToCopy.dequeue();
-      GenericDataObject* newData = oldData->clone();
-      newData->setValue("id", ++largestId);
-      int row = m_collection.getObjectCount();
-      if (m_isTracking)
-      {
-        lastChanges->push(new ChangedObject<GenericDataObject>(row, -1, "", ChangedObjectBase::Add, newData->clone(), nullptr) );
-      }
-      beginInsertRows(QModelIndex(), row, row);
-      m_collection.appendObject(largestId, newData);
-      endInsertRows();
-    }
-    if (m_isTracking)
-    {
-      m_changeTracker.push(lastChanges);
-    }
+    m_changeTracker.push(lastChanges);
   }
-  ***/
-
 }
 
 void GenericDataCollectionTableModel::deleteRows(const QModelIndexList &list)
@@ -198,7 +170,7 @@ void GenericDataCollectionTableModel::deleteRows(const QModelIndexList &list)
 }
 
 
-bool GenericDataCollectionTableModel::saveTrackedChanges(const QString& tableName, const GenericDataCollection &data)
+bool GenericDataCollectionTableModel::saveTrackedChanges(const QString& tableName, const GenericDataCollection &data, QSqlDatabase &db)
 {
   bool trackState = isTracking();
   setTracking(false);
@@ -211,10 +183,10 @@ bool GenericDataCollectionTableModel::saveTrackedChanges(const QString& tableNam
     // Undo must start at the top and work to the bottom.
 
     QStack<ChangedObject<GenericDataObject>*> * firstChanges = m_changeTracker.takeAt(0);
-    while (!firstChanges->isEmpty())
+    if (firstChanges != nullptr)
     {
-      for (int i=0; i<firstChanges->size(); ++i) {
-        ChangedObject<GenericDataObject>* bottomObject = firstChanges->at(i);
+      while (!firstChanges->isEmpty()) {
+        ChangedObject<GenericDataObject>* bottomObject = firstChanges->takeFirst();
         if (bottomObject != nullptr)
         {
           if (bottomObject->getChangeType() == ChangedObjectBase::Add)
@@ -223,10 +195,10 @@ bool GenericDataCollectionTableModel::saveTrackedChanges(const QString& tableNam
             GenericDataObject* newData = bottomObject->getNewData();
             if (newData != nullptr)
             {
-              QSqlQuery query;
+              QSqlQuery query(db);
               QString s = QString("INSERT INTO %1 (").arg(tableName);
               QString sValues = " VALUES (";
-              for (int iCol=0; i<data.getPropertNames().count(); ++iCol)
+              for (int iCol=0; iCol<data.getPropertNames().count(); ++iCol)
               {
                 if (iCol > 0) {
                   s = s.append(", ");
@@ -237,7 +209,7 @@ bool GenericDataCollectionTableModel::saveTrackedChanges(const QString& tableNam
               }
               QString sSQL = s.append(") ").append(sValues).append(")");
               query.prepare(sSQL);
-              for (int iCol=0; i<data.getPropertNames().count(); ++iCol)
+              for (int iCol=0; iCol<data.getPropertNames().count(); ++iCol)
               {
                 switch (data.getPropertyTypeVariant(iCol))
                 {
@@ -282,9 +254,9 @@ bool GenericDataCollectionTableModel::saveTrackedChanges(const QString& tableNam
             GenericDataObject* oldData = bottomObject->getOldData();
             if (oldData != nullptr)
             {
-              QSqlQuery query;
+              QSqlQuery query(db);
               // TODO: What if the key field is not id.
-              QString s = QString("INSERT FROM %1 WHERE %2=:id").arg(tableName).arg("id");
+              QString s = QString("DELETE FROM %1 WHERE %2=:id").arg(tableName).arg("id");
               query.prepare(s);
               query.bindValue(":id", oldData->getInt("id"));
               if (!query.exec())
@@ -300,13 +272,16 @@ bool GenericDataCollectionTableModel::saveTrackedChanges(const QString& tableNam
 
             // Info contains the modified field name!
             GenericDataObject* oldData = bottomObject->getOldData();
-            if (oldData != nullptr)
+            GenericDataObject* newData = bottomObject->getNewData();
+            if (oldData != nullptr && newData != nullptr)
             {
-              QSqlQuery query;
+              QSqlQuery query(db);
               // TODO: What if the key field is not id.
               QString s = QString("UPDATE %1 SET %2=:%2 WHERE %3=:id").arg(tableName).arg(fieldName).arg("id");
+              qDebug(qPrintable(QString("Update (%1)").arg(s)));
               query.prepare(s);
               query.bindValue(":id", oldData->getInt("id"));
+              qDebug(qPrintable(QString("where id = %1").arg(oldData->getInt("id"))));
               switch (data.getPropertyTypeVariant(fieldName))
               {
               case QVariant::Bool :
@@ -314,23 +289,28 @@ bool GenericDataCollectionTableModel::saveTrackedChanges(const QString& tableNam
               case QVariant::UInt :
               case QVariant::LongLong :
               case QVariant::ULongLong :
-                  query.bindValue(QString(":%1").arg(fieldName), oldData->getInt(fieldName));
+                  query.bindValue(QString(":%1").arg(fieldName), newData->getInt(fieldName));
+                  qDebug(qPrintable(QString("%1 = %2").arg(fieldName).arg(newData->getInt(fieldName))));
                   break;
               case QVariant::Char :
               case QVariant::String :
               case QVariant::Url :
               case QVariant::StringList :
-                  query.bindValue(QString(":%1").arg(fieldName), oldData->getString(fieldName));
+                  query.bindValue(QString(":%1").arg(fieldName), newData->getString(fieldName));
+                  qDebug(qPrintable(QString("%1 = %2").arg(fieldName).arg(newData->getString(fieldName))));
                   break;
               case QVariant::Double :
-                  query.bindValue(QString(":%1").arg(fieldName), oldData->getDouble(fieldName));
+                  query.bindValue(QString(":%1").arg(fieldName), newData->getDouble(fieldName));
+                  qDebug(qPrintable(QString("%1 = %2").arg(fieldName).arg(newData->getDouble(fieldName))));
                   break;
               case QVariant::QVariant::Date :
-                  query.bindValue(QString(":%1").arg(fieldName), oldData->getDate(fieldName));
+                  query.bindValue(QString(":%1").arg(fieldName), newData->getDate(fieldName));
+                  qDebug(qPrintable(QString("%1 = %2").arg(fieldName).arg(newData->getString(fieldName))));
                   break;
               case QVariant::QVariant::DateTime :
               case QVariant::Time :
-                  query.bindValue(QString(":%1").arg(fieldName), oldData->getDateTime(fieldName));
+                  query.bindValue(QString(":%1").arg(fieldName), newData->getDateTime(fieldName));
+                  qDebug(qPrintable(QString("%1 = %2").arg(fieldName).arg(newData->getString(fieldName))));
                   break;
               default:
                 qDebug(qPrintable(QString("Type name %1 not supported").arg(QVariant::typeToName(data.getPropertyTypeVariant(fieldName)))));
@@ -348,9 +328,8 @@ bool GenericDataCollectionTableModel::saveTrackedChanges(const QString& tableNam
           delete bottomObject;
         }
       }
+      delete firstChanges;
     }
-
-    delete firstChanges;
   }
   m_changeTracker.clear();
   setTracking(trackState);

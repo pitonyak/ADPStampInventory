@@ -346,18 +346,18 @@ void MainWindow::configure()
   //TableSortFieldDialog dlg(&gdc);
   //dlg.exec();
 
-  createDBWorker();
-  // QString tableName("country");
-  // QString tableName("inventory");
-  QString tableName("stamplocation");
-  // QString tableName("stamplocation");
-  GenericDataCollection* gdo = m_db->readTableName(tableName);
+  if (createDBWorker()) {
+      // QString tableName("country");
+      // QString tableName("inventory");
+      QString tableName("stamplocation");
+      // QString tableName("stamplocation");
+      GenericDataCollection* gdo = m_db->readTableName(tableName);
 
-  qDebug(qPrintable(QString("On return, number of rows = %1").arg(gdo->rowCount())));
+      qDebug(qPrintable(QString("On return, number of rows = %1").arg(gdo->rowCount())));
 
-  GenericDataCollectionTableDialog dlg(tableName, *gdo);
-  dlg.exec();
-
+      GenericDataCollectionTableDialog dlg(tableName, *gdo, *m_db);
+      dlg.exec();
+  }
 }
 
 #include <QXmlStreamReader>
@@ -399,16 +399,17 @@ void MainWindow::editTable()
   }
   **/
 
-  QStringList tableNames = schema.getTableNames();
-  bool ok;
+  if (createDBWorker()) {
+      QStringList tableNames = schema.getTableNames();
+      bool ok;
 
-  QString tableName = QInputDialog::getItem(this, tr("Choose Table"), tr("Table"), tableNames, 0, false, &ok);
-  if (ok && !tableName.isEmpty()) {
-    createDBWorker();
-    GenericDataCollection* gdo = m_db->readTableName(tableName);
-    GenericDataCollectionTableDialog dlg(tableName, *gdo);
-    dlg.exec();
-    delete gdo;
+      QString tableName = QInputDialog::getItem(this, tr("Choose Table"), tr("Table"), tableNames, 0, false, &ok);
+      if (ok && !tableName.isEmpty()) {
+        GenericDataCollection* gdo = m_db->readTableName(tableName);
+        GenericDataCollectionTableDialog dlg(tableName, *gdo, *m_db);
+        dlg.exec();
+        delete gdo;
+      }
   }
 
   //createDBWorker();
