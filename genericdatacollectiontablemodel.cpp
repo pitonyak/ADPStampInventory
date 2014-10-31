@@ -119,6 +119,48 @@ void GenericDataCollectionTableModel::getRowsAscending(const QModelIndexList& li
 
 void GenericDataCollectionTableModel::addRow()
 {
+  /***
+  int largestId = m_collection.getLargestId();
+  QStack<ChangedObject<GenericDataObject>*> * lastChanges = m_isTracking ? new QStack<ChangedObject<GenericDataObject>*>() : nullptr;
+  GenericDataObject* oldData = nullptr;
+  GenericDataObject* newData = nullptr; // WRONG TODO
+  newData->setValue("id", ++largestId);
+  int row = m_collection.getObjectCount();
+
+  // ?? What from here!
+
+  QQueue<GenericDataObject*> dataToCopy;
+  for (int i=0; i<rows.size(); ++i)
+  {
+    qDebug(qPrintable(QString("Copying %1").arg(i)));
+    dataToCopy.enqueue(m_collection.getObjectByRow(rows.at(i)));
+  }
+  qDebug(qPrintable(QString("duplicateRows %1").arg(rows.size())));
+  if (!rows.isEmpty())
+  {
+    int largestId = m_collection.getLargestId();
+    QStack<ChangedObject<GenericDataObject>*> * lastChanges = m_isTracking ? new QStack<ChangedObject<GenericDataObject>*>() : nullptr;
+    while (!dataToCopy.isEmpty())
+    {
+      GenericDataObject* oldData = dataToCopy.dequeue();
+      GenericDataObject* newData = oldData->clone();
+      newData->setValue("id", ++largestId);
+      int row = m_collection.getObjectCount();
+      if (m_isTracking)
+      {
+        lastChanges->push(new ChangedObject<GenericDataObject>(row, -1, "", ChangedObjectBase::Add, newData->clone(), nullptr) );
+      }
+      beginInsertRows(QModelIndex(), row, row);
+      m_collection.appendObject(largestId, newData);
+      endInsertRows();
+    }
+    if (m_isTracking)
+    {
+      m_changeTracker.push(lastChanges);
+    }
+  }
+  ***/
+
 }
 
 void GenericDataCollectionTableModel::deleteRows(const QModelIndexList &list)
