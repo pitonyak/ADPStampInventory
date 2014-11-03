@@ -403,6 +403,9 @@ void MainWindow::editTable()
   if (createDBWorker()) {
       QStringList tableNames = schema.getTableNames();
       bool ok;
+      QString s = schema.getDDL(true).join("\n\n");
+      ScrollMessageBox::information(this, "Schema", s);
+
 
       QString tableName = QInputDialog::getItem(this, tr("Choose Table"), tr("Table"), tableNames, 0, false, &ok);
       if (ok && !tableName.isEmpty()) {

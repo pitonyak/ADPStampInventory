@@ -95,7 +95,8 @@ public:
    */
   static DescribeSqlField readXml(QXmlStreamReader& reader);
 
-  QString generateDDL() const;
+  /*! \brief Generate the DDL usable to create this field. */
+  QString getDDL() const;
 
 private:
 

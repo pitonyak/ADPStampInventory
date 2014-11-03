@@ -2,15 +2,6 @@
 #include "scrollmessagebox.h"
 #include "csvreader.h"
 #include "csvwriter.h"
-//#include "dataobjectbase.h"
-//#include "dataobjectcatalog.h"
-//#include "dataobjectcatalogtype.h"
-//#include "dataobjectcountry.h"
-//#include "dataobjectdealer.h"
-//#include "dataobjectinventory.h"
-//#include "dataobjectstamplocation.h"
-//#include "dataobjectvaluesource.h"
-//#include "dataobjectvaluetype.h"
 #include "genericdatacollection.h"
 
 #include <QFile>
@@ -26,6 +17,7 @@
 #include <QSqlDriver>
 #include <QTextStream>
 #include <QList>
+#include <QtGlobal>
 
 #if defined(__GNUC__)
 #if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 6)
@@ -376,9 +368,40 @@ QStringList StampDB::getDDLForExport()
 }
 
 
-GenericDataCollection *StampDB::readTableName(const QString& tableName)
+GenericDataCollection *StampDB::readTableName(const QString& tableName, const bool useSchema, const bool includeLinks)
 {
+  if (!useSchema) {
+    return readTableSql(QString("select * from %1 order by ID").arg(tableName));
+  }
   return readTableSql(QString("select * from %1 order by ID").arg(tableName));
+}
+
+GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, const bool includeLinks)
+{
+  Q_ASSERT_X(m_schema.hasTable(tableName), "readTableBySchema", qPrintable(QString("Table [%1] is not in the schema.").arg(tableName)));
+  QStringList orderByList;
+  // TODO: Find the "key" field and use that instead of ID.
+  orderByList << "id";
+  return readTableBySchema(tableName, orderByList, includeLinks);
+}
+
+GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, const QStringList& orderByList, const bool includeLinks)
+{
+  Q_ASSERT_X(m_schema.hasTable(tableName), "readTableBySchema", qPrintable(QString("Table [%1] is not in the schema.").arg(tableName)));
+  DescribeSqlTable table = m_schema.getTableByName(tableName);
+  QStringList fieldNames = table.getFieldNames();
+  for (QStringListIterator fieldSortIterator(orderByList); fieldSortIterator.hasNext(); )
+  {
+    QString fieldName = fieldSortIterator.next();
+    Q_ASSERT_X(table.hasField(fieldName), "readTableBySchema", qPrintable(QString("Table [%1] does not have a field named [%2].").arg(tableName).arg(fieldName)));
+    // TODO: Build sort list and arrange to allow direction to be included.
+  }
+
+  for (QStringListIterator fieldIterator(fieldNames); fieldIterator.hasNext(); )
+  {
+
+  }
+  return nullptr;
 }
 
 GenericDataCollection* StampDB::readTableSql(const QString& sql)

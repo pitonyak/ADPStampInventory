@@ -146,10 +146,17 @@ public:
   /*! \brief Read all data from a table.
    *
    *  \param [in] tableName
+   *  \param [in] useSchema If true, validate the input based on the schema and convert to an appropriate type.
+   *  \param [in] includeLinks If true, include "linked" tables with the data.
    *
    *  \return a new generic data collection that you now own and must delete (or, nullptr if it fails).
    */
-  GenericDataCollection* readTableName(const QString& tableName);
+  GenericDataCollection* readTableName(const QString& tableName, const bool useSchema=false, const bool includeLinks=false);
+
+  GenericDataCollection* readTableBySchema(const QString& tableName, const bool includeLinks=false);
+  GenericDataCollection* readTableBySchema(const QString& tableName, const QStringList& orderByList, const bool includeLinks=false);
+
+  //GenericDataCollection* readTableName(const QString& tableName, const bool useSchema, const bool includeLinks);
 
   /*! \brief Execute SQL and create a table.
    *
@@ -199,6 +206,7 @@ private:
   /*! Regular expression that matches on "create table  <name> (...)"  */
   QRegExp *m_outerDDLRegExp;
 
+  // TODO: Replace this with the DDL returned by DescribeTables class.
   /*! Each string is the DDL to create a single table. */
   QStringList *m_desiredSchemaDDLList;
 

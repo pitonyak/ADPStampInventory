@@ -27,6 +27,7 @@ public:
   int getTableCount() const { return m_names.count(); }
   QStringList getTableNames() const { return m_names; }
   QString getNameByIndex(const int index) const;
+  bool hasTable(const QString& name) const;
 
   DescribeSqlTable getTableByName(const QString& name) const;
   DescribeSqlTable getTableByIndex(const int index) const;
@@ -49,7 +50,14 @@ public:
 
   static DescribeSqlTables readXml(QXmlStreamReader& reader);
 
-  QStringList generateDDL() const;
+  //**************************************************************************
+  //! Get the DDL usable to create the tables known to this object; one table per string.
+  /*!
+   * \param prettyPrint If true, each field is on its own line; if not, each field is separated by a comman and a space.
+   * \returns DDL usable to create the tables known to this object; one table per string.
+   *
+   ***************************************************************************/
+  QStringList getDDL(const bool prettyPrint) const;
 
 private:
 
@@ -67,5 +75,10 @@ private:
   QStringList m_names;
   QHash<QString, DescribeSqlTable> m_tables;
 };
+
+inline bool DescribeSqlTables::hasTable(const QString& name) const
+{
+  return m_tables.contains(name.toLower());
+}
 
 #endif // DESCRIBESQLTABLES_H

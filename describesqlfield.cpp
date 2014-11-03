@@ -167,12 +167,13 @@ QXmlStreamWriter& DescribeSqlField::writeXml(QXmlStreamWriter& writer) const
   return writer;
 }
 
-QString DescribeSqlField::generateDDL() const
+QString DescribeSqlField::getDDL() const
 {
   QString ddl = QString("%1 %2").arg(m_name).arg(getFieldType().getFirstSupportedName());
 
   if (getFieldType().supportsLength() && getFieldLength() > 0) {
-    ddl = ddl.append("(").append(getFieldLength()).append(")");
+    //ddl = ddl.append("(").append(getFieldLength()).append(")");
+    ddl = ddl.append(QString("(%1)").arg(getFieldLength()));
   }
 
   if (isKey()) {
@@ -182,6 +183,8 @@ QString DescribeSqlField::generateDDL() const
   if (isAutoIncrement()) {
     ddl = ddl.append(" AUTOINCREMENT");
   }
+
+  // ddl = ddl.append(QString(" [%1, %2, %3]").arg(getViewName()).arg(getFieldLength()).arg(getDescription()));
 
   return ddl;
 }

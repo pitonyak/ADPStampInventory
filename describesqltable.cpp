@@ -235,7 +235,7 @@ QXmlStreamWriter& DescribeSqlTable::writeXml(QXmlStreamWriter& writer) const
 }
 
 
-QString DescribeSqlTable::generateDDL() const
+QString DescribeSqlTable::getDDL(const bool prettyPrint) const
 {
   QString ddl;
   ddl = ddl.append("CREATE TABLE %1 ( ").arg(m_name);
@@ -244,9 +244,12 @@ QString DescribeSqlTable::generateDDL() const
     if (i > 0) {
       ddl = ddl.append(",");
     }
-    ddl = ddl.append(" %1 ").arg(m_fields.value(m_names.at(i)).generateDDL());
+    if (prettyPrint) {
+      ddl = ddl.append("\n  ");
+    }
+    ddl = ddl.append(" %1").arg(m_fields.value(m_names.at(i)).getDDL());
   }
 
-  ddl = ddl.append(")");
+  ddl = ddl.append(" )");
   return ddl;
 }

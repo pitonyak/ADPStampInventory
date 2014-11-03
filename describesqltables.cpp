@@ -142,7 +142,9 @@ DescribeSqlTables DescribeSqlTables::getStampSchema()
              "description", "Description", "VARCHAR", "Longer descriptive name", "100"};
 
   int n=sizeof(catalogType) / sizeof(catalogType[0]);
-  schema.addTable(DescribeSqlTable(catalogType, n, true, &typeMaster));
+  DescribeSqlTable catalogTypeTable(catalogType, n, true, &typeMaster);
+  catalogTypeTable.setFieldKey("id", true);
+  schema.addTable(catalogTypeTable);
   qDebug("Done with catalog type");
 
   QString country[] = {"country", "Country", "Country",
@@ -150,20 +152,26 @@ DescribeSqlTables DescribeSqlTables::getStampSchema()
              "name", "Name", "VARCHAR", "Viewable name such as Air Mail or Postage", "50",
              "a3", "A3", "VARCHAR", "Three letter country designation", "3"};
   n=sizeof(country) / sizeof(country[0]);
-  schema.addTable(DescribeSqlTable(country, n, true, &typeMaster));
+  DescribeSqlTable countryType(country, n, true, &typeMaster);
+  countryType.setFieldKey("id", true);
+  schema.addTable(countryType);
 
   QString  valueType[] = {"valuetype", "Value Type", "Categorizes the stamp for value such as mint or used.",
              "id", "Id", "INTEGER", "Table Key", "10",
              "description", "Description", "VARCHAR", "Describes the type", "100"};
   n=sizeof(valueType) / sizeof(valueType[0]);
-  schema.addTable(DescribeSqlTable(valueType, n, true, &typeMaster));
+  DescribeSqlTable valueTable(valueType, n, true, &typeMaster);
+  valueTable.setFieldKey("id", true);
+  schema.addTable(valueTable);
 
   QString valueSource[] = {"valuesource", "Value Source", "Categorizes the stamp for value such as mint or used.",
              "id", "Id", "INTEGER", "Table Key", "10",
              "year", "Date", "DATE", "Date for the book from which the values were taken in the format MM/DD/YYYY", "10",
              "description", "Description", "VARCHAR", "Longer descriptive name such as Scotts Catelog", "100"};
   n=sizeof(valueSource) / sizeof(valueSource[0]);
-  schema.addTable(DescribeSqlTable(valueSource, n, true, &typeMaster));
+  DescribeSqlTable valueSourceTable(valueSource, n, true, &typeMaster);
+  valueSourceTable.setFieldKey("id", true);
+  schema.addTable(valueSourceTable);
 
   QString catalog[] = {"catalog", "Catalog", "Catalog of stamp definitions.",
              "id", "Id", "INTEGER", "Table Key", "10",
@@ -179,6 +187,7 @@ DescribeSqlTables DescribeSqlTables::getStampSchema()
   catalogTable.setFieldLink("countryid", "country", "id");
   catalogTable.setFieldLink("typeid", "catalogtype", "id");
   catalogTable.setFieldCurrencySymbol("facevalue", "$");
+  catalogTable.setFieldKey("id", true);
   schema.addTable(catalogTable);
 
   QString bookValues[] = {"bookvalues", "Book Values", "What is each stamp worth.",
@@ -193,6 +202,7 @@ DescribeSqlTables DescribeSqlTables::getStampSchema()
   bookValuesTable.setFieldLink("catalogid", "catalog", "id");
   bookValuesTable.setFieldLink("valuetypeid", "valuetype", "id");
   bookValuesTable.setFieldCurrencySymbol("bookvalue", "$");
+  bookValuesTable.setFieldKey("id", true);
   schema.addTable(bookValuesTable);
 
   QString inventory[] = {"inventory", "Inventory", "Physical stamps I own.",
@@ -218,6 +228,7 @@ DescribeSqlTables DescribeSqlTables::getStampSchema()
   inventoryTable.setFieldLink("catalogid", "catalog", "id");
   inventoryTable.setFieldLink("dealerid", "dealer", "id");
   inventoryTable.setFieldLink("locationid", "stamplocation", "id");
+  inventoryTable.setFieldKey("id", true);
   // TODO: Remove type id.
   inventoryTable.setFieldLink("typeid", "catalogtype", "id");
   inventoryTable.setFieldCurrencySymbol("paid", "$");
@@ -228,7 +239,9 @@ DescribeSqlTables DescribeSqlTables::getStampSchema()
              "name", "Name", "VARCHAR", "Viewable name", "20",
              "description", "Description", "VARCHAR", "Longer descriptive name", "100"};
   n=sizeof(location) / sizeof(location[0]);
-  schema.addTable(DescribeSqlTable(location, n, true, &typeMaster));
+  DescribeSqlTable locationTable(location, n, true, &typeMaster);
+  locationTable.setFieldKey("id", true);
+  schema.addTable(locationTable);
 
   QString dealer[] = {"dealer", "Dealer", "From whom did I purchase this stamp.",
              "id", "Id", "INTEGER", "Table Key", "10",
@@ -246,17 +259,18 @@ DescribeSqlTables DescribeSqlTables::getStampSchema()
              "webiste", "Web", "VARCHAR", "Web Site", "60"};
   n=sizeof(dealer) / sizeof(dealer[0]);
   DescribeSqlTable dealerTable(dealer, n, true, &typeMaster);
+  dealerTable.setFieldKey("id", true);
   schema.addTable(dealerTable);
 
   return schema;
 }
 
-QStringList DescribeSqlTables::generateDDL() const
+QStringList DescribeSqlTables::getDDL(const bool prettyPrint) const
 {
   QStringList list;
   for (int i=0; i<m_names.count(); ++i) {
     DescribeSqlTable table = m_tables.value(m_names.at(i));
-    list << table.generateDDL();
+    list << table.getDDL(prettyPrint);
   }
   return list;
 }

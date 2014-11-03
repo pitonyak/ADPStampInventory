@@ -44,6 +44,7 @@ public:
   int getFieldCount() const { return m_names.count(); }
   QStringList getFieldNames() const { return m_names; }
   QString getFieldNameByIndex(const int index) const;
+  bool hasField(const QString& name) const;
 
   DescribeSqlField getFieldByName(const QString& name) const;
   DescribeSqlField getFieldByIndex(const int index) const;
@@ -60,7 +61,14 @@ public:
   QXmlStreamWriter& writeXml(QXmlStreamWriter& writer) const;
   static DescribeSqlTable readXml(QXmlStreamReader& reader);
 
-  QString generateDDL() const;
+  //**************************************************************************
+  //! Generate the DDL usable to create this table.
+  /*!
+   * \param prettyPrint If true, each field is on its own line; if not, each field is separated by a comman and a space.
+   * \returns DDL usable to create this table.
+   *
+   ***************************************************************************/
+  QString getDDL(const bool prettyPrint) const;
 
 private:
 
@@ -78,5 +86,10 @@ private:
   QStringList m_names;
   QHash<QString, DescribeSqlField> m_fields;
 };
+
+inline bool DescribeSqlTable::hasField(const QString& name) const
+{
+  return m_fields.contains(name.toLower());
+}
 
 #endif // DESCRIBESQLTABLE_H
