@@ -141,6 +141,19 @@ public:
    */
   QDateTime getDateTime(const QString& name, const QDateTime& defaultValue) const;
 
+  /*! \brief Get the proprety as a QTime
+   *  \param [in] name Property name of interest.
+   *  \return Return the property as an Time value or the current date and time if the property does not exist.
+   */
+  QTime getTime(const QString& name) const;
+
+  /*! \brief Get the proprety as a QTime
+   *  \param [in] name Property name of interest.
+   *  \param [in] defaultValue Returned if the property does not exist.
+   *  \return Return the property as an Time value or defaultValue if the property does not exist.
+   */
+  QTime getTime(const QString& name, const QTime &defaultValue) const;
+
   /*! \brief Replace all of the "properties" in this object. The properties are the only thing that is copied.
    *  \param [in] obj Object from which the properties are copied.
    *  \return Reference to this object.

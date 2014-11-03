@@ -98,7 +98,7 @@ void TableSortFieldDialog::addRow()
       TableSortField field;
       field.setFieldName(m_dataCollection->getPropertyName(i));
       field.setFieldIndex(i);
-      field.setFieldType(m_mapper.variantTypeToMetaType(m_dataCollection->getPropertyTypeVariant(i)));
+      field.setFieldType(m_dataCollection->getPropertyTypeMeta(i));
       m_tableModel->insertRow(getSelectedRow(), field);
       enableButtons();
       return;

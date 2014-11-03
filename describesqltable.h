@@ -32,6 +32,8 @@ public:
 
   DescribeSqlTable(const QString definitions[], const int n, bool idIsAutoInc = true ,const SqlFieldTypeMaster* typemaster = nullptr);
 
+  QString getFirstKeyFieldName() const;
+  QStringList getKeyFieldNames() const;
 
   QString getName() const { return m_name; }
   QString getViewName() const {return m_viewName; }
@@ -49,6 +51,9 @@ public:
   DescribeSqlField getFieldByName(const QString& name) const;
   DescribeSqlField getFieldByIndex(const int index) const;
   bool addField(const DescribeSqlField& field);
+
+  QMetaType::Type getFieldMetaType(const QString& name) const { return getFieldByName(name).getFieldMetaType(); }
+  QMetaType::Type getFieldMetaType(const int i) const { return getFieldByIndex(i).getFieldMetaType(); }
 
   const DescribeSqlTable& operator=(const DescribeSqlTable& table) { return copy(table); }
 

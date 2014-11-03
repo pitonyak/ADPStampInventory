@@ -80,19 +80,7 @@ public:
    *  \param [in] pType Property type for this name.
    *  \return True if the property is added, and false if it already exists.
    */
-  bool appendPropertyName(const QString& name, const QVariant::Type pType);
-
-  /*! \brief Get a properties type based on its name.
-   *  \param [in] name Case insensitive property name desired.
-   *  \return Properties type if the name exists, and QVariant::Invalid if it does not.
-   */
-  QVariant::Type getPropertyTypeVariant(const QString& name) const;
-
-  /*! \brief Get a properties type based on its index.
-   *  \param [in] i Index of the property name (the column).
-   *  \return Properties type or Invalid if the index is out of bounds.
-   */
-  QVariant::Type getPropertyTypeVariant(const int i) const;
+  bool appendPropertyName(const QString& name, const QMetaType::Type pType);
 
   /*! \brief Get a properties type based on its name.
    *  \param [in] name Case insensitive property name desired.
@@ -279,7 +267,7 @@ private:
   QStringList m_propertyNames;
 
   /*! \brief In-order list of property types. */
-  QList<QVariant::Type> m_propertyTypes;
+  QList<QMetaType::Type> m_metaTypes;
 
   /*! \brief Map an integer ID to a specific object. */
   QHash<int, GenericDataObject*> m_objects;
@@ -312,19 +300,10 @@ inline int GenericDataCollection::getPropertyNameCount() const
   return m_propertyNames.count();
 }
 
-inline QVariant::Type GenericDataCollection::getPropertyTypeVariant(const int i) const
-{
-  return (0 >= 0 && i < m_propertyTypes.size()) ? m_propertyTypes.at(i) : QVariant::Invalid;
-}
-
-inline QMetaType::Type GenericDataCollection::getPropertyTypeMeta(const QString& name) const
-{
-  return m_mapper.variantTypeToMetaType(getPropertyTypeVariant(name));
-}
-
 inline QMetaType::Type GenericDataCollection::getPropertyTypeMeta(const int i) const
 {
-  return m_mapper.variantTypeToMetaType(getPropertyTypeVariant(i));
+  Q_ASSERT_X(0 >= 0 && i < m_metaTypes.size(), "getPropertyTypeMeta", qPrintable(QString("Index %1 out of range, must be in [0, %2)").arg(i).arg(m_metaTypes.size())));
+  return m_metaTypes.at(i);
 }
 
 inline int GenericDataCollection::getObjectCount() const

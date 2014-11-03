@@ -33,6 +33,8 @@ public:
   DescribeSqlTable getTableByIndex(const int index) const;
   bool addTable(const DescribeSqlTable& table);
 
+  QMetaType::Type getFieldMetaType(const QString& tableName, const QString& fieldName) const { return getTableByName(tableName).getFieldMetaType(fieldName); }
+
   /*! \brief Perform a deep copy of the parameter into this object.
    *
    *  \param [in] tables Object from which to copy.

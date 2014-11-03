@@ -80,6 +80,30 @@ const DescribeSqlTable& DescribeSqlTable::copy(const DescribeSqlTable& table)
   return *this;
 }
 
+QString DescribeSqlTable::getFirstKeyFieldName() const
+{
+    for (QHash<QString, DescribeSqlField>::const_iterator i = m_fields.begin(); i != m_fields.end(); ++i)
+    {
+        if (i.value().isKey()) {
+            return i.key();
+        }
+    }
+    return "";
+}
+
+QStringList DescribeSqlTable::getKeyFieldNames() const
+{
+    QStringList names;
+    for (QHash<QString, DescribeSqlField>::const_iterator i = m_fields.begin(); i != m_fields.end(); ++i)
+    {
+        if (i.value().isKey()) {
+            names << i.key();
+        }
+    }
+    return names;
+}
+
+
 QString DescribeSqlTable::getFieldNameByIndex(const int index) const
 {
   if (0 <= index && index < getFieldCount()) {

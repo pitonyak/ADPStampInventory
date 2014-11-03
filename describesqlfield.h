@@ -43,6 +43,8 @@ public:
   /*! \brief Get the fields type. */
   SqlFieldType getFieldType() const { return m_fieldType; }
 
+  QMetaType::Type getFieldMetaType() const { return m_fieldType.qtType(); }
+
   /*! \brief Get the fields preferred type name in case some mapping causes more than one type to be mapped to this field. */
   QString getPreferredTypeName() const { return m_preferredTypeName; }
 

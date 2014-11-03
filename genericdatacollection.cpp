@@ -18,9 +18,9 @@ void GenericDataCollection::makeDummy()
 {
   QStringList nameList;
   nameList << "Id" << "Name" << "Date" << "Time" << "Double" << "Bool";
-  QList<QVariant::Type> typeList;
-  typeList << QVariant::Int << QVariant::String << QVariant::Date << QVariant::Time
-              << QVariant::Double << QVariant::Bool;
+  QList<QMetaType::Type> typeList;
+  typeList << QMetaType::Int << QMetaType::QString << QMetaType::QDate << QMetaType::QTime
+              << QMetaType::Double << QMetaType::Bool;
   for (int i=0; i<nameList.size(); ++i)
   {
     appendPropertyName(nameList.value(i), typeList.value(i));
@@ -79,10 +79,11 @@ void GenericDataCollection::insertRow(const int i, GenericDataObject *obj)
   }
 }
 
-QVariant::Type GenericDataCollection::getPropertyTypeVariant(const QString& name) const
+QMetaType::Type GenericDataCollection::getPropertyTypeMeta(const QString& name) const
 {
   QString lowerCaseName = name.toLower();
-  return m_LowerCasePropertyNameMap.contains(lowerCaseName) ? m_propertyTypes.at(m_LowerCasePropertyNameMap.value(lowerCaseName)) : QVariant::Invalid;
+  Q_ASSERT_X(m_LowerCasePropertyNameMap.contains(lowerCaseName), "getPropertyTypeMeta", qPrintable(QString("Invalid field name %1").arg(name)));
+  return m_LowerCasePropertyNameMap.contains(lowerCaseName) ? m_metaTypes.at(m_LowerCasePropertyNameMap.value(lowerCaseName)) : QMetaType::UnknownType;
 }
 
 QString GenericDataCollection::getPropertyName(const QString& name) const
@@ -96,25 +97,26 @@ int GenericDataCollection::getPropertyIndex(const QString& name) const
   return m_LowerCasePropertyNameMap.value(name.toLower(), -1);
 }
 
-bool GenericDataCollection::appendPropertyName(const QString& name, const QVariant::Type pType)
+bool GenericDataCollection::appendPropertyName(const QString& name, const QMetaType::Type pType)
 {
-  QString lowerCaseName = name.toLower();
-  if (m_LowerCasePropertyNameMap.contains(lowerCaseName))
-  {
-    return false;
-  }
-  m_LowerCasePropertyNameMap.insert(lowerCaseName, m_propertyNames.count());
-  m_propertyNames.append(name);
-  m_propertyTypes.append(pType);
-  return true;
+    QString lowerCaseName = name.toLower();
+    if (m_LowerCasePropertyNameMap.contains(lowerCaseName))
+    {
+      return false;
+    }
+    m_LowerCasePropertyNameMap.insert(lowerCaseName, m_propertyNames.count());
+    m_propertyNames.append(name);
+    m_metaTypes.append(pType);
+    return true;
 }
+
 
 bool GenericDataCollection::exportToCSV(CSVWriter& writer) const
 {
   writer.clearHeader();
   for (int i=0; i<getPropertNames().count(); ++i)
   {
-    writer.addHeader(getPropertyName(i), CSVColumn::variantTypeToMetaType(getPropertyTypeVariant(i)));
+    writer.addHeader(getPropertyName(i), getPropertyTypeMeta(i));
   }
   writer.writeHeader();
 
@@ -130,7 +132,7 @@ bool GenericDataCollection::exportToCSV(CSVWriter& writer) const
     {
       if (obj->hasValue(getPropertyName(i)))
       {
-        QMetaType::Type columnType = CSVColumn::variantTypeToMetaType(getPropertyTypeVariant(i));
+        QMetaType::Type columnType = getPropertyTypeMeta(i);
         bool qualified = (columnType == QMetaType::QString);
         newLine.append(CSVColumn(obj->getString(getPropertyName(i)), qualified, columnType));
       }
@@ -215,7 +217,7 @@ void GenericDataCollection::clear()
     }
     m_objects.clear();
     m_propertyNames.clear();
-    m_propertyTypes.clear();
+    m_metaTypes.clear();
     m_LowerCasePropertyNameMap.clear();
 }
 
@@ -225,7 +227,7 @@ const GenericDataCollection& GenericDataCollection::operator=(const GenericDataC
     {
         clear();
         m_propertyNames = obj.m_propertyNames;
-        m_propertyTypes = obj.m_propertyTypes;
+        m_metaTypes = obj.m_metaTypes;
         m_LowerCasePropertyNameMap = obj.m_LowerCasePropertyNameMap;
 
         QHashIterator<int, GenericDataObject*> i(obj.m_objects);
@@ -276,11 +278,11 @@ GenericDataObject* GenericDataCollection::createEmptyObject() const
 {
     GenericDataObject* data = new GenericDataObject();
 
-    for (int i=0; i<m_propertyNames.count() && i < m_propertyTypes.count(); ++i) {
+    for (int i=0; i<m_propertyNames.count() && i < m_metaTypes.count(); ++i) {
         if (m_propertyNames.at(i).compare("id", Qt::CaseInsensitive) == 0) {
             data->setValue("id", getLargestId() + 1);
         } else {
-            switch (m_propertyTypes.at(i))
+            switch (m_metaTypes.at(i))
             {
             case QVariant::Bool :
                 data->setValue(m_propertyNames.at(i), false);
@@ -309,7 +311,7 @@ GenericDataObject* GenericDataCollection::createEmptyObject() const
                 data->setValue(m_propertyNames.at(i), QTime::currentTime());
                 break;
             default:
-              qDebug(qPrintable(QString("Type name %1 not supported").arg(QVariant::typeToName(m_propertyTypes.at(i)))));
+              qDebug(qPrintable(QString("Type name %1 not supported").arg(QMetaType::typeName(m_metaTypes.at(i)))));
             }
         }
     }

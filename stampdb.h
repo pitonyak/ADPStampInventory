@@ -151,9 +151,9 @@ public:
    *
    *  \return a new generic data collection that you now own and must delete (or, nullptr if it fails).
    */
-  GenericDataCollection* readTableName(const QString& tableName, const bool useSchema=false, const bool includeLinks=false);
+  GenericDataCollection* readTableName(const QString& tableName, const bool sortByKey=true, const bool useSchema=false, const bool includeLinks=false);
 
-  GenericDataCollection* readTableBySchema(const QString& tableName, const bool includeLinks=false);
+  GenericDataCollection* readTableBySchema(const QString& tableName, const bool sortByKey=true, const bool includeLinks=false);
   GenericDataCollection* readTableBySchema(const QString& tableName, const QStringList& orderByList, const bool includeLinks=false);
 
   //GenericDataCollection* readTableName(const QString& tableName, const bool useSchema, const bool includeLinks);

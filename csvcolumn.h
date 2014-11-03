@@ -120,8 +120,6 @@ public:
 
     static QMetaType::Type guessType(const QString& s, const TypeMapper::ColumnConversionPreferences preference);
 
-    static QMetaType::Type variantTypeToMetaType(const QVariant::Type metaType);
-
 signals:
 
 public slots:

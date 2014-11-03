@@ -368,39 +368,140 @@ QStringList StampDB::getDDLForExport()
 }
 
 
-GenericDataCollection *StampDB::readTableName(const QString& tableName, const bool useSchema, const bool includeLinks)
+GenericDataCollection *StampDB::readTableName(const QString& tableName, const bool sortByKey, const bool useSchema, const bool includeLinks)
 {
   if (!useSchema) {
-    return readTableSql(QString("select * from %1 order by ID").arg(tableName));
+    if (sortByKey) {
+        return readTableSql(QString("select * from %1 order by ID").arg(tableName));
+    } else {
+        return readTableSql(QString("select * from %1").arg(tableName));
+    }
   }
   return readTableSql(QString("select * from %1 order by ID").arg(tableName));
 }
 
-GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, const bool includeLinks)
+GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, const bool sortByKey, const bool includeLinks)
 {
   Q_ASSERT_X(m_schema.hasTable(tableName), "readTableBySchema", qPrintable(QString("Table [%1] is not in the schema.").arg(tableName)));
   QStringList orderByList;
-  // TODO: Find the "key" field and use that instead of ID.
-  orderByList << "id";
+
+  if (sortByKey) {
+      DescribeSqlTable table = m_schema.getTableByName(tableName);
+      QStringList fieldNames = table.getFieldNames();
+      for (QStringListIterator fieldIterator(fieldNames); fieldIterator.hasNext(); )
+      {
+          QString fieldName = fieldIterator.next();
+          if (table.getFieldByName(fieldName).isKey()) {
+              orderByList << fieldName;
+          }
+      }
+      if (orderByList.isEmpty() && table.hasField("id")) {
+          orderByList << "id";
+      }
+  }
   return readTableBySchema(tableName, orderByList, includeLinks);
 }
 
 GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, const QStringList& orderByList, const bool includeLinks)
 {
   Q_ASSERT_X(m_schema.hasTable(tableName), "readTableBySchema", qPrintable(QString("Table [%1] is not in the schema.").arg(tableName)));
+
   DescribeSqlTable table = m_schema.getTableByName(tableName);
   QStringList fieldNames = table.getFieldNames();
+
+  QString orderBy = "";
+
   for (QStringListIterator fieldSortIterator(orderByList); fieldSortIterator.hasNext(); )
   {
     QString fieldName = fieldSortIterator.next();
     Q_ASSERT_X(table.hasField(fieldName), "readTableBySchema", qPrintable(QString("Table [%1] does not have a field named [%2].").arg(tableName).arg(fieldName)));
-    // TODO: Build sort list and arrange to allow direction to be included.
+    if (orderBy.isEmpty()) {
+        orderBy = QString("%1.%2").arg(tableName).arg(fieldName);
+    } else {
+        orderBy = orderBy.append(QString(", %1.%2").arg(tableName).arg(fieldName));
+    }
   }
 
+  if (!orderBy.isEmpty()) {
+      orderBy = QString("ORDER BY %1").arg(orderBy);
+  }
+
+  QString sqlFields = "";
+
+  // For our purposes, we could simply use "*".
+  // Use something similar if you send in a list of fields to use.
+  // If support multiple tables, then use a table name portion identifier.
   for (QStringListIterator fieldIterator(fieldNames); fieldIterator.hasNext(); )
   {
-
+      QString fieldName = fieldIterator.next();
+      if (sqlFields.isEmpty()) {
+          sqlFields = QString("%1.%2").arg(tableName).arg(fieldName);;
+      } else {
+          sqlFields = orderBy.append(QString(", %1.%2").arg(tableName).arg(fieldName));
+      }
   }
+
+  if (sqlFields.isEmpty()) {
+      qDebug("No fields to select");
+      return nullptr;
+  }
+
+  QString sql = QString("SELECT %1 FROM %2 %3").arg(sqlFields).arg(tableName).arg(orderBy);
+
+  if (openDB())
+  {
+    qDebug(qPrintable(QString("Reading table using [%1]").arg(sql)));
+    QSqlDatabase& db = getDB();
+    QSqlQuery query(db);
+
+    if (!query.exec(sql))
+    {
+        ScrollMessageBox::information(nullptr, "ERROR", query.lastError().text());
+    }
+    else if (query.isSelect())
+    {
+      GenericDataCollection* collection = new GenericDataCollection();
+
+      // Set the property names and types in order!
+      QStringList duplicateColumns;
+      for (int i=0; i<query.record().count(); ++i)
+      {
+        // query.record().field(i).type()) returns a QVariant type.
+        if (!collection->appendPropertyName(query.record().fieldName(i), m_schema.getFieldMetaType(tableName,  query.record().fieldName(i))))
+        {
+          duplicateColumns.append(query.record().fieldName(i));
+        }
+      }
+      if (duplicateColumns.count() > 0)
+      {
+        ScrollMessageBox::information(nullptr, "ERROR", QString(tr("Problem converting the following SQL\n\n%1\n\nThe following columns are duplicated:\n%2")).arg(sql).arg(duplicateColumns.join("\n")));
+        delete collection;
+        return nullptr;
+      }
+
+      // TODO: Get first key
+
+      bool hasIdColumn = collection->hasProperty("id");
+      QString idString = hasIdColumn ? collection->getPropertyName("id") : "";
+      int iCount = 0;
+      while (query.isActive() && query.next())
+      {
+        GenericDataObject* gdo = new GenericDataObject(collection);
+        for (int i=0; i<query.record().count(); ++i)
+        {
+          if (!query.record().isNull(i))
+          {
+            gdo->setValue(collection->getPropertyName(i), query.record().value(i));
+          }
+        }
+        collection->appendObject(hasIdColumn ? gdo->getInt(idString) : iCount, gdo);
+        ++iCount;
+      }
+      return collection;
+    }
+  }
+
+
   return nullptr;
 }
 
@@ -420,11 +521,13 @@ GenericDataCollection* StampDB::readTableSql(const QString& sql)
     {
       GenericDataCollection* collection = new GenericDataCollection();
 
+      TypeMapper mapper;
+
       // Set the property names and types in order!
       QStringList duplicateColumns;
       for (int i=0; i<query.record().count(); ++i)
       {
-        if (!collection->appendPropertyName(query.record().fieldName(i), query.record().field(i).type()))
+        if (!collection->appendPropertyName(query.record().fieldName(i), mapper.variantTypeToMetaType(query.record().field(i).type())))
         {
           duplicateColumns.append(query.record().fieldName(i));
         }

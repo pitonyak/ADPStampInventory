@@ -85,6 +85,18 @@ QDateTime GenericDataObject::getDateTime(const QString& name, const QDateTime& d
 }
 
 
+QTime GenericDataObject::getTime(const QString& name) const
+{
+  QString lower = name.toLower();
+  return hasValueNoCase(lower) ? m_properties.value(lower).toTime() : QTime::currentTime();
+}
+
+QTime GenericDataObject::getTime(const QString& name, const QTime& defaultValue) const
+{
+  QString lower = name.toLower();
+  return hasValueNoCase(lower) ? m_properties.value(lower).toTime() : defaultValue;
+}
+
 const GenericDataObject& GenericDataObject::operator=(const GenericDataObject& obj)
 {
   // Note that the parent object is NOT copied.
