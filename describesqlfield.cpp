@@ -167,3 +167,21 @@ QXmlStreamWriter& DescribeSqlField::writeXml(QXmlStreamWriter& writer) const
   return writer;
 }
 
+QString DescribeSqlField::generateDDL() const
+{
+  QString ddl = QString("%1 %2").arg(m_name).arg(getFieldType().getFirstSupportedName());
+
+  if (getFieldType().supportsLength() && getFieldLength() > 0) {
+    ddl = ddl.append("(").append(getFieldLength()).append(")");
+  }
+
+  if (isKey()) {
+    ddl = ddl.append(" PRIMARY KEY");
+  }
+
+  if (isAutoIncrement()) {
+    ddl = ddl.append(" AUTOINCREMENT");
+  }
+
+  return ddl;
+}

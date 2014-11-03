@@ -95,6 +95,8 @@ public:
    */
   static DescribeSqlField readXml(QXmlStreamReader& reader);
 
+  QString generateDDL() const;
+
 private:
 
   const DescribeSqlField& copy(const DescribeSqlField& field);

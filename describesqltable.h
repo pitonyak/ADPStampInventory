@@ -60,6 +60,8 @@ public:
   QXmlStreamWriter& writeXml(QXmlStreamWriter& writer) const;
   static DescribeSqlTable readXml(QXmlStreamReader& reader);
 
+  QString generateDDL() const;
+
 private:
 
   const DescribeSqlTable& copy(const DescribeSqlTable& table);

@@ -119,6 +119,9 @@ StampDB::StampDB(QObject *parent) :
 
   m_outerDDLRegExp = new QRegExp("^\\s*create\\s+table\\s+([a-z0-9_\\-\\.]+)\\s*\\((.*)\\)\\s*$");
   m_outerDDLRegExp->setCaseSensitivity(Qt::CaseInsensitive);
+
+  // There are now two distinct methods to get the stamp schema!
+  m_schema = DescribeSqlTables::getStampSchema();
 }
 
 StampDB::~StampDB()

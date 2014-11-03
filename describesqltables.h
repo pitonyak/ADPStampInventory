@@ -49,6 +49,8 @@ public:
 
   static DescribeSqlTables readXml(QXmlStreamReader& reader);
 
+  QStringList generateDDL() const;
+
 private:
 
   const DescribeSqlTables& copy(const DescribeSqlTables& tables);

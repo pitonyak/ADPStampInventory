@@ -1,6 +1,8 @@
 #ifndef STAMPDB_H
 #define STAMPDB_H
 
+#include "describesqltables.h"
+
 #include <QObject>
 #include <QString>
 #include <QtSql/QSqlDatabase>
@@ -180,7 +182,7 @@ public:
    */
   QStringList getOneColumnAsString(const QString& sqlSelect);
 
-
+  DescribeSqlTables m_schema;
 
 signals:
 

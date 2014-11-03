@@ -233,3 +233,20 @@ QXmlStreamWriter& DescribeSqlTable::writeXml(QXmlStreamWriter& writer) const
   writer.writeEndElement();
   return writer;
 }
+
+
+QString DescribeSqlTable::generateDDL() const
+{
+  QString ddl;
+  ddl = ddl.append("CREATE TABLE %1 ( ").arg(m_name);
+
+  for (int i=0; i<m_names.count(); ++i) {
+    if (i > 0) {
+      ddl = ddl.append(",");
+    }
+    ddl = ddl.append(" %1 ").arg(m_fields.value(m_names.at(i)).generateDDL());
+  }
+
+  ddl = ddl.append(")");
+  return ddl;
+}

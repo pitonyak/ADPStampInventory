@@ -251,3 +251,12 @@ DescribeSqlTables DescribeSqlTables::getStampSchema()
   return schema;
 }
 
+QStringList DescribeSqlTables::generateDDL() const
+{
+  QStringList list;
+  for (int i=0; i<m_names.count(); ++i) {
+    DescribeSqlTable table = m_tables.value(m_names.at(i));
+    list << table.generateDDL();
+  }
+  return list;
+}
