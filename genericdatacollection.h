@@ -149,6 +149,7 @@ public:
    */
   GenericDataObject* getObjectByRow (const int row);
 
+  /*! \return Get the largest ID known to this class. The DB is not verified. */
   int getLargestId() const;
   void setLargestId(const int n);
 

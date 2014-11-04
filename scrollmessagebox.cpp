@@ -125,6 +125,7 @@ void ScrollMessageBox::updateSize()
   QSize screenSize = QApplication::desktop()->availableGeometry(QCursor::pos()).size();
 
   // Limit screen size to 85% width except for screens less than 1024.
+  // Since on a smaller screen I may really want the entire width; especially for even smaller screens.
   int hardLimit = screenSize.width() - screenSize.width() / 15;
   if (screenSize.width() <= 1024)
   {

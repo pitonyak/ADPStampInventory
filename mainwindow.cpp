@@ -341,11 +341,6 @@ void MainWindow::openSQLWindow()
 
 void MainWindow::configure()
 {
-  //GenericDataCollection gdc;
-  //gdc.makeDummy();
-  //TableSortFieldDialog dlg(&gdc);
-  //dlg.exec();
-
   if (createDBWorker()) {
       // QString tableName("country");
       // QString tableName("inventory");
@@ -402,12 +397,15 @@ void MainWindow::editTable()
 
   if (createDBWorker()) {
       QStringList tableNames = schema.getTableNames();
+      tableNames.sort(Qt::CaseInsensitive);
       bool ok;
-      QString s = schema.getDDL(true).join("\n\n");
-      ScrollMessageBox::information(this, "Schema", s);
+      //QString s = schema.getDDL(true).join("\n\n");
+      //ScrollMessageBox::information(this, "Schema", s);
 
 
       QString tableName = QInputDialog::getItem(this, tr("Choose Table"), tr("Table"), tableNames, 0, false, &ok);
+      //int maxID = m_db->getMaxId(tableName);
+      //ScrollMessageBox::information(this, "Max ID", QString("Max ID is %1").arg(maxID));
       if (ok && !tableName.isEmpty()) {
         //GenericDataCollection* data = m_db->readTableName(tableName);
         GenericDataCollection* data = m_db->readTableBySchema(tableName);
@@ -419,15 +417,4 @@ void MainWindow::editTable()
         }
       }
   }
-
-  //createDBWorker();
-  // QString tableName("country");
-  //QString tableName("inventory");
-  // QString tableName("stamplocation");
-  //GenericDataCollection* gdo = m_db->readTableName(tableName);
-
-  //qDebug(qPrintable(QString("On return, number of rows = %1").arg(gdo->rowCount())));
-
-  //GenericDataCollectionTableDialog dlg(tableName, *gdo);
-  //dlg.exec();
 }

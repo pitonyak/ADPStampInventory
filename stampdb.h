@@ -156,6 +156,9 @@ public:
   GenericDataCollection* readTableBySchema(const QString& tableName, const bool sortByKey=true, const bool includeLinks=false);
   GenericDataCollection* readTableBySchema(const QString& tableName, const QStringList& orderByList, const bool includeLinks=false);
 
+  int getMaxId(const QString& tableName);
+  int getMaxId(const QString& tableName, const QString& fieldName);
+
   //GenericDataCollection* readTableName(const QString& tableName, const bool useSchema, const bool includeLinks);
 
   /*! \brief Execute SQL and create a table.

@@ -1,12 +1,6 @@
 #ifndef DESCRIBESQLTABLE_H
 #define DESCRIBESQLTABLE_H
 
-//**************************************************************************
-//! Used to describe what a table looks like for display and housekeeping.
-/*!
- *
- **************************************************************************/
-
 #include <QString>
 #include <QStringList>
 #include <QHash>

@@ -367,6 +367,35 @@ QStringList StampDB::getDDLForExport()
     return getOneColumnAsString(sql);
 }
 
+int StampDB::getMaxId(const QString& tableName)
+{
+    return getMaxId(tableName, "id");
+}
+
+int StampDB::getMaxId(const QString& tableName, const QString& fieldName)
+{
+    QString sql = QString("SELECT MAX(%2) FROM %1").arg(tableName).arg(fieldName);
+    QSqlDatabase& db = getDB();
+    QSqlQuery query(db);
+
+    if (!query.exec(sql))
+    {
+        QString errMsg = QString("SQL: %1\n\nError:\n%2").arg(sql).arg(query.lastError().text());
+        ScrollMessageBox::information(nullptr, "ERROR", errMsg);
+    }
+    else if (query.isSelect() && query.isActive() && query.next() && !query.record().isNull(0))
+    {
+        bool ok = true;
+        int rc = query.record().value(0).toInt(&ok);
+        if (ok) {
+            return rc;
+        }
+        QString errMsg = QString("SQL: %1\n\nError:\nCannot convert returned value to an integer").arg(sql);
+        ScrollMessageBox::information(nullptr, "ERROR", errMsg);
+    }
+    return -1;
+}
+
 
 GenericDataCollection *StampDB::readTableName(const QString& tableName, const bool sortByKey, const bool useSchema, const bool includeLinks)
 {
