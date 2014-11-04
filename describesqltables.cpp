@@ -256,7 +256,7 @@ DescribeSqlTables DescribeSqlTables::getStampSchema()
              "fax", "Fax", "VARCHAR", "Fax Number", "20",
              "comment", "Comment", "VARCHAR", "Comments about this stamp.", "200",
              "email", "e-mail", "VARCHAR", "e-mail address", "60",
-             "webiste", "Web", "VARCHAR", "Web Site", "60"};
+             "website", "Web", "VARCHAR", "Web Site", "60"};
   n=sizeof(dealer) / sizeof(dealer[0]);
   DescribeSqlTable dealerTable(dealer, n, true, &typeMaster);
   dealerTable.setFieldKey("id", true);

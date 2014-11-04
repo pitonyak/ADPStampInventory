@@ -122,6 +122,8 @@ public:
     QMetaType::Type getMetaType(const QString& name) const;
     QVariant::Type getVariantType(const QString& name) const;
 
+    QVariant forceToType(const QVariant& x, const QMetaType::Type aType, bool* ok = nullptr) const;
+
 signals:
 
 public slots:

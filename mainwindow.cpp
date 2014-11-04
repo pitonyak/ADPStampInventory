@@ -409,10 +409,14 @@ void MainWindow::editTable()
 
       QString tableName = QInputDialog::getItem(this, tr("Choose Table"), tr("Table"), tableNames, 0, false, &ok);
       if (ok && !tableName.isEmpty()) {
-        GenericDataCollection* data = m_db->readTableName(tableName);
-        GenericDataCollectionTableDialog dlg(tableName, *data, *m_db, schema);
-        dlg.exec();
-        delete data;
+        //GenericDataCollection* data = m_db->readTableName(tableName);
+        GenericDataCollection* data = m_db->readTableBySchema(tableName);
+        if (data != nullptr)
+        {
+          GenericDataCollectionTableDialog dlg(tableName, *data, *m_db, schema);
+          dlg.exec();
+          delete data;
+        }
       }
   }
 

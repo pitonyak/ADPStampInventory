@@ -89,6 +89,7 @@ QMetaType::Type GenericDataCollection::getPropertyTypeMeta(const QString& name) 
 QString GenericDataCollection::getPropertyName(const QString& name) const
 {
   QString lowerCaseName = name.toLower();
+  Q_ASSERT_X(m_LowerCasePropertyNameMap.contains(lowerCaseName), "getPropertyName", qPrintable(QString("Invalid field name %1").arg(name)));
   return m_LowerCasePropertyNameMap.contains(lowerCaseName) ? m_propertyNames.at(m_LowerCasePropertyNameMap.value(lowerCaseName)) : "";
 }
 

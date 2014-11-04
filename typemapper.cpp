@@ -1,6 +1,25 @@
 #include "typemapper.h"
 #include <QDate>
 #include <QDateTime>
+#include <QBitArray>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonValue>
+#include <QJsonObject>
+#include <QEasingCurve>
+#include <QLineF>
+#include <QRect>
+#include <QRectF>
+#include <QModelIndex>
+#include <QSize>
+#include <QSizeF>
+#include <QUrl>
+#include <QUuid>
+#include <QLocale>
+#include <QtGlobal>
+#include <QRegularExpression>
+
+
 
 
 TypeMapper::TypeMapper(QObject *parent) :
@@ -283,7 +302,6 @@ void TypeMapper::initialize()
             m_typeMapVariantToMeta.insert(typeMapMetaToVariantIterator.value(), typeMapMetaToVariantIterator.key());
         }
     }
-
 }
 
 QMetaType::Type TypeMapper::guessType(const QString& s, const ColumnConversionPreferences preferences)
@@ -422,3 +440,263 @@ QMetaType::Type TypeMapper::toSignedInteger(const QMetaType::Type metaType1) con
   return (pos1InUNumList >= 0) ? m_NumList[pos1InUNumList] : metaType1;
 }
 
+
+QVariant TypeMapper::forceToType(const QVariant& x, const QMetaType::Type aType, bool* ok) const
+{
+  QVariant v;
+  if (!x.canConvert(aType)) {
+    qDebug(qPrintable(QString("Cannot convert %1 to %2.").arg(x.typeName()).arg(QMetaType::typeName(aType))));
+    if (ok != nullptr) {
+      *ok = false;
+    }
+  } else if ( aType == variantTypeToMetaType(x.type())) {
+    if (ok != nullptr) {
+      *ok = true;
+    }
+    return x;
+  } else {
+    // Types differ, try to make the conversion.
+    if (ok != nullptr) {
+      *ok = true;
+    }
+    switch (aType) {
+    case QMetaType::QBitArray :
+      v.setValue(x.toBitArray());
+      break;
+
+    case QMetaType::Bool :
+      v.setValue(x.toBool());
+      break;
+
+    case QMetaType::QByteArray :
+      v.setValue(x.toByteArray());
+      break;
+
+    case QMetaType::QChar :
+    case QMetaType::Char :
+    case QMetaType::SChar :
+    case QMetaType::UChar :
+      v.setValue(x.toChar());
+      break;
+
+    case QMetaType::QDate :
+      v.setValue(x.toDate());
+      break;
+
+    case QMetaType::QDateTime :
+      v.setValue(x.toDateTime());
+      break;
+
+    case QMetaType::Double :
+      v.setValue(x.toDouble(ok));
+      break;
+
+    case QMetaType::QEasingCurve :
+      v.setValue(x.toEasingCurve());
+      break;
+
+    case QMetaType::Float :
+      v.setValue(x.toFloat(ok));
+      break;
+
+    case QMetaType::QVariantHash :
+      v.setValue(x.toHash());
+      break;
+
+    case QMetaType::Int :
+      v.setValue(x.toInt(ok));
+      break;
+
+    case QMetaType::QJsonArray :
+      v.setValue(x.toJsonArray());
+      break;
+
+    case QMetaType::QJsonDocument :
+      v.setValue(x.toJsonDocument());
+      break;
+
+    case QMetaType::QJsonObject :
+      v.setValue(x.toJsonObject());
+      break;
+
+    case QMetaType::QJsonValue :
+      v.setValue(x.toJsonValue());
+      break;
+
+    case QMetaType::QLine :
+      v.setValue(x.toLine());
+      break;
+
+    case QMetaType::QLineF :
+      v.setValue(x.toLineF());
+      break;
+
+    case QMetaType::QVariantList :
+      v.setValue(x.toList());
+      break;
+
+    case QMetaType::QLocale :
+      v.setValue(x.toLocale());
+      break;
+
+    case QMetaType::LongLong :
+      v.setValue(x.toLongLong(ok));
+      break;
+
+    case QMetaType::Long :
+      v.setValue(x.toLongLong(ok));
+      if (ok != nullptr && *ok) {
+        qlonglong qll_temp = v.toLongLong();
+        *ok = (std::numeric_limits<long>::min() <= qll_temp) && (qll_temp <= std::numeric_limits<long>::max());
+      }
+      break;
+
+    case QMetaType::Short :
+      v.setValue(x.toInt(ok));
+      if (ok != nullptr && *ok) {
+        qlonglong qll_temp = v.toLongLong();
+        *ok = (std::numeric_limits<short>::min() <= qll_temp) && (qll_temp <= std::numeric_limits<short>::max());
+      }
+      break;
+
+    case QMetaType::QVariantMap :
+      v.setValue(x.toMap());
+      break;
+
+    case QMetaType::QModelIndex :
+      v.setValue(x.toModelIndex());
+      break;
+
+    case QMetaType::QPoint :
+      v.setValue(x.toPoint());
+      break;
+
+    case QMetaType::QPointF :
+      v.setValue(x.toPointF());
+      break;
+
+    case QMetaType::QRect :
+      v.setValue(x.toRect());
+      break;
+
+    case QMetaType::QRectF :
+      v.setValue(x.toRectF());
+      break;
+
+    case QMetaType::QRegExp :
+      v.setValue(x.toRegExp());
+      break;
+
+    case QMetaType::QRegularExpression :
+      v.setValue(x.toRegularExpression());
+      break;
+
+    case QMetaType::QSize :
+      v.setValue(x.toSize());
+      break;
+
+    case QMetaType::QSizeF :
+      v.setValue(x.toSizeF());
+      break;
+
+    case QMetaType::QString :
+      v.setValue(x.toString());
+      break;
+
+    case QMetaType::QStringList :
+      v.setValue(x.toStringList());
+      break;
+
+    case QMetaType::QTime :
+      v.setValue(x.toTime());
+      break;
+
+    case QMetaType::UInt :
+      v.setValue(x.toUInt(ok));
+      break;
+
+    case QMetaType::ULongLong :
+      v.setValue(x.toULongLong(ok));
+      break;
+
+    case QMetaType::ULong :
+      v.setValue(x.toULongLong(ok));
+      if (ok != nullptr && *ok) {
+        qulonglong qll_temp = v.toULongLong();
+        *ok = (std::numeric_limits<ulong>::min() <= qll_temp) && (qll_temp <= std::numeric_limits<ulong>::max());
+      }
+      break;
+
+    case QMetaType::UShort :
+      v.setValue(x.toUInt(ok));
+      if (ok != nullptr && *ok) {
+        qulonglong qll_temp = v.toULongLong();
+        *ok = (std::numeric_limits<ushort>::min() <= qll_temp) && (qll_temp <= std::numeric_limits<ushort>::max());
+      }
+      break;
+
+    case QMetaType::QUrl :
+      v.setValue(x.toUrl());
+      break;
+
+    case QMetaType::QUuid :
+      v.setValue(x.toUuid());
+      break;
+
+      v.setValue(x);
+      break;
+
+    case QMetaType::Void :
+    case QMetaType::VoidStar :
+    case QMetaType::QObjectStar :
+    case QMetaType::QVariant :
+    case QMetaType::QCursor :
+    case QMetaType::QPolygon :
+    case QMetaType::QPolygonF :
+    case QMetaType::QColor :
+    case QMetaType::QTextLength :
+    case QMetaType::QIcon :
+    case QMetaType::QPen :
+    case QMetaType::QTextFormat :
+    case QMetaType::QPalette :
+    case QMetaType::QFont :
+    case QMetaType::QBrush :
+    case QMetaType::QRegion :
+    case QMetaType::QImage :
+    case QMetaType::QKeySequence :
+    case QMetaType::QSizePolicy :
+    case QMetaType::QPixmap :
+    case QMetaType::QBitmap :
+    case QMetaType::QMatrix :
+    case QMetaType::QTransform :
+    case QMetaType::QMatrix4x4 :
+    case QMetaType::QVector2D :
+    case QMetaType::QVector3D :
+    case QMetaType::QVector4D :
+    case QMetaType::QQuaternion :
+    case QMetaType::User :
+      qDebug(qPrintable(QString("Unsupported type %1").arg(QMetaType::typeName(aType))));
+      if (ok != nullptr) {
+        *ok = false;
+      }
+      break;
+
+    default :
+      qDebug(qPrintable(QString("Unsupported type %1").arg(QMetaType::typeName(aType))));
+      if (ok != nullptr) {
+        *ok = false;
+      }
+      break;
+    }
+  }
+
+  if (!v.isValid())
+  {
+    if (ok != nullptr && *ok) {
+      *ok = false;
+    }
+    qDebug(qPrintable(QString("Cannot convert type %1 to type %2 with [%3].").arg(x.typeName()).arg(QMetaType::typeName(aType)).arg(x.toString())));
+  }
+
+  return v;
+}

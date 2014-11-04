@@ -437,7 +437,7 @@ GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, cons
       if (sqlFields.isEmpty()) {
           sqlFields = QString("%1.%2").arg(tableName).arg(fieldName);;
       } else {
-          sqlFields = orderBy.append(QString(", %1.%2").arg(tableName).arg(fieldName));
+          sqlFields = sqlFields.append(QString(", %1.%2").arg(tableName).arg(fieldName));
       }
   }
 
@@ -480,10 +480,21 @@ GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, cons
       }
 
       // TODO: Get first key
+      QString firstKeyField = table.getFirstKeyFieldName();
+      Q_ASSERT_X(!firstKeyField.isEmpty(), "readTableBySchema", qPrintable(QString("Table %1 does not have a key field").arg(tableName)));
+      if (firstKeyField.isEmpty()) {
+        firstKeyField = "id";
+      }
 
-      bool hasIdColumn = collection->hasProperty("id");
-      QString idString = hasIdColumn ? collection->getPropertyName("id") : "";
+
+      // In case a different name is used for the property name in the field.
+      // I doubt if this ever happens.
+      bool hasIdColumn = collection->hasProperty(firstKeyField);
+      QString idString = hasIdColumn ? collection->getPropertyName(firstKeyField) : "";
       int iCount = 0;
+
+      TypeMapper mapper;
+      bool ok;
       while (query.isActive() && query.next())
       {
         GenericDataObject* gdo = new GenericDataObject(collection);
@@ -491,7 +502,11 @@ GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, cons
         {
           if (!query.record().isNull(i))
           {
-            gdo->setValue(collection->getPropertyName(i), query.record().value(i));
+            // A Variant is returned at this point. The concern is
+            // that some data types are stored as a string in the DB and
+            // we might want to treat them as a special type.
+            //??gdo->setValue(collection->getPropertyName(i), query.record().value(i));
+            gdo->setValue(collection->getPropertyName(i), mapper.forceToType(query.record().value(i), table.getFieldMetaType(collection->getPropertyName(i)), &ok));
           }
         }
         collection->appendObject(hasIdColumn ? gdo->getInt(idString) : iCount, gdo);
