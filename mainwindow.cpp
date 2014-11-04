@@ -409,10 +409,17 @@ void MainWindow::editTable()
       //ScrollMessageBox::information(this, "Max ID", QString("Max ID is %1").arg(maxID));
       if (ok && !tableName.isEmpty()) {
         //GenericDataCollection* data = m_db->readTableName(tableName);
-        GenericDataCollection* data = m_db->readTableBySchema(tableName);
+        //GenericDataCollection* data = m_db->readTableBySchema(tableName);
+        GenericDataCollections* data = m_db->readTableWithLinks(tableName);
+        Q_ASSERT_X(data != nullptr, "MainWindow::editTable", "Returned data is null");
+
+        ScrollMessageBox::information(this, "Supported Tables", data->getNames().join("\n"));
+
+        Q_ASSERT_X(data->contains(tableName), "MainWindow::editTable", "Table not returned");
         if (data != nullptr)
         {
-          GenericDataCollectionTableDialog dlg(tableName, *data, *m_db, schema);
+          //GenericDataCollectionTableDialog dlg(tableName, *data, *m_db, schema);
+          GenericDataCollectionTableDialog dlg(tableName, *data->getTable(tableName), *m_db, schema);
           dlg.exec();
           delete data;
         }

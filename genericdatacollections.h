@@ -27,8 +27,10 @@ public:
 
     QStringList getNames() const;
 
-    GenericDataCollection& operator[](const QString& name);
-    const GenericDataCollection& operator[](const QString& name) const;
+    GenericDataCollection* operator[](const QString& tableName);
+    const GenericDataCollection* operator[](const QString& tableName) const;
+    GenericDataCollection* getTable(const QString& tableName);
+    const GenericDataCollection* getTable(const QString& tableName) const;
 
     GenericDataObject* getObject(const QString& tableName, const int id);
 
@@ -53,14 +55,25 @@ inline bool GenericDataCollections::contains(const QString& tableName, const QSt
     return contains(tableName) && m_tables[tableName]->containsProperty(fieldName);
 }
 
-inline GenericDataCollection& GenericDataCollections::operator[](const QString& name)
+inline GenericDataCollection* GenericDataCollections::operator[](const QString& tableName)
 {
-    return *m_tables.value(name);
+    return getTable(tableName);
 }
 
-inline const GenericDataCollection& GenericDataCollections::operator[](const QString& name) const
+inline GenericDataCollection* GenericDataCollections::getTable(const QString& tableName)
 {
-    return *m_tables.value(name);
+  return contains(tableName) ? m_tables.value(tableName) : nullptr;
+}
+
+inline const GenericDataCollection* GenericDataCollections::getTable(const QString& tableName) const
+{
+  return contains(tableName) ? m_tables.value(tableName) : nullptr;
+}
+
+
+inline const GenericDataCollection* GenericDataCollections::operator[](const QString& tableName) const
+{
+    return getTable(tableName);
 }
 
 inline QStringList GenericDataCollections::getNames() const

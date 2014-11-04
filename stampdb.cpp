@@ -415,18 +415,19 @@ GenericDataCollections* StampDB::readTableWithLinks(const QString& tableName, co
     QHash<QString, int> tableDepth;
     QSet<QString> tablesToRead;
     tableDepth.insert(tableName.toLower(), 0);
+    tablesToRead << tableName;
 
     while (!tablesToRead.isEmpty())
     {
-        QString name = *tablesToRead.begin();
-        if (!tables->contains(name) && (maxLinkDepth < 0 || tableDepth[name.toLower()] <= maxLinkDepth)) {
-            int currentLevel = tableDepth[name.toLower()];
-            GenericDataCollection* table = readTableBySchema(name, sortByKey);
+        QString tableNameToReadNow = *tablesToRead.begin();
+        if (!tables->contains(tableNameToReadNow) && (maxLinkDepth < 0 || tableDepth[tableNameToReadNow.toLower()] <= maxLinkDepth)) {
+            int currentLevel = tableDepth[tableNameToReadNow.toLower()];
+            GenericDataCollection* table = readTableBySchema(tableNameToReadNow, sortByKey);
             if (table != nullptr) {
                 table->setParent(tables);
-                tables->addCollection(name, table);
-                if ((maxLinkDepth < 0) && (currentLevel + 1 <= maxLinkDepth) && m_schema.containsTable(name)) {
-                    QSet<QString> newNames = m_schema.getLinkedTableNames(name);
+                tables->addCollection(tableNameToReadNow, table);
+                if (((maxLinkDepth < 0) || (currentLevel + 1 <= maxLinkDepth)) && m_schema.containsTable(tableNameToReadNow)) {
+                    QSet<QString> newNames = m_schema.getLinkedTableNames(tableNameToReadNow);
                     QSetIterator<QString> i(newNames);
                     while (i.hasNext()) {
                         QString newTable = i.next();
@@ -444,7 +445,7 @@ GenericDataCollections* StampDB::readTableWithLinks(const QString& tableName, co
                 }
             }
         }
-        tablesToRead.remove(name);
+        tablesToRead.remove(tableNameToReadNow);
     }
     return tables;
 }

@@ -21,15 +21,16 @@ void GenericDataCollections::addCollection(const QString& name, GenericDataColle
 
 QVariant GenericDataCollections::getValue(const QString& tableName, const int id, const QString& fieldName)
 {
-    if (contains(tableName))
-    {
-        GenericDataCollection& table = operator[](tableName);
-        if (table.containsValue(id, fieldName)) {
-            return table.getObjectById(id)->getValueNative(fieldName);
-        } else if (table.containsProperty(fieldName)) {
-            TypeMapper mapper;
-            return QVariant(mapper.metaToVariantType(table.getPropertyTypeMeta(fieldName)));
-        }
-    }
-    return QVariant();
+  GenericDataCollection* table = getTable(tableName);
+  if (table != nullptr)
+  {
+
+      if (table->containsValue(id, fieldName)) {
+          return table->getObjectById(id)->getValueNative(fieldName);
+      } else if (table->containsProperty(fieldName)) {
+          TypeMapper mapper;
+          return QVariant(mapper.metaToVariantType(table->getPropertyTypeMeta(fieldName)));
+      }
+  }
+  return QVariant();
 }

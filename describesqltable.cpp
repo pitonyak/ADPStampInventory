@@ -279,13 +279,15 @@ QString DescribeSqlTable::getDDL(const bool prettyPrint) const
 
 QSet<QString> DescribeSqlTable::getLinkedTableNames() const
 {
-    QSet<QString> linkedTableNames;
-    for (QHash<QString, DescribeSqlField>::const_iterator i = m_fields.begin(); i != m_fields.end(); ++i)
-    {
-        if (i.value().isLinkField()) {
-            linkedTableNames << i.value().getLinkTableName();
-        }
-    }
-    return linkedTableNames;
+  qDebug("Looking for linked table names");
+  QSet<QString> linkedTableNames;
+  for (QHash<QString, DescribeSqlField>::const_iterator i = m_fields.begin(); i != m_fields.end(); ++i)
+  {
+    qDebug(qPrintable(QString("Field %1 is link field %2").arg(i.key()).arg(i.value().isLinkField())));
+      if (i.value().isLinkField()) {
+          linkedTableNames << i.value().getLinkTableName();
+      }
+  }
+  return linkedTableNames;
 }
 

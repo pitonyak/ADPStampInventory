@@ -50,7 +50,7 @@ int ValueComparer::valueCompare(const QVariant& v1, const QVariant& v2) const
     }
     if (v1.type() == v2.type())
     {
-        switch (v1.type())
+        switch ((QMetaType::Type)(v1.type()))
         {
         case QMetaType::QString :
         case QMetaType::QUrl :
