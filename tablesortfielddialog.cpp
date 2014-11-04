@@ -93,7 +93,7 @@ void TableSortFieldDialog::addRow()
   }
   for (int i=0; i<m_dataCollection->getPropertyNameCount(); ++i)
   {
-    if (!m_tableModel->hasFieldName(m_dataCollection->getPropertyName(i)))
+    if (!m_tableModel->containsFieldName(m_dataCollection->getPropertyName(i)))
     {
       TableSortField field;
       field.setFieldName(m_dataCollection->getPropertyName(i));

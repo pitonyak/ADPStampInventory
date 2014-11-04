@@ -2,6 +2,7 @@
 #define STAMPDB_H
 
 #include "describesqltables.h"
+#include "genericdatacollections.h"
 
 #include <QObject>
 #include <QString>
@@ -151,10 +152,13 @@ public:
    *
    *  \return a new generic data collection that you now own and must delete (or, nullptr if it fails).
    */
-  GenericDataCollection* readTableName(const QString& tableName, const bool sortByKey=true, const bool useSchema=false, const bool includeLinks=false);
+  GenericDataCollection* readTableName(const QString& tableName, const bool sortByKey=true, const bool useSchema=false);
 
-  GenericDataCollection* readTableBySchema(const QString& tableName, const bool sortByKey=true, const bool includeLinks=false);
-  GenericDataCollection* readTableBySchema(const QString& tableName, const QStringList& orderByList, const bool includeLinks=false);
+  GenericDataCollection* readTableBySchema(const QString& tableName, const bool sortByKey=true);
+  GenericDataCollection* readTableBySchema(const QString& tableName, const QStringList& orderByList);
+
+  GenericDataCollections* readTableWithLinks(const QString& tableName, const int maxLinkDepth=-1, const bool sortByKey=true);
+
 
   int getMaxId(const QString& tableName);
   int getMaxId(const QString& tableName, const QString& fieldName);

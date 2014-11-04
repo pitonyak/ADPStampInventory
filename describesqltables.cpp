@@ -26,6 +26,12 @@ const DescribeSqlTables& DescribeSqlTables::copy(const DescribeSqlTables& tables
   return *this;
 }
 
+QSet<QString> DescribeSqlTables::getLinkedTableNames(const QString& tableName) const
+{
+    Q_ASSERT_X(containsTable(tableName), "DescribeSqlTables::getLinkedTableNames", qPrintable(QString("Unknown table %1").arg(tableName)));
+    return getTableByName(tableName).getLinkedTableNames();
+}
+
 QString DescribeSqlTables::getNameByIndex(const int index) const
 {
   if (0 <= index && index < getTableCount()) {

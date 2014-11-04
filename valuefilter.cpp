@@ -1,6 +1,5 @@
 #include "valuefilter.h"
-
-//#include "linkbackupglobals.h"
+#include "typemapper.h"
 
 #include <QFileInfo>
 #include <QDir>
@@ -13,7 +12,8 @@
 #include <QUuid>
 #include <QUrl>
 
-//#include "stringhelper.h"
+TypeMapper mapper;
+
 
 ValueFilter::ValueFilter(QObject *parent) :
   QObject(parent), m_compareType(ValueFilter::Equal), m_compareField(ValueFilter::FullPath), m_caseSensitivity(Qt::CaseInsensitive), m_invertFilterResult(false), m_filterMeansAccept(true), m_filterFiles(true), m_filterDirs(true), m_multiValued(false), m_values(nullptr), m_expressions(nullptr)
@@ -228,7 +228,7 @@ void ValueFilter::setValue(const QVariant& value)
 void ValueFilter::createLists()
 {
   clearLists(false, true);
-  if (!isMultiValued() || m_value.type() != QVariant::String)
+  if (!isMultiValued() || mapper.variantTypeToMetaType(m_value.type()) != QMetaType::QString)
   {
     m_values->append(m_value);
   }
@@ -249,7 +249,7 @@ void ValueFilter::createRegularExpressions()
   {
     if (value.isValid() && !value.isNull())
     {
-      if (value.type() == QVariant::RegExp)
+      if (mapper.variantTypeToMetaType(value.type()) == QMetaType::QRegExp)
       {
         m_expressions->append(new QRegExp(value.toRegExp()));
       }
@@ -324,45 +324,55 @@ bool ValueFilter::passes(const QStringList& value) const
 
 bool ValueFilter::passes(const QVariant& value) const
 {
-    switch (value.type())
+    switch (mapper.variantTypeToMetaType(value.type()))
     {
-    case QVariant::Bool :
+    case QMetaType::Bool :
         return passes(value.toBool());
         break;
-    case QVariant::Char :
+    case QMetaType::Char :
+    case QMetaType::QChar :
+    case QMetaType::UChar :
+    case QMetaType::SChar :
         return passes(value.toChar());
         break;
-    case QVariant::Date :
+    case QMetaType::QDate :
         return passes(value.toDate());
         break;
-    case QVariant::DateTime :
+    case QMetaType::QDateTime :
         return passes(value.toDateTime());
         break;
-    case QVariant::Time :
+    case QMetaType::QTime :
         return passes(value.toTime());
         break;
-    case QVariant::Double :
+    case QMetaType::Double :
         return passes(value.toDouble());
         break;
-    case QVariant::Uuid :
+    case QMetaType::QUuid :
         return passes(value.toUuid());
         break;
-    case QVariant::Int :
+    case QMetaType::Int :
+    case QMetaType::Short :
         return passes(value.toInt());
         break;
-    case QVariant::String :
+    case QMetaType::QString :
         return passes(value.toString());
         break;
-    case QVariant::UInt :
-        //return passes(value.toUInt());
-        break;
-    case QVariant::ULongLong :
+    case QMetaType::UInt :
+    case QMetaType::UShort :
         return passes(value.toULongLong());
         break;
-    case QVariant::Url :
+    case QMetaType::ULongLong :
+    case QMetaType::ULong :
+        return passes(value.toULongLong());
+        break;
+    case QMetaType::LongLong :
+    case QMetaType::Long :
+        return passes(value.toLongLong());
+        break;
+    case QMetaType::QUrl :
         return passes(value.toUrl());
         break;
-    case QVariant::StringList :
+    case QMetaType::QStringList :
         return passes(value.toStringList());
         break;
     default:

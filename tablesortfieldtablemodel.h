@@ -85,7 +85,7 @@ public:
      *  \param [in] name Field name of interest.
      *  \return Returns true if the field is in the list.
      ***************************************************************************/
-    bool hasFieldName(const QString& name) const;
+    bool containsFieldName(const QString& name) const;
 
     const QList<TableSortField>& getList() const;
 

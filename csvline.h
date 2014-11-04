@@ -54,7 +54,7 @@ public:
    * \returns True if there is an original to return.
    *
    ***************************************************************************/
-  bool hasOriginalLine() const;
+  bool containsOriginalLine() const;
 
   //**************************************************************************
   /*! \brief Get the original line.
@@ -184,14 +184,14 @@ private:
   QList<CSVColumn> m_columns;
 };
 
-inline bool CSVLine::hasOriginalLine() const
+inline bool CSVLine::containsOriginalLine() const
 {
   return m_originalLine != nullptr;
 }
 
 inline QString CSVLine::getOrignalLine() const
 {
-  return hasOriginalLine() ? *m_originalLine : QString();
+  return containsOriginalLine() ? *m_originalLine : QString();
 }
 
 

@@ -52,15 +52,18 @@ int ValueComparer::valueCompare(const QVariant& v1, const QVariant& v2) const
     {
         switch (v1.type())
         {
-        case QVariant::String :
-        case QVariant::Url :
-        case QVariant::Uuid :
+        case QMetaType::QString :
+        case QMetaType::QUrl :
+        case QMetaType::QUuid :
             return v1.toString().compare(v2.toString(), m_caseSensitivity);
             break;
-        case QVariant::Bool :
+        case QMetaType::Bool :
             return v1.toBool() < v2.toBool() ? -1 : 1;
             break;
-        case QVariant::Char :
+        case QMetaType::Char :
+        case QMetaType::QChar :
+        case QMetaType::UChar :
+        case QMetaType::SChar :
             if (m_caseSensitivity == Qt::CaseInsensitive)
             {
                 return v1.toString().compare(v2.toString(), m_caseSensitivity);
@@ -70,31 +73,36 @@ int ValueComparer::valueCompare(const QVariant& v1, const QVariant& v2) const
                 return v1.toChar() < v2.toChar() ? -1 : 1;
             }
             break;
-        case QVariant::Date :
+        case QMetaType::QDate :
             return v1.toDate() < v2.toDate() ? -1 : 1;
             break;
-        case QVariant::DateTime :
+        case QMetaType::QDateTime :
             return v1.toDateTime() < v2.toDateTime() ? -1 : 1;
             break;
-        case QVariant::Time :
+        case QMetaType::QTime :
             return v1.toDateTime() < v2.toDateTime() ? -1 : 1;
             break;
-        case QVariant::Double :
+        case QMetaType::Double :
+        case QMetaType::Float :
             return v1.toDouble() < v2.toDouble() ? -1 : 1;
             break;
-        case QVariant::Int :
+        case QMetaType::Int :
+        case QMetaType::Short :
             return v1.toInt() < v2.toInt() ? -1 : 1;
             break;
-        case QVariant::UInt :
+        case QMetaType::UInt :
+        case QMetaType::UShort :
             return v1.toUInt() < v2.toUInt() ? -1 : 1;
             break;
-        case QVariant::ULongLong :
+        case QMetaType::ULongLong :
+        case QMetaType::ULong :
             return v1.toULongLong() < v2.toULongLong() ? -1 : 1;
             break;
-        case QVariant::LongLong :
+        case QMetaType::LongLong :
+        case QMetaType::Long :
             return v1.toLongLong() < v2.toLongLong() ? -1 : 1;
             break;
-        case QVariant::StringList :
+        case QMetaType::QStringList :
             return valueCompare(v1.toStringList(), v2.toStringList());
             break;
         default:

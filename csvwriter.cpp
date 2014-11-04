@@ -18,26 +18,20 @@ CSVWriter::~CSVWriter()
 QString CSVWriter::prepForWriting(const QVariant& columnValue)
 {
     QVariant x(columnValue);
-    if (!x.convert(QVariant::String))
+    if (!x.convert(QMetaType::QString))
     {
         // TODO: Error
 
     }
     else
     {
-        if (columnValue == QVariant::Int ||
-                columnValue == QVariant::UInt ||
-                columnValue == QVariant::LongLong ||
-                columnValue == QVariant::ULongLong ||
-                columnValue == QVariant::Double ||
-                columnValue == QVariant::Date ||
-                columnValue == QVariant::DateTime )
-        {
-            return makeSafe(x.toString());
-        }
-        else if (columnValue == QVariant::String)
+        if (columnValue == QVariant::String)
         {
             return makeSafe(reduceSpaces(x.toString()));
+        }
+        else
+        {
+            return makeSafe(x.toString());
         }
     }
     return QString();

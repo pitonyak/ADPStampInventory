@@ -3,6 +3,7 @@
 #include "csvreader.h"
 #include "csvwriter.h"
 #include "genericdatacollection.h"
+#include "genericdatacollections.h"
 
 #include <QFile>
 #include <QDir>
@@ -396,8 +397,7 @@ int StampDB::getMaxId(const QString& tableName, const QString& fieldName)
     return -1;
 }
 
-
-GenericDataCollection *StampDB::readTableName(const QString& tableName, const bool sortByKey, const bool useSchema, const bool includeLinks)
+GenericDataCollection *StampDB::readTableName(const QString& tableName, const bool sortByKey, const bool useSchema)
 {
   if (!useSchema) {
     if (sortByKey) {
@@ -409,9 +409,50 @@ GenericDataCollection *StampDB::readTableName(const QString& tableName, const bo
   return readTableSql(QString("select * from %1 order by ID").arg(tableName));
 }
 
-GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, const bool sortByKey, const bool includeLinks)
+GenericDataCollections* StampDB::readTableWithLinks(const QString& tableName, const int maxLinkDepth, const bool sortByKey)
 {
-  Q_ASSERT_X(m_schema.hasTable(tableName), "readTableBySchema", qPrintable(QString("Table [%1] is not in the schema.").arg(tableName)));
+    GenericDataCollections* tables = new GenericDataCollections();
+    QHash<QString, int> tableDepth;
+    QSet<QString> tablesToRead;
+    tableDepth.insert(tableName.toLower(), 0);
+
+    while (!tablesToRead.isEmpty())
+    {
+        QString name = *tablesToRead.begin();
+        if (!tables->contains(name) && (maxLinkDepth < 0 || tableDepth[name.toLower()] <= maxLinkDepth)) {
+            int currentLevel = tableDepth[name.toLower()];
+            GenericDataCollection* table = readTableBySchema(name, sortByKey);
+            if (table != nullptr) {
+                table->setParent(tables);
+                tables->addCollection(name, table);
+                if ((maxLinkDepth < 0) && (currentLevel + 1 <= maxLinkDepth) && m_schema.containsTable(name)) {
+                    QSet<QString> newNames = m_schema.getLinkedTableNames(name);
+                    QSetIterator<QString> i(newNames);
+                    while (i.hasNext()) {
+                        QString newTable = i.next();
+                        if (!tables->contains(newTable)) {
+                            if (tableDepth.contains(newTable.toLower())) {
+                                if (tableDepth[newTable.toLower()] > currentLevel + 1) {
+                                    tableDepth[newTable.toLower()] = currentLevel + 1;
+                                }
+                            } else {
+                                tablesToRead << newTable;
+                                tableDepth[newTable.toLower()] = currentLevel + 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        tablesToRead.remove(name);
+    }
+    return tables;
+}
+
+
+GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, const bool sortByKey)
+{
+  Q_ASSERT_X(m_schema.containsTable(tableName), "readTableBySchema", qPrintable(QString("Table [%1] is not in the schema.").arg(tableName)));
   QStringList orderByList;
 
   if (sortByKey) {
@@ -424,16 +465,16 @@ GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, cons
               orderByList << fieldName;
           }
       }
-      if (orderByList.isEmpty() && table.hasField("id")) {
+      if (orderByList.isEmpty() && table.containsField("id")) {
           orderByList << "id";
       }
   }
-  return readTableBySchema(tableName, orderByList, includeLinks);
+  return readTableBySchema(tableName, orderByList);
 }
 
-GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, const QStringList& orderByList, const bool includeLinks)
+GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, const QStringList& orderByList)
 {
-  Q_ASSERT_X(m_schema.hasTable(tableName), "readTableBySchema", qPrintable(QString("Table [%1] is not in the schema.").arg(tableName)));
+  Q_ASSERT_X(m_schema.containsTable(tableName), "readTableBySchema", qPrintable(QString("Table [%1] is not in the schema.").arg(tableName)));
 
   DescribeSqlTable table = m_schema.getTableByName(tableName);
   QStringList fieldNames = table.getFieldNames();
@@ -443,7 +484,7 @@ GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, cons
   for (QStringListIterator fieldSortIterator(orderByList); fieldSortIterator.hasNext(); )
   {
     QString fieldName = fieldSortIterator.next();
-    Q_ASSERT_X(table.hasField(fieldName), "readTableBySchema", qPrintable(QString("Table [%1] does not have a field named [%2].").arg(tableName).arg(fieldName)));
+    Q_ASSERT_X(table.containsField(fieldName), "readTableBySchema", qPrintable(QString("Table [%1] does not have a field named [%2].").arg(tableName).arg(fieldName)));
     if (orderBy.isEmpty()) {
         orderBy = QString("%1.%2").arg(tableName).arg(fieldName);
     } else {
@@ -518,7 +559,7 @@ GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, cons
 
       // In case a different name is used for the property name in the field.
       // I doubt if this ever happens.
-      bool hasIdColumn = collection->hasProperty(firstKeyField);
+      bool hasIdColumn = collection->containsProperty(firstKeyField);
       QString idString = hasIdColumn ? collection->getPropertyName(firstKeyField) : "";
       int iCount = 0;
 
@@ -583,7 +624,7 @@ GenericDataCollection* StampDB::readTableSql(const QString& sql)
         return nullptr;
       }
 
-      bool hasIdColumn = collection->hasProperty("id");
+      bool hasIdColumn = collection->containsProperty("id");
       QString idString = hasIdColumn ? collection->getPropertyName("id") : "";
       int iCount = 0;
       while (query.isActive() && query.next())

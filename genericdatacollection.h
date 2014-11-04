@@ -17,6 +17,8 @@ class CSVWriter;
 /*! \class GenericDataCollection
  * \brief Collection of generic objects with named and typed properties.
  *
+ * Think of this as a table
+ *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
  * \date 2012-2014
@@ -68,7 +70,7 @@ public:
    *  \param [in] name Case insensitive property name desired.
    *  \return True if the property exists, false otherwise.
    */
-  bool hasProperty(const QString& name) const;
+  bool containsProperty(const QString& fieldName) const;
 
   /*! \brief Get the number of property names.
    *  \return Number of property names.
@@ -120,7 +122,7 @@ public:
    *  \param [in] id Unique object identifier.
    *  \return True if the specified object exists.
    */
-  bool hasObject(const int id) const;
+  bool containsObject(const int id) const;
 
   /*! \brief Get a generic data object with the specified ID.
    *  \param [in] id Unique object identifier.
@@ -153,7 +155,7 @@ public:
   int getLargestId() const;
   void setLargestId(const int n);
 
-  bool hasValue(const int id, const QString& name) const;
+  bool containsValue(const int id, const QString& name) const;
 
   /*! \brief Get the property as a string.
    *  \param [in] id Unique object identifier.
@@ -291,9 +293,9 @@ inline const QStringList& GenericDataCollection::getPropertNames() const
   return m_propertyNames;
 }
 
-inline bool GenericDataCollection::hasProperty(const QString& name) const
+inline bool GenericDataCollection::containsProperty(const QString& fieldName) const
 {
-  return m_LowerCasePropertyNameMap.contains(name.toLower());
+  return m_LowerCasePropertyNameMap.contains(fieldName.toLower());
 }
 
 inline int GenericDataCollection::getPropertyNameCount() const
@@ -312,19 +314,19 @@ inline int GenericDataCollection::getObjectCount() const
   return m_objects.count();
 }
 
-inline bool GenericDataCollection::hasObject(const int id) const
+inline bool GenericDataCollection::containsObject(const int id) const
 {
   return m_objects.contains(id);
 }
 
 inline const GenericDataObject* GenericDataCollection::getObjectById (const int id) const
 {
-  return hasObject(id) ? m_objects.value(id) : nullptr;
+  return containsObject(id) ? m_objects.value(id) : nullptr;
 }
 
 inline GenericDataObject* GenericDataCollection::getObjectById (const int id)
 {
-  return hasObject(id) ? m_objects.value(id) : nullptr;
+  return containsObject(id) ? m_objects.value(id) : nullptr;
 }
 
 inline int GenericDataCollection::getIndexOf(const int id) const
@@ -352,49 +354,49 @@ inline void GenericDataCollection::setLargestId(const int n)
   m_largestId = n;
 }
 
-inline bool GenericDataCollection::hasValue(const int id, const QString& name) const
+inline bool GenericDataCollection::containsValue(const int id, const QString& name) const
 {
-  return hasObject(id) ? m_objects.value(id)->hasValue(name) : false;
+  return containsObject(id) ? m_objects.value(id)->containsValue(name) : false;
 }
 
 inline QString GenericDataCollection::getString(const int id, const QString& name) const
 {
-  return hasObject(id) ? m_objects.value(id)->getString(name) : "";
+  return containsObject(id) ? m_objects.value(id)->getString(name) : "";
 }
 
 inline QString GenericDataCollection::getString(const int id, const QString& name, const QString& defaultValue) const
 {
-  return hasObject(id) ? m_objects.value(id)->getString(name) : defaultValue;
+  return containsObject(id) ? m_objects.value(id)->getString(name) : defaultValue;
 }
 
 inline int GenericDataCollection::getInt(const int id, const QString& name, const int defaultValue) const
 {
-  return hasObject(id) ? m_objects.value(id)->getInt(name) : defaultValue;
+  return containsObject(id) ? m_objects.value(id)->getInt(name) : defaultValue;
 }
 
 inline double GenericDataCollection::getDouble(const int id, const QString& name, const double defaultValue) const
 {
-  return hasObject(id) ? m_objects.value(id)->getDouble(name) : defaultValue;
+  return containsObject(id) ? m_objects.value(id)->getDouble(name) : defaultValue;
 }
 
 inline QDate GenericDataCollection::getDate(const int id, const QString& name) const
 {
-  return hasObject(id) ? m_objects.value(id)->getDate(name) : QDate::currentDate();
+  return containsObject(id) ? m_objects.value(id)->getDate(name) : QDate::currentDate();
 }
 
 inline QDate GenericDataCollection::getDate(const int id, const QString& name, const QDate& defaultValue) const
 {
-  return hasObject(id) ? m_objects.value(id)->getDate(name) : defaultValue;
+  return containsObject(id) ? m_objects.value(id)->getDate(name) : defaultValue;
 }
 
 inline QDateTime GenericDataCollection::getDateTime(const int id, const QString& name) const
 {
-  return hasObject(id) ? m_objects.value(id)->getDateTime(name) : QDateTime::currentDateTime();
+  return containsObject(id) ? m_objects.value(id)->getDateTime(name) : QDateTime::currentDateTime();
 }
 
 inline QDateTime GenericDataCollection::getDateTime(const int id, const QString& name, const QDateTime& defaultValue) const
 {
-  return hasObject(id) ? m_objects.value(id)->getDateTime(name) : defaultValue;
+  return containsObject(id) ? m_objects.value(id)->getDateTime(name) : defaultValue;
 }
 
 inline const QString GenericDataCollection::getPropertyName(const int i) const

@@ -9,6 +9,7 @@
 #include "sqldialog.h"
 #include "genericdatacollectiontabledialog.h"
 #include "describesqltables.h"
+#include "genericdatacollections.h"
 
 #include <QMessageBox>
 #include <QStringList>

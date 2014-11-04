@@ -26,7 +26,7 @@ CSVLine::~CSVLine()
 
 void CSVLine::setOriginalLine(const QString& originalLine)
 {
-  if (hasOriginalLine())
+  if (containsOriginalLine())
   {
     *m_originalLine = originalLine;
   }
@@ -71,7 +71,7 @@ const CSVLine& CSVLine::copyFrom(const CSVLine& x)
 {
   if (this != &x)
   {
-    if (x.hasOriginalLine())
+    if (x.containsOriginalLine())
     {
       setOriginalLine(x.getOrignalLine());
     }

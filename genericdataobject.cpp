@@ -19,20 +19,20 @@ GenericDataObject::GenericDataObject(const GenericDataObject& obj, QObject *pare
 QString GenericDataObject::getString(const QString& name) const
 {
   QString lower = name.toLower();
-  return hasValueNoCase(lower) ? m_properties.value(lower).toString() : "";
+  return containsValueNoCase(lower) ? m_properties.value(lower).toString() : "";
 }
 
 QString GenericDataObject::getString(const QString& name, const QString& defaultValue) const
 {
   QString lower = name.toLower();
-  return hasValueNoCase(lower) ? m_properties.value(lower).toString() : defaultValue;
+  return containsValueNoCase(lower) ? m_properties.value(lower).toString() : defaultValue;
 }
 
 
 int GenericDataObject::getInt(const QString& name, const int defaultValue) const
 {
   QString lower = name.toLower();
-  if (hasValueNoCase(lower))
+  if (containsValueNoCase(lower))
   {
     bool ok = false;
     int i = m_properties.value(lower).toInt(&ok);
@@ -47,7 +47,7 @@ int GenericDataObject::getInt(const QString& name, const int defaultValue) const
 double GenericDataObject::getDouble(const QString& name, const double defaultValue) const
 {
   QString lower = name.toLower();
-  if (hasValueNoCase(lower))
+  if (containsValueNoCase(lower))
   {
     bool ok = false;
     double i = m_properties.value(lower).toDouble(&ok);
@@ -62,39 +62,39 @@ double GenericDataObject::getDouble(const QString& name, const double defaultVal
 QDate GenericDataObject::getDate(const QString& name) const
 {
   QString lower = name.toLower();
-  return hasValueNoCase(lower) ? m_properties.value(lower).toDate() : QDate::currentDate();
+  return containsValueNoCase(lower) ? m_properties.value(lower).toDate() : QDate::currentDate();
 }
 
 QDate GenericDataObject::getDate(const QString& name, const QDate& defaultValue) const
 {
   QString lower = name.toLower();
-  return hasValueNoCase(lower) ? m_properties.value(lower).toDate() : defaultValue;
+  return containsValueNoCase(lower) ? m_properties.value(lower).toDate() : defaultValue;
 }
 
 
 QDateTime GenericDataObject::getDateTime(const QString& name) const
 {
   QString lower = name.toLower();
-  return hasValueNoCase(lower) ? m_properties.value(lower).toDateTime() : QDateTime::currentDateTime();
+  return containsValueNoCase(lower) ? m_properties.value(lower).toDateTime() : QDateTime::currentDateTime();
 }
 
 QDateTime GenericDataObject::getDateTime(const QString& name, const QDateTime& defaultValue) const
 {
   QString lower = name.toLower();
-  return hasValueNoCase(lower) ? m_properties.value(lower).toDateTime() : defaultValue;
+  return containsValueNoCase(lower) ? m_properties.value(lower).toDateTime() : defaultValue;
 }
 
 
 QTime GenericDataObject::getTime(const QString& name) const
 {
   QString lower = name.toLower();
-  return hasValueNoCase(lower) ? m_properties.value(lower).toTime() : QTime::currentTime();
+  return containsValueNoCase(lower) ? m_properties.value(lower).toTime() : QTime::currentTime();
 }
 
 QTime GenericDataObject::getTime(const QString& name, const QTime& defaultValue) const
 {
   QString lower = name.toLower();
-  return hasValueNoCase(lower) ? m_properties.value(lower).toTime() : defaultValue;
+  return containsValueNoCase(lower) ? m_properties.value(lower).toTime() : defaultValue;
 }
 
 const GenericDataObject& GenericDataObject::operator=(const GenericDataObject& obj)
@@ -127,14 +127,14 @@ int GenericDataObject::compare(const GenericDataObject& obj, const QList<TableSo
         const TableSortField* sortField = i.next();
         if (sortField != nullptr)
         {
-            if (!obj.hasValueNoCase(sortField->fieldName()))
+            if (!obj.containsValueNoCase(sortField->fieldName()))
             {
-                if (hasValueNoCase(sortField->fieldName()))
+                if (containsValueNoCase(sortField->fieldName()))
                 {
                     return sortField->isAscending() ? 1 : -1;
                 }
             }
-            else if (!hasValueNoCase(sortField->fieldName()))
+            else if (!containsValueNoCase(sortField->fieldName()))
             {
                 return sortField->isAscending() ? -1 : 1;
             }
@@ -154,14 +154,14 @@ int GenericDataObject::compare(const GenericDataObject& obj, const QStringList& 
     int rc = 0;
     for (int i=0; rc==0 && i<fields.count(); ++i)
     {
-        if (!obj.hasValueNoCase(fields.at(i)))
+        if (!obj.containsValueNoCase(fields.at(i)))
         {
-            if (hasValueNoCase(fields.at(i)))
+            if (containsValueNoCase(fields.at(i)))
             {
                 return 1;
             }
         }
-        else if (!hasValueNoCase(fields.at(i)))
+        else if (!containsValueNoCase(fields.at(i)))
         {
             return -1;
         }
@@ -275,7 +275,7 @@ bool GenericDataObject::fieldNameMeansDateTime(const QString &name)
 bool GenericDataObject::setBindValue(QSqlQuery& query, const QString& paramName, const QString& fieldName, const SqlFieldType& fieldType, bool missingMeansNull) const
 {
     QString lower = fieldName.toLower();
-    if (hasValueNoCase(lower)) {
+    if (containsValueNoCase(lower)) {
         query.bindValue(paramName, m_properties.value(lower));
     } else {
         if (missingMeansNull) {

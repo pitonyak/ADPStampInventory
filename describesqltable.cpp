@@ -258,7 +258,6 @@ QXmlStreamWriter& DescribeSqlTable::writeXml(QXmlStreamWriter& writer) const
   return writer;
 }
 
-
 QString DescribeSqlTable::getDDL(const bool prettyPrint) const
 {
   QString ddl;
@@ -277,3 +276,16 @@ QString DescribeSqlTable::getDDL(const bool prettyPrint) const
   ddl = ddl.append(" )");
   return ddl;
 }
+
+QSet<QString> DescribeSqlTable::getLinkedTableNames() const
+{
+    QSet<QString> linkedTableNames;
+    for (QHash<QString, DescribeSqlField>::const_iterator i = m_fields.begin(); i != m_fields.end(); ++i)
+    {
+        if (i.value().isLinkField()) {
+            linkedTableNames << i.value().getLinkTableName();
+        }
+    }
+    return linkedTableNames;
+}
+

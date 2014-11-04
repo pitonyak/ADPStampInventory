@@ -68,14 +68,14 @@ public:
      *  \param [in] metaType Type of interest.
      *  \return True if the type is known by this class, false otherwise.
      */
-    bool hasMetaTypeEntry(const QMetaType::Type metaType) const;
+    bool containsMetaTypeEntry(const QMetaType::Type metaType) const;
 
     /*! \brief Determine if this class knows the type.
      *
      *  \param [in] variantType Type of interest.
      *  \return True if the type is known by this class, false otherwise.
      */
-    bool hasVariantTypeEntry(const QVariant::Type variantType) const;
+    bool containsVariantTypeEntry(const QVariant::Type variantType) const;
 
     /*! \brief Try to parse the string and guess the type.
      *
@@ -157,20 +157,20 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(TypeMapper::ColumnConversionPreferences)
 
 inline QVariant::Type TypeMapper::metaToVariantType(const QMetaType::Type metaType) const
 {
-    return hasMetaTypeEntry(metaType) ? m_typeMapMetaToVariant[metaType] : QVariant::Invalid;
+    return containsMetaTypeEntry(metaType) ? m_typeMapMetaToVariant[metaType] : QVariant::Invalid;
 }
 
 inline QMetaType::Type TypeMapper::variantTypeToMetaType(const QVariant::Type variantType) const
 {
-  return hasVariantTypeEntry(variantType) ? m_typeMapVariantToMeta[variantType] : QMetaType::Void;
+  return containsVariantTypeEntry(variantType) ? m_typeMapVariantToMeta[variantType] : QMetaType::Void;
 }
 
-inline bool TypeMapper::hasMetaTypeEntry(const QMetaType::Type metaType) const
+inline bool TypeMapper::containsMetaTypeEntry(const QMetaType::Type metaType) const
 {
     return m_typeMapMetaToVariant.contains(metaType);
 }
 
-inline bool TypeMapper::hasVariantTypeEntry(const QVariant::Type variantType) const
+inline bool TypeMapper::containsVariantTypeEntry(const QVariant::Type variantType) const
 {
   return m_typeMapVariantToMeta.contains(variantType);
 }

@@ -2,6 +2,8 @@
 #include "csvwriter.h"
 
 #include <QMetaType>
+#include <QUrl>
+#include <QUuid>
 
 GenericDataCollection::GenericDataCollection(QObject *parent) :
   QObject(parent), m_largestId(-1), m_trackChanges(false)
@@ -43,7 +45,7 @@ void GenericDataCollection::appendObject(const int id, GenericDataObject* obj)
 
 void GenericDataCollection::removeObject(const int id)
 {
-  if (hasObject(id))
+  if (containsObject(id))
   {
     m_sortedIDs.removeOne(id);
     delete m_objects.take(id);
@@ -131,7 +133,7 @@ bool GenericDataCollection::exportToCSV(CSVWriter& writer) const
     GenericDataObject* obj = m_objects.value(objKeys[idx]);
     for (int i=0; i<getPropertNames().count(); ++i)
     {
-      if (obj->hasValue(getPropertyName(i)))
+      if (obj->containsValue(getPropertyName(i)))
       {
         QMetaType::Type columnType = getPropertyTypeMeta(i);
         bool qualified = (columnType == QMetaType::QString);
@@ -247,7 +249,7 @@ const GenericDataCollection& GenericDataCollection::operator=(const GenericDataC
 
 bool GenericDataCollection::addSortField(const QString& name, const Qt::SortOrder order, Qt::CaseSensitivity sensitive)
 {
-    if (!hasProperty(name))
+    if (!containsProperty(name))
     {
         return false;
     }
@@ -285,34 +287,61 @@ GenericDataObject* GenericDataCollection::createEmptyObject() const
         } else {
             switch (m_metaTypes.at(i))
             {
-            case QVariant::Bool :
+            case QMetaType::Bool :
                 data->setValue(m_propertyNames.at(i), false);
                 break;
-            case QVariant::Int :
-            case QVariant::UInt :
-            case QVariant::LongLong :
-            case QVariant::ULongLong :
+            case QMetaType::Int :
+            case QMetaType::UInt :
+            case QMetaType::LongLong :
+            case QMetaType::ULongLong :
+            case QMetaType::Long :
+            case QMetaType::ULong :
+            case QMetaType::Short :
+            case QMetaType::UShort :
                 data->setValue(m_propertyNames.at(i), 0);
                 break;
-            case QVariant::Char :
-            case QVariant::String :
-            case QVariant::Url :
+            case QMetaType::Char :
+            case QMetaType::QChar :
+            case QMetaType::UChar :
+            case QMetaType::SChar :
+                data->setValue(m_propertyNames.at(i), 'X');
+                break;
+
+            case QMetaType::QString :
                 data->setValue(m_propertyNames.at(i), "");
                 break;
-            case QVariant::Double :
+
+            case QMetaType::QUrl :
+                data->setValue(m_propertyNames.at(i), QUrl());
+                break;
+
+            case QVariant::Uuid :
+                data->setValue(m_propertyNames.at(i), QUuid());
+                break;
+
+            case QMetaType::Double :
+            case QMetaType::Float :
                 data->setValue(m_propertyNames.at(i), 0.0);
                 break;
-            case QVariant::QVariant::Date :
+
+            case QMetaType::QDate :
                 data->setValue(m_propertyNames.at(i), QDate::currentDate());
                 break;
-            case QVariant::QVariant::DateTime :
+
+            case QMetaType::QDateTime :
                 data->setValue(m_propertyNames.at(i), QDateTime::currentDateTime());
                 break;
-            case QVariant::Time :
+
+            case QMetaType::QTime :
                 data->setValue(m_propertyNames.at(i), QTime::currentTime());
                 break;
+
+            case QMetaType::QStringList :
+                data->setValue(m_propertyNames.at(i), QStringList());
+                break;
+
             default:
-              qDebug(qPrintable(QString("Type name %1 not supported").arg(QMetaType::typeName(m_metaTypes.at(i)))));
+              qDebug(qPrintable(QString("Type %1 not supported").arg(QMetaType::typeName(m_metaTypes.at(i)))));
             }
         }
     }

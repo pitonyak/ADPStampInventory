@@ -211,50 +211,55 @@ bool GenericDataCollectionTableModel::saveTrackedChanges(const QString& tableNam
               query.prepare(sSQL);
               for (int iCol=0; iCol<data.getPropertNames().count(); ++iCol)
               {
-                switch (data.getPropertyTypeMeta(iCol))
+                if (!newData->containsValue(data.getPropertyName(iCol)))
                 {
-                case QMetaType::Bool :
-                case QMetaType::Int :
-                case QMetaType::UInt :
-                case QMetaType::LongLong :
-                case QMetaType::ULongLong :
-                //??case QVariant::Bool :
-                //??case QVariant::Int :
-                //??case QVariant::UInt :
-                //??case QVariant::LongLong :
-                //??case QVariant::ULongLong :
-                    query.bindValue(QString(":%1").arg(data.getPropertyName(iCol)), newData->getInt(data.getPropertyName(iCol)));
-                    break;
-                case QMetaType::Char :
-                case QMetaType::QString :
-                case QMetaType::QUrl :
-                case QMetaType::QStringList :
-                //??case QVariant::Char :
-                //??case QVariant::String :
-                //??case QVariant::Url :
-                //??case QVariant::StringList :
-                    query.bindValue(QString(":%1").arg(data.getPropertyName(iCol)), newData->getString(data.getPropertyName(iCol)));
-                    break;
-                case QMetaType::Double :
-                case QMetaType::Float :
-                //??case QVariant::Double :
-                    query.bindValue(QString(":%1").arg(data.getPropertyName(iCol)), newData->getDouble(data.getPropertyName(iCol)));
-                    break;
-                case QMetaType::QDate :
-                //case QVariant::Date :
-                    query.bindValue(QString(":%1").arg(data.getPropertyName(iCol)), newData->getDate(data.getPropertyName(iCol)));
-                    break;
-                case QMetaType::QDateTime :
-                //??case QVariant::QVariant::DateTime :
-                    query.bindValue(QString(":%1").arg(data.getPropertyName(iCol)), newData->getDateTime(data.getPropertyName(iCol)));
-                    break;
-                case QMetaType::QTime :
-                //??case QVariant::Time :
-                    query.bindValue(QString(":%1").arg(data.getPropertyName(iCol)), newData->getTime(data.getPropertyName(iCol)));
-                    break;
-                default:
-                  qDebug(qPrintable(QString("Type name %1 not supported").arg(QMetaType::typeName(data.getPropertyTypeMeta(iCol)))));
-                }
+                    TypeMapper mapper;
+                    query.bindValue(QString(":%1").arg(data.getPropertyName(iCol)), QVariant(mapper.metaToVariantType(data.getPropertyTypeMeta(iCol))));
+                } else {
+                    // Assume that it converts to the correct type!
+                    query.bindValue(QString(":%1").arg(data.getPropertyName(iCol)), newData->getValueNative(data.getPropertyName(iCol)));
+                } /** else {
+                    switch (data.getPropertyTypeMeta(iCol))
+                    {
+                    case QMetaType::Bool :
+                    case QMetaType::Int :
+                    case QMetaType::UInt :
+                    case QMetaType::LongLong :
+                    case QMetaType::ULongLong :
+                        query.bindValue(QString(":%1").arg(data.getPropertyName(iCol)), newData->getInt(data.getPropertyName(iCol)));
+                        break;
+                    case QMetaType::Char :
+                    case QMetaType::QChar :
+                    case QMetaType::UChar :
+                    case QMetaType::SChar :
+                    case QMetaType::QString :
+                    case QMetaType::QStringList :
+                        query.bindValue(QString(":%1").arg(data.getPropertyName(iCol)), newData->getString(data.getPropertyName(iCol)));
+                        break;
+
+                    // Do I need a special case for this?
+                    case QMetaType::QUrl :
+                    case QMetaType::QUuid :
+                        query.bindValue(QString(":%1").arg(data.getPropertyName(iCol)), newData->getString(data.getPropertyName(iCol)));
+                        break;
+
+                    case QMetaType::Double :
+                    case QMetaType::Float :
+                        query.bindValue(QString(":%1").arg(data.getPropertyName(iCol)), newData->getDouble(data.getPropertyName(iCol)));
+                        break;
+                    case QMetaType::QDate :
+                        query.bindValue(QString(":%1").arg(data.getPropertyName(iCol)), newData->getDate(data.getPropertyName(iCol)));
+                        break;
+                    case QMetaType::QDateTime :
+                        query.bindValue(QString(":%1").arg(data.getPropertyName(iCol)), newData->getDateTime(data.getPropertyName(iCol)));
+                        break;
+                    case QMetaType::QTime :
+                        query.bindValue(QString(":%1").arg(data.getPropertyName(iCol)), newData->getTime(data.getPropertyName(iCol)));
+                        break;
+                    default:
+                      qDebug(qPrintable(QString("Type name %1 not supported").arg(QMetaType::typeName(data.getPropertyTypeMeta(iCol)))));
+                    }
+                } **/
               }
               if (!query.exec())
               {
@@ -298,6 +303,16 @@ bool GenericDataCollectionTableModel::saveTrackedChanges(const QString& tableNam
               query.prepare(s);
               query.bindValue(":id", oldData->getInt("id"));
               qDebug(qPrintable(QString("where id = %1").arg(oldData->getInt("id"))));
+
+              if (!newData->containsValue(fieldName))
+              {
+                  TypeMapper mapper;
+                  query.bindValue(QString(":%1").arg(fieldName), QVariant(mapper.metaToVariantType(data.getPropertyTypeMeta(fieldName))));
+              } else {
+                  // Assume that it converts to the correct type!
+                  query.bindValue(QString(":%1").arg(fieldName), newData->getValueNative(fieldName));
+              }
+              /**
               switch (data.getPropertyTypeMeta(fieldName))
               {
               case QMetaType::Bool :
@@ -305,11 +320,6 @@ bool GenericDataCollectionTableModel::saveTrackedChanges(const QString& tableNam
               case QMetaType::UInt :
               case QMetaType::LongLong :
               case QMetaType::ULongLong :
-              //??case QVariant::Bool :
-              //??case QVariant::Int :
-              //??case QVariant::UInt :
-              //??case QVariant::LongLong :
-              //??case QVariant::ULongLong :
                   query.bindValue(QString(":%1").arg(fieldName), newData->getInt(fieldName));
                   qDebug(qPrintable(QString("%1 = %2").arg(fieldName).arg(newData->getInt(fieldName))));
                   break;
@@ -317,42 +327,28 @@ bool GenericDataCollectionTableModel::saveTrackedChanges(const QString& tableNam
               case QMetaType::QString :
               case QMetaType::QUrl :
               case QMetaType::QStringList :
-              //??case QVariant::Char :
-              //??case QVariant::String :
-              //??case QVariant::Url :
-              //??case QVariant::StringList :
                   query.bindValue(QString(":%1").arg(fieldName), newData->getString(fieldName));
                   qDebug(qPrintable(QString("%1 = %2").arg(fieldName).arg(newData->getString(fieldName))));
                   break;
               case QMetaType::Double :
               case QMetaType::Float :
-              //??case QVariant::Double :
-                  query.bindValue(QString(":%1").arg(fieldName), newData->getDouble(fieldName));
-                  qDebug(qPrintable(QString("%1 = %2").arg(fieldName).arg(newData->getDouble(fieldName))));
-                  break;
               case QMetaType::QDate :
               //case QVariant::Date :
                   query.bindValue(QString(":%1").arg(fieldName), newData->getDate(fieldName));
                   qDebug(qPrintable(QString("%1 = %2").arg(fieldName).arg(newData->getString(fieldName))));
                   break;
-              //??case QVariant::QVariant::DateTime :
-              //??case QVariant::Time :
-              //??    query.bindValue(QString(":%1").arg(fieldName), newData->getDateTime(fieldName));
-              //??    qDebug(qPrintable(QString("%1 = %2").arg(fieldName).arg(newData->getString(fieldName))));
-              //??    break;
               case QMetaType::QDateTime :
-              //??case QVariant::QVariant::DateTime :
                   query.bindValue(QString(":%1").arg(fieldName), newData->getDateTime(fieldName));
                   qDebug(qPrintable(QString("%1 = %2").arg(fieldName).arg(newData->getString(fieldName))));
                   break;
               case QMetaType::QTime :
-              //??case QVariant::Time :
                   query.bindValue(QString(":%1").arg(fieldName), newData->getTime(fieldName));
                   qDebug(qPrintable(QString("%1 = %2").arg(fieldName).arg(newData->getString(fieldName))));
                   break;
               default:
                 qDebug(qPrintable(QString("Type name %1 not supported").arg(QMetaType::typeName(data.getPropertyTypeMeta(fieldName)))));
               }
+              **/
               if (!query.exec())
               {
                 qDebug("Failed to update row");

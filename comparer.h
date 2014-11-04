@@ -1,6 +1,8 @@
 #ifndef COMPARER_H
 #define COMPARER_H
 
+#include "typemapper.h"
+
 #include <QObject>
 #include <QVariant>
 
@@ -94,7 +96,7 @@ public slots:
 private:
   FilterFlags m_flags;
   QString m_fieldName;
-
+  static TypeMapper mapper;
 };
 
 

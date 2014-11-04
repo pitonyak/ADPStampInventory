@@ -39,18 +39,18 @@ public:
    *  \param [in] name Property name of interest.
    *  \return True if there is a value for this property. Note that null values are generally not added and this is how you can test for that.
    */
-  inline bool hasValue(const QString& name) const;
+  inline bool containsValue(const QString& name) const;
 
   /*! \brief Determine if the property was set.
    *  \param [in] name Lowercase version of the property name of interest.
    *  \return True if there is a value for this property. Note that null values are generally not added and this is how you can test for that.
    */
-  inline bool hasValueNoCase(const QString& name) const;
+  inline bool containsValueNoCase(const QString& name) const;
 
   /*! \brief Get the value associated to the name with no checking or smart translations.
    *
    *  A default QVariant object is constructed and returned if a property with that name
-   *  does not exist. So, it is best to call hasValue to make sure that you get what you want.
+   *  does not exist. So, it is best to call containsValue to make sure that you get what you want.
    *
    *  Ultimately, this method directly accesses m_properties object without making any checks.
    *
@@ -200,12 +200,12 @@ inline void GenericDataObject::setValueNative(const QString &name, const QVarian
   m_properties.insert(name.toLower(), value);
 }
 
-inline bool GenericDataObject::hasValue(const QString& name) const
+inline bool GenericDataObject::containsValue(const QString& name) const
 {
-  return hasValueNoCase(name.toLower());
+  return containsValueNoCase(name.toLower());
 }
 
-inline bool GenericDataObject::hasValueNoCase(const QString& name) const
+inline bool GenericDataObject::containsValueNoCase(const QString& name) const
 {
   return m_properties.contains(name);
 }
@@ -217,7 +217,7 @@ inline GenericDataObject* GenericDataObject::clone(QObject *parent) const
 
 inline bool GenericDataObject::valueIs(const QString& lowerCaseName, const QString& compareValue, const Qt::CaseSensitivity sensitive) const
 {
-  return hasValueNoCase(lowerCaseName) && (m_properties.value(lowerCaseName).toString().compare(compareValue, sensitive) == 0);
+  return containsValueNoCase(lowerCaseName) && (m_properties.value(lowerCaseName).toString().compare(compareValue, sensitive) == 0);
 }
 
 #endif // GENERICDATAOBJECT_H

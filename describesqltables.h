@@ -27,7 +27,9 @@ public:
   int getTableCount() const { return m_names.count(); }
   QStringList getTableNames() const { return m_names; }
   QString getNameByIndex(const int index) const;
-  bool hasTable(const QString& name) const;
+  bool containsTable(const QString& name) const;
+
+  QSet<QString> getLinkedTableNames(const QString& tableName) const;
 
   DescribeSqlTable getTableByName(const QString& name) const;
   DescribeSqlTable getTableByIndex(const int index) const;
@@ -78,7 +80,7 @@ private:
   QHash<QString, DescribeSqlTable> m_tables;
 };
 
-inline bool DescribeSqlTables::hasTable(const QString& name) const
+inline bool DescribeSqlTables::containsTable(const QString& name) const
 {
   return m_tables.contains(name.toLower());
 }

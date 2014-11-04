@@ -309,7 +309,7 @@ int TableSortFieldTableModel::count() const
   return m_collection.count();
 }
 
-bool TableSortFieldTableModel::hasFieldName(const QString& name) const
+bool TableSortFieldTableModel::containsFieldName(const QString& name) const
 {
   for (int i=0; i<m_collection.size(); ++i)
   {

@@ -81,9 +81,8 @@ bool CSVColumn::canConvertToVariant() const
 
 QVariant CSVColumn::toVariant() const
 {
-  QVariant::Type varType = m_typeMap.metaToVariantType(m_type);
   QVariant v = QVariant::fromValue(m_value);
-  if (v.convert(varType))
+  if (v.convert(m_type))
   {
     return v;
   }

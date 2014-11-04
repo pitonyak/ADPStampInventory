@@ -22,7 +22,7 @@ bool GenericDataObjectLessThanById::operator()(const int left, const int right) 
 {
   Q_ASSERT_X(m_sortFields != nullptr, "GenericDataObjectLessThanById::operator()", "Sort Fields object is NULL");
   Q_ASSERT_X(m_data != nullptr, "GenericDataObjectLessThanById::operator()", "Data Container object is NULL");
-  Q_ASSERT_X(m_data->hasObject(left), "GenericDataObjectLessThanById::operator()", qPrintable(QString("data container does not have left object with ID %1").arg(left)));
-  Q_ASSERT_X(m_data->hasObject(right), "GenericDataObjectLessThanById::operator()", qPrintable(QString("data container does not have right object with ID %1").arg(right)));
+  Q_ASSERT_X(m_data->containsObject(left), "GenericDataObjectLessThanById::operator()", qPrintable(QString("data container does not have left object with ID %1").arg(left)));
+  Q_ASSERT_X(m_data->containsObject(right), "GenericDataObjectLessThanById::operator()", qPrintable(QString("data container does not have right object with ID %1").arg(right)));
   return m_data->getObjectById(left)->compare(*m_data->getObjectById(right), *m_sortFields) < 0;
 }

@@ -4,6 +4,7 @@
 #include <QString>
 #include <QStringList>
 #include <QHash>
+#include <QSet>
 #include "describesqlfield.h"
 
 class SqlFieldTypeMaster;
@@ -40,7 +41,7 @@ public:
   int getFieldCount() const { return m_names.count(); }
   QStringList getFieldNames() const { return m_names; }
   QString getFieldNameByIndex(const int index) const;
-  bool hasField(const QString& name) const;
+  bool containsField(const QString& name) const;
 
   DescribeSqlField getFieldByName(const QString& name) const;
   DescribeSqlField getFieldByIndex(const int index) const;
@@ -56,6 +57,8 @@ public:
   void setFieldRequired(const QString& name, bool x);
   void setFieldLink(const QString& name, const QString& linkTableName, const QString& linkFieldName);
   void setFieldCurrencySymbol(const QString& name, const QString& currencySymbol);
+
+  QSet<QString> getLinkedTableNames() const;
 
   QXmlStreamWriter& writeXml(QXmlStreamWriter& writer) const;
   static DescribeSqlTable readXml(QXmlStreamReader& reader);
@@ -86,7 +89,7 @@ private:
   QHash<QString, DescribeSqlField> m_fields;
 };
 
-inline bool DescribeSqlTable::hasField(const QString& name) const
+inline bool DescribeSqlTable::containsField(const QString& name) const
 {
   return m_fields.contains(name.toLower());
 }
