@@ -55,7 +55,7 @@ public:
   void setFieldKey(const QString& name, bool x);
   void setFieldAutoIncrement(const QString& name, bool x);
   void setFieldRequired(const QString& name, bool x);
-  void setFieldLink(const QString& name, const QString& linkTableName, const QString& linkFieldName);
+  void setFieldLink(const QString& name, const QString& linkTableName, const QString& linkFieldName, const QString& linkDisplayFields);
   void setFieldCurrencySymbol(const QString& name, const QString& currencySymbol);
 
   QSet<QString> getLinkedTableNames() const;

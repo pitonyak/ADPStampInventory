@@ -12,7 +12,7 @@ class DescribeSqlTables;
 //**************************************************************************
 /*! \class GenericDataCollectionTableModel
  *
- * \brief Table model for a GenericDataCollection.
+ * \brief Table model for a GenericDataCollection; which means you are editing a single "table".
  *
  * Provides general editing capability, but, you cannot edit a column named "id".
  *
@@ -75,7 +75,7 @@ public:
     int rowCount( const QModelIndex &parent = QModelIndex() ) const;
 
     //**************************************************************************
-    /*! \brief Returns the number of columns for the children of the given parent.
+    /*! \brief Returns the number of columns for the children of the given parent. This means number of columns / properties.
      *
      *  \param [in] parent Parent item when using a tree type model.
      *  \return Returns the number of columns for the children of the given parent.

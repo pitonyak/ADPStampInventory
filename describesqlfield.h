@@ -54,6 +54,9 @@ public:
   /*! \brief If this field is a foreign key to another table, this returns the key field name in the linked table. */
   QString getLinkFieldName() const { return m_linkField; }
 
+  QStringList getLinkDisplayField() const;
+
+
   /*! \brief If this is currency, return an appropriate currency symbol, such as "$". */
   QString getCurrencySymbol() const { return m_currencySymbol; }
   bool isAutoIncrement() const { return m_isAutoIncrement; }
@@ -80,6 +83,7 @@ public:
   void setPreferredTypeName(const QString& preferredName) { m_preferredTypeName = preferredName; }
   void setLinkTableName(const QString& linkTableName) { m_linkTable = linkTableName; }
   void setLinkFieldName(const QString& linkFieldName) { m_linkField = linkFieldName; }
+  void setLinkDisplayField(const QString& linkDisplayField) { m_linkDisplayField = linkDisplayField; }
   void setCurrencySymbol(const QString& currencySymbol) { m_currencySymbol = currencySymbol; }
   void setIsAutoIncrement(const bool isAutoInc) { m_isAutoIncrement = isAutoInc; }
   void setIsRequired(const bool isReq) { m_isRequired = isReq; }
@@ -124,6 +128,9 @@ private:
 
   /*! \brief Name of the field to which this field is linked in the associated link table. */
   QString m_linkField;
+
+  /*! \brief Name of the field to display. This is a comma separated list of field names. */
+  QString m_linkDisplayField;
 
   /*! \brief If not empty, then this is a currency field. */
   QString m_currencySymbol;

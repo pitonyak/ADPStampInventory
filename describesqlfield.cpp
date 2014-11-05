@@ -34,6 +34,7 @@ const DescribeSqlField& DescribeSqlField::copy(const DescribeSqlField& field)
     setFieldLength(field.getFieldLength());
     setFieldPrecision(field.getFieldPrecision());
     setCurrencySymbol(field.getCurrencySymbol());
+    setLinkDisplayField(field.m_linkDisplayField);
   }
   return *this;
 }
@@ -187,4 +188,17 @@ QString DescribeSqlField::getDDL() const
   // ddl = ddl.append(QString(" [%1, %2, %3]").arg(getViewName()).arg(getFieldLength()).arg(getDescription()));
 
   return ddl;
+}
+
+
+QStringList DescribeSqlField::getLinkDisplayField() const
+{
+  if (!m_linkDisplayField.contains(',')) {
+    QStringList l;
+    l << m_linkDisplayField;
+    //qDebug(qPrintable(QString("adding [%1] to the list").arg(m_linkDisplayField)));
+    return l;
+  }
+  //qDebug(qPrintable(QString("Spliting [%1]").arg(m_linkDisplayField)));
+  return m_linkDisplayField.split(',');
 }

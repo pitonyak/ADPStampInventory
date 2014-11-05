@@ -1,5 +1,6 @@
 #include "genericdatacollectiontabledialog.h"
 #include "genericdatacollectiontablemodel.h"
+#include "genericdatacollectionstablemodel.h"
 #include "linkbackfilterdelegate.h"
 #include "checkboxonlydelegate.h"
 #include "constants.h"
@@ -17,11 +18,12 @@
 #include <QItemSelection>
 #include <QSortFilterProxyModel>
 
-GenericDataCollectionTableDialog::GenericDataCollectionTableDialog(const QString& name, GenericDataCollection &data, StampDB &db, DescribeSqlTables& schema, QWidget *parent) :
+GenericDataCollectionTableDialog::GenericDataCollectionTableDialog(const QString& tableName, GenericDataCollection &data, StampDB &db, DescribeSqlTables& schema, GenericDataCollections *tables, QWidget *parent) :
   QDialog(parent),
   m_duplicateButton(nullptr), m_addButton(nullptr), m_deleteButton(nullptr), m_undoButton(nullptr),
   m_SaveChangesButton(nullptr),
-  m_dataCollection(data), m_tableView(nullptr), m_name(name), m_tableModel(nullptr),
+  m_table(data), m_tables(tables), m_tableView(nullptr),
+  m_tableName(tableName), m_tableModel(nullptr),
   m_db(db), m_schema(schema)
 {
   buildDialog();
@@ -33,13 +35,15 @@ GenericDataCollectionTableDialog::~GenericDataCollectionTableDialog()
 
 void GenericDataCollectionTableDialog::buildDialog()
 {
-  setWindowTitle(tr("Edit Table %1").arg(m_name));
+  setWindowTitle(tr("Edit Table %1").arg(m_tableName));
   QVBoxLayout *vLayout;
   QHBoxLayout *hLayout;
 
   // Build the primary table.
   m_tableView = new QTableView();
-  m_tableModel = new GenericDataCollectionTableModel(m_dataCollection);
+  //??m_tableModel = new GenericDataCollectionTableModel(m_table);
+  Q_ASSERT_X(m_tables != nullptr, "GenericDataCollectionTableDialog::buildDialog()", "m_tables is null");
+  m_tableModel = new GenericDataCollectionsTableModel(m_tableName, *m_tables, m_schema);
 
   m_proxyModel = new QSortFilterProxyModel(this);
   m_proxyModel->setSourceModel(m_tableModel);
@@ -48,7 +52,7 @@ void GenericDataCollectionTableDialog::buildDialog()
   m_tableView->setModel(m_proxyModel);
   m_tableView->setSortingEnabled(true);
 
-  qDebug(qPrintable(QString("Num columns %1").arg(m_dataCollection.getPropertyNameCount())));
+  qDebug(qPrintable(QString("Num columns %1").arg(m_table.getPropertyNameCount())));
 
   // Parameter sets the owning parent that will delete the delegate.
   LinkBackFilterDelegate* delegate = new LinkBackFilterDelegate(m_tableView);
@@ -56,8 +60,8 @@ void GenericDataCollectionTableDialog::buildDialog()
 
   // For all columns that are boolean, use this delegate.
   CheckBoxOnlyDelegate * cboDelegate = nullptr;
-  for (int i=m_dataCollection.getPropertyNameCount() - 1; i>=0; --i) {
-    if (m_dataCollection.getPropertyTypeMeta(i) == QMetaType::Bool) {
+  for (int i=m_table.getPropertyNameCount() - 1; i>=0; --i) {
+    if (m_table.getPropertyTypeMeta(i) == QMetaType::Bool) {
       if (cboDelegate == nullptr) {
         cboDelegate = new CheckBoxOnlyDelegate(m_tableView);
       }
@@ -97,13 +101,13 @@ void GenericDataCollectionTableDialog::buildDialog()
   setLayout(vLayout);
 
   QSettings settings;
-  restoreGeometry(settings.value(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgGeometry).arg(m_name)).toByteArray());
-  QString s = settings.value(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgColumnWidths).arg(m_name)).toString();
+  restoreGeometry(settings.value(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgGeometry).arg(m_tableName)).toByteArray());
+  QString s = settings.value(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgColumnWidths).arg(m_tableName)).toString();
   if (s.length() > 0)
   {
     QStringList list = s.split(',');
     bool ok = true;
-    for (int i=0; i<list.count() && i<m_dataCollection.getPropertyNameCount(); ++i)
+    for (int i=0; i<list.count() && i<m_table.getPropertyNameCount(); ++i)
     {
       int width = list[i].toInt(&ok);
       if (ok && width > 0)
@@ -163,7 +167,7 @@ void GenericDataCollectionTableDialog::undoChange()
 
 void GenericDataCollectionTableDialog::saveChanges()
 {
-  m_tableModel->saveTrackedChanges(m_name, m_dataCollection, m_db.getDB(), m_schema);
+  m_tableModel->saveTrackedChanges(m_tableName, m_table, m_db.getDB(), m_schema);
   enableButtons();
 }
 
@@ -188,12 +192,12 @@ void GenericDataCollectionTableDialog::saveState()
   // by the time that this objects destructor was called. So, now this is called before the destructor.
   // save the dialog state.
   QSettings settings;
-  settings.setValue(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgGeometry).arg(m_name), saveGeometry());
+  settings.setValue(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgGeometry).arg(m_tableName), saveGeometry());
 
     if (m_tableView != nullptr)
     {
       QString s;
-      for (int i=0; i<m_dataCollection.getPropertyNameCount(); ++i)
+      for (int i=0; i<m_table.getPropertyNameCount(); ++i)
       {
         //qDebug(qPrintable(QString("(%1)(%2)").arg(i).arg(m_tableView->columnWidth(i))));
         if (s.length() > 0)
@@ -206,7 +210,7 @@ void GenericDataCollectionTableDialog::saveState()
         }
       }
       //qDebug(qPrintable(QString("(%1)(%2)").arg(m_name).arg(s)));
-      settings.setValue(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgColumnWidths).arg(m_name), s);
+      settings.setValue(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgColumnWidths).arg(m_tableName), s);
     }
 }
 

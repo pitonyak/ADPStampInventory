@@ -352,8 +352,8 @@ void MainWindow::configure()
       qDebug(qPrintable(QString("On return, number of rows = %1").arg(gdo->rowCount())));
 
       DescribeSqlTables schema = DescribeSqlTables::getStampSchema();
-      GenericDataCollectionTableDialog dlg(tableName, *gdo, *m_db, schema);
-      dlg.exec();
+      //GenericDataCollectionTableDialog dlg(tableName, *gdo, *m_db, schema);
+      //dlg.exec();
   }
 }
 
@@ -413,13 +413,13 @@ void MainWindow::editTable()
         GenericDataCollections* data = m_db->readTableWithLinks(tableName);
         Q_ASSERT_X(data != nullptr, "MainWindow::editTable", "Returned data is null");
 
-        ScrollMessageBox::information(this, "Supported Tables", data->getNames().join("\n"));
+        //??ScrollMessageBox::information(this, "Supported Tables", data->getNames().join("\n"));
 
         Q_ASSERT_X(data->contains(tableName), "MainWindow::editTable", "Table not returned");
         if (data != nullptr)
         {
           //GenericDataCollectionTableDialog dlg(tableName, *data, *m_db, schema);
-          GenericDataCollectionTableDialog dlg(tableName, *data->getTable(tableName), *m_db, schema);
+          GenericDataCollectionTableDialog dlg(tableName, *data->getTable(tableName), *m_db, schema, data);
           dlg.exec();
           delete data;
         }

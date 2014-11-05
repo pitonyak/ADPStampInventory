@@ -7,16 +7,18 @@
 
 class QTableView;
 class GenericDataCollectionTableModel;
+class GenericDataCollectionsTableModel;
 class QItemSelection;
 class QSortFilterProxyModel;
 class StampDB;
 class DescribeSqlTables;
+class GenericDataCollections;
 
 class GenericDataCollectionTableDialog : public QDialog
 {
   Q_OBJECT
 public:
-  explicit GenericDataCollectionTableDialog(const QString& name, GenericDataCollection& data, StampDB& db, DescribeSqlTables& schema, QWidget *parent = nullptr);
+  explicit GenericDataCollectionTableDialog(const QString& tableName, GenericDataCollection& data, StampDB& db, DescribeSqlTables& schema, GenericDataCollections *tables, QWidget *parent=nullptr);
 
   /*! \brief Destructor saves dialog geometry. */
   virtual ~GenericDataCollectionTableDialog();
@@ -61,16 +63,18 @@ private:
   QPushButton* m_SaveChangesButton;
 
   /*! \brief Identifies the columns and the types. */
-  GenericDataCollection& m_dataCollection;
+  GenericDataCollection& m_table;
+  GenericDataCollections *m_tables;
 
   /*! \brief View presented to the user */
   QTableView* m_tableView;
 
   /*! \brief Used for saving and restoring dialog sizes. */
-  QString m_name;
+  QString m_tableName;
 
   /*! \brief Actual data model to which changes are made and such. */
-  GenericDataCollectionTableModel* m_tableModel;
+  //??GenericDataCollectionTableModel* m_tableModel;
+  GenericDataCollectionsTableModel* m_tableModel;
 
   /*! \brief Used by the view to allow for sorting and similar. the actual table model is contained inside of this. */
   QSortFilterProxyModel* m_proxyModel;

@@ -173,12 +173,13 @@ void DescribeSqlTable::setFieldRequired(const QString& name, bool x)
   }
 }
 
-void DescribeSqlTable::setFieldLink(const QString& name, const QString& linkTableName, const QString& linkFieldName)
+void DescribeSqlTable::setFieldLink(const QString& name, const QString& linkTableName, const QString& linkFieldName, const QString& linkDisplayFields)
 {
   QString simpleName = name.toLower();
   if (m_fields.contains(simpleName)) {
     m_fields[simpleName].setLinkTableName(linkTableName);
     m_fields[simpleName].setLinkFieldName(linkFieldName);
+    m_fields[simpleName].setLinkDisplayField(linkDisplayFields);
   } else {
     qDebug(qPrintable(QString("Field name = '%1' is not found in table %2").arg(simpleName).arg(getName())));
   }
@@ -279,14 +280,12 @@ QString DescribeSqlTable::getDDL(const bool prettyPrint) const
 
 QSet<QString> DescribeSqlTable::getLinkedTableNames() const
 {
-  qDebug("Looking for linked table names");
   QSet<QString> linkedTableNames;
   for (QHash<QString, DescribeSqlField>::const_iterator i = m_fields.begin(); i != m_fields.end(); ++i)
   {
-    qDebug(qPrintable(QString("Field %1 is link field %2").arg(i.key()).arg(i.value().isLinkField())));
-      if (i.value().isLinkField()) {
-          linkedTableNames << i.value().getLinkTableName();
-      }
+    if (i.value().isLinkField()) {
+      linkedTableNames << i.value().getLinkTableName();
+    }
   }
   return linkedTableNames;
 }

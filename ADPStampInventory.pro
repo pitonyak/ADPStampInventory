@@ -78,7 +78,8 @@ SOURCES += main.cpp\
     describesqltable.cpp \
     describesqlfield.cpp \
     describesqltables.cpp \
-    genericdatacollections.cpp
+    genericdatacollections.cpp \
+    genericdatacollectionstablemodel.cpp
 
 HEADERS  += mainwindow.h \
     stampdb.h \
@@ -133,7 +134,8 @@ HEADERS  += mainwindow.h \
     describesqltable.h \
     describesqlfield.h \
     describesqltables.h \
-    genericdatacollections.h
+    genericdatacollections.h \
+    genericdatacollectionstablemodel.h
 
 FORMS    += mainwindow.ui \
     logroutinginfodialog.ui

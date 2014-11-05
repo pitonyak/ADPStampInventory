@@ -190,8 +190,8 @@ DescribeSqlTables DescribeSqlTables::getStampSchema()
              "description", "Description", "VARCHAR", "Describe the stamp", "200"};
   n=sizeof(catalog) / sizeof(catalog[0]);
   DescribeSqlTable catalogTable(catalog, n, true, &typeMaster);
-  catalogTable.setFieldLink("countryid", "country", "id");
-  catalogTable.setFieldLink("typeid", "catalogtype", "id");
+  catalogTable.setFieldLink("countryid", "country", "id", "a3");
+  catalogTable.setFieldLink("typeid", "catalogtype", "id", "name");
   catalogTable.setFieldCurrencySymbol("facevalue", "$");
   catalogTable.setFieldKey("id", true);
   schema.addTable(catalogTable);
@@ -201,12 +201,11 @@ DescribeSqlTables DescribeSqlTables::getStampSchema()
              "catalogid", "Catalog Id", "INTEGER", "Catalog from which the value was pulled", "10",
              "sourceid", "Source Id", "INTEGER", "?? What is this? Remove it?", "10",
              "valuetypeid", "Value Type Id", "INTEGER", "Value categorization such as mint or used.", "10",
-             "bookvalue", "Book Value", "DOUBLE", "What is this stampe worth", "10",
-             "description", "Description", "VARCHAR", "Describe the stamp", "200"};
+             "bookvalue", "Book Value", "DOUBLE", "What is this stampe worth", "10" };
   n=sizeof(bookValues) / sizeof(bookValues[0]);
   DescribeSqlTable bookValuesTable(bookValues, n, true, &typeMaster);
-  bookValuesTable.setFieldLink("catalogid", "catalog", "id");
-  bookValuesTable.setFieldLink("valuetypeid", "valuetype", "id");
+  bookValuesTable.setFieldLink("catalogid", "catalog", "id", "countryid,scott,typeid");
+  bookValuesTable.setFieldLink("valuetypeid", "valuetype", "id", "description");
   bookValuesTable.setFieldCurrencySymbol("bookvalue", "$");
   bookValuesTable.setFieldKey("id", true);
   schema.addTable(bookValuesTable);
@@ -231,12 +230,12 @@ DescribeSqlTables DescribeSqlTables::getStampSchema()
              "valuemultiplier", "Multiplier", "DOUBLE", "Use to set a premium over or under catelog value.", "10"};
   n=sizeof(inventory) / sizeof(inventory[0]);
   DescribeSqlTable inventoryTable(inventory, n, true, &typeMaster);
-  inventoryTable.setFieldLink("catalogid", "catalog", "id");
-  inventoryTable.setFieldLink("dealerid", "dealer", "id");
-  inventoryTable.setFieldLink("locationid", "stamplocation", "id");
+  inventoryTable.setFieldLink("catalogid", "catalog", "id", "countryid,scott,typeid");
+  inventoryTable.setFieldLink("dealerid", "dealer", "id", "name");
+  inventoryTable.setFieldLink("locationid", "stamplocation", "id", "name");
   inventoryTable.setFieldKey("id", true);
   // TODO: Remove type id.
-  inventoryTable.setFieldLink("typeid", "catalogtype", "id");
+  inventoryTable.setFieldLink("typeid", "catalogtype", "id", "name");
   inventoryTable.setFieldCurrencySymbol("paid", "$");
   schema.addTable(inventoryTable);
 
