@@ -145,7 +145,7 @@ public:
    */
   const GenericDataObject* getObjectByRow (const int row) const;
 
-  /*! \brief Get a generic data object with the specified ID.
+  /*! \brief Get a generic data object by row number.
    *  \param [in] row Row number of an object.
    *  \return The object if it exists and null if it does not.
    */
@@ -247,6 +247,7 @@ public:
    */
   const GenericDataCollection& operator=(const GenericDataCollection& obj);
 
+  /*! number of objects */
   int rowCount() const;
   void sort();
 

@@ -112,6 +112,8 @@ public:
 
   QString getLinkValues(const QString& tableName, const int id, QStringList fields) const;
 
+  QStringList getLinkEditValues(const QString& tableName, const int id, QStringList fields) const;
+
 signals:
 
 public slots:

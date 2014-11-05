@@ -69,10 +69,18 @@ QVariant GenericDataCollectionsTableModel::data( const QModelIndex &index, int r
       }
     }
 
-    if (role == Qt::DisplayRole || role == Qt::EditRole)
+    if (role == Qt::EditRole)
     {
-      if (m_useLinks && fieldSchema.isLinkField()) {
-
+        if (m_useLinks && fieldSchema.isLinkField())
+        {
+            // TODO: Return a string list of all possible linked values!
+        }
+        return object->getValue(m_table->getPropertyName(index.column()));
+    }
+    else if (role == Qt::DisplayRole)
+    {
+      if (m_useLinks && fieldSchema.isLinkField())
+      {
         int objectId = object->getInt("id");
         bool ok = true;
         int linkId = object->getValue(m_table->getPropertyName(index.column())).toInt(&ok);
@@ -92,45 +100,33 @@ QVariant GenericDataCollectionsTableModel::data( const QModelIndex &index, int r
         } else {
             return getLinkValues(fieldSchema.getLinkTableName(), linkId, fieldSchema.getLinkDisplayField());
         }
-        /**
-        qDebug(qPrintable(QString("Field %1 links to %2.%3").arg(fieldName).arg(m_fieldSchema.getLinkTableName()).arg(m_fieldSchema.getLinkFieldName())));
-        GenericDataCollection* linkTable = m_tables.getTable(m_fieldSchema.getLinkTableName());
-        Q_ASSERT_X(linkTable != nullptr, "GenericDataCollectionsTableModel::data", qPrintable(QString("Schema does not have link table %1 for field %2").arg(m_fieldSchema.getLinkTableName()).arg(fieldName)));
-        bool ok = true;
-        int linkId = object->getValue(fieldName).toInt(&ok);
-        Q_ASSERT_X(ok, "GenericDataCollectionsTableModel::data", qPrintable(QString("Failed to convert %1 link to id for field %2").arg(object->getValue(fieldName).toString()).arg(fieldName)));
-
-        const GenericDataObject* linkObject = linkTable->getObjectById(linkId);
-        Q_ASSERT_X(linkObject != nullptr, "GenericDataCollectionsTableModel::data", qPrintable(QString("Failed to get link %1 for field %2").arg(linkId).arg(fieldName)));
-        Q_ASSERT_X(linkObject->containsValue(m_fieldSchema.getLinkFieldName()), "GenericDataCollectionsTableModel::data", qPrintable(QString("No value for link %1 for field %2").arg(linkId).arg(fieldName)));
-        if (linkObject != nullptr && linkObject->containsValue(m_fieldSchema.getLinkFieldName()))
-        {
-          QStringList linkFields = m_fieldSchema.getLinkDisplayField();
-          if (linkFields.size() == 1) {
-            qDebug(qPrintable(QString("Link Table %1 Link Field %2 Link Display Field %3").arg(m_fieldSchema.getLinkTableName()).arg(m_fieldSchema.getLinkFieldName()).arg(linkFields.first())));
-            Q_ASSERT_X(linkObject->containsValue(linkFields.first()), "GenericDataCollectionsTableModel::data", qPrintable(QString("No value for link %1 for field %2").arg(linkId).arg(linkFields.first())));
-            return linkObject->getValue(linkFields.first());
-          } else {
-            QString s = "";
-            for (int i=0; i<linkFields.size(); ++i) {
-              if (s.size() > 0) {
-                s = s.append(" ");
-              }
-              //Q_ASSERT_X(linkObject->containsValue(linkFields.at(i)), "GenericDataCollectionsTableModel::data", qPrintable(QString("No value for link %1 for field %2").arg(linkId).arg(linkFields.at(i))));
-              if (linkObject->containsValue(linkFields.at(i))) {
-                s = s.append(linkObject->getValue(linkFields.at(i)).toString());
-              }
-            }
-            return s;
-          }
-          return linkObject->getValue(m_fieldSchema.getLinkFieldName());
-        }
-        **/
       }
       return object->getValue(m_table->getPropertyName(index.column()));
     }
   }
   return QVariant();
+}
+
+QStringList GenericDataCollectionsTableModel::getLinkEditValues(const QString& tableName, const int id, QStringList fields) const
+{
+    QStringList list;
+    DescribeSqlTable schema = m_schemas.getTableByName(tableName);
+    const GenericDataCollection* table = m_tables.getTable(tableName);
+    for (int iRow=0; iRow<table->rowCount(); ++iRow)
+    {
+        QString s = "";
+        GenericDataObject* row = table->getObjectByRow(iRow);
+        for (int iField=0; iField < fields.size(); ++iField)
+        {
+            if (iField > 0) {
+                s = s.append(('/'));
+            }
+            DescribeSqlField fieldSchema = schema.getFieldByName(fieldName);
+            int linkId = row->getInt(fieldName);
+        }
+
+    }
+    return list;
 }
 
 QString GenericDataCollectionsTableModel::getLinkValues(const QString& tableName, const int id, QStringList fields) const
@@ -218,12 +214,12 @@ void GenericDataCollectionsTableModel::getRowsAscending(const QModelIndexList& l
   QHash<int, int> rowHash;
   for (int i=0; i<list.size(); ++i)
   {
-    qDebug(qPrintable(QString("Checking entry %1 / %2").arg(i).arg(list.size())));
+    //qDebug(qPrintable(QString("Checking entry %1 / %2").arg(i).arg(list.size())));
     if (!rowHash.contains(list.at(i).row()))
     {
       rowHash.insert(list.at(i).row(), i);
       rows.append(list.at(i).row());
-      qDebug(qPrintable(QString(" row = %1 / %2").arg(list.at(i).row()).arg(rows.size())));
+      //qDebug(qPrintable(QString(" row = %1 / %2").arg(list.at(i).row()).arg(rows.size())));
     }
   }
   qSort(rows);
