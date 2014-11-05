@@ -130,6 +130,7 @@ private:
   DescribeSqlTables& m_schemas;
   DescribeSqlTable m_schema;
   ChangeTracker<GenericDataObject> m_changeTracker;
+
 };
 
 #endif // GENERICDATACOLLECTIONSTABLEMODEL_H
