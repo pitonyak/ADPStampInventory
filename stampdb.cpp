@@ -457,16 +457,19 @@ GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, cons
   QStringList orderByList;
 
   if (sortByKey) {
-      DescribeSqlTable table = m_schema.getTableByName(tableName);
-      QStringList fieldNames = table.getFieldNames();
+      const DescribeSqlTable* table = m_schema.getTableByName(tableName);
+      if (table == nullptr) {
+          return nullptr;
+      }
+      QStringList fieldNames = table->getFieldNames();
       for (QStringListIterator fieldIterator(fieldNames); fieldIterator.hasNext(); )
       {
           QString fieldName = fieldIterator.next();
-          if (table.getFieldByName(fieldName).isKey()) {
+          if (table->getFieldByName(fieldName)->isKey()) {
               orderByList << fieldName;
           }
       }
-      if (orderByList.isEmpty() && table.containsField("id")) {
+      if (orderByList.isEmpty() && table->containsField("id")) {
           orderByList << "id";
       }
   }
@@ -477,15 +480,18 @@ GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, cons
 {
   Q_ASSERT_X(m_schema.containsTable(tableName), "readTableBySchema", qPrintable(QString("Table [%1] is not in the schema.").arg(tableName)));
 
-  DescribeSqlTable table = m_schema.getTableByName(tableName);
-  QStringList fieldNames = table.getFieldNames();
+  const DescribeSqlTable* table = m_schema.getTableByName(tableName);
+  if (table == nullptr) {
+      return nullptr;
+  }
+  QStringList fieldNames = table->getFieldNames();
 
   QString orderBy = "";
 
   for (QStringListIterator fieldSortIterator(orderByList); fieldSortIterator.hasNext(); )
   {
     QString fieldName = fieldSortIterator.next();
-    Q_ASSERT_X(table.containsField(fieldName), "readTableBySchema", qPrintable(QString("Table [%1] does not have a field named [%2].").arg(tableName).arg(fieldName)));
+    Q_ASSERT_X(table->containsField(fieldName), "readTableBySchema", qPrintable(QString("Table [%1] does not have a field named [%2].").arg(tableName).arg(fieldName)));
     if (orderBy.isEmpty()) {
         orderBy = QString("%1.%2").arg(tableName).arg(fieldName);
     } else {
@@ -551,7 +557,7 @@ GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, cons
       }
 
       // TODO: Get first key
-      QString firstKeyField = table.getFirstKeyFieldName();
+      QString firstKeyField = table->getFirstKeyFieldName();
       Q_ASSERT_X(!firstKeyField.isEmpty(), "readTableBySchema", qPrintable(QString("Table %1 does not have a key field").arg(tableName)));
       if (firstKeyField.isEmpty()) {
         firstKeyField = "id";
@@ -577,7 +583,7 @@ GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, cons
             // that some data types are stored as a string in the DB and
             // we might want to treat them as a special type.
             //??gdo->setValue(collection->getPropertyName(i), query.record().value(i));
-            gdo->setValue(collection->getPropertyName(i), mapper.forceToType(query.record().value(i), table.getFieldMetaType(collection->getPropertyName(i)), &ok));
+            gdo->setValue(collection->getPropertyName(i), mapper.forceToType(query.record().value(i), table->getFieldMetaType(collection->getPropertyName(i)), &ok));
           }
         }
         collection->appendObject(hasIdColumn ? gdo->getInt(idString) : iCount, gdo);

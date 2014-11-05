@@ -9,6 +9,18 @@
  *
  * \brief Quick link for a <Table, object ID, Field Name, Cached Value>
  *
+ * A linked field is used when say a catalog id is stored in the inventory table.
+ * Showing the ID is useless, so, it references fields in the catalog table;
+ * For example, the country, scott value, and type. These fields are then
+ * concatenated together and shown as a descriptive value for that field.
+ *
+ * It is assumed that given a row and column in a table, the descriptive value
+ * will not change since the underlying reference tables do not change.
+ *
+ * If the linked field value is changed, then that entry must be removed from the cache.
+ *
+ * This class caches the single string displayed for that field.
+ *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
  * \date 2014

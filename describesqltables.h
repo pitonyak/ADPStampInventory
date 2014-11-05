@@ -31,11 +31,27 @@ public:
 
   QSet<QString> getLinkedTableNames(const QString& tableName) const;
 
-  DescribeSqlTable getTableByName(const QString& name) const;
-  DescribeSqlTable getTableByIndex(const int index) const;
+  /*! \brief Get a table schema based on the tables name.
+   *
+   * This is called often so a pointer is returned since that is faster than using a copy constuctor.
+   *
+   *  \param [in] tableName Name of the table for which a schema is desired.
+   *  \return a pointer to the table schema, or, nullptr if the table name is not contained.
+   */
+  const DescribeSqlTable* getTableByName(const QString& tableName) const;
+
+  /*! \brief Get a table schema based on the tables index in the list (so that all tables can be easily enumerated).
+   *
+   * This is called often so a pointer is returned since that is faster than using a copy constuctor.
+   *
+   *  \param [in] index Index from 0 to count -1 of the table.
+   *  \return a pointer to the table schema, or, nullptr if the table index is not valid.
+   */
+  const DescribeSqlTable* getTableByIndex(const int index) const;
+
   bool addTable(const DescribeSqlTable& table);
 
-  QMetaType::Type getFieldMetaType(const QString& tableName, const QString& fieldName) const { return getTableByName(tableName).getFieldMetaType(fieldName); }
+  QMetaType::Type getFieldMetaType(const QString& tableName, const QString& fieldName) const;
 
   /*! \brief Perform a deep copy of the parameter into this object.
    *

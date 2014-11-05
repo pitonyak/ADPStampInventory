@@ -114,18 +114,18 @@ QString DescribeSqlTable::getFieldNameByIndex(const int index) const
   return "";
 }
 
-DescribeSqlField DescribeSqlTable::getFieldByName(const QString& name) const
+const DescribeSqlField* DescribeSqlTable::getFieldByName(const QString& name) const
 {
   QString simpleName = name.toLower();
   if (m_fields.contains(simpleName)) {
-    return m_fields.value(simpleName);
+    return &const_cast<QHash<QString, DescribeSqlField>&>(m_fields)[simpleName];
   } else {
     qDebug(qPrintable(QString("Field name = '%1' is contained in table %2").arg(name).arg(getName())));
   }
-  return DescribeSqlField();
+  return nullptr;
 }
 
-DescribeSqlField DescribeSqlTable::getFieldByIndex(const int index) const
+const DescribeSqlField *DescribeSqlTable::getFieldByIndex(const int index) const
 {
   return getFieldByName(getFieldNameByIndex(index));
 }
@@ -240,6 +240,18 @@ DescribeSqlTable DescribeSqlTable::readXml(QXmlStreamReader& reader)
         }
     }
     return table;
+}
+
+QMetaType::Type DescribeSqlTable::getFieldMetaType(const QString& name) const
+{
+    const DescribeSqlField* field = getFieldByName(name);
+    return (field != nullptr) ? field->getFieldMetaType() : QMetaType::UnknownType;
+}
+
+QMetaType::Type DescribeSqlTable::getFieldMetaType(const int i) const
+{
+    const DescribeSqlField* field = getFieldByIndex(i);
+    return (field != nullptr) ? field->getFieldMetaType() : QMetaType::UnknownType;
 }
 
 QXmlStreamWriter& DescribeSqlTable::writeXml(QXmlStreamWriter& writer) const

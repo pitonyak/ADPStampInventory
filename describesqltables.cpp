@@ -29,7 +29,8 @@ const DescribeSqlTables& DescribeSqlTables::copy(const DescribeSqlTables& tables
 QSet<QString> DescribeSqlTables::getLinkedTableNames(const QString& tableName) const
 {
     Q_ASSERT_X(containsTable(tableName), "DescribeSqlTables::getLinkedTableNames", qPrintable(QString("Unknown table %1").arg(tableName)));
-    return getTableByName(tableName).getLinkedTableNames();
+    const DescribeSqlTable* table = getTableByName(tableName);
+    return (table != nullptr) ? table->getLinkedTableNames() : QSet<QString>();
 }
 
 QString DescribeSqlTables::getNameByIndex(const int index) const
@@ -42,18 +43,25 @@ QString DescribeSqlTables::getNameByIndex(const int index) const
   return "";
 }
 
-DescribeSqlTable DescribeSqlTables::getTableByName(const QString& name) const
+QMetaType::Type DescribeSqlTables::getFieldMetaType(const QString& tableName, const QString& fieldName) const
 {
-  QString simpleName = name.toLower();
-  if (m_tables.contains(simpleName)) {
-    return m_tables.value(simpleName);
-  } else {
-    qDebug(qPrintable(QString("Table name = '%1' is contained in table set %2").arg(name).arg(getName())));
-  }
-  return DescribeSqlTable();
+  const DescribeSqlTable* table = getTableByName(tableName);
+  return (table != nullptr) ? table->getFieldMetaType(fieldName) : QMetaType::UnknownType;
 }
 
-DescribeSqlTable DescribeSqlTables::getTableByIndex(const int index) const
+
+const DescribeSqlTable *DescribeSqlTables::getTableByName(const QString& tableName) const
+{
+  QString simpleName = tableName.toLower();
+  if (m_tables.contains(simpleName)) {
+    return &const_cast<QHash<QString, DescribeSqlTable>&>(m_tables)[simpleName];
+  } else {
+    qDebug(qPrintable(QString("Table name = '%1' is contained in table set %2").arg(tableName).arg(getName())));
+  }
+  return nullptr;
+}
+
+const DescribeSqlTable *DescribeSqlTables::getTableByIndex(const int index) const
 {
   return getTableByName(getNameByIndex(index));
 }

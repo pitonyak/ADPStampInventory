@@ -6,6 +6,7 @@
 #include "changedobject.h"
 #include "changetracker.h"
 #include "linkedfieldcache.h"
+#include "linkedfieldselectioncache.h"
 
 #include <QDialog>
 #include <QAbstractTableModel>
@@ -112,7 +113,7 @@ public:
 
   QString getLinkValues(const QString& tableName, const int id, QStringList fields) const;
 
-  QStringList getLinkEditValues(const QString& tableName, const int id, QStringList fields) const;
+  QStringList getLinkEditValues(const QString& tableName, QStringList fields) const;
 
 signals:
 
@@ -134,7 +135,9 @@ private:
   DescribeSqlTables& m_schemas;
   DescribeSqlTable m_schema;
   ChangeTracker<GenericDataObject> m_changeTracker;
-  LinkedFieldCache m_linkedFieldCache;
+
+  //LinkedFieldCache m_linkedFieldCache;
+  LinkedFieldSelectionCache m_linkCache;
 
 };
 

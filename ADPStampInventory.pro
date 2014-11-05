@@ -80,7 +80,8 @@ SOURCES += main.cpp\
     describesqltables.cpp \
     genericdatacollections.cpp \
     genericdatacollectionstablemodel.cpp \
-    linkedfieldcache.cpp
+    linkedfieldcache.cpp \
+    linkedfieldselectioncache.cpp
 
 HEADERS  += mainwindow.h \
     stampdb.h \
@@ -137,7 +138,8 @@ HEADERS  += mainwindow.h \
     describesqltables.h \
     genericdatacollections.h \
     genericdatacollectionstablemodel.h \
-    linkedfieldcache.h
+    linkedfieldcache.h \
+    linkedfieldselectioncache.h
 
 FORMS    += mainwindow.ui \
     logroutinginfodialog.ui

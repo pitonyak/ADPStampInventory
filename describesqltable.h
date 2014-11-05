@@ -43,12 +43,12 @@ public:
   QString getFieldNameByIndex(const int index) const;
   bool containsField(const QString& name) const;
 
-  DescribeSqlField getFieldByName(const QString& name) const;
-  DescribeSqlField getFieldByIndex(const int index) const;
+  const DescribeSqlField* getFieldByName(const QString& name) const;
+  const DescribeSqlField* getFieldByIndex(const int index) const;
   bool addField(const DescribeSqlField& field);
 
-  QMetaType::Type getFieldMetaType(const QString& name) const { return getFieldByName(name).getFieldMetaType(); }
-  QMetaType::Type getFieldMetaType(const int i) const { return getFieldByIndex(i).getFieldMetaType(); }
+  QMetaType::Type getFieldMetaType(const QString& name) const;
+  QMetaType::Type getFieldMetaType(const int i) const;
 
   const DescribeSqlTable& operator=(const DescribeSqlTable& table) { return copy(table); }
 
