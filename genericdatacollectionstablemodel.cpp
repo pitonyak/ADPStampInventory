@@ -7,8 +7,10 @@
 #include <QQueue>
 #include <QSqlQuery>
 
-GenericDataCollectionsTableModel::GenericDataCollectionsTableModel(const QString& tableName, GenericDataCollections& tables, DescribeSqlTables& schema, QObject *parent) :
-  QAbstractTableModel(parent), m_isTracking(true), m_tableName(tableName), m_tables(tables), m_table(nullptr), m_schemas(schema)
+GenericDataCollectionsTableModel::GenericDataCollectionsTableModel(const bool useLinks, const QString& tableName, GenericDataCollections& tables, DescribeSqlTables& schema, QObject *parent) :
+  QAbstractTableModel(parent),
+  m_useLinks(useLinks), m_isTracking(true),
+  m_tableName(tableName), m_tables(tables), m_table(nullptr), m_schemas(schema)
 {
   m_table = m_tables.getTable(tableName);
   Q_ASSERT_X(m_table != nullptr, "GenericDataCollectionsTableModel::GenericDataCollectionsTableModel", qPrintable(QString("Collection does not contain table %1").arg(tableName)));
@@ -65,24 +67,31 @@ QVariant GenericDataCollectionsTableModel::data( const QModelIndex &index, int r
         QLocale locale;
         return locale.toCurrencyString(object->getValueNative(fieldName).toDouble());
       }
-      /**
-      if (fieldName.compare("paid", Qt::CaseInsensitive) == 0 ||
-          fieldName.compare("facevalue", Qt::CaseInsensitive) == 0 ||
-          fieldName.compare("bookvalue", Qt::CaseInsensitive) == 0)
-      {
-        // TODO: For a face value, can potentially use a better locale for non-US stamps.
-        QLocale locale;
-        return locale.toCurrencyString(object->getValueNative(fieldName).toDouble());
-      }
-      **/
     }
 
     if (role == Qt::DisplayRole || role == Qt::EditRole)
     {
-      if (fieldSchema.isLinkField()) {
+      if (m_useLinks && fieldSchema.isLinkField()) {
+
+        int objectId = object->getInt("id");
         bool ok = true;
         int linkId = object->getValue(m_table->getPropertyName(index.column())).toInt(&ok);
-        return getLinkValues(fieldSchema.getLinkTableName(), linkId, fieldSchema.getLinkDisplayField());
+
+        if (objectId >= 0) {
+            const QString* cachedValue = const_cast<LinkedFieldCache&>(m_linkedFieldCache).getValue(m_tableName, objectId, fieldName);
+            if (cachedValue != nullptr)
+            {
+                return *cachedValue;
+            }
+            else
+            {
+                QString newValue = getLinkValues(fieldSchema.getLinkTableName(), linkId, fieldSchema.getLinkDisplayField());
+                const_cast<LinkedFieldCache&>(m_linkedFieldCache).setValue(m_tableName, objectId, fieldName, newValue);
+                return newValue;
+            }
+        } else {
+            return getLinkValues(fieldSchema.getLinkTableName(), linkId, fieldSchema.getLinkDisplayField());
+        }
         /**
         qDebug(qPrintable(QString("Field %1 links to %2.%3").arg(fieldName).arg(m_fieldSchema.getLinkTableName()).arg(m_fieldSchema.getLinkFieldName())));
         GenericDataCollection* linkTable = m_tables.getTable(m_fieldSchema.getLinkTableName());
@@ -136,10 +145,33 @@ QString GenericDataCollectionsTableModel::getLinkValues(const QString& tableName
     if (i > 0) {
       s = s.append('/');
     }
-    if (row != nullptr && row->containsValue(fields.at(i))) {
-      DescribeSqlField fieldSchema = schema.getFieldByName(fields.at(i));
+    QString fieldName = fields.at(i);
+    if (row != nullptr && row->containsValue(fieldName)) {
+      DescribeSqlField fieldSchema = schema.getFieldByName(fieldName);
+      int linkId = row->getInt(fieldName);
       if (fieldSchema.isLinkField()) {
-        s = s.append(getLinkValues(fieldSchema.getLinkTableName(), row->getInt(fields.at(i)), fieldSchema.getLinkDisplayField()));
+        // Test for a cached value
+        if (id >= 0)
+        {
+          const QString* cachedValue = const_cast<LinkedFieldCache&>(m_linkedFieldCache).getValue(fieldSchema.getLinkTableName(), linkId, fieldName);
+          if (cachedValue != nullptr)
+          {
+            //qDebug(qPrintable(QString("OLD %1(%2).%3=%4").arg(tableName).arg(linkId).arg(fieldName).arg(*cachedValue)));
+            s = s.append(*cachedValue);
+          }
+          else
+          {
+            QString newValue = getLinkValues(fieldSchema.getLinkTableName(), row->getInt(fieldName), fieldSchema.getLinkDisplayField());
+            //qDebug(qPrintable(QString("NEW %1(%2).%3=%4").arg(tableName).arg(linkId).arg(fieldName).arg(newValue)));
+            const_cast<LinkedFieldCache&>(m_linkedFieldCache).setValue(fieldSchema.getLinkTableName(), linkId, fieldName, newValue);
+            s = s.append(newValue);
+          }
+        }
+        else
+        {
+            // ID is negative so get it the normal way.
+            s = s.append(getLinkValues(fieldSchema.getLinkTableName(), linkId, fieldSchema.getLinkDisplayField()));
+        }
       } else {
         s = s.append(row->getString(fields.at(i)));
       }

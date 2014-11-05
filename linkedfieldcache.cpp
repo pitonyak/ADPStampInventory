@@ -5,7 +5,7 @@ LinkedFieldCache::LinkedFieldCache(QObject *parent) :
 {
 }
 
-QString* LinkedFieldCache::getValue(const QString& tableName, const int id, const QString& fieldName)
+const QString *LinkedFieldCache::getValue(const QString& tableName, const int id, const QString& fieldName)
 {
   QHash<QString, QString>& objectCache = m_linkedFieldCache[tableName][id];
   return objectCache.contains(fieldName) ? &objectCache[fieldName] : nullptr;

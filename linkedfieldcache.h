@@ -35,7 +35,7 @@ public:
    *
    *  \return Pointer to the cached value; returns nullptr if the value does not exist.
    */
-  QString* getValue(const QString& tableName, const int id, const QString& fieldName);
+  const QString* getValue(const QString& tableName, const int id, const QString& fieldName);
 
   /*! \brief Set the cached value for the table.row.field.
    *

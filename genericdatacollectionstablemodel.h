@@ -5,6 +5,7 @@
 #include "describesqltable.h"
 #include "changedobject.h"
 #include "changetracker.h"
+#include "linkedfieldcache.h"
 
 #include <QDialog>
 #include <QAbstractTableModel>
@@ -41,7 +42,7 @@ public:
    *  \param [in] schema
    *  \param [in, out] parent The object's owner. The parent's destructor destroys this object.
    */
-  explicit GenericDataCollectionsTableModel(const QString& tableName, GenericDataCollections& tables, DescribeSqlTables& schema, QObject *parent = nullptr);
+  explicit GenericDataCollectionsTableModel(const bool useLinks, const QString& tableName, GenericDataCollections& tables, DescribeSqlTables& schema, QObject *parent = nullptr);
 
   //**************************************************************************
   /*! \brief Returns the flags used to describe the item identified by the index.
@@ -120,6 +121,7 @@ public slots:
   void duplicateRows(const QModelIndexList& list);
 
 private:
+  bool m_useLinks;
   bool m_isTracking;
   QString m_tableName;
   GenericDataCollections& m_tables;
@@ -130,6 +132,7 @@ private:
   DescribeSqlTables& m_schemas;
   DescribeSqlTable m_schema;
   ChangeTracker<GenericDataObject> m_changeTracker;
+  LinkedFieldCache m_linkedFieldCache;
 
 };
 

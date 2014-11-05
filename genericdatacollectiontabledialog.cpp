@@ -43,7 +43,7 @@ void GenericDataCollectionTableDialog::buildDialog()
   m_tableView = new QTableView();
   //??m_tableModel = new GenericDataCollectionTableModel(m_table);
   Q_ASSERT_X(m_tables != nullptr, "GenericDataCollectionTableDialog::buildDialog()", "m_tables is null");
-  m_tableModel = new GenericDataCollectionsTableModel(m_tableName, *m_tables, m_schema);
+  m_tableModel = new GenericDataCollectionsTableModel(true, m_tableName, *m_tables, m_schema);
 
   m_proxyModel = new QSortFilterProxyModel(this);
   m_proxyModel->setSourceModel(m_tableModel);
