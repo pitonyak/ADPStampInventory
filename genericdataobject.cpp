@@ -152,7 +152,7 @@ int GenericDataObject::compare(const GenericDataObject& obj, const QList<TableSo
 int GenericDataObject::compare(const GenericDataObject& obj, const QStringList& fields, Qt::CaseSensitivity sensitive) const
 {
     int rc = 0;
-    for (int i=0; rc==0 && i<fields.count(); ++i)
+    for (int i=0; rc==0 && i<fields.size(); ++i)
     {
         if (!obj.containsValueNoCase(fields.at(i)))
         {

@@ -107,7 +107,7 @@ void GenericDataCollectionTableDialog::buildDialog()
   {
     QStringList list = s.split(',');
     bool ok = true;
-    for (int i=0; i<list.count() && i<m_table.getPropertyNameCount(); ++i)
+    for (int i=0; i<list.size() && i<m_table.getPropertyNameCount(); ++i)
     {
       int width = list[i].toInt(&ok);
       if (ok && width > 0)
@@ -152,7 +152,7 @@ void GenericDataCollectionTableDialog::deleteRow()
 {
   QModelIndexList proxyList = m_tableView->selectionModel()->selectedIndexes();
   QModelIndexList mappedList;
-  for (int i=0; i<proxyList.count(); ++i) {
+  for (int i=0; i<proxyList.size(); ++i) {
     mappedList.append(m_proxyModel->mapToSource(proxyList.at(i)));
   }
   m_tableModel->deleteRows(mappedList);
@@ -177,7 +177,7 @@ void GenericDataCollectionTableDialog::duplicateRow()
 
   QModelIndexList proxyList = m_tableView->selectionModel()->selectedIndexes();
   QModelIndexList mappedList;
-  for (int i=0; i<proxyList.count(); ++i) {
+  for (int i=0; i<proxyList.size(); ++i) {
     mappedList.append(m_proxyModel->mapToSource(proxyList.at(i)));
   }
   m_tableModel->duplicateRows(mappedList);

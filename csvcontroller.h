@@ -440,12 +440,12 @@ inline void CSVController::clearLines()
 
 inline int CSVController::countHeaderColumns() const
 {
-  return m_header.count();
+  return m_header.size();
 }
 
 inline int CSVController::countLines() const
 {
-  return m_lines.count();
+  return m_lines.size();
 }
 
 inline bool CSVController::getMergeDelimiters() const

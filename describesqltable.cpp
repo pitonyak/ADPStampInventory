@@ -264,7 +264,7 @@ QString DescribeSqlTable::getDDL(const bool prettyPrint) const
   QString ddl;
   ddl = ddl.append("CREATE TABLE %1 ( ").arg(m_name);
 
-  for (int i=0; i<m_names.count(); ++i) {
+  for (int i=0; i<m_names.size(); ++i) {
     if (i > 0) {
       ddl = ddl.append(",");
     }

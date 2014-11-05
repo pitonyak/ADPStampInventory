@@ -89,7 +89,8 @@ public:
   void moveRoutingUp(int row);
   void moveRoutingDown(int row);
 
-  int count() const;
+  /*! \brief return the number of routines. */
+  int size() const;
 
 private:
   //**************************************************************************

@@ -107,7 +107,7 @@ bool GenericDataCollection::appendPropertyName(const QString& name, const QMetaT
     {
       return false;
     }
-    m_LowerCasePropertyNameMap.insert(lowerCaseName, m_propertyNames.count());
+    m_LowerCasePropertyNameMap.insert(lowerCaseName, m_propertyNames.size());
     m_propertyNames.append(name);
     m_metaTypes.append(pType);
     return true;
@@ -117,7 +117,7 @@ bool GenericDataCollection::appendPropertyName(const QString& name, const QMetaT
 bool GenericDataCollection::exportToCSV(CSVWriter& writer) const
 {
   writer.clearHeader();
-  for (int i=0; i<getPropertNames().count(); ++i)
+  for (int i=0; i<getPropertNames().size(); ++i)
   {
     writer.addHeader(getPropertyName(i), getPropertyTypeMeta(i));
   }
@@ -127,11 +127,11 @@ bool GenericDataCollection::exportToCSV(CSVWriter& writer) const
   QList<int> objKeys = m_objects.keys();
   qSort(objKeys);
 
-  for (int idx=0; idx < objKeys.count(); ++idx)
+  for (int idx=0; idx < objKeys.size(); ++idx)
   {
     CSVLine newLine;
     GenericDataObject* obj = m_objects.value(objKeys[idx]);
-    for (int i=0; i<getPropertNames().count(); ++i)
+    for (int i=0; i<getPropertNames().size(); ++i)
     {
       if (obj->containsValue(getPropertyName(i)))
       {
@@ -152,7 +152,7 @@ bool GenericDataCollection::exportToCSV(CSVWriter& writer) const
   {
     iterator.next();
     CSVLine newLine;
-    for (int i=0; i<getPropertNames().count(); ++i)
+    for (int i=0; i<getPropertNames().size(); ++i)
     {
       if (iterator.value()->hasValue(getPropertyName(i)))
       {
@@ -266,7 +266,7 @@ void GenericDataCollection::clearSortFields()
 void GenericDataCollection::sort()
 {
     m_sortedIDs = m_objects.keys();
-    if (m_sortFields.count() == 0)
+    if (m_sortFields.size() == 0)
     {
         qSort(m_sortedIDs);
     }
@@ -281,7 +281,7 @@ GenericDataObject* GenericDataCollection::createEmptyObject() const
 {
     GenericDataObject* data = new GenericDataObject();
 
-    for (int i=0; i<m_propertyNames.count() && i < m_metaTypes.count(); ++i) {
+    for (int i=0; i<m_propertyNames.size() && i < m_metaTypes.size(); ++i) {
         if (m_propertyNames.at(i).compare("id", Qt::CaseInsensitive) == 0) {
             data->setValue("id", getLargestId() + 1);
         } else {

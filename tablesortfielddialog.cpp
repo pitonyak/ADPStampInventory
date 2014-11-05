@@ -63,7 +63,7 @@ QString TableSortFieldDialog::getConfigFilePath() const
 
 bool TableSortFieldDialog::isRowSelected() const
 {
-  return m_tableModel != nullptr && m_tableView != nullptr && m_tableModel->count() > 0 && m_tableView->currentIndex().row() >= 0;
+  return m_tableModel != nullptr && m_tableView != nullptr && m_tableModel->size() > 0 && m_tableView->currentIndex().row() >= 0;
 }
 
 int TableSortFieldDialog::getSelectedRow() const
@@ -288,7 +288,7 @@ void TableSortFieldDialog::buildDialog()
   {
     QStringList list = s.split(',');
     bool ok = true;
-    for (int i=0; i<list.count() && i<TableSortFieldTableModel::numColumns; ++i)
+    for (int i=0; i<list.size() && i<TableSortFieldTableModel::numColumns; ++i)
     {
       int width = list[i].toInt(&ok);
       if (ok && width > 0)
@@ -305,7 +305,7 @@ void TableSortFieldDialog::enableButtons()
 {
   if (m_dataCollection != nullptr)
   {
-    int count = m_tableModel->count();
+    int count = m_tableModel->size();
     int row = count > 0 ? getSelectedRow() : -1;
     m_upButton->setEnabled(row > 0);
     m_downButton->setEnabled(row >= 0 && row < (count - 1));

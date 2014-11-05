@@ -119,7 +119,7 @@ void SimpleLoggerADP::processQueuedMessages()
     {
       LogMessageContainer* message = queue.head();
 
-      for (int i=0; i<m_routing.count(); ++i)
+      for (int i=0; i<m_routing.size(); ++i)
       {
         SimpleLoggerRoutingInfo& routing(m_routing[i]);
         if (routing.passes(message->getLocation(), message->getCategory(), message->getLevel(), message->getMessage()))
@@ -205,7 +205,7 @@ void SimpleLoggerADP::processQueuedMessages()
 void SimpleLoggerADP::processOneMessage(const LogMessageContainer& message)
 {
   QMutexLocker locker(&m_processingMutex);
-  for (int i=0; i<m_routing.count(); ++i)
+  for (int i=0; i<m_routing.size(); ++i)
   {
     SimpleLoggerRoutingInfo& routing(m_routing[i]);
     if (routing.passes(message.getLocation(), message.getCategory(), message.getLevel(), message.getMessage()))

@@ -137,7 +137,7 @@ void LogConfigDialog::buildDialog()
   {
     QStringList list = s.split(',');
     bool ok = true;
-    for (int i=0; i<list.count() && i<LogRoutingInfoTableModel::numColumns; ++i)
+    for (int i=0; i<list.size() && i<LogRoutingInfoTableModel::numColumns; ++i)
     {
       int width = list[i].toInt(&ok);
       if (ok && width > 0)
@@ -188,7 +188,7 @@ QString LogConfigDialog::getLogFilePath() const
 
 bool LogConfigDialog::isRoutingSelected() const
 {
-  return m_tableModel != nullptr && m_routingTableView != nullptr && m_tableModel->count() > 0 && m_routingTableView->currentIndex().row() >= 0;
+  return m_tableModel != nullptr && m_routingTableView != nullptr && m_tableModel->size() > 0 && m_routingTableView->currentIndex().row() >= 0;
 }
 
 int LogConfigDialog::getSelectedRouting() const

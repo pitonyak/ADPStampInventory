@@ -92,7 +92,7 @@ QXmlStreamWriter& TableSortField::write(QXmlStreamWriter& writer) const
 QXmlStreamWriter& TableSortField::write(const QList<TableSortField>& list, QXmlStreamWriter& writer)
 {
   writer.writeStartElement("TableSortFields");
-  for (int i=0; i<list.count(); ++i)
+  for (int i=0; i<list.size(); ++i)
   {
     list.at(i).write(writer);
   }

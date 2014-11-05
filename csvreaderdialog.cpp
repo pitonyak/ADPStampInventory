@@ -427,7 +427,7 @@ void CSVReaderDialog::configureFromReader(QVBoxLayout* vBoxLayout)
     for (int row=0; row<m_reader->countLines(); ++row)
     {
       const CSVLine& line = m_reader->getLine(row);
-      for (int col=0; col<line.count(); ++col)
+      for (int col=0; col<line.size(); ++col)
       {
         QTableWidgetItem *newItem = new  QTableWidgetItem(line[col].getValue());
         m_tableWidget->setItem(row, col, newItem);

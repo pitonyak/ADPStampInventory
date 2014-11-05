@@ -24,7 +24,7 @@ public:
   void setViewName(const QString& viewName) { m_viewName = viewName; }
   void setDescription(const QString& description) { m_description = description; }
 
-  int getTableCount() const { return m_names.count(); }
+  int getTableCount() const { return m_names.size(); }
   QStringList getTableNames() const { return m_names; }
   QString getNameByIndex(const int index) const;
   bool containsTable(const QString& name) const;

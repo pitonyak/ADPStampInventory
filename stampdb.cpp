@@ -543,7 +543,7 @@ GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, cons
           duplicateColumns.append(query.record().fieldName(i));
         }
       }
-      if (duplicateColumns.count() > 0)
+      if (duplicateColumns.size() > 0)
       {
         ScrollMessageBox::information(nullptr, "ERROR", QString(tr("Problem converting the following SQL\n\n%1\n\nThe following columns are duplicated:\n%2")).arg(sql).arg(duplicateColumns.join("\n")));
         delete collection;
@@ -618,7 +618,7 @@ GenericDataCollection* StampDB::readTableSql(const QString& sql)
           duplicateColumns.append(query.record().fieldName(i));
         }
       }
-      if (duplicateColumns.count() > 0)
+      if (duplicateColumns.size() > 0)
       {
         ScrollMessageBox::information(nullptr, "ERROR", QString(tr("Problem converting the following SQL\n\n%1\n\nThe following columns are duplicated:\n%2")).arg(sql).arg(duplicateColumns.join("\n")));
         delete collection;
@@ -762,7 +762,7 @@ bool StampDB::exportToCSV(const QDir& outputDir, const bool overwrite)
     }
 
     QStringList tableNames = getTableNames(true);
-    for (int iTable=0; iTable < tableNames.count(); ++iTable)
+    for (int iTable=0; iTable < tableNames.size(); ++iTable)
     {
       QFile file(outputDir.filePath(tableNames.at(iTable) + ".csv"));
         if (file.exists() && overwrite) {
@@ -920,7 +920,7 @@ bool StampDB::loadCSV(CSVReader& reader, const QString& tableName)
   {
     csvKeyValue = -1;
     const CSVLine& readLine = reader.getLine(iRow);
-    if (csvKeyColumn >= 0 && csvKeyColumn < readLine.count())
+    if (csvKeyColumn >= 0 && csvKeyColumn < readLine.size())
     {
         const CSVColumn& c = readLine[csvKeyColumn];
         QVariant v = c.toVariant();
@@ -939,7 +939,7 @@ bool StampDB::loadCSV(CSVReader& reader, const QString& tableName)
       {
         // verify that the CSV file has at least
         // that many columns in the current line.
-        if (csvColumnIndex[iCol] < readLine.count())
+        if (csvColumnIndex[iCol] < readLine.size())
         {
           const CSVColumn& c = readLine[csvColumnIndex[iCol]];
           QVariant v = c.toVariant();

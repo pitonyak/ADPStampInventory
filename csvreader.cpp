@@ -124,7 +124,7 @@ void CSVReader::recordInitialization()
 {
     m_entireRecordRead = false;
     m_numberOfRecordsRead = 0;
-    if (m_lines.count() > 0)
+    if (m_lines.size() > 0)
     {
         m_lines.last().clear();
     }
@@ -240,7 +240,7 @@ QString CSVReader::toString(bool brief) const
 {
     QString s = "";
     s = m_header.toString(brief);
-    for (int i=0; i<m_lines.count(); ++i)
+    for (int i=0; i<m_lines.size(); ++i)
     {
         s = s + "\n" + m_lines[i].toString(brief);
     }
@@ -265,7 +265,7 @@ bool CSVReader::readNLines(int n, bool clearBeforeReading)
         {
             noError = readNextRecord(false);
         }
-        QString s = QString("Number of lines is %1").arg(m_lines.count());
+        QString s = QString("Number of lines is %1").arg(m_lines.size());
         qDebug(qPrintable(s));
     }
     return noError;
@@ -273,11 +273,11 @@ bool CSVReader::readNLines(int n, bool clearBeforeReading)
 
 bool CSVReader::readNextRecord(bool clearBeforeReading)
 {
-    if (!clearBeforeReading || m_lines.count() == 0)
+    if (!clearBeforeReading || m_lines.size() == 0)
     {
         m_lines.append(CSVLine());
     }
-    else if (m_lines.count() == 1)
+    else if (m_lines.size() == 1)
     {
         // There is only one, so use the existing one.
         m_lines[0].clear();
@@ -610,12 +610,12 @@ void CSVReader::guessColumnTypes(TypeMapper::ColumnConversionPreferences flags )
 
   TypeMapper typeMapper;
 
-  for (int iRow = 0; iRow < m_lines.count(); ++iRow)
+  for (int iRow = 0; iRow < m_lines.size(); ++iRow)
   {
     const CSVLine& line = m_lines[iRow];
-    for (int iCol=0; iCol < line.count(); ++ iCol)
+    for (int iCol=0; iCol < line.size(); ++ iCol)
     {
-      if (iCol >= m_columnTypes->count())
+      if (iCol >= m_columnTypes->size())
       {
         m_columnTypes->append(line[iCol].getType());
       }
@@ -626,7 +626,7 @@ void CSVReader::guessColumnTypes(TypeMapper::ColumnConversionPreferences flags )
     }
   }
   QString s;
-  for (int i=0; i<m_columnTypes->count(); ++i)
+  for (int i=0; i<m_columnTypes->size(); ++i)
   {
     if (i == 0)
     {

@@ -21,9 +21,9 @@ LogRoutingInfoTableModel::LogRoutingInfoTableModel(QObject *parent) :
 
 void LogRoutingInfoTableModel::clear()
 {
-  if (m_routings.count() > 0)
+  if (m_routings.size() > 0)
   {
-    beginRemoveRows(QModelIndex(), 0, m_routings.count() - 1);
+    beginRemoveRows(QModelIndex(), 0, m_routings.size() - 1);
     m_routings.clear();
     endRemoveRows();
   }
@@ -32,9 +32,9 @@ void LogRoutingInfoTableModel::clear()
 void LogRoutingInfoTableModel::appendRoutings(const QList<SimpleLoggerRoutingInfo> &routing)
 {
     clear();
-    if (routing.count() > 0)
+    if (routing.size() > 0)
     {
-        beginInsertRows(QModelIndex(), m_routings.count(), m_routings.count() + routing.count() - 1);
+        beginInsertRows(QModelIndex(), m_routings.size(), m_routings.size() + routing.size() - 1);
         m_routings.append(routing);
         endInsertRows();
     }
@@ -43,9 +43,9 @@ void LogRoutingInfoTableModel::appendRoutings(const QList<SimpleLoggerRoutingInf
 void LogRoutingInfoTableModel::setRoutings(const QList<SimpleLoggerRoutingInfo>& routing)
 {
     clear();
-    if (routing.count() > 0)
+    if (routing.size() > 0)
     {
-        beginInsertRows(QModelIndex(), 0, routing.count() - 1);
+        beginInsertRows(QModelIndex(), 0, routing.size() - 1);
         m_routings.append(routing);
         endInsertRows();
     }
@@ -58,7 +58,7 @@ const QList<SimpleLoggerRoutingInfo> & LogRoutingInfoTableModel::getRoutings() c
 
 int LogRoutingInfoTableModel::rowCount( const QModelIndex & parent) const
 {
-    return parent.isValid() ? 0 : m_routings.count();
+    return parent.isValid() ? 0 : m_routings.size();
 }
 
 int LogRoutingInfoTableModel::columnCount( const QModelIndex &) const
@@ -286,9 +286,9 @@ void LogRoutingInfoTableModel::insertRouting(int row, const SimpleLoggerRoutingI
   if (row < 0)
   {
     row = 0;
-  } else if (row > m_routings.count())
+  } else if (row > m_routings.size())
   {
-    row = m_routings.count();
+    row = m_routings.size();
   }
 
   beginInsertRows(QModelIndex(), row, row);
@@ -298,7 +298,7 @@ void LogRoutingInfoTableModel::insertRouting(int row, const SimpleLoggerRoutingI
 
 void LogRoutingInfoTableModel::updateRouting(int row, const SimpleLoggerRoutingInfo& routing)
 {
-  if (0 <= row && row < m_routings.count())
+  if (0 <= row && row < m_routings.size())
   {
     m_routings[row] = routing;
   }
@@ -306,7 +306,7 @@ void LogRoutingInfoTableModel::updateRouting(int row, const SimpleLoggerRoutingI
 
 void LogRoutingInfoTableModel::removeRouting(int row)
 {
-  if (0 <= row && row < m_routings.count())
+  if (0 <= row && row < m_routings.size())
   {
     beginRemoveRows(QModelIndex(), row, row);
     m_routings.removeAt(row);
@@ -316,7 +316,7 @@ void LogRoutingInfoTableModel::removeRouting(int row)
 
 void LogRoutingInfoTableModel::moveRoutingUp(int row)
 {
-  if (0 < row && row < m_routings.count())
+  if (0 < row && row < m_routings.size())
   {
     if (beginMoveRows(QModelIndex(), row, row, QModelIndex(), row- 1))
     {
@@ -328,7 +328,7 @@ void LogRoutingInfoTableModel::moveRoutingUp(int row)
 
 void LogRoutingInfoTableModel::moveRoutingDown(int row)
 {
-  if (0 <= row && row < m_routings.count() - 1)
+  if (0 <= row && row < m_routings.size() - 1)
   {
     // Yes, I really do need to use row+2, odd as it is!
     if (beginMoveRows(QModelIndex(), row, row, QModelIndex(), row + 2))
@@ -339,7 +339,7 @@ void LogRoutingInfoTableModel::moveRoutingDown(int row)
   }
 }
 
-int LogRoutingInfoTableModel::count() const
+int LogRoutingInfoTableModel::size() const
 {
-  return m_routings.count();
+  return m_routings.size();
 }

@@ -52,7 +52,7 @@ QTextStream& TableFieldBinaryTreeEvalNode::toStream(QTextStream& stream) const
     if (m_node->nodeType() == TableFieldEvalNode::VALUE)
     {
       stream << m_node->nodeValue();
-      if (m_children.count() > 0)
+      if (m_children.size() > 0)
       {
         qDebug(qPrintable(tr("Value element contains children!")));
       }
@@ -68,11 +68,11 @@ QTextStream& TableFieldBinaryTreeEvalNode::toStream(QTextStream& stream) const
         stream << " " << m_node->nodeValue() << " ";
       }
 
-      if (m_children.count() > 0)
+      if (m_children.size() > 0)
       {
         stream << "(";
         m_children.at(0)->toStream(stream);
-        for (int i=1; i<m_children.count(); ++i)
+        for (int i=1; i<m_children.size(); ++i)
         {
           if (m_node->isInfix())
           {
@@ -124,7 +124,7 @@ bool TableFieldBinaryTreeEvalNode::processOneTreeLevel(QStack<TableFieldBinaryTr
             if (child2->nodeType() == opNode->nodeType())
             {
                 // So does child 2, so copy the children.
-                for (int i=0; i<child2->m_children.count(); ++i)
+                for (int i=0; i<child2->m_children.size(); ++i)
                 {
                     child1->addChild(child2->m_children.at(i));
                 }
@@ -283,10 +283,10 @@ TableFieldBinaryTreeEvalNode* TableFieldBinaryTreeEvalNode::buildTree(QList<Tabl
       isError = true;
       qDebug(qPrintable(tr("Unprocessed Operators left in the stack after processing")));
     }
-    else if (values.count() != 1)
+    else if (values.size() != 1)
     {
       isError = true;
-      qDebug(qPrintable(tr("There should be only one value left after processing, not %1").arg(values.count())));
+      qDebug(qPrintable(tr("There should be only one value left after processing, not %1").arg(values.size())));
     }
     else
     {
@@ -296,7 +296,7 @@ TableFieldBinaryTreeEvalNode* TableFieldBinaryTreeEvalNode::buildTree(QList<Tabl
 
         // Clone the node so that the parent / owner is properly set.
         headNode->m_node = topNode->m_node->clone(headNode);
-        for (int i=0; i<topNode->m_children.count(); ++i)
+        for (int i=0; i<topNode->m_children.size(); ++i)
         {
             headNode->addChild(topNode->m_children.at(i));
         }
@@ -325,19 +325,19 @@ bool TableFieldBinaryTreeEvalNode::testEvaluator(const QHash<QString, bool>& val
         //qDebug(qPrintable(QString("Returning %1").arg(vals.value(nodeValue()))));
         return vals.value(nodeValue());
     }
-    else if (m_children.count() > 0)
+    else if (m_children.size() > 0)
     {
         bool rc = m_children.at(0)->testEvaluator(vals);
         if (isAnd())
         {
-            for (int i=1; rc && i<m_children.count(); ++i)
+            for (int i=1; rc && i<m_children.size(); ++i)
             {
                 rc = m_children.at(i)->testEvaluator(vals);
             }
         }
         else if (isOr())
         {
-            for (int i=1; !rc && i<m_children.count(); ++i)
+            for (int i=1; !rc && i<m_children.size(); ++i)
             {
                 rc = m_children.at(i)->testEvaluator(vals);
             }

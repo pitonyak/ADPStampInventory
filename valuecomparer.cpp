@@ -31,13 +31,13 @@ const ValueComparer& ValueComparer::operator=(const ValueComparer& obj)
 int ValueComparer::valueCompare(const QStringList& v1, const QStringList& v2) const
 {
     int rc = 0;
-    for (int i=0; rc == 0 && i<v1.count() && i<v2.count(); ++i)
+    for (int i=0; rc == 0 && i<v1.size() && i<v2.size(); ++i)
     {
         rc = v1.at(i).compare(v2.at(i), m_caseSensitivity);
     }
-    if (rc == 0 && v1.count() != v2.count())
+    if (rc == 0 && v1.size() != v2.size())
     {
-        rc = v1.count() < v2.count() ? -1 : 1;
+        rc = v1.size() < v2.size() ? -1 : 1;
     }
     return rc;
 }

@@ -38,7 +38,7 @@ public:
   void setViewName(const QString& viewName) { m_viewName = viewName; }
   void setDescription(const QString& description) { m_description = description; }
 
-  int getFieldCount() const { return m_names.count(); }
+  int getFieldCount() const { return m_names.size(); }
   QStringList getFieldNames() const { return m_names; }
   QString getFieldNameByIndex(const int index) const;
   bool containsField(const QString& name) const;

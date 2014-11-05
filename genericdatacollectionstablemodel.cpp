@@ -278,7 +278,7 @@ bool GenericDataCollectionsTableModel::saveTrackedChanges(const QString& tableNa
               QSqlQuery query(db);
               QString s = QString("INSERT INTO %1 (").arg(tableName);
               QString sValues = " VALUES (";
-              for (int iCol=0; iCol<data.getPropertNames().count(); ++iCol)
+              for (int iCol=0; iCol<data.getPropertNames().size(); ++iCol)
               {
                 if (iCol > 0) {
                   s = s.append(", ");
@@ -289,7 +289,7 @@ bool GenericDataCollectionsTableModel::saveTrackedChanges(const QString& tableNa
               }
               QString sSQL = s.append(") ").append(sValues).append(")");
               query.prepare(sSQL);
-              for (int iCol=0; iCol<data.getPropertNames().count(); ++iCol)
+              for (int iCol=0; iCol<data.getPropertNames().size(); ++iCol)
               {
                 if (!newData->containsValue(data.getPropertyName(iCol)))
                 {

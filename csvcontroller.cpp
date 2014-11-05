@@ -277,7 +277,7 @@ void CSVController::setControllerDefaults()
 
 int CSVController::countColumns(int index) const
 {
-    return (index >= 0 && index < m_lines.count()) ? m_lines[index].count() : 0;
+    return (index >= 0 && index < m_lines.size()) ? m_lines[index].size() : 0;
 }
 
 void CSVController::setHeader(const CSVLine& header)
@@ -287,7 +287,7 @@ void CSVController::setHeader(const CSVLine& header)
 
 const CSVLine& CSVController::getLine(int index) const
 {
-    if (0 <= index && index < m_lines.count())
+    if (0 <= index && index < m_lines.size())
     {
         return m_lines[index];
     }
@@ -302,10 +302,10 @@ void CSVController::addHeader(const QString& headerName, const QMetaType::Type h
 
 QString CSVController::getHeaderName(int i) const
 {
-  return 0<=i && i<m_header.count() ? m_header[i].getValue() : "";
+  return 0<=i && i<m_header.size() ? m_header[i].getValue() : "";
 }
 
 QMetaType::Type CSVController::getHeaderType(int i) const
 {
-  return 0<=i && i<m_header.count() ? m_header[i].getType() : QMetaType::Void;
+  return 0<=i && i<m_header.size() ? m_header[i].getType() : QMetaType::Void;
 }

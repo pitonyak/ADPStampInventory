@@ -16,7 +16,7 @@ TableSortFieldTableModel::TableSortFieldTableModel(const GenericDataCollection* 
 
 int TableSortFieldTableModel::rowCount( const QModelIndex & parent) const
 {
-    return parent.isValid() ? 0 : m_collection.count();
+    return parent.isValid() ? 0 : m_sortFields.size();
 }
 
 int TableSortFieldTableModel::columnCount( const QModelIndex &) const
@@ -29,7 +29,7 @@ bool TableSortFieldTableModel::setData ( const QModelIndex & index, const QVaria
   (void) value;
   if (role == Qt::EditRole)
   {
-    TableSortField& field = m_collection[index.row()];
+    TableSortField& field = m_sortFields[index.row()];
     switch (index.column())
     {
     case typeColumn:
@@ -65,7 +65,7 @@ bool TableSortFieldTableModel::setData ( const QModelIndex & index, const QVaria
 
 QVariant TableSortFieldTableModel::data( const QModelIndex &index, int role ) const
 {
-  const TableSortField& field = m_collection[index.row()];
+  const TableSortField& field = m_sortFields[index.row()];
   switch( role )
   {
   case Qt::DisplayRole:
@@ -107,9 +107,9 @@ QVariant TableSortFieldTableModel::data( const QModelIndex &index, int role ) co
           for (int i=0; i<m_dataCollection->getPropertyNameCount(); ++i)
           {
             bool found_it = false;
-            for (int j=0; j<m_collection.count() && !found_it; ++j)
+            for (int j=0; j<m_sortFields.size() && !found_it; ++j)
             {
-              found_it = m_collection.at(j).fieldName().compare(m_dataCollection->getPropertyName(i), Qt::CaseInsensitive) == 0;
+              found_it = m_sortFields.at(j).fieldName().compare(m_dataCollection->getPropertyName(i), Qt::CaseInsensitive) == 0;
             }
             if (!found_it)
             {
@@ -214,9 +214,9 @@ Qt::ItemFlags TableSortFieldTableModel::flags( const QModelIndex &index ) const
 
 void TableSortFieldTableModel::updateRow(int row, const TableSortField& field)
 {
-  if (0 <= row && row < m_collection.count())
+  if (0 <= row && row < m_sortFields.size())
   {
-    m_collection[row] = field;
+    m_sortFields[row] = field;
   }
 }
 
@@ -225,13 +225,13 @@ void TableSortFieldTableModel::insertRow(int row, const TableSortField& field)
   if (row < 0)
   {
     row = 0;
-  } else if (row > m_collection.count())
+  } else if (row > m_sortFields.size())
   {
-    row = m_collection.count();
+    row = m_sortFields.size();
   }
 
   beginInsertRows(QModelIndex(), row, row);
-  m_collection.insert(row, field);
+  m_sortFields.insert(row, field);
   endInsertRows();
 }
 
@@ -241,38 +241,38 @@ void TableSortFieldTableModel::copyRow(int row)
   {
     return;
   }
-  insertRow(row, m_collection.at(row));
+  insertRow(row, m_sortFields.at(row));
 }
 
 void TableSortFieldTableModel::removeRow(int row)
 {
-  if (0 <= row && row < m_collection.count())
+  if (0 <= row && row < m_sortFields.size())
   {
     beginRemoveRows(QModelIndex(), row, row);
-    m_collection.removeAt(row);
+    m_sortFields.removeAt(row);
     endRemoveRows();
   }
 }
 
 void TableSortFieldTableModel::clear()
 {
-  if (m_collection.count() > 0)
+  if (m_sortFields.size() > 0)
   {
-    beginRemoveRows(QModelIndex(), 0, m_collection.count() - 1);
-    m_collection.clear();
+    beginRemoveRows(QModelIndex(), 0, m_sortFields.size() - 1);
+    m_sortFields.clear();
     endRemoveRows();
   }
 }
 
 void TableSortFieldTableModel::add(const QList<TableSortField>& list)
 {
-  if (list.count() > 0)
+  if (list.size() > 0)
   {
-    int row = m_collection.count();
-    beginInsertRows(QModelIndex(), row, row + list.count() - 1);
-    for (int i=0; i<list.count(); ++i)
+    int row = m_sortFields.size();
+    beginInsertRows(QModelIndex(), row, row + list.size() - 1);
+    for (int i=0; i<list.size(); ++i)
     {
-      m_collection.insert(row + i, list.at(i));
+      m_sortFields.insert(row + i, list.at(i));
     }
     endInsertRows();
   }
@@ -281,11 +281,11 @@ void TableSortFieldTableModel::add(const QList<TableSortField>& list)
 
 void TableSortFieldTableModel::moveRowUp(int row)
 {
-  if (0 < row && row < m_collection.count())
+  if (0 < row && row < m_sortFields.size())
   {
     if (beginMoveRows(QModelIndex(), row, row, QModelIndex(), row- 1))
     {
-      m_collection.move(row, row - 1);
+      m_sortFields.move(row, row - 1);
       endMoveRows();
     }
   }
@@ -293,27 +293,27 @@ void TableSortFieldTableModel::moveRowUp(int row)
 
 void TableSortFieldTableModel::moveRowDown(int row)
 {
-  if (0 <= row && row < m_collection.count() - 1)
+  if (0 <= row && row < m_sortFields.size() - 1)
   {
     // Yes, I really do need to use row+2, odd as it is!
     if (beginMoveRows(QModelIndex(), row, row, QModelIndex(), row + 2))
     {
-      m_collection.move(row, row + 1);
+      m_sortFields.move(row, row + 1);
       endMoveRows();
     }
   }
 }
 
-int TableSortFieldTableModel::count() const
+int TableSortFieldTableModel::size() const
 {
-  return m_collection.count();
+  return m_sortFields.size();
 }
 
 bool TableSortFieldTableModel::containsFieldName(const QString& name) const
 {
-  for (int i=0; i<m_collection.size(); ++i)
+  for (int i=0; i<m_sortFields.size(); ++i)
   {
-    if (name.compare(m_collection.at(i).fieldName(), Qt::CaseInsensitive) == 0) {
+    if (name.compare(m_sortFields.at(i).fieldName(), Qt::CaseInsensitive) == 0) {
       return true;
     }
   }

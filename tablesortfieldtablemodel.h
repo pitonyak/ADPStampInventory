@@ -96,7 +96,8 @@ public:
     void clear();
     void moveRowUp(int row);
     void moveRowDown(int row);
-    int count() const;
+    /*! Number of table sort fields. */
+    int size() const;
     void add(const QList<TableSortField>& list);
 
 signals:
@@ -112,13 +113,13 @@ public:
 
 private:
     const GenericDataCollection* m_dataCollection;
-    QList<TableSortField> m_collection;
+    QList<TableSortField> m_sortFields;
     TypeMapper m_mapper;
 };
 
 inline const QList<TableSortField>& TableSortFieldTableModel::getList() const
 {
-  return m_collection;
+  return m_sortFields;
 }
 
 #endif // TABLESORTFIELDTABLEMODEL_H

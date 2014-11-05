@@ -99,7 +99,7 @@ public:
    * \returns Number of columns already added to this line.
    *
    ***************************************************************************/
-  int count() const;
+  int size() const;
 
   //**************************************************************************
   /*! \brief Find the index for a column with the given value.

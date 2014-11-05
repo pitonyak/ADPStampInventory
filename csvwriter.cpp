@@ -139,9 +139,9 @@ void CSVWriter::write(const CSVColumn& column)
 
 void CSVWriter::write(const CSVLine& csvLine, bool includeRecordSeparator)
 {
-    if (csvLine.count() > 0)
+    if (csvLine.size() > 0)
     {
-        for (int i=0; i<csvLine.count() && canWriteToStream(); ++i)
+        for (int i=0; i<csvLine.size() && canWriteToStream(); ++i)
         {
             if (i>0)
             {
@@ -169,9 +169,9 @@ void CSVWriter::writeLines(int firstIndex, int num)
     }
     if (num < 0)
     {
-        num = m_lines.count();
+        num = m_lines.size();
     }
-    for (int i=firstIndex; i<m_lines.count() && num > 0; --i, --num)
+    for (int i=firstIndex; i<m_lines.size() && num > 0; --i, --num)
     {
         write(m_lines[i]);
     }

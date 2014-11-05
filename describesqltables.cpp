@@ -273,7 +273,7 @@ DescribeSqlTables DescribeSqlTables::getStampSchema()
 QStringList DescribeSqlTables::getDDL(const bool prettyPrint) const
 {
   QStringList list;
-  for (int i=0; i<m_names.count(); ++i) {
+  for (int i=0; i<m_names.size(); ++i) {
     DescribeSqlTable table = m_tables.value(m_names.at(i));
     list << table.getDDL(prettyPrint);
   }

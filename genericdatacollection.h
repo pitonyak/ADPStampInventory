@@ -300,7 +300,7 @@ inline bool GenericDataCollection::containsProperty(const QString& fieldName) co
 
 inline int GenericDataCollection::getPropertyNameCount() const
 {
-  return m_propertyNames.count();
+  return m_propertyNames.size();
 }
 
 inline QMetaType::Type GenericDataCollection::getPropertyTypeMeta(const int i) const
@@ -311,7 +311,7 @@ inline QMetaType::Type GenericDataCollection::getPropertyTypeMeta(const int i) c
 
 inline int GenericDataCollection::getObjectCount() const
 {
-  return m_objects.count();
+  return m_objects.size();
 }
 
 inline bool GenericDataCollection::containsObject(const int id) const
@@ -406,12 +406,12 @@ inline const QString GenericDataCollection::getPropertyName(const int i) const
 
 inline int GenericDataCollection::rowCount() const
 {
-    return m_objects.count();
+    return m_objects.size();
 }
 
 inline int GenericDataCollection::getSortFieldCount() const
 {
-    return m_sortFields.count();
+    return m_sortFields.size();
 }
 
 inline TableSortField * GenericDataCollection::getSortField(const int i) const

@@ -155,7 +155,7 @@ void ScrollMessageBox::updateSize()
 
 
     QStringList sl = label->text().split("\n");
-    for (int k=0; k<sl.count(); ++k)
+    for (int k=0; k<sl.size(); ++k)
     {
         width = qMax(width, fm.width(sl[k])+100);
     }

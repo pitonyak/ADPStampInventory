@@ -55,12 +55,12 @@ void LinkBackFilterDelegate::setEditorData(QWidget *editor, const QModelIndex &i
   {
     QComboBox* comboBox = dynamic_cast<QComboBox*>(editor);
     QStringList qsl = qvar.toStringList();
-    if (qsl.count() == 1)
+    if (qsl.size() == 1)
     {
       comboBox->addItems(qsl);
       comboBox->setCurrentIndex(0);
     }
-    else if (qsl.count() > 1)
+    else if (qsl.size() > 1)
     {
       QString desiredItemText = qsl.at(0);
       qsl.removeAt(0);

@@ -174,7 +174,7 @@ public:
 
     QStringList getSupportedNames() const { return m_supportedNames; }
 
-    QString getFirstSupportedName() const { return m_supportedNames.count() > 0 ? m_supportedNames.first() : "Unknown"; }
+    QString getFirstSupportedName() const { return m_supportedNames.size() > 0 ? m_supportedNames.first() : "Unknown"; }
 
 private:
     QRegExp* firstMatchingRegExp(const QString& aName) const;

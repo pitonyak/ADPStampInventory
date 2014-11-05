@@ -257,7 +257,7 @@ void MainWindow::readCSV()
         {
           const CSVLine& readLine = reader.getLine(i);
           CSVLine newLine;
-          for (int k=0; k<readLine.count(); ++k)
+          for (int k=0; k<readLine.size(); ++k)
           {
             const CSVColumn& c = readLine[k];
             QVariant v = c.toVariant();
@@ -306,7 +306,7 @@ void MainWindow::exportCSV()
 
     QStringList tableNames = m_db->getTableNames();
     QStringList existingFiles;
-    for (int i=0; i<tableNames.count(); ++i)
+    for (int i=0; i<tableNames.size(); ++i)
     {
         if (QFile::exists(writeDir.filePath(tableNames.at(i) + ".csv"))) {
             existingFiles.append(tableNames.at(i) + ".csv");
@@ -315,7 +315,7 @@ void MainWindow::exportCSV()
     if (QFile::exists(writeDir.filePath("stamps.ddl"))) {
         existingFiles.append("stamps.ddl");
     }
-    if (existingFiles.count() > 0)
+    if (existingFiles.size() > 0)
     {
         if (ScrollMessageBox::question(this, "WARNING", QString(tr("OVerwrite the following files:\n%1")).arg(existingFiles.join("\n"))) != QDialogButtonBox::Yes)
         {

@@ -36,14 +36,14 @@ void CSVLine::setOriginalLine(const QString& originalLine)
   }
 }
 
-int CSVLine::count() const
+int CSVLine::size() const
 {
-  return m_columns.count();
+  return m_columns.size();
 }
 
 int CSVLine::indexOf(const QString& value, const int from, const Qt::CaseSensitivity cs) const
 {
-  for (int i=from; i<m_columns.count(); ++i)
+  for (int i=from; i<m_columns.size(); ++i)
   {
     if (value.compare(m_columns[i].getValue(), cs) == 0)
     {
@@ -88,7 +88,7 @@ const CSVLine& CSVLine::copyFrom(const CSVLine& x)
 QString CSVLine::toString(const bool brief) const
 {
   QString s = "";
-  for (int i=0; i<m_columns.count(); ++i)
+  for (int i=0; i<m_columns.size(); ++i)
   {
     if (i > 0)
     {
@@ -103,7 +103,7 @@ QString CSVLine::toString(const bool brief) const
 QStringList CSVLine::toStringList() const
 {
   QStringList list;
-  for (int i=0; i<m_columns.count(); ++i)
+  for (int i=0; i<m_columns.size(); ++i)
   {
     list.append(m_columns[i].getValue());
   }

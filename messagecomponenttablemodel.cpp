@@ -12,9 +12,9 @@ MessageComponentTableModel::MessageComponentTableModel(QObject *parent) :
 
 void MessageComponentTableModel::clear()
 {
-  if (m_components.count() > 0)
+  if (m_components.size() > 0)
   {
-    beginRemoveRows(QModelIndex(), 0, m_components.count() - 1);
+    beginRemoveRows(QModelIndex(), 0, m_components.size() - 1);
     m_components.clear();
     endRemoveRows();
   }
@@ -23,9 +23,9 @@ void MessageComponentTableModel::clear()
 void MessageComponentTableModel::appendMessageComponents(const QList< QPair<SimpleLoggerRoutingInfo::MessageComponent, QString> >& components)
 {
     clear();
-    if (components.count() > 0)
+    if (components.size() > 0)
     {
-        beginInsertRows(QModelIndex(), m_components.count(), m_components.count() + components.count() - 1);
+        beginInsertRows(QModelIndex(), m_components.size(), m_components.size() + components.size() - 1);
         m_components.append(components);
         endInsertRows();
     }
@@ -34,9 +34,9 @@ void MessageComponentTableModel::appendMessageComponents(const QList< QPair<Simp
 void MessageComponentTableModel::setMessageComponents(const QList< QPair<SimpleLoggerRoutingInfo::MessageComponent, QString> >& components)
 {
     clear();
-    if (components.count() > 0)
+    if (components.size() > 0)
     {
-        beginInsertRows(QModelIndex(), 0, components.count() - 1);
+        beginInsertRows(QModelIndex(), 0, components.size() - 1);
         m_components.append(components);
         endInsertRows();
     }
@@ -50,7 +50,7 @@ const QList< QPair<SimpleLoggerRoutingInfo::MessageComponent, QString> >& Messag
 
 int MessageComponentTableModel::rowCount( const QModelIndex & parent) const
 {
-    return parent.isValid() ? 0 : m_components.count();
+    return parent.isValid() ? 0 : m_components.size();
 }
 
 int MessageComponentTableModel::columnCount( const QModelIndex &) const
@@ -224,9 +224,9 @@ void MessageComponentTableModel::insertMessageComponent(int row, const QPair<Sim
   if (row < 0)
   {
     row = 0;
-  } else if (row > m_components.count())
+  } else if (row > m_components.size())
   {
-    row = m_components.count();
+    row = m_components.size();
   }
 
   beginInsertRows(QModelIndex(), row, row);
@@ -236,7 +236,7 @@ void MessageComponentTableModel::insertMessageComponent(int row, const QPair<Sim
 
 void MessageComponentTableModel::removeMessageComponent(int row)
 {
-  if (0 <= row && row < m_components.count())
+  if (0 <= row && row < m_components.size())
   {
     beginRemoveRows(QModelIndex(), row, row);
     m_components.removeAt(row);
@@ -246,7 +246,7 @@ void MessageComponentTableModel::removeMessageComponent(int row)
 
 void MessageComponentTableModel::moveMessageComponentUp(int row)
 {
-  if (0 < row && row < m_components.count())
+  if (0 < row && row < m_components.size())
   {
     if (beginMoveRows(QModelIndex(), row, row, QModelIndex(), row- 1))
     {
@@ -258,7 +258,7 @@ void MessageComponentTableModel::moveMessageComponentUp(int row)
 
 void MessageComponentTableModel::moveMessageComponentDown(int row)
 {
-  if (0 <= row && row < m_components.count() - 1)
+  if (0 <= row && row < m_components.size() - 1)
   {
     // Yes, I really do need to use row+2, odd as it is!
     if (beginMoveRows(QModelIndex(), row, row, QModelIndex(), row + 2))
@@ -271,7 +271,7 @@ void MessageComponentTableModel::moveMessageComponentDown(int row)
 
 int MessageComponentTableModel::messageComponentCount() const
 {
-  return m_components.count();
+  return m_components.size();
 }
 
 
