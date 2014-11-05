@@ -16,7 +16,7 @@
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2011-2013
+ * \date 2011-2014
  ***************************************************************************/
 class LinkBackFilterDelegate : public QStyledItemDelegate
 {

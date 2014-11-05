@@ -9,6 +9,7 @@ LinkBackFilterDelegate::LinkBackFilterDelegate(QObject *parent) :
   QStyledItemDelegate(parent)
 {
 }
+// TODO: Look here: http://qt-project.org/forums/viewthread/17880
 
 #include <QFile>
 #include <QTextStream>
@@ -69,10 +70,12 @@ void LinkBackFilterDelegate::setEditorData(QWidget *editor, const QModelIndex &i
       {
         if (QString::compare(comboBox->itemText(i), desiredItemText) == 0)
         {
+          qDebug(qPrintable(QString("Found item text %1 at %2").arg(desiredItemText).arg(i)));
           comboBox->setCurrentIndex(i);
           return;
         }
       }
+      qDebug(qPrintable(QString("Did not find item text %1").arg(desiredItemText)));
       comboBox->setCurrentIndex(0);
     }
   }

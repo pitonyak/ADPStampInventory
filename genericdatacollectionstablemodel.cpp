@@ -76,14 +76,21 @@ QVariant GenericDataCollectionsTableModel::data( const QModelIndex &index, int r
     {
         if (m_useLinks && fieldSchema->isLinkField())
         {
+            QVariant currentValue = data(index, Qt::DisplayRole);
+            QStringList returnList;
+            returnList << currentValue.toString();
             if (m_linkCache.hasCachedListBySource(m_tableName, fieldName))
             {
-                return m_linkCache.getCachedListBySource(m_tableName, fieldName);
+                returnList.append(m_linkCache.getCachedListBySource(m_tableName, fieldName));
             }
-            QString cacheId = m_linkCache.hasCacheIdentifier(m_tableName, fieldName) ? m_linkCache.getCacheIdentifer(m_tableName, fieldName) : const_cast<LinkedFieldSelectionCache&>(m_linkCache).setCacheIdentifier(m_tableName, fieldName, fieldSchema->getLinkTableName(), fieldSchema->getLinkDisplayField());
-            QStringList list = getLinkEditValues(fieldSchema->getLinkTableName(), fieldSchema->getLinkDisplayField());
-            const_cast<LinkedFieldSelectionCache&>(m_linkCache).setCachedList(cacheId, list);
-            return list;
+            else
+            {
+                QString cacheId = m_linkCache.hasCacheIdentifier(m_tableName, fieldName) ? m_linkCache.getCacheIdentifer(m_tableName, fieldName) : const_cast<LinkedFieldSelectionCache&>(m_linkCache).setCacheIdentifier(m_tableName, fieldName, fieldSchema->getLinkTableName(), fieldSchema->getLinkDisplayField());
+                QStringList list = getLinkEditValues(fieldSchema->getLinkTableName(), fieldSchema->getLinkDisplayField());
+                const_cast<LinkedFieldSelectionCache&>(m_linkCache).setCachedList(cacheId, list);
+                returnList.append(list);
+            }
+            return returnList;
         }
         return object->getValue(m_table->getPropertyName(index.column()));
     }
