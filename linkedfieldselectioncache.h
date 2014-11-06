@@ -65,6 +65,8 @@ public:
     bool hasCachedListBySource(const QString& tableName, const QString& fieldName) const;
     QStringList getCachedListBySource(const QString& tableName, const QString& fieldName) const;
 
+    int getIdForCachedValue(const QString& cacheId, const QString& cachedValue) const;
+
   signals:
 
   public slots:

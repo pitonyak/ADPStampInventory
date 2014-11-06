@@ -38,11 +38,26 @@ bool GenericDataCollectionsTableModel::setData ( const QModelIndex & index, cons
     if (object != nullptr)
     {
       GenericDataObject* originalObject = isTracking() ? object->clone() : nullptr;
-      QString name = m_table->getPropertyName(index.column());
-      object->setValue(name, value);
+
+      QString fieldName = m_table->getPropertyName(index.column());
+      const DescribeSqlField* fieldSchema = m_schema.getFieldByName(fieldName);
+      if (m_useLinks && fieldSchema->isLinkField())
+      {
+        QString cacheId = m_linkCache.buildCacheIdentifier(fieldSchema->getLinkTableName(), fieldSchema->getLinkDisplayField());
+        int refId = m_linkCache.getIdForCachedValue(cacheId, value.toString());
+
+        //??qDebug(qPrintable(QString("Setting value %1.%2=%3 using %5 yields %4").arg(m_tableName).arg(fieldName).arg(value.toString()).arg(refId).arg(cacheId)));
+        if (refId >= 0) {
+          object->setValue(fieldName, refId);
+        }
+      }
+      else
+      {
+        object->setValue(fieldName, value);
+      }
       if (isTracking())
       {
-        m_changeTracker.push(index.row(), index.column(), name, ChangedObjectBase::Edit, object->clone(), originalObject);
+        m_changeTracker.push(index.row(), index.column(), fieldName, ChangedObjectBase::Edit, object->clone(), originalObject);
       }
       emit dataChanged(index, index);
       return true;
@@ -61,7 +76,19 @@ QVariant GenericDataCollectionsTableModel::data( const QModelIndex &index, int r
     Q_ASSERT_X(m_schema.containsField(fieldName), "GenericDataCollectionsTableModel::data", qPrintable(QString("Schema does not have field %1").arg(fieldName)));
     const DescribeSqlField* fieldSchema = m_schema.getFieldByName(fieldName);
 
-    if (role == Qt::DisplayRole)
+    if (role == Qt::EditRole)
+    {
+      if (m_useLinks && fieldSchema->isLinkField())
+      {
+        QVariant currentValue = data(index, Qt::DisplayRole);
+        QStringList returnList;
+        returnList << currentValue.toString();
+        returnList.append(getLinkEditValues(fieldSchema->getLinkTableName(), fieldSchema->getLinkDisplayField()));
+        return returnList;
+      }
+      return object->getValue(m_table->getPropertyName(index.column()));
+    }
+    else if (role == Qt::DisplayRole)
     {
       // Only display currency symbol for display, not for edit!
       if (fieldSchema->isCurrency())
@@ -70,51 +97,10 @@ QVariant GenericDataCollectionsTableModel::data( const QModelIndex &index, int r
         QLocale locale;
         return locale.toCurrencyString(object->getValueNative(fieldName).toDouble());
       }
-    }
-
-    if (role == Qt::EditRole)
-    {
-        if (m_useLinks && fieldSchema->isLinkField())
-        {
-            QVariant currentValue = data(index, Qt::DisplayRole);
-            QStringList returnList;
-            returnList << currentValue.toString();
-            if (m_linkCache.hasCachedListBySource(m_tableName, fieldName))
-            {
-                returnList.append(m_linkCache.getCachedListBySource(m_tableName, fieldName));
-            }
-            else
-            {
-                QString cacheId = m_linkCache.hasCacheIdentifier(m_tableName, fieldName) ? m_linkCache.getCacheIdentifer(m_tableName, fieldName) : const_cast<LinkedFieldSelectionCache&>(m_linkCache).setCacheIdentifier(m_tableName, fieldName, fieldSchema->getLinkTableName(), fieldSchema->getLinkDisplayField());
-                QStringList list = getLinkEditValues(fieldSchema->getLinkTableName(), fieldSchema->getLinkDisplayField());
-                const_cast<LinkedFieldSelectionCache&>(m_linkCache).setCachedList(cacheId, list);
-                returnList.append(list);
-            }
-            return returnList;
-        }
-        return object->getValue(m_table->getPropertyName(index.column()));
-    }
-    else if (role == Qt::DisplayRole)
-    {
-      if (m_useLinks && fieldSchema->isLinkField())
+      else if (m_useLinks && fieldSchema->isLinkField())
       {
-        int objectId = object->getInt("id");
-        bool ok = true;
-        int linkId = object->getValue(m_table->getPropertyName(index.column())).toInt(&ok);
-
-        const QString* cachedValue = m_linkCache.getCacheValueBySourceTable(m_tableName, fieldName, objectId);
-
-        if (cachedValue != nullptr)
-        {
-          return *cachedValue;
-        }
-        else
-        {
-          QString cacheId = m_linkCache.hasCacheIdentifier(m_tableName, fieldName) ? m_linkCache.getCacheIdentifer(m_tableName, fieldName) : const_cast<LinkedFieldSelectionCache&>(m_linkCache).setCacheIdentifier(m_tableName, fieldName, fieldSchema->getLinkTableName(), fieldSchema->getLinkDisplayField());
-          QString newValue = getLinkValues(fieldSchema->getLinkTableName(), linkId, fieldSchema->getLinkDisplayField());
-          const_cast<LinkedFieldSelectionCache&>(m_linkCache).addCacheValue(cacheId, linkId, newValue);
-          return newValue;
-        }
+        int linkId = object->getInt(m_table->getPropertyName(index.column()));
+        return getLinkValues(fieldSchema->getLinkTableName(), linkId, fieldSchema->getLinkDisplayField());
       }
       return object->getValue(m_table->getPropertyName(index.column()));
     }
@@ -124,68 +110,92 @@ QVariant GenericDataCollectionsTableModel::data( const QModelIndex &index, int r
 
 QStringList GenericDataCollectionsTableModel::getLinkEditValues(const QString& tableName, QStringList fields) const
 {
-    QStringList list;
-    const DescribeSqlTable* schema = m_schemas.getTableByName(tableName);
-    const GenericDataCollection* table = m_tables.getTable(tableName);
+  // Do we already have the list?
+  QString cacheId = m_linkCache.buildCacheIdentifier(tableName, fields);
+  if (m_linkCache.hasCachedList(cacheId)) {
+    return m_linkCache.getCachedList(cacheId);
+  }
 
-    // Begin by getting all cache IDs.
-    QHash<int, QString> fieldToCacheId;
-    for (int iField=0; iField < fields.size(); ++iField)
+  const DescribeSqlTable* schema = m_schemas.getTableByName(tableName);
+  const GenericDataCollection* table = m_tables.getTable(tableName);
+
+  // Build any internal cache IDs for the fields that we will use.
+  QHash<int, QString> innerFieldToCacheId;
+  for (int iField=0; iField < fields.size(); ++iField)
+  {
+    QString fieldName = fields.at(iField);
+    const DescribeSqlField* fieldSchema = schema->getFieldByName(fieldName);
+    if (fieldSchema->isLinkField())
     {
+      QString fieldCacheId = m_linkCache.hasCacheIdentifier(tableName, fieldName) ? m_linkCache.getCacheIdentifer(tableName, fieldName) : const_cast<LinkedFieldSelectionCache&>(m_linkCache).setCacheIdentifier(tableName, fieldName, fieldSchema->getLinkTableName(), fieldSchema->getLinkDisplayField());
+      innerFieldToCacheId[iField] = fieldCacheId;
+    }
+  }
+
+  QStringList list;
+
+  for (int iRow=0; iRow < table->rowCount(); ++iRow)
+  {
+    const GenericDataObject* row = table->getObjectByRow(iRow);
+    int rowId = row->getInt("id");
+    const QString* cachedValue = m_linkCache.getCacheValue(cacheId, rowId);
+
+    if (cachedValue != nullptr)
+    {
+      list << *cachedValue;
+    } else {
+
+      QString s = "";
+      for (int iField=0; iField < fields.size(); ++iField)
+      {
+        if (iField > 0) {
+          s = s.append(('/'));
+        }
         QString fieldName = fields.at(iField);
         const DescribeSqlField* fieldSchema = schema->getFieldByName(fieldName);
+        int linkId = row->getInt(fieldName);
         if (fieldSchema->isLinkField())
         {
-            QString cacheId = m_linkCache.hasCacheIdentifier(m_tableName, fieldName) ? m_linkCache.getCacheIdentifer(m_tableName, fieldName) : const_cast<LinkedFieldSelectionCache&>(m_linkCache).setCacheIdentifier(m_tableName, fieldName, fieldSchema->getLinkTableName(), fieldSchema->getLinkDisplayField());
-            fieldToCacheId[iField] = cacheId;
+          QString fieldCacheId = innerFieldToCacheId[iField];
+          // Test for a cached value
+          const QString* cachedValue = m_linkCache.getCacheValue(fieldCacheId, linkId);
+          if (cachedValue != nullptr)
+          {
+            s = s.append(*cachedValue);
+          }
+          else
+          {
+            s.append(getLinkValues(fieldSchema->getLinkTableName(), linkId, fieldSchema->getLinkDisplayField()));
+          }
         }
-    }
-
-    for (int iRow=0; iRow<table->rowCount(); ++iRow)
-    {
-        QString s = "";
-        const GenericDataObject* row = table->getObjectByRow(iRow);
-        for (int iField=0; iField < fields.size(); ++iField)
+        else
         {
-            if (iField > 0) {
-                s = s.append(('/'));
-            }
-            QString fieldName = fields.at(iField);
-            const DescribeSqlField* fieldSchema = schema->getFieldByName(fieldName);
-            int linkId = row->getInt(fieldName);
-            if (fieldSchema->isLinkField())
-            {
-                QString cacheId = fieldToCacheId[iField];
-                // Test for a cached value
-                const QString* cachedValue = m_linkCache.getCacheValue(cacheId, linkId);
-                if (cachedValue != nullptr)
-                {
-                  s = s.append(*cachedValue);
-                }
-                else
-                {
-                  QString newValue = getLinkValues(fieldSchema->getLinkTableName(), linkId, fieldSchema->getLinkDisplayField());
-                  const_cast<LinkedFieldSelectionCache&>(m_linkCache).addCacheValue(cacheId, linkId, newValue);
-                  s = s.append(newValue);
-                }
-            }
-            else
-            {
-              s = s.append(row->getString(fieldName));
-            }
+          s = s.append(row->getString(fieldName));
         }
-        list << s;
+      }
+      const_cast<LinkedFieldSelectionCache&>(m_linkCache).addCacheValue(cacheId, rowId, s);
+      list << s;
     }
-    return list;
+  }
+  const_cast<LinkedFieldSelectionCache&>(m_linkCache).setCachedList(cacheId, list);
+  return list;
 }
 
 QString GenericDataCollectionsTableModel::getLinkValues(const QString& tableName, const int id, QStringList fields) const
 {
+  QString cacheId = m_linkCache.buildCacheIdentifier(tableName, fields);
+  const QString* cachedValue = m_linkCache.getCacheValue(cacheId, id);
+  if (cachedValue != nullptr)
+  {
+    return *cachedValue;
+  }
+
   QString s = "";
 
   const DescribeSqlTable* schema = m_schemas.getTableByName(tableName);
   GenericDataCollection* linkTable = m_tables.getTable(tableName);
   GenericDataObject* row = (linkTable != nullptr) ? linkTable->getObjectById(id) : nullptr;
+
   for (int i=0; i<fields.size(); ++i)
   {
     if (i > 0) {
@@ -197,18 +207,15 @@ QString GenericDataCollectionsTableModel::getLinkValues(const QString& tableName
       int linkId = row->getInt(fieldName);
       if (fieldSchema->isLinkField())
       {
-        // Test for a cached value
-        const QString* cachedValue = m_linkCache.getCacheValueBySourceTable(tableName, fieldName, linkId);
+        QString fieldCacheId = m_linkCache.hasCacheIdentifier(tableName, fieldName) ? m_linkCache.getCacheIdentifer(tableName, fieldName) : const_cast<LinkedFieldSelectionCache&>(m_linkCache).setCacheIdentifier(tableName, fieldName, fieldSchema->getLinkTableName(), fieldSchema->getLinkDisplayField());
+        const QString* cachedValue = m_linkCache.getCacheValue(fieldCacheId, linkId);
         if (cachedValue != nullptr)
         {
           s = s.append(*cachedValue);
         }
         else
         {
-          QString cacheId = m_linkCache.hasCacheIdentifier(tableName, fieldName) ? m_linkCache.getCacheIdentifer(tableName, fieldName) : const_cast<LinkedFieldSelectionCache&>(m_linkCache).setCacheIdentifier(tableName, fieldName, fieldSchema->getLinkTableName(), fieldSchema->getLinkDisplayField());
-          QString newValue = getLinkValues(fieldSchema->getLinkTableName(), linkId, fieldSchema->getLinkDisplayField());
-          const_cast<LinkedFieldSelectionCache&>(m_linkCache).addCacheValue(cacheId, linkId, newValue);
-          s = s.append(newValue);
+          s = s.append(getLinkValues(fieldSchema->getLinkTableName(), linkId, fieldSchema->getLinkDisplayField()));
         }
       }
       else
@@ -217,6 +224,8 @@ QString GenericDataCollectionsTableModel::getLinkValues(const QString& tableName
       }
     }
   }
+  qDebug(qPrintable(QString("Set cache: %1 %2 %3").arg(cacheId).arg(id).arg(s)));
+  const_cast<LinkedFieldSelectionCache&>(m_linkCache).addCacheValue(cacheId, id, s);
   return s;
 }
 

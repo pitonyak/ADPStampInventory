@@ -29,6 +29,7 @@ bool GenericDataCollectionTableModel::setData ( const QModelIndex & index, const
     {
       GenericDataObject* originalObject = isTracking() ? object->clone() : nullptr;
       QString name = m_collection.getPropertyName(index.column());
+      // TODO: See if this is
       object->setValue(name, value);
       if (isTracking())
       {
