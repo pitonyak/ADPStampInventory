@@ -6,6 +6,7 @@
 #include "constants.h"
 #include "stampdb.h"
 #include "describesqltables.h"
+#include "genericdatacollectionstableproxy.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -41,14 +42,18 @@ void GenericDataCollectionTableDialog::buildDialog()
 
   // Build the primary table.
   m_tableView = new QTableView();
-  //??m_tableModel = new GenericDataCollectionTableModel(m_table);
   Q_ASSERT_X(m_tables != nullptr, "GenericDataCollectionTableDialog::buildDialog()", "m_tables is null");
   m_tableModel = new GenericDataCollectionsTableModel(true, m_tableName, *m_tables, m_schema);
 
-  m_proxyModel = new QSortFilterProxyModel(this);
+  // I could use QSortFilterProxyModel(this), but I want to use a
+  // "natural" sort, which recognizes numbers.
+  // see http://qt-project.org/doc/qt-5/qsortfilterproxymodel.html
+  // http://doc.qt.digia.com/4.6/itemviews-customsortfiltermodel.html
+  m_proxyModel = new GenericDataCollectionsTableProxy(this);
+  m_proxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
+  m_proxyModel->setNumericMode(true);
   m_proxyModel->setSourceModel(m_tableModel);
 
-  //??m_tableView->setModel(m_tableModel);
   m_tableView->setModel(m_proxyModel);
   m_tableView->setSortingEnabled(true);
 
@@ -56,6 +61,7 @@ void GenericDataCollectionTableDialog::buildDialog()
 
   // Parameter sets the owning parent that will delete the delegate.
   LinkBackFilterDelegate* delegate = new LinkBackFilterDelegate(m_tableView);
+  delegate->setDateFormatString("MM/dd/yyyy");
   m_tableView->setItemDelegate(delegate);
 
   // For all columns that are boolean, use this delegate.

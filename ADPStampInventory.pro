@@ -81,7 +81,8 @@ SOURCES += main.cpp\
     genericdatacollections.cpp \
     genericdatacollectionstablemodel.cpp \
     linkedfieldcache.cpp \
-    linkedfieldselectioncache.cpp
+    linkedfieldselectioncache.cpp \
+    genericdatacollectionstableproxy.cpp
 
 HEADERS  += mainwindow.h \
     stampdb.h \
@@ -139,7 +140,8 @@ HEADERS  += mainwindow.h \
     genericdatacollections.h \
     genericdatacollectionstablemodel.h \
     linkedfieldcache.h \
-    linkedfieldselectioncache.h
+    linkedfieldselectioncache.h \
+    genericdatacollectionstableproxy.h
 
 FORMS    += mainwindow.ui \
     logroutinginfodialog.ui

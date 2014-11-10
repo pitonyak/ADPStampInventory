@@ -19,6 +19,8 @@
 #include <QXmlStreamWriter>
 #include <QInputDialog>
 
+#include <QSqlQuery>
+
 #if defined(__GNUC__)
 #if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 6)
 #include "nullptr.h"
@@ -347,11 +349,58 @@ void MainWindow::configure()
       // QString tableName("inventory");
       QString tableName("stamplocation");
       // QString tableName("stamplocation");
+      /**
       GenericDataCollection* gdo = m_db->readTableName(tableName);
 
       qDebug(qPrintable(QString("On return, number of rows = %1").arg(gdo->rowCount())));
 
       DescribeSqlTables schema = DescribeSqlTables::getStampSchema();
+
+      GenericDataCollection* data = m_db->readTableBySchema("catalog");
+
+      QSqlQuery query(m_db->getDB());
+      QString s = QString("UPDATE %1 SET %2=:%2, updated=:updated WHERE %3=:id").arg("catalog").arg("releasedate").arg("id");
+      query.prepare(s);
+
+      for (int i=0; i<data->rowCount(); ++i)
+      {
+        GenericDataObject* row = data->getObjectByRow (i);
+        QString scott = row->getString("scott");
+        int id = row->getInt("id");
+        int countryId = row->getInt("countryid");
+        QDate rd = row->getDate("releasedate");
+        bool makeChange = false;
+        QString leadingNum = "";
+        for (int idx = 0; idx < scott.length() && scott.at(idx).isDigit(); ++idx)
+        {
+          leadingNum.append(scott.at(idx));
+        }
+        int leadingInt = leadingNum.isEmpty() ? 0 : leadingNum.toInt();
+
+        makeChange = countryId == 5 && leadingInt < 2000 && leadingInt > 299 && (row->getDate("releasedate").year() >= 2000);
+        makeChange = (row->getDate("releasedate").year() >= 2000);
+
+        if (makeChange)
+        {
+          qDebug(qPrintable(QString("Changing %4 (%1) from %2 to %3").arg(id).arg(rd.toString("MM/dd/yyyy")).arg(rd.addYears(-100).toString("MM/dd/yyyy")).arg(scott)));
+          makeChange = false;
+        }
+        if (makeChange)
+        {
+          QDate d = row->getDate("releasedate").addYears(-100);
+          query.bindValue(":id", row->getInt("id"));
+          QDateTime now = QDateTime::currentDateTime();
+          query.bindValue(":updated", now);
+          query.bindValue(":releasedate", d);
+          if (!query.exec())
+          {
+            qDebug(qPrintable(QString("Failed to update row for id ").arg(row->getInt("id"))));
+            return;
+          }
+        }
+
+      }
+**/
       //GenericDataCollectionTableDialog dlg(tableName, *gdo, *m_db, schema);
       //dlg.exec();
   }

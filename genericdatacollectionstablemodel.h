@@ -109,7 +109,7 @@ public:
   void getRowsAscending(const QModelIndexList &list, QList<int> &rows) const;
 
   // Write tracked changes to the backing DB.
-  bool saveTrackedChanges(const QString& tableName, const GenericDataCollection& data, QSqlDatabase& db, const DescribeSqlTables& schema);
+  bool saveTrackedChanges(const QString& tableName, GenericDataCollection& data, QSqlDatabase& db, const DescribeSqlTables& schema);
 
   QString getLinkValues(const QString& tableName, const int id, QStringList fields) const;
 

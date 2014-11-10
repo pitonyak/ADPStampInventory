@@ -9,10 +9,10 @@ class QTableView;
 class GenericDataCollectionTableModel;
 class GenericDataCollectionsTableModel;
 class QItemSelection;
-class QSortFilterProxyModel;
 class StampDB;
 class DescribeSqlTables;
 class GenericDataCollections;
+class GenericDataCollectionsTableProxy;
 
 class GenericDataCollectionTableDialog : public QDialog
 {
@@ -73,11 +73,11 @@ private:
   QString m_tableName;
 
   /*! \brief Actual data model to which changes are made and such. */
-  //??GenericDataCollectionTableModel* m_tableModel;
   GenericDataCollectionsTableModel* m_tableModel;
 
   /*! \brief Used by the view to allow for sorting and similar. the actual table model is contained inside of this. */
-  QSortFilterProxyModel* m_proxyModel;
+  //QSortFilterProxyModel* m_proxyModel;
+  GenericDataCollectionsTableProxy* m_proxyModel;
 
   /*! \brief We need this here so that we can persist the DB. */
   StampDB& m_db;

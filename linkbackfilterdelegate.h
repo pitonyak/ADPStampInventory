@@ -52,9 +52,26 @@ public:
     void setModelData(QWidget *editor, QAbstractItemModel *model,
                       const QModelIndex &index) const;
 
+    virtual QString displayText(const QVariant & value, const QLocale & locale ) const;
+
+    QString getDateFormatString() const { return m_dateFormatString; }
+    QString getTimeFormatString() const { return m_timeFormatString; }
+    QString getDateTimeFormatString() const { return m_dateTimeFormatString; }
+
+    void setDateFormatString(const QString& formatString) { m_dateFormatString = formatString; }
+    void setTimeFormatString(const QString& formatString) { m_timeFormatString = formatString; }
+    void setDateTimeFormatString(const QString& formatString) { m_dateTimeFormatString = formatString; }
+
+
 signals:
 
 public slots:
+
+private:
+    QString m_dateFormatString;
+    QString m_timeFormatString;
+    QString m_dateTimeFormatString;
+
 
 };
 

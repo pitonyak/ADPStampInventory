@@ -14,6 +14,7 @@ LinkBackFilterDelegate::LinkBackFilterDelegate(QObject *parent) :
 #include <QFile>
 #include <QTextStream>
 #include <QCheckBox>
+#include <QDateEdit>
 
 QWidget *LinkBackFilterDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem & option,
                                               const QModelIndex &index) const
@@ -33,6 +34,14 @@ QWidget *LinkBackFilterDelegate::createEditor(QWidget *parent, const QStyleOptio
     checkBox->setTristate(false);
     return checkBox;
   }
+  else if (qvar.type() == QVariant::Date && !getDateFormatString().isEmpty())
+  {
+    QDateEdit* editor = new QDateEdit(parent);
+    editor->setDisplayFormat(getDateFormatString());
+    // Annoying that I need this!
+    editor->setAutoFillBackground(true);
+    return editor;
+  }
 
   //widget = new QLineEdit(parent);
   // Returns an expanding line editor.
@@ -43,6 +52,16 @@ QWidget *LinkBackFilterDelegate::createEditor(QWidget *parent, const QStyleOptio
   // the edit display as well (distracting).
   widget->setAutoFillBackground(true);
   return widget;
+}
+
+QString LinkBackFilterDelegate::displayText(const QVariant & value, const QLocale & locale ) const
+{
+  if (value.type() == QVariant::Date && !getDateFormatString().isEmpty())
+  {
+    //qDebug(qPrintable(QString("%1 %2 %3").arg(value.toDate().toString()).arg(value.toDate().toString("")).arg(value.toDate().toString("MM/dd/yyy"))));
+    return value.toDate().toString(getDateFormatString());
+  }
+  return QStyledItemDelegate::displayText(value, locale);
 }
 
 void LinkBackFilterDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const
