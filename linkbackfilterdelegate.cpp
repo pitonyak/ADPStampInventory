@@ -8,6 +8,12 @@
 LinkBackFilterDelegate::LinkBackFilterDelegate(QObject *parent) :
   QStyledItemDelegate(parent)
 {
+    setBoolTrue(tr("yes"));
+    setBoolFalse(tr("no"));
+
+    setTimeFormatString(tr("hh:mm:ss A"));
+    setDateFormatString(tr("MM/dd/yyyy"));
+    setDateTimeFormatString(tr("MM/dd/yyyy hh:mm:ss A"));
 }
 // TODO: Look here: http://qt-project.org/forums/viewthread/17880
 
@@ -42,6 +48,22 @@ QWidget *LinkBackFilterDelegate::createEditor(QWidget *parent, const QStyleOptio
     editor->setAutoFillBackground(true);
     return editor;
   }
+  else if (qvar.type() == QVariant::DateTime && !getDateTimeFormatString().isEmpty())
+  {
+    QDateTimeEdit* editor = new QDateTimeEdit(parent);
+    editor->setDisplayFormat(getDateTimeFormatString());
+    // Annoying that I need this!
+    editor->setAutoFillBackground(true);
+    return editor;
+  }
+  else if (qvar.type() == QVariant::Time && !getTimeFormatString().isEmpty())
+  {
+    QTimeEdit* editor = new QTimeEdit(parent);
+    editor->setDisplayFormat(getTimeFormatString());
+    // Annoying that I need this!
+    editor->setAutoFillBackground(true);
+    return editor;
+  }
 
   //widget = new QLineEdit(parent);
   // Returns an expanding line editor.
@@ -61,6 +83,28 @@ QString LinkBackFilterDelegate::displayText(const QVariant & value, const QLocal
     //qDebug(qPrintable(QString("%1 %2 %3").arg(value.toDate().toString()).arg(value.toDate().toString("")).arg(value.toDate().toString("MM/dd/yyy"))));
     return value.toDate().toString(getDateFormatString());
   }
+  else if (value.type() == QVariant::DateTime && !getDateTimeFormatString().isEmpty())
+  {
+    return value.toDateTime().toString(getDateTimeFormatString());
+  }
+  else if (value.type() == QVariant::Time && !getTimeFormatString().isEmpty())
+  {
+      return value.toTime().toString(getTimeFormatString());
+  }
+  else if (value.type() == QVariant::Bool)
+  {
+      if (value.toBool())
+      {
+          if (!getBoolTrue().isEmpty()) {
+              return getBoolTrue();
+          }
+      }
+      else if (!getBoolFalse().isEmpty()) {
+          return getBoolFalse();
+      }
+      //return value.toTime().toString(getTimeFormatString());
+  }
+
   return QStyledItemDelegate::displayText(value, locale);
 }
 

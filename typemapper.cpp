@@ -465,6 +465,7 @@ QVariant TypeMapper::forceToType(const QVariant& x, const QMetaType::Type aType,
       break;
 
     case QMetaType::Bool :
+      //qDebug("Setting type to BOOL");
       v.setValue(x.toBool());
       break;
 

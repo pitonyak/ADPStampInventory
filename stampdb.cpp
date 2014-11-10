@@ -582,7 +582,10 @@ GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, cons
             // A Variant is returned at this point. The concern is
             // that some data types are stored as a string in the DB and
             // we might want to treat them as a special type.
-            //??gdo->setValue(collection->getPropertyName(i), query.record().value(i));
+            // This is particularly problematic with SQL Light that uses strings for many things.
+            // If a BIT Varying type is used, and, if the string length is greater than 1, then string should be used
+            // rather than a boolean value. I don't have this problem at the moment, so,ignore it for now.
+            //gdo->setValue(collection->getPropertyName(i), query.record().value(i));
             gdo->setValue(collection->getPropertyName(i), mapper.forceToType(query.record().value(i), table->getFieldMetaType(collection->getPropertyName(i)), &ok));
           }
         }

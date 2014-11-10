@@ -5,11 +5,15 @@ SqlFieldTypeMaster::SqlFieldTypeMaster()
     // Order is crucial here because the list is searched in order.
     // If CHAR is first, it will match even if the type is CHARACTER VARYING.
 
+    // A BIT Varying field may have a length greater than 1, in which case, a string should be used rather than a boolean value.
+    // This assumes that a BIT is not varying, and uses a boolean instead.
+
     m_fieldTypes.append(SqlFieldType("NVARCHAR", "NATIONAL CHARACTER VARYING", QMetaType::QString, true, false));
     m_fieldTypes.append(SqlFieldType("NCHAR", "NATIONAL CHARACTER", QMetaType::QString, true, false));
     m_fieldTypes.append(SqlFieldType("VARCHAR", "CHARACTER VARYING", QMetaType::QString, true, false));
     m_fieldTypes.append(SqlFieldType("CHARACTER", "CHAR", QMetaType::QChar, true, false));
-    m_fieldTypes.append(SqlFieldType("BIT VARYING", "BIT", QMetaType::QString, true, false));
+    m_fieldTypes.append(SqlFieldType("BIT VARYING", "BIT", QMetaType::Bool, true, false));
+    //m_fieldTypes.append(SqlFieldType("BIT VARYING", "BIT", QMetaType::QString, true, false));
     m_fieldTypes.append(SqlFieldType("TIMESTAMPTZ", "TIMESTAMP WITH TIME ZONE", QMetaType::QDateTime, false, false));
     m_fieldTypes.append(SqlFieldType("TIMESTAMP", QMetaType::QDateTime, false, false));
     m_fieldTypes.append(SqlFieldType("TIMETZ", "TIME WITH TIME ZONE", QMetaType::QTime, false, false));

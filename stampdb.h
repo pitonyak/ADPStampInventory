@@ -154,7 +154,30 @@ public:
    */
   GenericDataCollection* readTableName(const QString& tableName, const bool sortByKey=true, const bool useSchema=false);
 
+  /*! \brief Read all data from a table and attempt to set the type based on the schema data.
+   *
+   * If a smarter DB is used, then we probably do not need to map the types.
+   * The SqlFieldTypeMaster will automatically map all BIT and BIT Varying types to a Bool,
+   * which is wrong for a sequence of bits.
+   *
+   *  \param [in] tableName
+   *  \param [in] sortByKey If true, the sort key list is automatically created based on the key fields (probably "id");
+   *
+   *  \return a new generic data collection that you now own and must delete (or, nullptr if it fails).
+   */
   GenericDataCollection* readTableBySchema(const QString& tableName, const bool sortByKey=true);
+
+  /*! \brief Read all data from a table and attempt to set the type based on the schema data.
+   *
+   * If a smarter DB is used, then we probably do not need to map the types.
+   * The SqlFieldTypeMaster will automatically map all BIT and BIT Varying types to a Bool,
+   * which is wrong for a sequence of bits.
+   *
+   *  \param [in] tableName
+   *  \param [in] orderByList Field name list by which the data is ordered.
+   *
+   *  \return a new generic data collection that you now own and must delete (or, nullptr if it fails).
+   */
   GenericDataCollection* readTableBySchema(const QString& tableName, const QStringList& orderByList);
 
   GenericDataCollections* readTableWithLinks(const QString& tableName, const int maxLinkDepth=-1, const bool sortByKey=true);
