@@ -345,6 +345,12 @@ void MainWindow::openSQLWindow()
 void MainWindow::configure()
 {
   if (createDBWorker()) {
+
+      GenericDataCollection gdc;
+      gdc.makeDummy();
+      TableSortFieldDialog dlg(&gdc);
+      dlg.exec();
+
       // QString tableName("country");
       // QString tableName("inventory");
       QString tableName("stamplocation");
@@ -410,10 +416,6 @@ void MainWindow::configure()
 
 void MainWindow::editTable()
 {
-  //GenericDataCollection gdc;
-  //gdc.makeDummy();
-  //TableSortFieldDialog dlg(&gdc);
-  //dlg.exec();
 
   DescribeSqlTables schema = DescribeSqlTables::getStampSchema();
   /**

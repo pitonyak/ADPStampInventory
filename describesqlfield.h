@@ -129,7 +129,7 @@ private:
   /*! \brief Name of the field to which this field is linked in the associated link table. */
   QString m_linkField;
 
-  /*! \brief Name of the field to display. This is a comma separated list of field names. */
+  /*! \brief Name of the field to display. This is a comma separated list of field names. Display this field by concatenating all these fields (from the target link table) together with some separator. */
   QString m_linkDisplayField;
 
   /*! \brief If not empty, then this is a currency field. */
@@ -144,8 +144,10 @@ private:
   /*! \brief True if this is a key field for the table. */
   bool m_isKey;
 
+  /*! How long is this field (if supported by the type). */
   int m_fieldLength;
 
+  /*! Field precision (not that this is used right now) */
   int m_fieldPrecision;
 };
 

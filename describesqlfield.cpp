@@ -103,6 +103,7 @@ DescribeSqlField DescribeSqlField::readXml(QXmlStreamReader& reader)
                 if (reader.attributes().hasAttribute("table") && reader.attributes().hasAttribute("field")) {
                     field.setLinkTableName(reader.attributes().value("table").toString());
                     field.setLinkFieldName(reader.attributes().value("field").toString());
+                    field.m_linkDisplayField = reader.attributes().value("displayfield").toString();
                 } else {
                     qDebug(qPrintable(QString("Link in field '%1' does not reference a table and field").arg(field.getName())));
                 }
@@ -162,6 +163,7 @@ QXmlStreamWriter& DescribeSqlField::writeXml(QXmlStreamWriter& writer) const
     writer.writeStartElement("Link");
     writer.writeAttribute("table", getLinkTableName());
     writer.writeAttribute("field", getLinkFieldName());
+    writer.writeAttribute("displayfield", m_linkDisplayField);
     writer.writeEndElement();
   }
   writer.writeEndElement();
