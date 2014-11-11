@@ -136,6 +136,10 @@ public:
    */
   GenericDataObject* getObjectById (const int id);
 
+  /*! \brief Find the "row" for this object ID.
+   *  \param [in] id Unique object identifier.
+   *  \return Index of this object, or -1 if not found.
+   */
   int getIndexOf(const int id) const;
 
 
@@ -247,7 +251,7 @@ public:
    */
   const GenericDataCollection& operator=(const GenericDataCollection& obj);
 
-  /*! number of objects */
+  /*! number of objects. Same as object count. */
   int rowCount() const;
   void sort();
 

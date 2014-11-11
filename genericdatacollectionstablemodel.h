@@ -115,13 +115,30 @@ public:
 
   QStringList getLinkEditValues(const QString& tableName, QStringList fields) const;
 
+  QString incrementScottNumber(const QString& scott) const;
+
+  int getIndexOf(const int id) const;
+  QModelIndex getIndexByRowCol(int row, int col) const;
+
 signals:
 
 public slots:
   void addRow();
   void deleteRows(const QModelIndexList& list);
   void undoChange();
-  void duplicateRows(const QModelIndexList& list);
+
+  //**************************************************************************
+  /*! \brief Duplicate the specified rows and return a list of the inserted IDs.
+   *
+   * As the rows are duplicated, the ID is always set to the current largest plus one.
+   * The Scott number will attempt to increment based on the autoIncrement parameter.
+   *
+   *  \param [in] list Identifies the rows to duplicate.
+   *  \param [in] autoIncrement If true, will attempt to increment the Scott number.
+   *
+   *  \return return a list of the inserted IDs in the order that they were inserted.
+   ***************************************************************************/
+  QList<int> duplicateRows(const QModelIndexList& list, const bool autoIncrement=false);
 
 private:
   bool m_useLinks;
@@ -140,5 +157,10 @@ private:
   LinkedFieldSelectionCache m_linkCache;
 
 };
+
+inline int GenericDataCollectionsTableModel::getIndexOf(const int id) const
+{
+  return (m_table != nullptr) ? m_table->getIndexOf(id) : -1;
+}
 
 #endif // GENERICDATACOLLECTIONSTABLEMODEL_H

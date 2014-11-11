@@ -228,6 +228,9 @@ int GenericDataObject::compare(const GenericDataObject& obj, const QStringList& 
 
 void GenericDataObject::setValue(const QString &name, const QVariant& value)
 {
+  // Just assume that it is correct type.
+  setValueNative(name, value);
+  /**
   if (fieldNameMeansDate(name))
   {
     // m_properties.insert(name.toLower(), value);
@@ -243,6 +246,7 @@ void GenericDataObject::setValue(const QString &name, const QVariant& value)
   {
     setValueNative(name, value);
   }
+  **/
 }
 
 

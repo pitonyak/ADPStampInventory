@@ -6,6 +6,8 @@
 #include <QLocale>
 #include <QQueue>
 #include <QSqlQuery>
+#include <QRegularExpression>
+#include <QRegularExpressionMatch>
 
 GenericDataCollectionsTableModel::GenericDataCollectionsTableModel(const bool useLinks, const QString& tableName, GenericDataCollections& tables, DescribeSqlTables& schema, QObject *parent) :
   QAbstractTableModel(parent),
@@ -19,6 +21,25 @@ GenericDataCollectionsTableModel::GenericDataCollectionsTableModel(const bool us
       m_schema = *tableSchema;
   }
 }
+
+QModelIndex GenericDataCollectionsTableModel::getIndexByRowCol(int row, int col) const
+{
+  if (col < 0) {
+    col = 0;
+  }
+  if (col >= m_table->getPropertNames().size()) {
+    col = m_table->getPropertNames().size() - 1;
+  }
+  if (row < 0) {
+    row = 0;
+  }
+  if (row >= m_table->getObjectCount())
+  {
+    row = m_table->getObjectCount() - 1;
+  }
+  return (col >= 0 && row >= 0) ? createIndex(row, col) : QModelIndex();
+}
+
 
 int GenericDataCollectionsTableModel::rowCount( const QModelIndex & parent) const
 {
@@ -539,8 +560,55 @@ void GenericDataCollectionsTableModel::undoChange()
   setTracking(trackState);
 }
 
-void GenericDataCollectionsTableModel::duplicateRows(const QModelIndexList& list)
+QString GenericDataCollectionsTableModel::incrementScottNumber(const QString& scott) const
 {
+  if (!scott.isEmpty()) {
+    QString regs = "^(\\D*)(\\d*)(.*)$";
+    qDebug(qPrintable(regs));
+    qDebug(qPrintable(scott));
+    QRegularExpression re(regs);
+    QRegularExpressionMatch match = re.match(scott);
+    if (match.hasMatch())
+    {
+      qDebug("We have a match");
+      QString lead = match.captured(1);   // No numbers
+      QString middle = match.captured(2); // Only numbers
+      QString tail = match.captured(3);   // Anything, but it starts without a number.
+      if (middle.isEmpty())
+      {
+        return scott;
+      }
+      if (tail.isEmpty() || tail.startsWith('/'))
+      {
+        return QString("%1%2%3").arg(lead).arg(1 + middle.toLongLong()).arg(tail);
+      }
+      if (tail.contains('/'))
+      {
+        QStringList list = tail.split('/');
+        QString x = list.at(0);
+        if (x.at(x.length() - 1).isLetter())
+        {
+          QChar c(x.at(x.length() - 1).unicode() + 1);
+          x.truncate(x.length() - 1);
+          list.replace(0, QString("%1%2").arg(x).arg(c));
+          return QString("%1%2%3").arg(lead).arg(middle).arg(list.join('/'));
+        }
+
+      }
+      else if (tail.at(tail.length() - 1).isLetter())
+      {
+        QChar c(tail.at(tail.length() - 1).unicode() + 1);
+        tail.truncate(tail.length() - 1);
+        return QString("%1%2%3%4").arg(lead).arg(middle).arg(tail).arg(c);
+      }
+    }
+  }
+  return scott;
+}
+
+QList<int> GenericDataCollectionsTableModel::duplicateRows(const QModelIndexList& list, const bool autoIncrement)
+{
+  QList<int> addedIds;
   qDebug(qPrintable(QString("duplicateRows %1").arg(list.size())));
   QList<int> rows;
   getRowsAscending(list, rows);
@@ -559,7 +627,14 @@ void GenericDataCollectionsTableModel::duplicateRows(const QModelIndexList& list
     {
       GenericDataObject* oldData = dataToCopy.dequeue();
       GenericDataObject* newData = oldData->clone();
-      newData->setValue("id", ++largestId);
+      int nextId = ++largestId;
+      addedIds << nextId;
+      newData->setValue("id", nextId);
+      if (autoIncrement) {
+        if (newData->containsValue("scott")) {
+          newData->setValue("scott", incrementScottNumber(newData->getString("scott")));
+        }
+      }
       int row = m_table->getObjectCount();
       if (m_isTracking)
       {
@@ -574,5 +649,6 @@ void GenericDataCollectionsTableModel::duplicateRows(const QModelIndexList& list
       m_changeTracker.push(lastChanges);
     }
   }
+  return addedIds;
 }
 

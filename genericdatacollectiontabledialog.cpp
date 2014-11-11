@@ -21,7 +21,8 @@
 
 GenericDataCollectionTableDialog::GenericDataCollectionTableDialog(const QString& tableName, GenericDataCollection &data, StampDB &db, DescribeSqlTables& schema, GenericDataCollections *tables, QWidget *parent) :
   QDialog(parent),
-  m_duplicateButton(nullptr), m_addButton(nullptr), m_deleteButton(nullptr), m_undoButton(nullptr),
+  m_duplicateButton(nullptr), m_duplicateButtonIncrement(nullptr),
+  m_addButton(nullptr), m_deleteButton(nullptr), m_undoButton(nullptr),
   m_SaveChangesButton(nullptr),
   m_table(data), m_tables(tables), m_tableView(nullptr),
   m_tableName(tableName), m_tableModel(nullptr),
@@ -90,6 +91,8 @@ void GenericDataCollectionTableDialog::buildDialog()
   hLayout->addWidget(m_deleteButton);
   m_duplicateButton = new QPushButton(tr("Duplicate"));
   hLayout->addWidget(m_duplicateButton);
+  m_duplicateButtonIncrement = new QPushButton(tr("Duplicate+"));
+  hLayout->addWidget(m_duplicateButtonIncrement);
   m_undoButton = new QPushButton(tr("Undo"));
   hLayout->addWidget(m_undoButton);
   m_SaveChangesButton = new QPushButton(tr("Save Changes"));
@@ -99,6 +102,7 @@ void GenericDataCollectionTableDialog::buildDialog()
   connect(m_addButton, SIGNAL(clicked()), this, SLOT(addRow()));
   connect(m_deleteButton, SIGNAL(clicked()), this, SLOT(deleteRow()));
   connect(m_duplicateButton, SIGNAL(clicked()), this, SLOT(duplicateRow()));
+  connect(m_duplicateButtonIncrement, SIGNAL(clicked()), this, SLOT(duplicateRowAutoIncrement()));
   connect(m_undoButton, SIGNAL(clicked()), this, SLOT(undoChange()));
   connect(m_SaveChangesButton, SIGNAL(clicked()), this, SLOT(saveChanges()));
 
@@ -179,17 +183,43 @@ void GenericDataCollectionTableDialog::saveChanges()
 
 void GenericDataCollectionTableDialog::duplicateRow()
 {
-  qDebug("DuplicateRow()");
+  privateRowDuplicator(false);
+}
 
+void GenericDataCollectionTableDialog::duplicateRowAutoIncrement()
+{
+  privateRowDuplicator(true);
+}
+
+void GenericDataCollectionTableDialog::privateRowDuplicator(const bool autoIncrement)
+{
   QModelIndexList proxyList = m_tableView->selectionModel()->selectedIndexes();
   QModelIndexList mappedList;
   for (int i=0; i<proxyList.size(); ++i) {
     mappedList.append(m_proxyModel->mapToSource(proxyList.at(i)));
   }
-  m_tableModel->duplicateRows(mappedList);
-  // TODO: Select the first inserted one.
+  QList<int> addedIds = m_tableModel->duplicateRows(mappedList, autoIncrement);
+  if (!addedIds.isEmpty())
+  {
+    int row = m_tableModel->getIndexOf(addedIds.first());
+    if (row >= 0) {
+      // Select the first inserted Id.
+      QModelIndex tableIndex = m_tableModel->getIndexByRowCol(row, 1);
+      if (tableIndex.isValid())
+      {
+        QModelIndex proxyIndex = m_proxyModel->mapFromSource(tableIndex);
+        if (proxyIndex.isValid())
+        {
+          //m_tableView->selectRow(proxyIndex.row());
+          m_tableView->clearSelection();
+          m_tableView->selectionModel()->select(proxyIndex, QItemSelectionModel::Select);
+        }
+      }
+    }
+  }
   enableButtons();
 }
+
 
 void GenericDataCollectionTableDialog::saveState()
 {

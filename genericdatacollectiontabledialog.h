@@ -33,12 +33,16 @@ public slots:
   void deleteRow();
   void undoChange();
   void duplicateRow();
+  void duplicateRowAutoIncrement();
   void saveChanges();
 
   /*! \brief Call save state before the destructor is called. */
   void clickedOK();
 
 private:
+
+  void privateRowDuplicator(const bool autoIncrement);
+
   /*! \brief Set list columns, delegates, and initial values. */
   void buildDialog();
 
@@ -53,6 +57,7 @@ private:
 
   /*! \brief Copy the selected rows */
   QPushButton* m_duplicateButton;
+  QPushButton* m_duplicateButtonIncrement;
   /*! \brief Add a new row */
   QPushButton* m_addButton;
   /*! \brief Delete the selected rows */
