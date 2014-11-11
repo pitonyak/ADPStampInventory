@@ -146,6 +146,7 @@ void GenericDataCollectionTableDialog::enableButtons()
 {
   bool somethingSelected = isRowSelected();
   m_duplicateButton->setEnabled(somethingSelected);
+  m_duplicateButtonIncrement->setEnabled(somethingSelected);
   m_addButton->setEnabled(true);
   m_deleteButton->setEnabled(somethingSelected);
   m_undoButton->setEnabled(!m_tableModel->trackerIsEmpty());

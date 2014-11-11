@@ -8,8 +8,9 @@
 LinkBackFilterDelegate::LinkBackFilterDelegate(QObject *parent) :
   QStyledItemDelegate(parent)
 {
-    setBoolTrue(tr("yes"));
-    setBoolFalse(tr("no"));
+    // I don't actually know if I need this since the delegate is setting to a check box for boolean values.
+    //setBoolTrue(tr("yes"));
+    //setBoolFalse(tr("no"));
 
     setTimeFormatString(tr("hh:mm:ss A"));
     setDateFormatString(tr("MM/dd/yyyy"));
