@@ -124,6 +124,9 @@ public:
 
     QVariant forceToType(const QVariant& x, const QMetaType::Type aType, bool* ok = nullptr) const;
 
+    static QVariant getDefaultValue(QMetaType::Type aType);
+
+
 signals:
 
 public slots:

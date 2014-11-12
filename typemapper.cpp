@@ -20,8 +20,6 @@
 #include <QRegularExpression>
 
 
-
-
 TypeMapper::TypeMapper(QObject *parent) :
   QObject(parent)
 {
@@ -700,4 +698,150 @@ QVariant TypeMapper::forceToType(const QVariant& x, const QMetaType::Type aType,
   }
 
   return v;
+}
+
+
+QVariant TypeMapper::getDefaultValue(QMetaType::Type aType)
+{
+    // Go for default values
+    switch (aType) {
+    case QMetaType::Bool :
+        return QVariant((bool)false);
+        break;
+
+    case QMetaType::Int :
+        return QVariant((int) 0);
+        break;
+
+    case QMetaType::UInt :
+        return QVariant((unsigned int) 0);
+        break;
+
+    case QMetaType::Double :
+        return QVariant((double) 0);
+        break;
+
+    case QMetaType::Long :
+    case QMetaType::LongLong :
+        return QVariant((qlonglong) 0);
+        break;
+
+    case QMetaType::Short :
+        return QVariant((short) 0);
+        break;
+
+    case QMetaType::ULong :
+    case QMetaType::ULongLong :
+        return QVariant((qulonglong) 0);
+        break;
+
+    case QMetaType::UShort :
+        return QVariant((unsigned short) 0);
+        break;
+
+    case QMetaType::Float :
+        return QVariant((float) 0);
+        break;
+
+    case QMetaType::QUuid :
+        return QUuid();
+        break;
+
+    case QMetaType::QUrl :
+        return QUrl();
+        break;
+
+    case QMetaType::QString :
+        return QString();
+        break;
+
+    case QMetaType::QChar :
+        return QChar('X');
+        break;
+
+    case QMetaType::Char :
+        return 'X';
+        break;
+
+    case QMetaType::SChar :
+        return QVariant((signed char) 'X');
+        break;
+
+    case QMetaType::UChar :
+        return QVariant((unsigned char) 'X');
+        break;
+
+    case QMetaType::QDate :
+        return QDate::currentDate();
+        break;
+
+    case QMetaType::QTime :
+        return QTime::currentTime();
+        break;
+
+    case QMetaType::QDateTime :
+        return QDateTime::currentDateTime();
+        break;
+
+    case QMetaType::Void :
+    case QMetaType::QByteArray :
+    case QMetaType::VoidStar :
+    case QMetaType::QObjectStar :
+    case QMetaType::QVariant :
+    case QMetaType::QCursor :
+    case QMetaType::QSize :
+    case QMetaType::QVariantList :
+    case QMetaType::QPolygon :
+    case QMetaType::QPolygonF :
+    case QMetaType::QColor :
+    case QMetaType::QSizeF :
+    case QMetaType::QRectF :
+    case QMetaType::QLine :
+    case QMetaType::QTextLength :
+    case QMetaType::QStringList :
+    case QMetaType::QVariantMap :
+    case QMetaType::QVariantHash :
+    case QMetaType::QIcon :
+    case QMetaType::QPen :
+    case QMetaType::QLineF :
+    case QMetaType::QTextFormat :
+    case QMetaType::QRect :
+    case QMetaType::QPoint :
+    case QMetaType::QRegExp :
+    case QMetaType::QRegularExpression :
+    case QMetaType::QPointF :
+    case QMetaType::QPalette :
+    case QMetaType::QFont :
+    case QMetaType::QBrush :
+    case QMetaType::QRegion :
+    case QMetaType::QBitArray :
+    case QMetaType::QImage :
+    case QMetaType::QKeySequence :
+    case QMetaType::QSizePolicy :
+    case QMetaType::QPixmap :
+    case QMetaType::QLocale :
+    case QMetaType::QBitmap :
+    case QMetaType::QMatrix :
+    case QMetaType::QTransform :
+    case QMetaType::QMatrix4x4 :
+    case QMetaType::QVector2D :
+    case QMetaType::QVector3D :
+    case QMetaType::QVector4D :
+    case QMetaType::QQuaternion :
+    case QMetaType::QEasingCurve :
+    case QMetaType::QJsonValue :
+    case QMetaType::QJsonObject :
+    case QMetaType::QJsonArray :
+    case QMetaType::QJsonDocument :
+    case QMetaType::QModelIndex :
+    case QMetaType::User :
+    case QMetaType::UnknownType :
+        // TODO: not supported
+        return QVariant();
+        break;
+
+    default :
+        return QVariant();
+        break;
+    }
 }
