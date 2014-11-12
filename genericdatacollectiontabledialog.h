@@ -39,6 +39,9 @@ public slots:
   /*! \brief Call save state before the destructor is called. */
   void clickedOK();
 
+  /*! \brief Verify cancel with unsaved changes. */
+  void clickedCancel();
+
 private:
 
   void privateRowDuplicator(const bool autoIncrement);

@@ -18,6 +18,7 @@
 #include <QSettings>
 #include <QItemSelection>
 #include <QSortFilterProxyModel>
+#include <QMessageBox>
 
 GenericDataCollectionTableDialog::GenericDataCollectionTableDialog(const QString& tableName, GenericDataCollection &data, StampDB &db, DescribeSqlTables& schema, GenericDataCollections *tables, QWidget *parent) :
   QDialog(parent),
@@ -82,7 +83,7 @@ void GenericDataCollectionTableDialog::buildDialog()
 
   QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal);
   connect(buttonBox, SIGNAL(accepted()), this, SLOT(clickedOK()));
-  connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
+  connect(buttonBox, SIGNAL(rejected()), this, SLOT(clickedCancel()));
 
   hLayout = new QHBoxLayout();
   m_addButton = new QPushButton(tr("Add"));
@@ -233,20 +234,22 @@ void GenericDataCollectionTableDialog::saveState()
 
     if (m_tableView != nullptr)
     {
-      QString s;
+      QString s = "";
+
+      if (m_tableView->isSortingEnabled()) {
+          // TODO: How do I know which column is sorted?
+      }
+
       for (int i=0; i<m_table.getPropertyNameCount(); ++i)
       {
         //qDebug(qPrintable(QString("(%1)(%2)").arg(i).arg(m_tableView->columnWidth(i))));
         if (s.length() > 0)
         {
-          s = s + QString(",%1").arg(m_tableView->columnWidth(i));
+          s.append(',');
         }
-        else
-        {
-          s = QString("%1").arg(m_tableView->columnWidth(i));
-        }
+        s.append(QString("%1").arg(m_tableView->columnWidth(i)));
       }
-      //qDebug(qPrintable(QString("(%1)(%2)").arg(m_name).arg(s)));
+      qDebug(qPrintable(QString("(%1)(%2)").arg(m_tableName).arg(s)));
       settings.setValue(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgColumnWidths).arg(m_tableName), s);
     }
 }
@@ -258,6 +261,22 @@ void GenericDataCollectionTableDialog::clickedOK()
   accept();
 }
 
-
+void GenericDataCollectionTableDialog::clickedCancel()
+{
+    if (!m_tableModel->trackerIsEmpty())
+    {
+        QMessageBox::StandardButton rc = QMessageBox::warning(this, tr("title"), tr("There are unsaved changes, Exit anyway?"), QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel, QMessageBox::Cancel);
+        if (rc == QMessageBox::Save)
+        {
+            clickedOK();
+            return;
+        }
+        else if (rc == QMessageBox::Cancel)
+        {
+            return;
+        }
+    }
+    reject();
+}
 
 
