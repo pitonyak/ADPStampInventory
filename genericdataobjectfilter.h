@@ -1,6 +1,8 @@
 #ifndef GENERICDATAOBJECTFILTER_H
 #define GENERICDATAOBJECTFILTER_H
 
+#include "variantcomparer.h"
+
 #include <QObject>
 #include <QVariant>
 #include <QMetaType>
@@ -23,14 +25,7 @@ class GenericDataObject;
 class GenericDataObjectFilter : public QObject
 {
     Q_OBJECT
-    Q_ENUMS(CompareType)
-
 public:
-    //**************************************************************************
-    /*! \brief Enumerate the supported comparisons such as Less and Less Equal.*/
-    //**************************************************************************
-    enum CompareType {Less, LessEqual, Equal, GreaterEqual, Greater, NotEqual, RegularExpression, FileSpec, Contains, RegExpPartial, RegExpFull, StartsWith, EndsWith};
-
     explicit GenericDataObjectFilter(QObject *parent = nullptr);
 
     //**************************************************************************
@@ -87,13 +82,15 @@ public:
      *  \return True if the object matches the filter.
      ***************************************************************************/
     bool objectMatchesFilter(const GenericDataObject& obj) const;
+
+    // Does NOT invert the result.
     bool variantMatchesFilter(const QVariant& obj) const;
 
     //**************************************************************************
     /*! \brief Get the compare type; equal, less than, greater than, etc...
      ***************************************************************************/
-    CompareType getCompareType() const;
-    void setCompareType(CompareType compareType=Equal);
+    VariantComparer::CompareType getCompareType() const;
+    void setCompareType(VariantComparer::CompareType compareType=VariantComparer::Equal);
     QString getCompareTypeAsString() const;
 
     QMetaType::Type getFieldType() const;
@@ -167,13 +164,6 @@ private:
 public slots:
 
 private:
-    bool compareValues(const bool x) const;
-    bool compareValues(const double x) const;
-    bool compareValues(const qlonglong x) const;
-    bool compareValues(const QTime& x) const;
-    bool compareValues(const QDate& x) const;
-    bool compareValues(const QDateTime& x) const;
-    bool compareValues(const QString& x) const;
 
     /*! \brief Empty the lists, but do not delete them. */
     void clearLists(bool deleteLists, bool createIfDoNotExist);
@@ -181,7 +171,7 @@ private:
     void createRegularExpressions();
 
     /*! \brief Enumerate the supported comparisons such as Less and Less Equal. */
-    enum CompareType m_compareType;
+    enum VariantComparer::CompareType m_compareType;
 
     /*! \brief Field to compare. */
     QString m_compareField;
@@ -203,7 +193,7 @@ private:
 
 };
 
-inline GenericDataObjectFilter::CompareType GenericDataObjectFilter::getCompareType() const
+inline VariantComparer::CompareType GenericDataObjectFilter::getCompareType() const
 {
   return m_compareType;
 }

@@ -83,7 +83,8 @@ SOURCES += main.cpp\
     linkedfieldcache.cpp \
     linkedfieldselectioncache.cpp \
     genericdatacollectionstableproxy.cpp \
-    genericdataobjectfilter.cpp
+    genericdataobjectfilter.cpp \
+    variantcomparer.cpp
 
 HEADERS  += mainwindow.h \
     stampdb.h \
@@ -143,7 +144,8 @@ HEADERS  += mainwindow.h \
     linkedfieldcache.h \
     linkedfieldselectioncache.h \
     genericdatacollectionstableproxy.h \
-    genericdataobjectfilter.h
+    genericdataobjectfilter.h \
+    variantcomparer.h
 
 FORMS    += mainwindow.ui \
     logroutinginfodialog.ui
