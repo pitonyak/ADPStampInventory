@@ -1,5 +1,6 @@
 #include "genericdataobjectfilter.h"
 #include "typemapper.h"
+#include "genericdataobject.h"
 
 #include <QFileInfo>
 #include <QDir>
@@ -229,52 +230,127 @@ void GenericDataObjectFilter::setValueDefault(const QMetaType::Type aType)
     setValue(TypeMapper::getDefaultValue(aType));
 }
 
-
-/**
-bool GenericDataObjectFilter::passes(const QFileInfo& fileInfo) const
+bool GenericDataObjectFilter::objectMatchesFilter(const GenericDataObject& obj) const
 {
-  if (!applicable(fileInfo))
-  {
-    TRACE_MSG(QString("Filter (%1) not applicable").arg(getMainValueAsString()), 5);
-    return false;
-  }
+  // Perhaps I should match against an empty variant object if this does not match.
+  return obj.containsValue(m_compareField) ? variantMatchesFilter(obj.getValue(m_compareField)) : false;
+}
 
+bool GenericDataObjectFilter::variantMatchesFilter(const QVariant& obj) const
+{
   bool filterPass = false;
-
-  switch (m_compareField)
+  switch (m_fieldType)
   {
-  case GenericDataObjectFilter::Date:
-    filterPass = compareValues(fileInfo.lastModified().date());
+  case QMetaType::Bool :
+    filterPass = compareValues(obj.toBool());
     break;
-  case GenericDataObjectFilter::DateTime:
-    filterPass = compareValues(fileInfo.lastModified());
+
+  // I should be more precise on this, but, unless there
+  // is a performance problem, this is less code.
+  case QMetaType::Int :
+  case QMetaType::UInt :
+  case QMetaType::Long :
+  case QMetaType::LongLong :
+  case QMetaType::Short :
+  case QMetaType::ULong :
+  case QMetaType::ULongLong :
+  case QMetaType::UShort :
+    filterPass = compareValues(obj.toLongLong());
     break;
-  case GenericDataObjectFilter::Name:
-    filterPass = compareValues(fileInfo.fileName());
+
+  case QMetaType::Double :
+  case QMetaType::Float :
+    filterPass = compareValues(obj.toDouble());
     break;
-  case GenericDataObjectFilter::FullPath:
-    filterPass = compareValues(fileInfo.canonicalFilePath());
+
+  case QMetaType::QUuid :
+  case QMetaType::QUrl :
+  case QMetaType::QString :
+  case QMetaType::QChar :
+  case QMetaType::Char :
+  case QMetaType::SChar :
+  case QMetaType::UChar :
+    filterPass = compareValues(obj.toString());
     break;
-  case GenericDataObjectFilter::PathOnly:
-    filterPass = compareValues(fileInfo.canonicalPath());
+
+  case QMetaType::QDate :
+    filterPass = compareValues(obj.toDate());
     break;
-  case GenericDataObjectFilter::Size:
-    filterPass = compareValues(fileInfo.size());
+
+  case QMetaType::QTime :
+    filterPass = compareValues(obj.toTime());
     break;
-  case GenericDataObjectFilter::Time:
-    filterPass = compareValues(fileInfo.lastModified().time());
+
+  case QMetaType::QDateTime :
+    filterPass = compareValues(obj.toDateTime());
     break;
-  default:
-    // An invalid compare will never pass, even for an inverted filter.
-    qDebug("Invalid compare field");
-    return false;
-    break;
+
+  case QMetaType::Void :
+  case QMetaType::QByteArray :
+  case QMetaType::VoidStar :
+  case QMetaType::QObjectStar :
+  case QMetaType::QVariant :
+  case QMetaType::QCursor :
+  case QMetaType::QSize :
+  case QMetaType::QVariantList :
+  case QMetaType::QPolygon :
+  case QMetaType::QPolygonF :
+  case QMetaType::QColor :
+  case QMetaType::QSizeF :
+  case QMetaType::QRectF :
+  case QMetaType::QLine :
+  case QMetaType::QTextLength :
+  case QMetaType::QStringList :
+  case QMetaType::QVariantMap :
+  case QMetaType::QVariantHash :
+  case QMetaType::QIcon :
+  case QMetaType::QPen :
+  case QMetaType::QLineF :
+  case QMetaType::QTextFormat :
+  case QMetaType::QRect :
+  case QMetaType::QPoint :
+  case QMetaType::QRegExp :
+  case QMetaType::QRegularExpression :
+  case QMetaType::QPointF :
+  case QMetaType::QPalette :
+  case QMetaType::QFont :
+  case QMetaType::QBrush :
+  case QMetaType::QRegion :
+  case QMetaType::QBitArray :
+  case QMetaType::QImage :
+  case QMetaType::QKeySequence :
+  case QMetaType::QSizePolicy :
+  case QMetaType::QPixmap :
+  case QMetaType::QLocale :
+  case QMetaType::QBitmap :
+  case QMetaType::QMatrix :
+  case QMetaType::QTransform :
+  case QMetaType::QMatrix4x4 :
+  case QMetaType::QVector2D :
+  case QMetaType::QVector3D :
+  case QMetaType::QVector4D :
+  case QMetaType::QQuaternion :
+  case QMetaType::QEasingCurve :
+  case QMetaType::QJsonValue :
+  case QMetaType::QJsonObject :
+  case QMetaType::QJsonArray :
+  case QMetaType::QJsonDocument :
+  case QMetaType::QModelIndex :
+  case QMetaType::User :
+  case QMetaType::UnknownType :
+      // TODO: not supported
+      return false;
+      break;
+
+  default :
+      return false;
+      break;
   }
 
-  return isInvertFilterResult() ? !filterPass : filterPass;
+  return m_invertFilterResult ? !filterPass : filterPass;
 }
-**/
-bool GenericDataObjectFilter::compareValues(const qlonglong aSize) const
+
+bool GenericDataObjectFilter::compareValues(const bool x) const
 {
   switch (m_compareType)
   {
@@ -283,7 +359,7 @@ bool GenericDataObjectFilter::compareValues(const qlonglong aSize) const
   case GenericDataObjectFilter::FileSpec:
     foreach (QRegExp* expression, *m_expressions)
     {
-      if ((expression != nullptr) && expression->exactMatch(QString::number(aSize)))
+      if ((expression != nullptr) && expression->exactMatch( x ? "TRUE" : "FALSE"))
       {
         return true;
       }
@@ -292,7 +368,7 @@ bool GenericDataObjectFilter::compareValues(const qlonglong aSize) const
   case GenericDataObjectFilter::RegExpPartial:
     foreach (QRegExp* expression, *m_expressions)
     {
-      if ((expression != nullptr) && (expression->indexIn(QString::number(aSize)) >= 0))
+      if ((expression != nullptr) && (expression->indexIn(x ? "TRUE" : "FALSE") >= 0))
       {
         return true;
       }
@@ -304,205 +380,66 @@ bool GenericDataObjectFilter::compareValues(const qlonglong aSize) const
       switch (m_compareType)
       {
       case GenericDataObjectFilter::Less:
-        if (aSize < v.toLongLong())
+        if (x < v.toBool())
         {
           return true;
         }
         break;
       case GenericDataObjectFilter::LessEqual:
-        if (aSize <= v.toLongLong())
+        if (x <= v.toBool())
         {
           return true;
         }
         break;
       case GenericDataObjectFilter::Equal:
-        if (aSize == v.toLongLong())
+        if (x == v.toBool())
         {
           return true;
         }
         break;
       case GenericDataObjectFilter::GreaterEqual:
-        if (aSize >= v.toLongLong())
+        if (x >= v.toBool())
         {
           return true;
         }
         break;
       case GenericDataObjectFilter::Greater:
-        if (aSize > v.toLongLong())
+        if (x > v.toBool())
         {
           return true;
         }
         break;
       case GenericDataObjectFilter::NotEqual:
-        if (aSize != v.toLongLong())
+        if (x != v.toBool())
         {
           return true;
         }
         break;
       case GenericDataObjectFilter::Contains:
-        if (QString::number(aSize).contains(v.toString(), m_caseSensitivity))
         {
-          return true;
+          QString b = x ? "TRUE" : "FALSE";
+          if (b.contains(v.toString(), m_caseSensitivity))
+          {
+            return true;
+          }
         }
         break;
-      default:
-        break;
-      }
-    }
-  }
-
-  return false;
-}
-
-
-bool GenericDataObjectFilter::compareValues(const QTime& aTime) const
-{
-  switch (m_compareType)
-  {
-  case GenericDataObjectFilter::RegExpFull:
-  case GenericDataObjectFilter::RegularExpression:
-  case GenericDataObjectFilter::FileSpec:
-    foreach (QRegExp* expression, *m_expressions)
-    {
-      if ((expression != nullptr) && expression->exactMatch(aTime.toString(Qt::TextDate)))
-      {
-        return true;
-      }
-    }
-    break;
-  case GenericDataObjectFilter::RegExpPartial:
-    foreach (QRegExp* expression, *m_expressions)
-    {
-      if ((expression != nullptr) && (expression->indexIn(aTime.toString(Qt::TextDate)) >= 0))
-      {
-        return true;
-      }
-    }
-    break;
-  default:
-    foreach (QVariant v, *m_values)
-    {
-      switch (m_compareType)
-      {
-      case GenericDataObjectFilter::Less:
-        if (aTime < v.toTime())
+      case GenericDataObjectFilter::EndsWith:
         {
-          return true;
+          QString b = x ? "TRUE" : "FALSE";
+          if (b.startsWith(v.toString(), m_caseSensitivity))
+          {
+            return true;
+          }
         }
         break;
-      case GenericDataObjectFilter::LessEqual:
-        if (aTime <= v.toTime())
+      case GenericDataObjectFilter::StartsWith:
         {
-          return true;
-        }
-        break;
-      case GenericDataObjectFilter::Equal:
-        if (aTime == v.toTime())
-        {
-          return true;
-        }
-        break;
-      case GenericDataObjectFilter::GreaterEqual:
-        if (aTime >= v.toTime())
-        {
-          return true;
-        }
-        break;
-      case GenericDataObjectFilter::Greater:
-        if (aTime > v.toTime())
-        {
-          return true;
-        }
-        break;
-      case GenericDataObjectFilter::NotEqual:
-        if (aTime != v.toTime())
-        {
-          return true;
-        }
-        break;
-      case GenericDataObjectFilter::Contains:
-        if (aTime.toString(Qt::TextDate).contains(v.toString(), m_caseSensitivity))
-        {
-          return true;
-        }
-        break;
-      default:
-        break;
-      }
-    }
-  }
-  return false;
-}
-
-bool GenericDataObjectFilter::compareValues(const QDate& aDate) const
-{
-  switch (m_compareType)
-  {
-  case GenericDataObjectFilter::RegExpFull:
-  case GenericDataObjectFilter::RegularExpression:
-  case GenericDataObjectFilter::FileSpec:
-    foreach (QRegExp* expression, *m_expressions)
-    {
-      if ((expression != nullptr) && expression->exactMatch(aDate.toString(Qt::TextDate)))
-      {
-        return true;
-      }
-    }
-    break;
-  case GenericDataObjectFilter::RegExpPartial:
-    foreach (QRegExp* expression, *m_expressions)
-    {
-      if ((expression != nullptr) && (expression->indexIn(aDate.toString(Qt::TextDate)) >= 0))
-      {
-        return true;
-      }
-    }
-    break;
-  default:
-    foreach (QVariant v, *m_values)
-    {
-      switch (m_compareType)
-      {
-      case GenericDataObjectFilter::Less:
-        if (aDate < v.toDate())
-        {
-          return true;
-        }
-        break;
-      case GenericDataObjectFilter::LessEqual:
-        if (aDate <= v.toDate())
-        {
-          return true;
-        }
-        break;
-      case GenericDataObjectFilter::Equal:
-        if (aDate == v.toDate())
-        {
-          return true;
-        }
-        break;
-      case GenericDataObjectFilter::GreaterEqual:
-        if (aDate >= v.toDate())
-        {
-          return true;
-        }
-        break;
-      case GenericDataObjectFilter::Greater:
-        if (aDate > v.toDate())
-        {
-          return true;
-        }
-        break;
-      case GenericDataObjectFilter::NotEqual:
-        if (aDate != v.toDate())
-        {
-          return true;
-        }
-        break;
-      case GenericDataObjectFilter::Contains:
-        if (aDate.toString(Qt::TextDate).contains(v.toString(), m_caseSensitivity))
-        {
-          return true;
+          QString b = x ? "TRUE" : "FALSE";
+          if (b.endsWith(v.toString(), m_caseSensitivity))
+          {
+            return true;
+          }
         }
         break;
       default:
@@ -513,7 +450,7 @@ bool GenericDataObjectFilter::compareValues(const QDate& aDate) const
   return false;
 }
 
-bool GenericDataObjectFilter::compareValues(const QDateTime& aDateTime) const
+bool GenericDataObjectFilter::compareValues(const double x) const
 {
   switch (m_compareType)
   {
@@ -522,7 +459,7 @@ bool GenericDataObjectFilter::compareValues(const QDateTime& aDateTime) const
   case GenericDataObjectFilter::FileSpec:
     foreach (QRegExp* expression, *m_expressions)
     {
-      if ((expression != nullptr) && expression->exactMatch(aDateTime.toString(Qt::TextDate)))
+      if ((expression != nullptr) && expression->exactMatch(QString::number(x)))
       {
         return true;
       }
@@ -531,7 +468,7 @@ bool GenericDataObjectFilter::compareValues(const QDateTime& aDateTime) const
   case GenericDataObjectFilter::RegExpPartial:
     foreach (QRegExp* expression, *m_expressions)
     {
-      if ((expression != nullptr) && (expression->indexIn(aDateTime.toString(Qt::TextDate)) >= 0))
+      if ((expression != nullptr) && (expression->indexIn(QString::number(x)) >= 0))
       {
         return true;
       }
@@ -543,43 +480,55 @@ bool GenericDataObjectFilter::compareValues(const QDateTime& aDateTime) const
       switch (m_compareType)
       {
       case GenericDataObjectFilter::Less:
-        if (aDateTime < v.toDateTime())
+        if (x < v.toDouble())
         {
           return true;
         }
         break;
       case GenericDataObjectFilter::LessEqual:
-        if (aDateTime <= v.toDateTime())
+        if (x <= v.toDouble())
         {
           return true;
         }
         break;
       case GenericDataObjectFilter::Equal:
-        if (aDateTime == v.toDateTime())
+        if (x == v.toDouble())
         {
           return true;
         }
         break;
       case GenericDataObjectFilter::GreaterEqual:
-        if (aDateTime >= v.toDateTime())
+        if (x >= v.toDouble())
         {
           return true;
         }
         break;
       case GenericDataObjectFilter::Greater:
-        if (aDateTime > v.toDateTime())
+        if (x > v.toDouble())
         {
           return true;
         }
         break;
       case GenericDataObjectFilter::NotEqual:
-        if (aDateTime != v.toDateTime())
+        if (x != v.toDouble())
         {
           return true;
         }
         break;
       case GenericDataObjectFilter::Contains:
-        if (aDateTime.toString(Qt::TextDate).contains(v.toString(), m_caseSensitivity))
+        if (QString::number(x).contains(v.toString(), m_caseSensitivity))
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::EndsWith:
+        if (QString::number(x).startsWith(v.toString(), m_caseSensitivity))
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::StartsWith:
+        if (QString::number(x).endsWith(v.toString(), m_caseSensitivity))
         {
           return true;
         }
@@ -592,30 +541,26 @@ bool GenericDataObjectFilter::compareValues(const QDateTime& aDateTime) const
   return false;
 }
 
-bool GenericDataObjectFilter::compareValues(const QString& filePortion) const
+
+bool GenericDataObjectFilter::compareValues(const qlonglong x) const
 {
-  int i;
   switch (m_compareType)
   {
   case GenericDataObjectFilter::RegExpFull:
   case GenericDataObjectFilter::RegularExpression:
   case GenericDataObjectFilter::FileSpec:
-    for (i=0; i<m_expressions->size(); ++i)
+    foreach (QRegExp* expression, *m_expressions)
     {
-      QRegExp* expression = m_expressions->at(i);
-      if ((expression != nullptr) && expression->exactMatch(filePortion))
+      if ((expression != nullptr) && expression->exactMatch(QString::number(x)))
       {
         return true;
-      }
-      else
-      {
       }
     }
     break;
   case GenericDataObjectFilter::RegExpPartial:
     foreach (QRegExp* expression, *m_expressions)
     {
-      if ((expression != nullptr) && (expression->indexIn(filePortion) >= 0))
+      if ((expression != nullptr) && (expression->indexIn(QString::number(x)) >= 0))
       {
         return true;
       }
@@ -627,43 +572,422 @@ bool GenericDataObjectFilter::compareValues(const QString& filePortion) const
       switch (m_compareType)
       {
       case GenericDataObjectFilter::Less:
-        if (QString::compare(filePortion, v.toString(), m_caseSensitivity) < 0)
+        if (x < v.toLongLong())
         {
           return true;
         }
         break;
       case GenericDataObjectFilter::LessEqual:
-        if (QString::compare(filePortion, v.toString(), m_caseSensitivity) <= 0)
+        if (x <= v.toLongLong())
         {
           return true;
         }
         break;
       case GenericDataObjectFilter::Equal:
-        if (QString::compare(filePortion, v.toString(), m_caseSensitivity) == 0)
+        if (x == v.toLongLong())
         {
           return true;
         }
         break;
       case GenericDataObjectFilter::GreaterEqual:
-        if (QString::compare(filePortion, v.toString(), m_caseSensitivity) >= 0)
+        if (x >= v.toLongLong())
         {
           return true;
         }
         break;
       case GenericDataObjectFilter::Greater:
-        if (QString::compare(filePortion, v.toString(), m_caseSensitivity) > 0)
+        if (x > v.toLongLong())
         {
           return true;
         }
         break;
       case GenericDataObjectFilter::NotEqual:
-        if (QString::compare(filePortion, v.toString(), m_caseSensitivity) != 0)
+        if (x != v.toLongLong())
         {
           return true;
         }
         break;
       case GenericDataObjectFilter::Contains:
-        if (filePortion.contains(v.toString(), m_caseSensitivity))
+        if (QString::number(x).contains(v.toString(), m_caseSensitivity))
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::EndsWith:
+        if (QString::number(x).startsWith(v.toString(), m_caseSensitivity))
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::StartsWith:
+        if (QString::number(x).endsWith(v.toString(), m_caseSensitivity))
+        {
+          return true;
+        }
+        break;
+      default:
+        qDebug("Unexpected unsupported compare type");
+        break;
+      }
+    }
+  }
+
+  return false;
+}
+
+
+bool GenericDataObjectFilter::compareValues(const QTime& x) const
+{
+  switch (m_compareType)
+  {
+  case GenericDataObjectFilter::RegExpFull:
+  case GenericDataObjectFilter::RegularExpression:
+  case GenericDataObjectFilter::FileSpec:
+    foreach (QRegExp* expression, *m_expressions)
+    {
+      if ((expression != nullptr) && expression->exactMatch(x.toString("hh:mm:ss A")))
+      {
+        return true;
+      }
+    }
+    break;
+  case GenericDataObjectFilter::RegExpPartial:
+    foreach (QRegExp* expression, *m_expressions)
+    {
+      if ((expression != nullptr) && (expression->indexIn(x.toString("hh:mm:ss A")) >= 0))
+      {
+        return true;
+      }
+    }
+    break;
+  default:
+    foreach (QVariant v, *m_values)
+    {
+      switch (m_compareType)
+      {
+      case GenericDataObjectFilter::Less:
+        if (x < v.toTime())
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::LessEqual:
+        if (x <= v.toTime())
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::Equal:
+        if (x == v.toTime())
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::GreaterEqual:
+        if (x >= v.toTime())
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::Greater:
+        if (x > v.toTime())
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::NotEqual:
+        if (x != v.toTime())
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::Contains:
+        if (x.toString("hh:mm:ss A").contains(v.toString(), m_caseSensitivity))
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::EndsWith:
+        if (x.toString("hh:mm:ss A").startsWith(v.toString(), m_caseSensitivity))
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::StartsWith:
+        if (x.toString("hh:mm:ss A").endsWith(v.toString(), m_caseSensitivity))
+        {
+          return true;
+        }
+        break;
+      default:
+        break;
+      }
+    }
+  }
+  return false;
+}
+
+bool GenericDataObjectFilter::compareValues(const QDate& x) const
+{
+  switch (m_compareType)
+  {
+  case GenericDataObjectFilter::RegExpFull:
+  case GenericDataObjectFilter::RegularExpression:
+  case GenericDataObjectFilter::FileSpec:
+    foreach (QRegExp* expression, *m_expressions)
+    {
+      if ((expression != nullptr) && expression->exactMatch(x.toString("MM/dd/yyyy")))
+      {
+        return true;
+      }
+    }
+    break;
+  case GenericDataObjectFilter::RegExpPartial:
+    foreach (QRegExp* expression, *m_expressions)
+    {
+      if ((expression != nullptr) && (expression->indexIn(x.toString("MM/dd/yyyy")) >= 0))
+      {
+        return true;
+      }
+    }
+    break;
+  default:
+    foreach (QVariant v, *m_values)
+    {
+      switch (m_compareType)
+      {
+      case GenericDataObjectFilter::Less:
+        if (x < v.toDate())
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::LessEqual:
+        if (x <= v.toDate())
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::Equal:
+        if (x == v.toDate())
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::GreaterEqual:
+        if (x >= v.toDate())
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::Greater:
+        if (x > v.toDate())
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::NotEqual:
+        if (x != v.toDate())
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::Contains:
+        if (x.toString("MM/dd/yyyy").contains(v.toString(), m_caseSensitivity))
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::EndsWith:
+        if (x.toString("MM/dd/yyyy").startsWith(v.toString(), m_caseSensitivity))
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::StartsWith:
+        if (x.toString("MM/dd/yyyy").endsWith(v.toString(), m_caseSensitivity))
+        {
+          return true;
+        }
+        break;
+      default:
+        break;
+      }
+    }
+  }
+  return false;
+}
+
+bool GenericDataObjectFilter::compareValues(const QDateTime& x) const
+{
+  switch (m_compareType)
+  {
+  case GenericDataObjectFilter::RegExpFull:
+  case GenericDataObjectFilter::RegularExpression:
+  case GenericDataObjectFilter::FileSpec:
+    foreach (QRegExp* expression, *m_expressions)
+    {
+      if ((expression != nullptr) && expression->exactMatch(x.toString("MM/dd/yyyy hh:mm:ss A")))
+      {
+        return true;
+      }
+    }
+    break;
+  case GenericDataObjectFilter::RegExpPartial:
+    foreach (QRegExp* expression, *m_expressions)
+    {
+      if ((expression != nullptr) && (expression->indexIn(x.toString("MM/dd/yyyy hh:mm:ss A")) >= 0))
+      {
+        return true;
+      }
+    }
+    break;
+  default:
+    foreach (QVariant v, *m_values)
+    {
+      switch (m_compareType)
+      {
+      case GenericDataObjectFilter::Less:
+        if (x < v.toDateTime())
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::LessEqual:
+        if (x <= v.toDateTime())
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::Equal:
+        if (x == v.toDateTime())
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::GreaterEqual:
+        if (x >= v.toDateTime())
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::Greater:
+        if (x > v.toDateTime())
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::NotEqual:
+        if (x != v.toDateTime())
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::Contains:
+        if (x.toString("MM/dd/yyyy hh:mm:ss A").contains(v.toString(), m_caseSensitivity))
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::EndsWith:
+        if (x.toString("MM/dd/yyyy hh:mm:ss A").startsWith(v.toString(), m_caseSensitivity))
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::StartsWith:
+        if (x.toString("MM/dd/yyyy hh:mm:ss A").endsWith(v.toString(), m_caseSensitivity))
+        {
+          return true;
+        }
+        break;
+      default:
+        break;
+      }
+    }
+  }
+  return false;
+}
+
+bool GenericDataObjectFilter::compareValues(const QString& x) const
+{
+  switch (m_compareType)
+  {
+  case GenericDataObjectFilter::RegExpFull:
+  case GenericDataObjectFilter::RegularExpression:
+  case GenericDataObjectFilter::FileSpec:
+    foreach (QRegExp* expression, *m_expressions)
+    {
+      if ((expression != nullptr) && expression->exactMatch(x))
+      {
+        return true;
+      }
+    }
+    break;
+  case GenericDataObjectFilter::RegExpPartial:
+    foreach (QRegExp* expression, *m_expressions)
+    {
+      if ((expression != nullptr) && (expression->indexIn(x) >= 0))
+      {
+        return true;
+      }
+    }
+    break;
+  default:
+    foreach (QVariant v, *m_values)
+    {
+      switch (m_compareType)
+      {
+      case GenericDataObjectFilter::Less:
+        if (x.compare(v.toString(), m_caseSensitivity) < 0)
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::LessEqual:
+        if (x.compare(v.toString(), m_caseSensitivity) <= 0)
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::Equal:
+        if (x.compare(v.toString(), m_caseSensitivity) == 0)
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::GreaterEqual:
+        if (x.compare(v.toString(), m_caseSensitivity) >= 0)
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::Greater:
+        if (x.compare(v.toString(), m_caseSensitivity) > 0)
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::NotEqual:
+        if (x.compare(v.toString(), m_caseSensitivity) != 0)
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::Contains:
+        if (x.contains(v.toString(), m_caseSensitivity))
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::EndsWith:
+        if (x.startsWith(v.toString(), m_caseSensitivity))
+        {
+          return true;
+        }
+        break;
+      case GenericDataObjectFilter::StartsWith:
+        if (x.endsWith(v.toString(), m_caseSensitivity))
         {
           return true;
         }
@@ -682,16 +1006,18 @@ QString GenericDataObjectFilter::getCompareTypeAsString() const
   return  metaObj->enumerator(metaObj->indexOfEnumerator("CompareType")).valueToKey(getCompareType());
 }
 
-QString GenericDataObjectFilter::getCompareFieldAsString() const
+QString GenericDataObjectFilter::getFieldTypeAsString() const
 {
-    return m_compareField;
+  TypeMapper mapper;
+  return mapper.getMetaName(m_fieldType);
 }
 
 QXmlStreamWriter& GenericDataObjectFilter::operator<<(QXmlStreamWriter& writer) const
 {
   writer.writeStartElement("Filter");
   writer.writeTextElement("CompareType", getCompareTypeAsString());
-  writer.writeTextElement("CompareField", getCompareFieldAsString());
+  writer.writeTextElement("FieldType", getFieldTypeAsString());
+  writer.writeTextElement("CompareField", getCompareField());
   writer.writeTextElement("Value", m_value.toString());
   writer.writeTextElement("CaseSensitive", (m_caseSensitivity==Qt::CaseSensitive) ? "True" : "False");
   writer.writeTextElement("Invert", m_invertFilterResult ? "True" : "False");
@@ -708,8 +1034,6 @@ QXmlStreamReader& GenericDataObjectFilter::operator>>(QXmlStreamReader& reader)
 
 QXmlStreamReader&  GenericDataObjectFilter::readFilter(QXmlStreamReader& reader)
 {
-  // setAllDefault();
-  // TODO: Clear the object first.
   QString version = "1";
   QString name;
   while (!reader.atEnd()) {
@@ -746,17 +1070,21 @@ void GenericDataObjectFilter::readInternals(QXmlStreamReader& reader, const QStr
         // Ignore an empty name
       } else if (QString::compare(name, "CompareType", Qt::CaseInsensitive) == 0) {
         if (value.isEmpty()) {
-          setCompareTypeDefault();
+          setCompareType(GenericDataObjectFilter::Equal);
         } else {
-          //TRACE_MSG(QString("Setting CompareType (%1) for filter").arg(value), 1);
-          // ??? indexIn >= 0 is a partial match.
           setCompareType(static_cast<GenericDataObjectFilter::CompareType>(metaObj->enumerator(metaObj->indexOfEnumerator("CompareType")).keyToValue(qPrintable(value))));
+        }
+      }  else if (QString::compare(name, "FieldType", Qt::CaseInsensitive) == 0) {
+        if (value.isEmpty()) {
+          setFieldType(QMetaType::QString);
+        } else {
+          TypeMapper mapper;
+          setFieldType(mapper.getMetaType(value));
         }
       } else if (QString::compare(name, "CompareField", Qt::CaseInsensitive) == 0) {
         if (value.isEmpty()) {
           setCompareField("");
         } else {
-          //TRACE_MSG(QString("Setting CompareField (%1) for filter").arg(value), 1);
           setCompareField(value);
         }
       } else if (QString::compare(name, "Value", Qt::CaseInsensitive) == 0) {

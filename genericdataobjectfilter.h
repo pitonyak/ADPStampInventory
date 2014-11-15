@@ -8,6 +8,7 @@
 
 class QXmlStreamWriter;
 class QXmlStreamReader;
+class GenericDataObject;
 
 //**************************************************************************
 /*! \class GenericDataObjectFilter
@@ -25,7 +26,6 @@ class GenericDataObjectFilter : public QObject
     Q_ENUMS(CompareType)
 
 public:
-
     //**************************************************************************
     /*! \brief Enumerate the supported comparisons such as Less and Less Equal.*/
     //**************************************************************************
@@ -79,21 +79,33 @@ public:
     //??bool passes(const QFileInfo& fileInfo) const;
 
     //**************************************************************************
+    /*! \brief Determine if the object matches based on the supplied filter.
+     *
+     * Matching does not mean that the object is accepted or not, you must still look to see if matching means accept or reject the record.
+     *
+     *  \param [in] obj Object to check to see if it matches.
+     *  \return True if the object matches the filter.
+     ***************************************************************************/
+    bool objectMatchesFilter(const GenericDataObject& obj) const;
+    bool variantMatchesFilter(const QVariant& obj) const;
+
+    //**************************************************************************
     /*! \brief Get the compare type; equal, less than, greater than, etc...
      ***************************************************************************/
     CompareType getCompareType() const;
     void setCompareType(CompareType compareType=Equal);
-    void setCompareTypeDefault();
     QString getCompareTypeAsString() const;
+
+    QMetaType::Type getFieldType() const;
+    void setFieldType(QMetaType::Type fieldType);
+    QString getFieldTypeAsString() const;
 
     //**************************************************************************
     /*! \brief Get the field that is compared; file name, full path, date, etc...
      ***************************************************************************/
     const QString &getCompareField() const;
     QString getCompareField();
-
     void setCompareField(const QString& compareField);
-    QString getCompareFieldAsString() const;
 
     //**************************************************************************
     /*! \brief Are comparisons case sensitive?
@@ -143,8 +155,6 @@ public:
     void setValue(const QString&);
     void setValue(const QRegExp&);
 
-    QString getMainValueAsString() const;
-
     QXmlStreamWriter& operator<<(QXmlStreamWriter& writer) const;
     QXmlStreamReader& operator>>(QXmlStreamReader& reader);
 
@@ -157,11 +167,13 @@ private:
 public slots:
 
 private:
-    bool compareValues(const qlonglong aSize) const;
-    bool compareValues(const QTime& aTime) const;
-    bool compareValues(const QDate& aDate) const;
-    bool compareValues(const QDateTime& aDateTime) const;
-    bool compareValues(const QString& filePortion) const;
+    bool compareValues(const bool x) const;
+    bool compareValues(const double x) const;
+    bool compareValues(const qlonglong x) const;
+    bool compareValues(const QTime& x) const;
+    bool compareValues(const QDate& x) const;
+    bool compareValues(const QDateTime& x) const;
+    bool compareValues(const QString& x) const;
 
     /*! \brief Empty the lists, but do not delete them. */
     void clearLists(bool deleteLists, bool createIfDoNotExist);
@@ -186,16 +198,14 @@ private:
     QList<QVariant>* m_values;
     QList<QRegExp*>* m_expressions;
 
+    // TODO: New things!
+    QMetaType::Type m_fieldType;
+
 };
 
 inline GenericDataObjectFilter::CompareType GenericDataObjectFilter::getCompareType() const
 {
   return m_compareType;
-}
-
-inline void GenericDataObjectFilter::setCompareTypeDefault()
-{
-  setCompareType();
 }
 
 inline const QString &GenericDataObjectFilter::getCompareField() const
@@ -268,16 +278,6 @@ inline void GenericDataObjectFilter::setValue(const QRegExp& x)
   setValue(QVariant(x));
 }
 
-inline QString GenericDataObjectFilter::getMainValueAsString() const
-{
-  if (m_value.canConvert(QVariant::String))
-  {
-    return m_value.toString();
-  } else {
-    return "";
-  }
-}
-
 inline const QVariant& GenericDataObjectFilter::getValue() const
 {
   return m_value;
@@ -291,6 +291,16 @@ inline QXmlStreamWriter& operator<<(QXmlStreamWriter& os, const GenericDataObjec
 inline QXmlStreamReader& operator>>(QXmlStreamReader& is, GenericDataObjectFilter& filter)
 {
     return filter.operator>>(is);
+}
+
+inline QMetaType::Type GenericDataObjectFilter::getFieldType() const
+{
+  return m_fieldType;
+}
+
+inline void GenericDataObjectFilter::setFieldType(QMetaType::Type fieldType)
+{
+  m_fieldType = fieldType;
 }
 
 

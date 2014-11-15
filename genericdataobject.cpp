@@ -252,6 +252,7 @@ void GenericDataObject::setValue(const QString &name, const QVariant& value)
 
 const QVariant GenericDataObject::getValue(const QString& name) const
 {
+  /**
   if (fieldNameMeansDate(name))
   {
     const QVariant v = m_properties.value(name.toLower());
@@ -262,6 +263,7 @@ const QVariant GenericDataObject::getValue(const QString& name) const
     const QVariant v = m_properties.value(name.toLower());
     return (QMetaType::QDateTime != (QMetaType::Type) v.type()) ? v.toDateTime() : v;
   }
+  **/
   return m_properties.value(name.toLower());
 }
 

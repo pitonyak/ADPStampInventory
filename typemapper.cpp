@@ -348,6 +348,11 @@ QMetaType::Type TypeMapper::guessType(const QString& s, const ColumnConversionPr
         return QMetaType::QDateTime;
     }
 
+    if (QDateTime::fromString(simple, "MM/dd/yyyy hh:mm:ss P").isValid())
+    {
+        return QMetaType::QDateTime;
+    }
+
     if (QDateTime::fromString(simple, "MM/dd/yyyy hh:mm:ss").isValid())
     {
         return QMetaType::QDateTime;
