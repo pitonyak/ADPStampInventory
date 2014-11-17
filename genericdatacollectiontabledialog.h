@@ -55,6 +55,9 @@ private:
   /*! \brief Enable/disable buttons based on dialog values. */
   void enableButtons();
 
+  /*! \brief disable ALL buttons. */
+  void disableButtons();
+
   /*! \brief Return True if a row is currently selected. */
   bool isRowSelected() const;
 

@@ -143,6 +143,16 @@ bool GenericDataCollectionTableDialog::isRowSelected() const
   return m_tableModel != nullptr && m_tableView != nullptr && m_tableModel->rowCount() > 0 && m_tableView->currentIndex().row() >= 0;
 }
 
+void GenericDataCollectionTableDialog::disableButtons()
+{
+    m_duplicateButton->setEnabled(false);
+    m_duplicateButtonIncrement->setEnabled(false);
+    m_addButton->setEnabled(false);
+    m_deleteButton->setEnabled(false);
+    m_undoButton->setEnabled(false);
+    m_SaveChangesButton->setEnabled(false);
+}
+
 void GenericDataCollectionTableDialog::enableButtons()
 {
   bool somethingSelected = isRowSelected();
@@ -179,6 +189,7 @@ void GenericDataCollectionTableDialog::undoChange()
 
 void GenericDataCollectionTableDialog::saveChanges()
 {
+  disableButtons();
   m_tableModel->saveTrackedChanges(m_tableName, m_table, m_db.getDB(), m_schema);
   enableButtons();
 }
