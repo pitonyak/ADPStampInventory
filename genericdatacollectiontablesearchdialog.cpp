@@ -6,10 +6,18 @@
 #include <QHBoxLayout>
 #include <QFormLayout>
 #include <QLabel>
+#include <QCheckBox>
+#include <QDialogButtonBox>
 
-GenericDataCollectionTableSearchDialog::GenericDataCollectionTableSearchDialog(QWidget *parent) :
-    QDialog(parent)
+GenericDataCollectionTableSearchDialog::GenericDataCollectionTableSearchDialog(GenericDataCollectionTableDialog *tableDialog, QWidget *parent) :
+    QDialog(parent), m_tableDialog(tableDialog),
+    m_findValueLineEdit(nullptr), m_replaceValueLineEdit(nullptr), m_matchCaseCB(nullptr), m_matchEntireCellCB(nullptr),
+    m_regularExpressionCB(nullptr), m_selectionOnlyCB(nullptr)
 {
+  if (m_tableDialog != nullptr)
+  {
+    buildDialog();
+  }
 }
 
 void GenericDataCollectionTableSearchDialog::buildDialog()
@@ -30,28 +38,89 @@ void GenericDataCollectionTableSearchDialog::buildDialog()
 
   QPushButton* button;
   QVBoxLayout *vLayout;
-  QHBoxLayout *hLayout;
+  QVBoxLayout *vLayout2;
+  //QHBoxLayout *hLayout;
   QFormLayout *fLayout = new QFormLayout;
 
+  vLayout = new QVBoxLayout();
   m_findValueLineEdit = new QLineEdit();
   m_replaceValueLineEdit = new QLineEdit();
 
-  hLayout = new QHBoxLayout();
+  //hLayout = new QHBoxLayout();
+  vLayout->addWidget(new QLabel(tr("Search for")));
+  button = new QPushButton(tr("Find"));
+  connect(button, SIGNAL(accepted()), this, SLOT(find()));
+  QHBoxLayout *hLayout2 = new QHBoxLayout();
+  hLayout2->addWidget(m_findValueLineEdit);
+  hLayout2->addWidget(button);
+  vLayout->addLayout(hLayout2);
 
-  vLayout = new QVBoxLayout();
-  vLayout->addWidget(new QLabel(tr("Find: ")));
-  hLayout->addLayout(vLayout);
-  vLayout->addWidget(new QLabel(tr("Replace: ")));
-  hLayout->addLayout(vLayout);
+  vLayout->addWidget(new QLabel(tr("Replace with")));
+  vLayout2 = new QVBoxLayout();
+  button = new QPushButton(tr("Replace"));
+  connect(button, SIGNAL(accepted()), this, SLOT(replace()));
+  vLayout2->addWidget(button);
+  button = new QPushButton(tr("Replace All"));
+  connect(button, SIGNAL(accepted()), this, SLOT(replaceAll()));
+  vLayout2->addWidget(button);
+  hLayout2 = new QHBoxLayout();
+  hLayout2->addWidget(m_replaceValueLineEdit);
+  hLayout2->addLayout(vLayout2);
+  vLayout->addLayout(hLayout2);
 
-  hLayout->addLayout(vLayout);
+  hLayout2 = new QHBoxLayout();
+  vLayout2 = new QVBoxLayout();
+  m_matchCaseCB = new QCheckBox(tr("Match case"));
+  vLayout2->addWidget(m_matchCaseCB);
+  m_regularExpressionCB = new QCheckBox(tr("Regular expression"));
+  vLayout2->addWidget(m_regularExpressionCB);
+  hLayout2->addLayout(vLayout2);
 
-  vLayout = new QVBoxLayout();
-  vLayout->addWidget(m_findValueLineEdit);
-  vLayout->addWidget(m_replaceValueLineEdit);
-  hLayout->addLayout(vLayout);
+  vLayout2 = new QVBoxLayout();
+  m_matchEntireCellCB = new QCheckBox(tr("Match cell only"));
+  vLayout2->addWidget(m_matchEntireCellCB);
+  m_selectionOnlyCB = new QCheckBox(tr("Current Selection Only"));
+  vLayout2->addWidget(m_selectionOnlyCB);
+  hLayout2->addLayout(vLayout2);
 
-  fLayout->addRow(hLayout);
+  vLayout->addLayout(hLayout2);
+  QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Close);
+  connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
+  connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
+  vLayout->addWidget(buttonBox);
+
+  /**
+  hLayout2 = new QHBoxLayout();
+  m_matchCaseCB = new QCheckBox(tr("Match case"));
+  hLayout2->addWidget(m_matchCaseCB);
+  m_matchEntireCellCB = new QCheckBox(tr("Match cell only"));
+  hLayout2->addWidget(m_matchEntireCellCB);
+  vLayout->addLayout(hLayout2);
+
+  hLayout2 = new QHBoxLayout();
+  m_regularExpressionCB = new QCheckBox(tr("Regular expression"));
+  hLayout2->addWidget(m_regularExpressionCB);
+  m_selectionOnlyCB = new QCheckBox(tr("Current Selection Only"));
+  hLayout2->addWidget(m_selectionOnlyCB);
+  vLayout->addLayout(hLayout2);
+**/
+
+
+  //vLayout = new QVBoxLayout();
+  //vLayout->addWidget(new QLabel(tr("Find: ")));
+  //hLayout->addLayout(vLayout);
+  //vLayout->addWidget(new QLabel(tr("Replace: ")));
+  //hLayout->addLayout(vLayout);
+
+  //hLayout->addLayout(vLayout);
+
+  //vLayout = new QVBoxLayout();
+  //vLayout->addWidget(m_findValueLineEdit);
+  //vLayout->addWidget(m_replaceValueLineEdit);
+  //hLayout->addLayout(vLayout);
+
+  fLayout->addRow(vLayout);
+  setLayout(fLayout);
 
 
   /**
@@ -162,3 +231,33 @@ void GenericDataCollectionTableSearchDialog::enableButtons()
   }
   **/
 }
+
+void GenericDataCollectionTableSearchDialog::setCaseSensitive(const Qt::CaseSensitivity sensitivity)
+{
+  if (m_matchCaseCB != nullptr)
+  {
+    m_matchCaseCB->setChecked(sensitivity == Qt::CaseSensitive);
+  }
+}
+
+Qt::CaseSensitivity GenericDataCollectionTableSearchDialog::getCaseSensitivity() const
+{
+  return (m_matchCaseCB != nullptr && m_matchCaseCB->isChecked()) ? Qt::CaseSensitive : Qt::CaseInsensitive;
+}
+
+
+void GenericDataCollectionTableSearchDialog::find()
+{
+
+}
+
+void GenericDataCollectionTableSearchDialog::replace()
+{
+
+}
+
+void GenericDataCollectionTableSearchDialog::replaceAll()
+{
+
+}
+
