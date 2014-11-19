@@ -1,4 +1,7 @@
 #include "genericdatacollectiontablesearchdialog.h"
+#include "genericdatacollectiontabledialog.h"
+#include "genericdatacollectionstablemodel.h"
+
 
 #include <QLineEdit>
 #include <QPushButton>
@@ -8,6 +11,8 @@
 #include <QLabel>
 #include <QCheckBox>
 #include <QDialogButtonBox>
+#include <QSortFilterProxyModel>
+#include <QMessageBox>
 
 GenericDataCollectionTableSearchDialog::GenericDataCollectionTableSearchDialog(GenericDataCollectionTableDialog *tableDialog, QWidget *parent) :
     QDialog(parent), m_tableDialog(tableDialog),
@@ -49,7 +54,7 @@ void GenericDataCollectionTableSearchDialog::buildDialog()
   //hLayout = new QHBoxLayout();
   vLayout->addWidget(new QLabel(tr("Search for")));
   button = new QPushButton(tr("Find"));
-  connect(button, SIGNAL(accepted()), this, SLOT(find()));
+  connect(button, SIGNAL(released()), this, SLOT(find()));
   QHBoxLayout *hLayout2 = new QHBoxLayout();
   hLayout2->addWidget(m_findValueLineEdit);
   hLayout2->addWidget(button);
@@ -58,10 +63,10 @@ void GenericDataCollectionTableSearchDialog::buildDialog()
   vLayout->addWidget(new QLabel(tr("Replace with")));
   vLayout2 = new QVBoxLayout();
   button = new QPushButton(tr("Replace"));
-  connect(button, SIGNAL(accepted()), this, SLOT(replace()));
+  connect(button, SIGNAL(released()), this, SLOT(replace()));
   vLayout2->addWidget(button);
   button = new QPushButton(tr("Replace All"));
-  connect(button, SIGNAL(accepted()), this, SLOT(replaceAll()));
+  connect(button, SIGNAL(released()), this, SLOT(replaceAll()));
   vLayout2->addWidget(button);
   hLayout2 = new QHBoxLayout();
   hLayout2->addWidget(m_replaceValueLineEdit);
@@ -248,7 +253,23 @@ Qt::CaseSensitivity GenericDataCollectionTableSearchDialog::getCaseSensitivity()
 
 void GenericDataCollectionTableSearchDialog::find()
 {
+  QString searchString = m_findValueLineEdit->text();
+  QSortFilterProxyModel proxy;
+  proxy.setSourceModel(m_tableDialog->getTableModel());
+  proxy.setFilterFixedString(searchString);
+  int num_rows = m_tableDialog->getTableModel()->rowCount();
+  int num_cols = m_tableDialog->getTableModel()->columnCount();
+  //QModelIndex matchingIndex = proxy.mapFromSource(proxy.index(num_rows,num_cols));
+  QModelIndex matchingIndex = proxy.mapToSource(proxy.index(num_rows,0));
 
+   if(matchingIndex.isValid())
+   {
+       QMessageBox::information(this, "Find", "Found");
+   }
+   else
+   {
+       QMessageBox::information(this, "Find", "Not Found");
+   }
 }
 
 void GenericDataCollectionTableSearchDialog::replace()

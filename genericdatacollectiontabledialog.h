@@ -2,6 +2,8 @@
 #define GENERICDATACOLLECTIONTABLEDIALOG_H
 
 #include "genericdatacollection.h"
+#include "genericdatacollectionstablemodel.h"
+#include "genericdatacollectiontablemodel.h"
 
 #include <QDialog>
 
@@ -25,6 +27,10 @@ public:
 
   /*! \brief Save the dialogs current state / size. */
   void virtual saveState();
+
+  void find(const QString& s);
+  GenericDataCollectionsTableModel* getTableModel() { return m_tableModel; }
+
 signals:
 
 public slots:

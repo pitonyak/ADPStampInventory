@@ -280,6 +280,11 @@ void GenericDataCollectionTableDialog::clickedOK()
   accept();
 }
 
+void GenericDataCollectionTableDialog::find(const QString& s)
+{
+
+}
+
 #include "genericdatacollectiontablesearchdialog.h"
 
 void GenericDataCollectionTableDialog::searchDialog()

@@ -1,6 +1,5 @@
 #include "genericdatacollectionstablemodel.h"
 
-#include "genericdatacollectiontablemodel.h"
 #include "describesqltables.h"
 
 #include <QLocale>
