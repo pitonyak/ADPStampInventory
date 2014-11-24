@@ -85,7 +85,8 @@ SOURCES += main.cpp\
     genericdatacollectionstableproxy.cpp \
     genericdataobjectfilter.cpp \
     variantcomparer.cpp \
-    genericdatacollectiontablesearchdialog.cpp
+    genericdatacollectiontablesearchdialog.cpp \
+    genericdatacollectiontablefilterdialog.cpp
 
 HEADERS  += mainwindow.h \
     stampdb.h \
@@ -147,7 +148,8 @@ HEADERS  += mainwindow.h \
     genericdatacollectionstableproxy.h \
     genericdataobjectfilter.h \
     variantcomparer.h \
-    genericdatacollectiontablesearchdialog.h
+    genericdatacollectiontablesearchdialog.h \
+    genericdatacollectiontablefilterdialog.h
 
 FORMS    += mainwindow.ui \
     logroutinginfodialog.ui

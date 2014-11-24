@@ -1,5 +1,5 @@
-#ifndef GENERICDATACOLLECTIONTABLESEARCHDIALOG_H
-#define GENERICDATACOLLECTIONTABLESEARCHDIALOG_H
+#ifndef GENERICDATACOLLECTIONTABLEFILTERDIALOG_H
+#define GENERICDATACOLLECTIONTABLEFILTERDIALOG_H
 
 #include <QDialog>
 #include <QVariant>
@@ -9,14 +9,13 @@
 class QLineEdit;
 class GenericDataCollectionTableDialog;
 class QCheckBox;
+class QRadioButton;
 
-class GenericDataCollectionTableSearchDialog : public QDialog
+class GenericDataCollectionTableFilterDialog : public QDialog
 {
-    Q_OBJECT
+  Q_OBJECT
 public:
-  explicit GenericDataCollectionTableSearchDialog(GenericDataCollectionTableDialog* tableDialog, QWidget *parent = nullptr);
-
-  //Requires a reference to the parent dialog.
+  explicit GenericDataCollectionTableFilterDialog(GenericDataCollectionTableDialog* tableDialog, QWidget *parent = nullptr);
 
   void setCaseSensitive(const Qt::CaseSensitivity sensitivity);
   void setCaseSensitive() { setCaseSensitive(Qt::CaseSensitive); }
@@ -27,9 +26,8 @@ public:
 signals:
 
 public slots:
-  void find();
-  void replace();
-  void replaceAll();
+  void applyFilter();
+  void clearFilter();
 
 private:
   void buildDialog();
@@ -44,10 +42,10 @@ private:
   QCheckBox* m_regularExpressionCB;
   QCheckBox* m_selectionOnlyCB;
 
-  QVariant m_findValue;
-  QVariant m_replaceValue;
-  QModelIndex m_firstIndex;
-  QModelIndex m_lastIndex;
+  QRadioButton* m_rbString;
+  QRadioButton* m_rbRegExp;
+  QRadioButton* m_rbWild;
+
 };
 
-#endif // GENERICDATACOLLECTIONTABLESEARCHDIALOG_H
+#endif // GENERICDATACOLLECTIONTABLEFILTERDIALOG_H

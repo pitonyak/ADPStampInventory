@@ -28,8 +28,10 @@ public:
   /*! \brief Save the dialogs current state / size. */
   void virtual saveState();
 
-  void find(const QString& s);
+  QModelIndex find(const QString& s);
+  QModelIndex find(const QString& s, const QModelIndex& lastIndex);
   GenericDataCollectionsTableModel* getTableModel() { return m_tableModel; }
+  GenericDataCollectionsTableProxy* getProxyModel() { return m_proxyModel; }
 
 signals:
 

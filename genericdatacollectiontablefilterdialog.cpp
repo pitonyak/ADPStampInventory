@@ -1,4 +1,4 @@
-#include "genericdatacollectiontablesearchdialog.h"
+#include "genericdatacollectiontablefilterdialog.h"
 #include "genericdatacollectiontabledialog.h"
 #include "genericdatacollectionstablemodel.h"
 
@@ -13,11 +13,13 @@
 #include <QDialogButtonBox>
 #include <QSortFilterProxyModel>
 #include <QMessageBox>
+#include <QGroupBox>
+#include <QRadioButton>
 
-GenericDataCollectionTableSearchDialog::GenericDataCollectionTableSearchDialog(GenericDataCollectionTableDialog *tableDialog, QWidget *parent) :
-    QDialog(parent), m_tableDialog(tableDialog),
-    m_findValueLineEdit(nullptr), m_replaceValueLineEdit(nullptr), m_matchCaseCB(nullptr), m_matchEntireCellCB(nullptr),
-    m_regularExpressionCB(nullptr), m_selectionOnlyCB(nullptr)
+GenericDataCollectionTableFilterDialog::GenericDataCollectionTableFilterDialog(GenericDataCollectionTableDialog* tableDialog, QWidget *parent) :
+  QDialog(parent), m_tableDialog(tableDialog),
+  m_findValueLineEdit(nullptr), m_replaceValueLineEdit(nullptr), m_matchCaseCB(nullptr), m_matchEntireCellCB(nullptr),
+  m_regularExpressionCB(nullptr), m_selectionOnlyCB(nullptr)
 {
   if (m_tableDialog != nullptr)
   {
@@ -25,7 +27,14 @@ GenericDataCollectionTableSearchDialog::GenericDataCollectionTableSearchDialog(G
   }
 }
 
-void GenericDataCollectionTableSearchDialog::buildDialog()
+
+// filter string, regexp, wild card
+// Filter role (view, edit)
+// Filter column (drop down)
+// set locale aware
+// case sensitive
+
+void GenericDataCollectionTableFilterDialog::buildDialog()
 {
   setWindowTitle(tr("Search Table"));
 
@@ -40,6 +49,12 @@ void GenericDataCollectionTableSearchDialog::buildDialog()
 
   // Search value (based on what I want to find)
   // Replace value (baesd on what I want to find)
+
+  QGroupBox* filterType = new QGroupBox();
+  m_rbString = new QRadioButton(tr("String"));
+  m_rbRegExp = new QRadioButton(tr("Regular Expression"));
+  m_rbWild = new QRadioButton(tr("Wild Card"));
+
 
   QPushButton* button;
   QVBoxLayout *vLayout;
@@ -222,7 +237,7 @@ void GenericDataCollectionTableSearchDialog::buildDialog()
   enableButtons();
 }
 
-void GenericDataCollectionTableSearchDialog::enableButtons()
+void GenericDataCollectionTableFilterDialog::enableButtons()
 {
     /**
   if (m_dataCollection != nullptr)
@@ -237,7 +252,7 @@ void GenericDataCollectionTableSearchDialog::enableButtons()
   **/
 }
 
-void GenericDataCollectionTableSearchDialog::setCaseSensitive(const Qt::CaseSensitivity sensitivity)
+void GenericDataCollectionTableFilterDialog::setCaseSensitive(const Qt::CaseSensitivity sensitivity)
 {
   if (m_matchCaseCB != nullptr)
   {
@@ -245,7 +260,7 @@ void GenericDataCollectionTableSearchDialog::setCaseSensitive(const Qt::CaseSens
   }
 }
 
-Qt::CaseSensitivity GenericDataCollectionTableSearchDialog::getCaseSensitivity() const
+Qt::CaseSensitivity GenericDataCollectionTableFilterDialog::getCaseSensitivity() const
 {
   return (m_matchCaseCB != nullptr && m_matchCaseCB->isChecked()) ? Qt::CaseSensitive : Qt::CaseInsensitive;
 }
@@ -253,7 +268,12 @@ Qt::CaseSensitivity GenericDataCollectionTableSearchDialog::getCaseSensitivity()
 
 #include "genericdatacollectionstableproxy.h"
 
-void GenericDataCollectionTableSearchDialog::find()
+void GenericDataCollectionTableFilterDialog::clearFilter()
+{
+
+}
+
+void GenericDataCollectionTableFilterDialog::applyFilter()
 {
   QString searchString = m_findValueLineEdit->text();
 
@@ -291,14 +311,3 @@ void GenericDataCollectionTableSearchDialog::find()
   }
   **/
 }
-
-void GenericDataCollectionTableSearchDialog::replace()
-{
-
-}
-
-void GenericDataCollectionTableSearchDialog::replaceAll()
-{
-
-}
-

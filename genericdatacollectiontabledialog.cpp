@@ -280,9 +280,18 @@ void GenericDataCollectionTableDialog::clickedOK()
   accept();
 }
 
-void GenericDataCollectionTableDialog::find(const QString& s)
+QModelIndex GenericDataCollectionTableDialog::find(const QString& s)
 {
+  // Determine a start index and go from there!
+  QModelIndex modelIndex;
+  return modelIndex;
+}
 
+QModelIndex GenericDataCollectionTableDialog::find(const QString& s, const QModelIndex& lastIndex)
+{
+  // If the index is invalid, then attempt to start from the beginning.
+  QModelIndex modelIndex;
+  return modelIndex;
 }
 
 #include "genericdatacollectiontablesearchdialog.h"
