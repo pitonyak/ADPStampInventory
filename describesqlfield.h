@@ -93,6 +93,10 @@ public:
 
   const DescribeSqlField& operator=(const DescribeSqlField& field) { return copy(field); }
 
+  /*! \brief Write this object to an XML stream.
+   *  \param [in, out] writer Write to this XML stream.
+   *  \return reference to the writer stream.
+   */
   QXmlStreamWriter& writeXml(QXmlStreamWriter& writer) const;
 
   /*! \brief Read and return an object of this type. Fields not included in the XML use the default values.

@@ -86,7 +86,9 @@ SOURCES += main.cpp\
     genericdataobjectfilter.cpp \
     variantcomparer.cpp \
     genericdatacollectiontablesearchdialog.cpp \
-    genericdatacollectiontablefilterdialog.cpp
+    genericdatacollectiontablefilterdialog.cpp \
+    tableeditfielddescriptor.cpp \
+    tableeditfielddescriptors.cpp
 
 HEADERS  += mainwindow.h \
     stampdb.h \
@@ -149,7 +151,9 @@ HEADERS  += mainwindow.h \
     genericdataobjectfilter.h \
     variantcomparer.h \
     genericdatacollectiontablesearchdialog.h \
-    genericdatacollectiontablefilterdialog.h
+    genericdatacollectiontablefilterdialog.h \
+    tableeditfielddescriptor.h \
+    tableeditfielddescriptors.h
 
 FORMS    += mainwindow.ui \
     logroutinginfodialog.ui

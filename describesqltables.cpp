@@ -159,7 +159,6 @@ DescribeSqlTables DescribeSqlTables::getStampSchema()
   DescribeSqlTable catalogTypeTable(catalogType, n, true, &typeMaster);
   catalogTypeTable.setFieldKey("id", true);
   schema.addTable(catalogTypeTable);
-  qDebug("Done with catalog type");
 
   QString country[] = {"country", "Country", "Country",
              "id", "Id", "INTEGER", "Table Key", "10",
