@@ -141,6 +141,26 @@ QXmlStreamWriter& DescribeSqlTables::writeXml(QXmlStreamWriter& writer) const
   return writer;
 }
 
+QHash<QString, TableEditFieldDescriptors> DescribeSqlTables::getPrimaryTableEditDescriptors()
+{
+  QHash<QString, TableEditFieldDescriptors> tableDescriptors;
+
+  TableEditFieldDescriptors catalogDescriptors;
+  TableEditFieldDescriptor linkField("country", "a3", "");
+  catalogDescriptors.append(TableEditFieldDescriptor("catalog", "id", "ID", "/", true));
+  catalogDescriptors.append(TableEditFieldDescriptor(linkField, "catalog", "countryid", "Country"));
+  linkField.setTableName("catalogtype");
+  linkField.setFieldName("name");
+  catalogDescriptors.append(TableEditFieldDescriptor(linkField, "catalog", "typeid", "Type"));
+  catalogDescriptors.append(TableEditFieldDescriptor("catalog", "scott", "Scott"));
+  catalogDescriptors.append(TableEditFieldDescriptor("catalog", "description", "Description"));
+  catalogDescriptors.append(TableEditFieldDescriptor("catalog", "releasedate", "Release"));
+  catalogDescriptors.append(TableEditFieldDescriptor("catalog", "facevalue", "Face"));
+  tableDescriptors.insert("catalog", catalogDescriptors);
+
+  return tableDescriptors;
+}
+
 DescribeSqlTables DescribeSqlTables::getStampSchema()
 {
   DescribeSqlTables schema;

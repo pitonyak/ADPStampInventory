@@ -29,6 +29,8 @@ public:
   TableEditFieldDescriptor(const TableEditFieldDescriptor& fieldDescriptor);
   explicit TableEditFieldDescriptor(const TableEditFieldDescriptor& fieldDescriptor, QObject *parent);
   explicit TableEditFieldDescriptor(const QString& tableName, const QString& fieldName, const QString& displayName, const QString& separator="/", const bool readOnly=false, QObject *parent = nullptr);
+  explicit TableEditFieldDescriptor(const TableEditFieldDescriptor& linkField, const QString& tableName, const QString& fieldName, const QString& displayName, const QString& separator="/", const bool readOnly=false, QObject *parent = nullptr);
+  explicit TableEditFieldDescriptor(const QList<TableEditFieldDescriptor>& linkFields, const QString& tableName, const QString& fieldName, const QString& displayName, const QString& separator="/", const bool readOnly=false, QObject *parent = nullptr);
 
   QString getFieldName() const { return m_fieldName;}
   void setFieldName(const QString& name) { m_fieldName = name; }

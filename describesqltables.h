@@ -2,6 +2,7 @@
 #define DESCRIBESQLTABLES_H
 
 #include "describesqltable.h"
+#include "tableeditfielddescriptors.h"
 #include <QHash>
 #include <QStringList>
 #include <QString>
@@ -160,6 +161,8 @@ public:
    *  \return A stamp schema object describing the fields and such as desired.
    */
   static DescribeSqlTables getStampSchema();
+
+  static QHash<QString, TableEditFieldDescriptors> getPrimaryTableEditDescriptors();
 
   //**************************************************************************
   /*! \brief Write this object as XML to a stream.

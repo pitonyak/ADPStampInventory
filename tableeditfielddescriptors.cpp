@@ -23,6 +23,9 @@ TableEditFieldDescriptors::TableEditFieldDescriptors(const TableEditFieldDescrip
 QXmlStreamWriter& TableEditFieldDescriptors::writeXml(QXmlStreamWriter& writer) const
 {
   writer.writeStartElement("FieldViewDescriptors");
+  if (!getName().isEmpty())
+    writer.writeAttribute("name", getName());
+
   for (int i=0; i<size(); ++i) {
     at(i).writeXml(writer);
   }
@@ -37,6 +40,10 @@ TableEditFieldDescriptors TableEditFieldDescriptors::readXml(QXmlStreamReader& r
   while (!reader.atEnd()) {
     if (reader.isStartElement()) {
       if (reader.name().compare("FieldViewDescriptors", Qt::CaseInsensitive) == 0) {
+
+        if (reader.attributes().hasAttribute("name"))
+          descriptors.setName(reader.attributes().value("name").toString());
+
         if (foundMainTag) {
           // Found the main tag a second time!
           break;
@@ -71,6 +78,7 @@ const TableEditFieldDescriptors& TableEditFieldDescriptors::copy(const TableEdit
 {
   if (this != &o)
   {
+    setName(o.getName());
     m_fields = o.m_fields;
   }
   return *this;

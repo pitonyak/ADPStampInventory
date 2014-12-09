@@ -27,6 +27,22 @@ TableEditFieldDescriptor::TableEditFieldDescriptor(const QString& tableName, con
 {
 }
 
+TableEditFieldDescriptor::TableEditFieldDescriptor(const TableEditFieldDescriptor& linkField, const QString& tableName, const QString& fieldName, const QString& displayName, const QString& separator, const bool readOnly, QObject *parent) :
+  QObject(parent), m_readOnly(readOnly), m_fieldDisplaySeparator(separator),
+  m_tableName(tableName), m_fieldName(fieldName), m_displayName(displayName)
+{
+  append(linkField);
+}
+
+TableEditFieldDescriptor::TableEditFieldDescriptor(const QList<TableEditFieldDescriptor>& linkFields, const QString& tableName, const QString& fieldName, const QString& displayName, const QString& separator, const bool readOnly, QObject *parent) :
+  QObject(parent), m_readOnly(readOnly), m_fieldDisplaySeparator(separator),
+  m_tableName(tableName), m_fieldName(fieldName), m_displayName(displayName)
+{
+  append(linkFields);
+}
+
+
+
 const TableEditFieldDescriptor& TableEditFieldDescriptor::copy(const TableEditFieldDescriptor& o)
 {
   if (&o != this)

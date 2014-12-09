@@ -16,10 +16,14 @@ public:
   int size() const { return m_fields.size(); }
   const TableEditFieldDescriptor& at(const int i) const { return m_fields.at(i); }
   void clear() { m_fields.clear(); }
+
   void append(const TableEditFieldDescriptor& fieldDescriptor) { m_fields.append(fieldDescriptor); }
   void append(const QList<TableEditFieldDescriptor>& fieldDescriptors) { m_fields.append(fieldDescriptors); }
 
   const TableEditFieldDescriptors& operator=(const TableEditFieldDescriptors& o) { return copy(o); }
+
+  QString getName() const { return m_name; }
+  void setName(const QString& name) { m_name = name; }
 
   // Read / write XMl is not tested.
 
@@ -35,13 +39,14 @@ public:
    */
   static TableEditFieldDescriptors readXml(QXmlStreamReader& reader);
 
-
 signals:
 
 public slots:
 
 private:
   const TableEditFieldDescriptors& copy(const TableEditFieldDescriptors& o);
+
+  QString m_name;
   QList<TableEditFieldDescriptor> m_fields;
 
 };
