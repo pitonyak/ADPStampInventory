@@ -586,7 +586,7 @@ GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, cons
             // If a BIT Varying type is used, and, if the string length is greater than 1, then string should be used
             // rather than a boolean value. I don't have this problem at the moment, so,ignore it for now.
             //gdo->setValue(collection->getPropertyName(i), query.record().value(i));
-            gdo->setValue(collection->getPropertyName(i), mapper.forceToType(query.record().value(i), table->getFieldMetaType(collection->getPropertyName(i)), &ok));
+            gdo->setValueNative(collection->getPropertyName(i), mapper.forceToType(query.record().value(i), table->getFieldMetaType(collection->getPropertyName(i)), &ok));
           }
         }
         collection->appendObject(hasIdColumn ? gdo->getInt(idString) : iCount, gdo);
@@ -644,7 +644,7 @@ GenericDataCollection* StampDB::readTableSql(const QString& sql)
         {
           if (!query.record().isNull(i))
           {
-            gdo->setValue(collection->getPropertyName(i), query.record().value(i));
+            gdo->setValueNative(collection->getPropertyName(i), query.record().value(i));
           }
         }
         collection->appendObject(hasIdColumn ? gdo->getInt(idString) : iCount, gdo);

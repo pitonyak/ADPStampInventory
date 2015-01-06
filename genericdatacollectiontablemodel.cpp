@@ -30,7 +30,7 @@ bool GenericDataCollectionTableModel::setData ( const QModelIndex & index, const
       GenericDataObject* originalObject = isTracking() ? object->clone() : nullptr;
       QString name = m_collection.getPropertyName(index.column());
       // TODO: See if this is
-      object->setValue(name, value);
+      object->setValueNative(name, value);
       if (isTracking())
       {
         m_changeTracker.push(index.row(), index.column(), name, ChangedObjectBase::Edit, object->clone(), originalObject);
@@ -459,7 +459,7 @@ void GenericDataCollectionTableModel::duplicateRows(const QModelIndexList& list)
     {
       GenericDataObject* oldData = dataToCopy.dequeue();
       GenericDataObject* newData = oldData->clone();
-      newData->setValue("id", ++largestId);
+      newData->setValueNative("id", ++largestId);
       int row = m_collection.getObjectCount();
       if (m_isTracking)
       {

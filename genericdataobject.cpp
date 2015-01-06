@@ -226,29 +226,23 @@ int GenericDataObject::compare(const GenericDataObject& obj, const QStringList& 
     return rc;
 }
 
-void GenericDataObject::setValue(const QString &name, const QVariant& value)
+bool GenericDataObject::isDateTime(const QString& name) const
 {
-  // Just assume that it is correct type.
-  setValueNative(name, value);
-  /**
-  if (fieldNameMeansDate(name))
-  {
-    // m_properties.insert(name.toLower(), value);
-    setValueNative(name, value);
-  }
-  else if (fieldNameMeansDateTime(name))
-  {
-    //const QVariant v = m_properties.value(name.toLower());
-    //return (QMetaType::QDateTime != (QMetaType::Type) v.type()) ? v.toDateTime() : v;
-    setValueNative(name, value);
-  }
-  else
-  {
-    setValueNative(name, value);
-  }
-  **/
+  const QVariant v = m_properties.value(name.toLower());
+  return (QMetaType::QDateTime == (QMetaType::Type) v.type());
 }
 
+bool GenericDataObject::isDate(const QString& name) const
+{
+  const QVariant v = m_properties.value(name.toLower());
+  return (QMetaType::QDate == (QMetaType::Type) v.type());
+}
+
+bool GenericDataObject::isTime(const QString& name) const
+{
+  const QVariant v = m_properties.value(name.toLower());
+  return (QMetaType::QTime == (QMetaType::Type) v.type());
+}
 
 const QVariant GenericDataObject::getValue(const QString& name) const
 {

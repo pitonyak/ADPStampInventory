@@ -53,7 +53,7 @@ public slots:
 
 private:
 
-  void privateRowDuplicator(const bool autoIncrement);
+  void privateRowDuplicator(const bool autoIncrement, const bool setUpdated);
 
   /*! \brief Set list columns, delegates, and initial values. */
   void buildDialog();

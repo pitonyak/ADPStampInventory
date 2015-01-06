@@ -204,22 +204,22 @@ void GenericDataCollectionTableDialog::saveChanges()
 
 void GenericDataCollectionTableDialog::duplicateRow()
 {
-  privateRowDuplicator(false);
+  privateRowDuplicator(false, true);
 }
 
 void GenericDataCollectionTableDialog::duplicateRowAutoIncrement()
 {
-  privateRowDuplicator(true);
+  privateRowDuplicator(true, true);
 }
 
-void GenericDataCollectionTableDialog::privateRowDuplicator(const bool autoIncrement)
+void GenericDataCollectionTableDialog::privateRowDuplicator(const bool autoIncrement, const bool setUpdated)
 {
   QModelIndexList proxyList = m_tableView->selectionModel()->selectedIndexes();
   QModelIndexList mappedList;
   for (int i=0; i<proxyList.size(); ++i) {
     mappedList.append(m_proxyModel->mapToSource(proxyList.at(i)));
   }
-  QList<int> addedIds = m_tableModel->duplicateRows(mappedList, autoIncrement);
+  QList<int> addedIds = m_tableModel->duplicateRows(mappedList, autoIncrement, setUpdated);
   if (!addedIds.isEmpty())
   {
     int row = m_tableModel->getIndexOf(addedIds.first());

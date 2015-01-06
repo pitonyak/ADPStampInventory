@@ -84,9 +84,30 @@ public:
 
   /*! \brief Set the value for a named property.
    *  \param [in] name Property name of interest.
+   *  \param [in] value Property value that must be of the correct type.
    */
   void setValueNative(const QString& name, const QVariant& value);
-  void setValue(const QString& name, const QVariant& value);
+
+  /*! \brief Determine if the contained value is of type QDateTime.
+   * It would be better to base this on the defined data types.
+   *  \param [in] name Property name of interest.
+   *  \return True if the contained value is of type QDateTime.
+   */
+  bool isDateTime(const QString& name) const;
+
+  /*! \brief Determine if the contained value is of type QDate.
+   * It would be better to base this on the defined data types.
+   *  \param [in] name Property name of interest.
+   *  \return True if the contained value is of type QDate.
+   */
+  bool isDate(const QString& name) const;
+
+  /*! \brief Determine if the contained value is of type QTime.
+   * It would be better to base this on the defined data types.
+   *  \param [in] name Property name of interest.
+   *  \return True if the contained value is of type QTime.
+   */
+  bool isTime(const QString& name) const;
 
   /*! \brief Get the proprety as a string.
    *  \param [in] name Property name of interest.

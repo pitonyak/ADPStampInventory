@@ -135,10 +135,11 @@ public slots:
    *
    *  \param [in] list Identifies the rows to duplicate.
    *  \param [in] autoIncrement If true, will attempt to increment the Scott number.
+   *  \param [in] setUpdated If true, will attempt to set any date field named "updated"
    *
    *  \return return a list of the inserted IDs in the order that they were inserted.
    ***************************************************************************/
-  QList<int> duplicateRows(const QModelIndexList& list, const bool autoIncrement=false);
+  QList<int> duplicateRows(const QModelIndexList& list, const bool autoIncrement=false, const bool setUpdated=false);
 
 private:
   bool m_useLinks;

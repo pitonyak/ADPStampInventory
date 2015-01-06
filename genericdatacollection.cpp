@@ -283,12 +283,12 @@ GenericDataObject* GenericDataCollection::createEmptyObject() const
 
     for (int i=0; i<m_propertyNames.size() && i < m_metaTypes.size(); ++i) {
         if (m_propertyNames.at(i).compare("id", Qt::CaseInsensitive) == 0) {
-            data->setValue("id", getLargestId() + 1);
+            data->setValueNative("id", getLargestId() + 1);
         } else {
             switch (m_metaTypes.at(i))
             {
             case QMetaType::Bool :
-                data->setValue(m_propertyNames.at(i), false);
+                data->setValueNative(m_propertyNames.at(i), false);
                 break;
             case QMetaType::Int :
             case QMetaType::UInt :
@@ -298,46 +298,46 @@ GenericDataObject* GenericDataCollection::createEmptyObject() const
             case QMetaType::ULong :
             case QMetaType::Short :
             case QMetaType::UShort :
-                data->setValue(m_propertyNames.at(i), 0);
+                data->setValueNative(m_propertyNames.at(i), 0);
                 break;
             case QMetaType::Char :
             case QMetaType::QChar :
             case QMetaType::UChar :
             case QMetaType::SChar :
-                data->setValue(m_propertyNames.at(i), 'X');
+                data->setValueNative(m_propertyNames.at(i), 'X');
                 break;
 
             case QMetaType::QString :
-                data->setValue(m_propertyNames.at(i), "");
+                data->setValueNative(m_propertyNames.at(i), "");
                 break;
 
             case QMetaType::QUrl :
-                data->setValue(m_propertyNames.at(i), QUrl());
+                data->setValueNative(m_propertyNames.at(i), QUrl());
                 break;
 
             case QVariant::Uuid :
-                data->setValue(m_propertyNames.at(i), QUuid());
+                data->setValueNative(m_propertyNames.at(i), QUuid());
                 break;
 
             case QMetaType::Double :
             case QMetaType::Float :
-                data->setValue(m_propertyNames.at(i), 0.0);
+                data->setValueNative(m_propertyNames.at(i), 0.0);
                 break;
 
             case QMetaType::QDate :
-                data->setValue(m_propertyNames.at(i), QDate::currentDate());
+                data->setValueNative(m_propertyNames.at(i), QDate::currentDate());
                 break;
 
             case QMetaType::QDateTime :
-                data->setValue(m_propertyNames.at(i), QDateTime::currentDateTime());
+                data->setValueNative(m_propertyNames.at(i), QDateTime::currentDateTime());
                 break;
 
             case QMetaType::QTime :
-                data->setValue(m_propertyNames.at(i), QTime::currentTime());
+                data->setValueNative(m_propertyNames.at(i), QTime::currentTime());
                 break;
 
             case QMetaType::QStringList :
-                data->setValue(m_propertyNames.at(i), QStringList());
+                data->setValueNative(m_propertyNames.at(i), QStringList());
                 break;
 
             default:
