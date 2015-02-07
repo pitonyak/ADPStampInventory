@@ -42,6 +42,8 @@ public slots:
   void undoChange();
   void duplicateRow();
   void duplicateRowAutoIncrement();
+  void duplicateRowAddLowerA();
+  void duplicateRowAddUpperA();
   void saveChanges();
   void searchDialog();
 
@@ -53,7 +55,7 @@ public slots:
 
 private:
 
-  void privateRowDuplicator(const bool autoIncrement, const bool setUpdated);
+  void privateRowDuplicator(const bool autoIncrement, const bool setUpdated, const bool appendChar=false, const char charToAppend='a');
 
   /*! \brief Set list columns, delegates, and initial values. */
   void buildDialog();
@@ -73,6 +75,8 @@ private:
   /*! \brief Copy the selected rows */
   QPushButton* m_duplicateButton;
   QPushButton* m_duplicateButtonIncrement;
+  QPushButton* m_duplicateButtonAppendLowerA;
+  QPushButton* m_duplicateButtonAppendUpperA;
   /*! \brief Add a new row */
   QPushButton* m_addButton;
   /*! \brief Delete the selected rows */

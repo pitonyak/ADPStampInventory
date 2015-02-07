@@ -454,11 +454,22 @@ void MainWindow::editTable()
       //QString s = schema.getDDL(true).join("\n\n");
       //ScrollMessageBox::information(this, "Schema", s);
 
+      QSettings settings;
+      int focusedNameIndex = 0;
+      if (tableNames.size() > 0) {
+        QString startName = settings.value(Constants::Settings_GenericDataCollectionLastEditedTable, tableNames.at(0)).toString();
+        focusedNameIndex = tableNames.indexOf(startName);
+        if (focusedNameIndex < 0) {
+          focusedNameIndex = 0;
+        }
+      }
 
-      QString tableName = QInputDialog::getItem(this, tr("Choose Table"), tr("Table"), tableNames, 0, false, &ok);
+      QString tableName = QInputDialog::getItem(this, tr("Choose Table"), tr("Table"), tableNames, focusedNameIndex, false, &ok);
+
       //int maxID = m_db->getMaxId(tableName);
       //ScrollMessageBox::information(this, "Max ID", QString("Max ID is %1").arg(maxID));
       if (ok && !tableName.isEmpty()) {
+        settings.setValue(Constants::Settings_GenericDataCollectionLastEditedTable, tableName);
         //GenericDataCollection* data = m_db->readTableName(tableName);
         //GenericDataCollection* data = m_db->readTableBySchema(tableName);
         GenericDataCollections* data = m_db->readTableWithLinks(tableName);

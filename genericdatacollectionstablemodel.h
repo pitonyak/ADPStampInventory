@@ -139,7 +139,7 @@ public slots:
    *
    *  \return return a list of the inserted IDs in the order that they were inserted.
    ***************************************************************************/
-  QList<int> duplicateRows(const QModelIndexList& list, const bool autoIncrement=false, const bool setUpdated=false);
+  QList<int> duplicateRows(const QModelIndexList& list, const bool autoIncrement=false, const bool setUpdated=false, const bool appendChar=false, const char charToAppend='a');
 
 private:
   bool m_useLinks;

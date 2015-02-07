@@ -610,7 +610,7 @@ QString GenericDataCollectionsTableModel::incrementScottNumber(const QString& sc
   return scott;
 }
 
-QList<int> GenericDataCollectionsTableModel::duplicateRows(const QModelIndexList& list, const bool autoIncrement, const bool setUpdated)
+QList<int> GenericDataCollectionsTableModel::duplicateRows(const QModelIndexList& list, const bool autoIncrement, const bool setUpdated, const bool appendChar, const char charToAppend)
 {
   QList<int> addedIds;
   qDebug(qPrintable(QString("duplicateRows %1").arg(list.size())));
@@ -634,9 +634,14 @@ QList<int> GenericDataCollectionsTableModel::duplicateRows(const QModelIndexList
       int nextId = ++largestId;
       addedIds << nextId;
       newData->setValueNative("id", nextId);
-      if (autoIncrement) {
+      if (autoIncrement || appendChar) {
         if (newData->containsValue("scott")) {
-          newData->setValueNative("scott", incrementScottNumber(newData->getString("scott")));
+          if (autoIncrement) {
+            newData->setValueNative("scott", incrementScottNumber(newData->getString("scott")));
+          }
+          if (appendChar) {
+            newData->setValueNative("scott", newData->getString("scott").append(charToAppend));
+          }
         }
       }
       if (setUpdated) {

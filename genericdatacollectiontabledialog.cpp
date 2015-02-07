@@ -23,6 +23,7 @@
 GenericDataCollectionTableDialog::GenericDataCollectionTableDialog(const QString& tableName, GenericDataCollection &data, StampDB &db, DescribeSqlTables& schema, GenericDataCollections *tables, QWidget *parent) :
   QDialog(parent),
   m_duplicateButton(nullptr), m_duplicateButtonIncrement(nullptr),
+  m_duplicateButtonAppendLowerA(nullptr), m_duplicateButtonAppendUpperA(nullptr),
   m_addButton(nullptr), m_deleteButton(nullptr), m_undoButton(nullptr),
   m_saveChangesButton(nullptr), m_searchButton(nullptr),
   m_table(data), m_tables(tables), m_tableView(nullptr),
@@ -98,8 +99,15 @@ void GenericDataCollectionTableDialog::buildDialog()
   hLayout->addWidget(m_deleteButton);
   m_duplicateButton = new QPushButton(tr("Duplicate"));
   hLayout->addWidget(m_duplicateButton);
-  m_duplicateButtonIncrement = new QPushButton(tr("Duplicate+"));
+  m_duplicateButtonIncrement = new QPushButton(tr("Duplicate +"));
   hLayout->addWidget(m_duplicateButtonIncrement);
+
+  m_duplicateButtonAppendLowerA = new QPushButton(tr("Duplicate a"));
+  hLayout->addWidget(m_duplicateButtonAppendLowerA);
+  m_duplicateButtonAppendUpperA = new QPushButton(tr("Duplicate A"));
+  hLayout->addWidget(m_duplicateButtonAppendUpperA);
+
+
   m_undoButton = new QPushButton(tr("Undo"));
   hLayout->addWidget(m_undoButton);
   m_saveChangesButton = new QPushButton(tr("Save Changes"));
@@ -110,6 +118,10 @@ void GenericDataCollectionTableDialog::buildDialog()
   connect(m_deleteButton, SIGNAL(clicked()), this, SLOT(deleteRow()));
   connect(m_duplicateButton, SIGNAL(clicked()), this, SLOT(duplicateRow()));
   connect(m_duplicateButtonIncrement, SIGNAL(clicked()), this, SLOT(duplicateRowAutoIncrement()));
+
+  connect(m_duplicateButtonAppendLowerA, SIGNAL(clicked()), this, SLOT(duplicateRowAddLowerA()));
+  connect(m_duplicateButtonAppendUpperA, SIGNAL(clicked()), this, SLOT(duplicateRowAddUpperA()));
+
   connect(m_undoButton, SIGNAL(clicked()), this, SLOT(undoChange()));
   connect(m_saveChangesButton, SIGNAL(clicked()), this, SLOT(saveChanges()));
 
@@ -153,6 +165,8 @@ void GenericDataCollectionTableDialog::disableButtons()
 {
     m_duplicateButton->setEnabled(false);
     m_duplicateButtonIncrement->setEnabled(false);
+    m_duplicateButtonAppendLowerA->setEnabled(false);
+    m_duplicateButtonAppendUpperA->setEnabled(false);
     m_addButton->setEnabled(false);
     m_deleteButton->setEnabled(false);
     m_undoButton->setEnabled(false);
@@ -165,6 +179,8 @@ void GenericDataCollectionTableDialog::enableButtons()
   bool somethingSelected = isRowSelected();
   m_duplicateButton->setEnabled(somethingSelected);
   m_duplicateButtonIncrement->setEnabled(somethingSelected);
+  m_duplicateButtonAppendLowerA->setEnabled(somethingSelected);
+  m_duplicateButtonAppendUpperA->setEnabled(somethingSelected);
   m_addButton->setEnabled(true);
   m_deleteButton->setEnabled(somethingSelected);
   m_undoButton->setEnabled(!m_tableModel->trackerIsEmpty());
@@ -212,14 +228,24 @@ void GenericDataCollectionTableDialog::duplicateRowAutoIncrement()
   privateRowDuplicator(true, true);
 }
 
-void GenericDataCollectionTableDialog::privateRowDuplicator(const bool autoIncrement, const bool setUpdated)
+void GenericDataCollectionTableDialog::duplicateRowAddLowerA()
+{
+  privateRowDuplicator(false, true, true, 'a');
+}
+
+void GenericDataCollectionTableDialog::duplicateRowAddUpperA()
+{
+  privateRowDuplicator(false, true, true, 'A');
+}
+
+void GenericDataCollectionTableDialog::privateRowDuplicator(const bool autoIncrement, const bool setUpdated, const bool appendChar, const char charToAppend)
 {
   QModelIndexList proxyList = m_tableView->selectionModel()->selectedIndexes();
   QModelIndexList mappedList;
   for (int i=0; i<proxyList.size(); ++i) {
     mappedList.append(m_proxyModel->mapToSource(proxyList.at(i)));
   }
-  QList<int> addedIds = m_tableModel->duplicateRows(mappedList, autoIncrement, setUpdated);
+  QList<int> addedIds = m_tableModel->duplicateRows(mappedList, autoIncrement, setUpdated, appendChar, charToAppend);
   if (!addedIds.isEmpty())
   {
     int row = m_tableModel->getIndexOf(addedIds.first());
