@@ -28,8 +28,32 @@ public:
   /*! \brief Save the dialogs current state / size. */
   void virtual saveState();
 
-  QModelIndex find(const QString& s);
-  QModelIndex find(const QString& s, const QModelIndex& lastIndex);
+  /*! \brief Find the next instance of the string "s" based on the current cursor position and column.
+   * TODO: Should support extra search options such as regular expression, wild card, full match, partial match, etc.
+   * TODO: Should support all column search.
+   * TODO: Support searching by row.
+   *
+   *  \param [in] s String to find.
+   *
+   *  \param [in] searchForward If True, searches down, if false, searches up.
+   *
+   *  \return The location of the found item. Return an invalid index if not found.
+   */
+  QModelIndex find(const QString& s, const bool searchForward);
+
+  /*! \brief Find the next instance of the string "s" based on the current cursor position and column.
+   * TODO: Should support extra search options such as regular expression, wild card, full match, partial match, etc.
+   *
+   *  \param [in] s String to find.
+   *
+   *  \param [in] lastIndex Starting position from which to search. So, this is like find next or find previous.
+   *
+   *  \param [in] searchForward If True, searches down, if false, searches up.
+   *
+   *  \return The location of the found item. Return an invalid index if not found.
+   */
+  QModelIndex find(const QString& s, const QModelIndex& lastIndex, const bool searchForward);
+
   GenericDataCollectionsTableModel* getTableModel() { return m_tableModel; }
   GenericDataCollectionsTableProxy* getProxyModel() { return m_proxyModel; }
 
@@ -52,6 +76,9 @@ public slots:
 
   /*! \brief Verify cancel with unsaved changes. */
   void clickedCancel();
+
+protected:
+  virtual void keyPressEvent(QKeyEvent* evt);
 
 private:
 
@@ -97,12 +124,12 @@ private:
   /*! \brief Used for saving and restoring dialog sizes. */
   QString m_tableName;
 
-  /*! \brief Actual data model to which changes are made and such. */
+  /*! \brief Actual data model to which changes are made and such. This is the source model for the proxy model. */
   GenericDataCollectionsTableModel* m_tableModel;
 
-  /*! \brief Used by the view to allow for sorting and similar. the actual table model is contained inside of this. */
-  //QSortFilterProxyModel* m_proxyModel;
+  /*! \brief Used by the view to allow for sorting and similar. the actual table model is contained inside of this. The m_tableModel is the source model for this proxy model. */
   GenericDataCollectionsTableProxy* m_proxyModel;
+  //QSortFilterProxyModel* m_proxyModel;
 
   /*! \brief We need this here so that we can persist the DB. */
   StampDB& m_db;

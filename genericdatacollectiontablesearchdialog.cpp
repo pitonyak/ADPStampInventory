@@ -2,7 +2,6 @@
 #include "genericdatacollectiontabledialog.h"
 #include "genericdatacollectionstablemodel.h"
 
-
 #include <QLineEdit>
 #include <QPushButton>
 #include <QVBoxLayout>
@@ -13,11 +12,15 @@
 #include <QDialogButtonBox>
 #include <QSortFilterProxyModel>
 #include <QMessageBox>
+#include <QRadioButton>
+#include <QButtonGroup>
 
 GenericDataCollectionTableSearchDialog::GenericDataCollectionTableSearchDialog(GenericDataCollectionTableDialog *tableDialog, QWidget *parent) :
     QDialog(parent), m_tableDialog(tableDialog),
-    m_findValueLineEdit(nullptr), m_replaceValueLineEdit(nullptr), m_matchCaseCB(nullptr), m_matchEntireCellCB(nullptr),
-    m_regularExpressionCB(nullptr), m_selectionOnlyCB(nullptr)
+    m_findValueLineEdit(nullptr), m_replaceValueLineEdit(nullptr), m_matchCaseCB(nullptr), m_WrapCB(nullptr),
+    m_Backwards(nullptr), m_AllColumns(nullptr),
+    m_rbMatchAll(nullptr), m_rbContains(nullptr), m_rbStartsWith(nullptr), m_rbEndsWith(nullptr),
+    m_rbString(nullptr), m_rbRegExp(nullptr), m_rbWildCard(nullptr)
 {
   if (m_tableDialog != nullptr)
   {
@@ -77,15 +80,15 @@ void GenericDataCollectionTableSearchDialog::buildDialog()
   vLayout2 = new QVBoxLayout();
   m_matchCaseCB = new QCheckBox(tr("Match case"));
   vLayout2->addWidget(m_matchCaseCB);
-  m_regularExpressionCB = new QCheckBox(tr("Regular expression"));
-  vLayout2->addWidget(m_regularExpressionCB);
+  m_WrapCB = new QCheckBox(tr("Wrap"));
+  vLayout2->addWidget(m_WrapCB);
   hLayout2->addLayout(vLayout2);
 
   vLayout2 = new QVBoxLayout();
-  m_matchEntireCellCB = new QCheckBox(tr("Match cell only"));
-  vLayout2->addWidget(m_matchEntireCellCB);
-  m_selectionOnlyCB = new QCheckBox(tr("Current Selection Only"));
-  vLayout2->addWidget(m_selectionOnlyCB);
+  m_Backwards = new QCheckBox(tr("Search Previous"));
+  vLayout2->addWidget(m_Backwards);
+  m_AllColumns = new QCheckBox(tr("All Columns"));
+  vLayout2->addWidget(m_AllColumns);
   hLayout2->addLayout(vLayout2);
 
   vLayout->addLayout(hLayout2);
@@ -93,6 +96,41 @@ void GenericDataCollectionTableSearchDialog::buildDialog()
   connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
   connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
   vLayout->addWidget(buttonBox);
+
+  QVBoxLayout *vLayoutRBMatchExtent = new QVBoxLayout();
+  QButtonGroup *rbGroup = new QButtonGroup(vLayoutRBMatchExtent);
+  m_rbMatchAll = new QRadioButton("Match All");
+  m_rbContains = new QRadioButton("Contains");
+  m_rbStartsWith = new QRadioButton("Starts With");
+  m_rbEndsWith = new QRadioButton("Ends With");
+  rbGroup->addButton(m_rbMatchAll);
+  rbGroup->addButton(m_rbContains);
+  rbGroup->addButton(m_rbStartsWith);
+  rbGroup->addButton(m_rbEndsWith);
+  vLayoutRBMatchExtent->addWidget(m_rbMatchAll);
+  vLayoutRBMatchExtent->addWidget(m_rbContains);
+  vLayoutRBMatchExtent->addWidget(m_rbStartsWith);
+  vLayoutRBMatchExtent->addWidget(m_rbEndsWith);
+
+
+  QVBoxLayout *vLayoutRBMatchType = new QVBoxLayout();
+  rbGroup = new QButtonGroup(vLayoutRBMatchType);
+  m_rbString = new QRadioButton("String");
+  m_rbRegExp = new QRadioButton("Regular Expression");
+  m_rbWildCard = new QRadioButton("Wild Card");
+  vLayoutRBMatchType->addWidget(m_rbString);
+  vLayoutRBMatchType->addWidget(m_rbRegExp);
+  vLayoutRBMatchType->addWidget(m_rbWildCard);
+  rbGroup->addButton(m_rbString);
+  rbGroup->addButton(m_rbRegExp);
+  rbGroup->addButton(m_rbWildCard);
+
+  hLayout2 = new QHBoxLayout();
+  hLayout2->addLayout(vLayoutRBMatchExtent);
+  hLayout2->addLayout(vLayoutRBMatchType);
+  vLayout->addLayout(hLayout2);
+
+//???
 
   /**
   hLayout2 = new QHBoxLayout();
@@ -237,17 +275,185 @@ void GenericDataCollectionTableSearchDialog::enableButtons()
   **/
 }
 
-void GenericDataCollectionTableSearchDialog::setCaseSensitive(const Qt::CaseSensitivity sensitivity)
+void GenericDataCollectionTableSearchDialog::setCaseSensitive(const bool b)
 {
   if (m_matchCaseCB != nullptr)
   {
-    m_matchCaseCB->setChecked(sensitivity == Qt::CaseSensitive);
+    m_matchCaseCB->setChecked(b);
   }
 }
 
-Qt::CaseSensitivity GenericDataCollectionTableSearchDialog::getCaseSensitivity() const
+bool GenericDataCollectionTableSearchDialog::isCaseSensitive() const
 {
-  return (m_matchCaseCB != nullptr && m_matchCaseCB->isChecked()) ? Qt::CaseSensitive : Qt::CaseInsensitive;
+  return (m_matchCaseCB != nullptr && m_matchCaseCB->isChecked());
+}
+
+
+QString GenericDataCollectionTableSearchDialog::getFindValue() const
+{
+  return (m_findValueLineEdit != nullptr) ? m_findValueLineEdit->text() : "";
+}
+
+void GenericDataCollectionTableSearchDialog::setFindValue(const QString& s)
+{
+  if (m_findValueLineEdit != nullptr)
+  {
+    m_findValueLineEdit->setText(s);
+  }
+}
+
+QString GenericDataCollectionTableSearchDialog::getReplaceValue() const
+{
+  return (m_replaceValueLineEdit != nullptr) ? m_replaceValueLineEdit->text() : "";
+}
+
+void GenericDataCollectionTableSearchDialog::setReplaceValue(const QString& s)
+{
+  if (m_replaceValueLineEdit != nullptr)
+  {
+    m_replaceValueLineEdit->setText(s);
+  }
+}
+
+bool GenericDataCollectionTableSearchDialog::isMatchAll() const
+{
+  return (m_rbMatchAll != nullptr) ? m_rbMatchAll->isChecked() : false;
+}
+
+bool GenericDataCollectionTableSearchDialog::isContains() const
+{
+  return (m_rbContains != nullptr) ? m_rbContains->isChecked() : false;
+}
+
+bool GenericDataCollectionTableSearchDialog::isStartsWith() const
+{
+  return (m_rbStartsWith != nullptr) ? m_rbStartsWith->isChecked() : false;
+}
+
+bool GenericDataCollectionTableSearchDialog::isEndsWith() const
+{
+  return (m_rbEndsWith != nullptr) ? m_rbEndsWith->isChecked() : false;
+}
+
+bool GenericDataCollectionTableSearchDialog::isMatchAsString() const
+{
+  return (m_rbString != nullptr) ? m_rbString->isChecked() : false;
+}
+
+bool GenericDataCollectionTableSearchDialog::isRegularExpression() const
+{
+  return (m_rbRegExp != nullptr) ? m_rbRegExp->isChecked() : false;
+}
+
+bool GenericDataCollectionTableSearchDialog::isWildCard() const
+{
+  return (m_rbWildCard != nullptr) ? m_rbWildCard->isChecked() : false;
+}
+
+bool GenericDataCollectionTableSearchDialog::isWrap() const
+{
+  return (m_WrapCB != nullptr) ? m_WrapCB->isChecked() : false;
+}
+
+bool GenericDataCollectionTableSearchDialog::isBackwards() const
+{
+  return (m_Backwards != nullptr) ? m_Backwards->isChecked() : false;
+}
+
+bool GenericDataCollectionTableSearchDialog::isAllColumns() const
+{
+  return (m_AllColumns != nullptr) ? m_AllColumns->isChecked() : false;
+}
+
+
+void GenericDataCollectionTableSearchDialog::setWrap(const bool b)
+{
+  if (m_WrapCB != nullptr) m_WrapCB->setChecked(b);
+}
+
+void GenericDataCollectionTableSearchDialog::setBackwards(const bool b)
+{
+  if (m_Backwards != nullptr) m_Backwards->setChecked(b);
+}
+
+void GenericDataCollectionTableSearchDialog::setAllColumns(const bool b)
+{
+  if (m_AllColumns != nullptr) m_AllColumns->setChecked(b);
+}
+
+void GenericDataCollectionTableSearchDialog::setMatchAll(const bool b)
+{
+  if (m_rbMatchAll != nullptr) m_rbMatchAll->setChecked(b);
+}
+
+void GenericDataCollectionTableSearchDialog::setContains(const bool b)
+{
+  if (m_rbContains != nullptr) m_rbContains->setChecked(b);
+}
+
+void GenericDataCollectionTableSearchDialog::setStartsWith(const bool b)
+{
+  if (m_rbStartsWith != nullptr) m_rbStartsWith->setChecked(b);
+}
+
+void GenericDataCollectionTableSearchDialog::setEndsWith(const bool b)
+{
+  if (m_rbEndsWith != nullptr) m_rbEndsWith->setChecked(b);
+}
+
+void GenericDataCollectionTableSearchDialog::setMatchAsString(const bool b)
+{
+  if (m_rbString != nullptr) m_rbString->setChecked(b);
+}
+
+void GenericDataCollectionTableSearchDialog::setRegularExpression(const bool b)
+{
+  if (m_rbRegExp != nullptr) m_rbRegExp->setChecked(b);
+}
+
+void GenericDataCollectionTableSearchDialog::setWildCard(const bool b)
+{
+  if (m_rbWildCard != nullptr) m_rbWildCard->setChecked(b);
+}
+
+void GenericDataCollectionTableSearchDialog::set(const SearchOptions& options)
+{
+  setMatchAll(options.isMatchEntireString());
+  setMatchAsString(options.isMatchAsString());
+  setCaseSensitive(options.isCaseSensitive());
+  setBackwards(options.isBackwards());
+  setAllColumns(options.isAllColumns());
+  setWrap(options.isWrap());
+  setContains(options.isContains());
+  setStartsWith(options.isStartsWith());
+  setEndsWith(options.isEndsWith());
+  setRegularExpression(options.isRegularExpression());
+  setWildCard(options.isWildCard());
+
+  setFindValue(options.getFindValue());
+  setReplaceValue(options.getReplaceValue());
+}
+
+SearchOptions GenericDataCollectionTableSearchDialog::getOptions()
+{
+  SearchOptions options;
+  if (isMatchAll()) options.setMatchEntireString();
+  if (isMatchAsString()) options.setMatchAsString();
+
+  options.setCaseSensitive(isCaseSensitive());
+  options.setBackwards(isBackwards());
+  options.setAllColumns(isAllColumns());
+  options.setWrap(isWrap());
+
+  if (isContains()) options.setContains();
+  if (isStartsWith()) options.setStartsWith();
+  if (isEndsWith()) options.setEndsWith();
+  if (isRegularExpression()) options.setRegularExpression();
+  if (isWildCard()) options.setWildCard();
+
+  options.setFindValue(getFindValue());
+  options.setReplaceValue(getReplaceValue());
+  return options;
 }
 
 

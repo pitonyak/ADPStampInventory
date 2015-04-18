@@ -89,7 +89,9 @@ SOURCES += main.cpp\
     genericdatacollectiontablefilterdialog.cpp \
     tableeditfielddescriptor.cpp \
     tableeditfielddescriptors.cpp \
-    dbtransactionhandler.cpp
+    dbtransactionhandler.cpp \
+    searchoptions.cpp \
+    stringutil.cpp
 
 HEADERS  += mainwindow.h \
     stampdb.h \
@@ -155,7 +157,9 @@ HEADERS  += mainwindow.h \
     genericdatacollectiontablefilterdialog.h \
     tableeditfielddescriptor.h \
     tableeditfielddescriptors.h \
-    dbtransactionhandler.h
+    dbtransactionhandler.h \
+    searchoptions.h \
+    stringutil.h
 
 FORMS    += mainwindow.ui \
     logroutinginfodialog.ui

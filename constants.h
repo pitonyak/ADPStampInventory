@@ -50,6 +50,10 @@ public:
 
   static QString Settings_GenericDataCollectionLastEditedTable;
 
+  static QString Settings_SearchFindValue;
+  static QString Settings_SearchReplaceValue;
+  static QString Settings_SearchOptions;
+
 };
 
 #endif // CONSTANTS_H

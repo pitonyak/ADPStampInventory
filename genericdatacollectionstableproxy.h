@@ -11,6 +11,7 @@
  * \copyright Andrew Pitonyak, but you may use without restriction.
  * \date 2014
  ***************************************************************************/
+class SearchOptions;
 class GenericDataCollectionsTableProxy : public QSortFilterProxyModel
 {
   Q_OBJECT
@@ -51,6 +52,31 @@ public:
    *  \param [in]
    */
   void 	setNumericMode(bool on);
+
+  /*! \brief Wrapper to allow searching all columns.
+   *
+   * If all columns are to be searched, it looks until it finds the first instance.
+   *
+   *  \param [in] startIndex Where to start searching.
+   *
+   *  \param [in] options tell everything else about the search.
+   */
+  QModelIndexList search(const QModelIndex& startIndex, const SearchOptions& options);
+
+  /*! \brief Search one column, even if the search options specify all of the cells.
+   *
+   * The standard search allows for the general searching, but it only supports searching forward.
+   * This code adds code to allow for "replace", or at least we hope that it does eventually,
+   * and it implements "search backwards".
+   *
+   *  \param [in] startIndex Where to start searching.
+   *
+   *  \param [in] options tell everything else about the search.
+   */
+  QModelIndexList searchOneColumn(const QModelIndex& startIndex, const SearchOptions& options);
+
+  bool oneMatch(const QModelIndex& startIndex, const SearchOptions& options, const QRegularExpression* regexp = nullptr) const;
+
 
 signals:
 

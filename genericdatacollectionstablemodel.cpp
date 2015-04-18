@@ -8,6 +8,8 @@
 #include <QSqlQuery>
 #include <QRegularExpression>
 #include <QRegularExpressionMatch>
+#include <QCollator>
+#include <algorithm>
 
 GenericDataCollectionsTableModel::GenericDataCollectionsTableModel(const bool useLinks, const QString& tableName, GenericDataCollections& tables, DescribeSqlTables& schema, QObject *parent) :
   QAbstractTableModel(parent),
@@ -155,6 +157,7 @@ QStringList GenericDataCollectionsTableModel::getLinkEditValues(const QString& t
     }
   }
 
+  // List that will be returned
   QStringList list;
 
   for (int iRow=0; iRow < table->rowCount(); ++iRow)
@@ -200,6 +203,19 @@ QStringList GenericDataCollectionsTableModel::getLinkEditValues(const QString& t
       list << s;
     }
   }
+
+  // Sort this list before storing it.
+  // Use a QCollator so that numbers and strings sort well.
+  QCollator collator;
+  collator.setNumericMode(true);
+  collator.setCaseSensitivity(Qt::CaseInsensitive);
+
+  // And this is why I like lambda expressions, I can define my sort function right here!
+  auto mySort = ([collator](const QString& a, const QString& b){ return collator.compare(a,b) < 0; } );
+
+  // Use the standard sort to sort the list in ascending order.
+  std::sort(list.begin(), list.end(), mySort);
+
   const_cast<LinkedFieldSelectionCache&>(m_linkCache).setCachedList(cacheId, list);
   return list;
 }

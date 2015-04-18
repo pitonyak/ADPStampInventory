@@ -1,4 +1,5 @@
 #include "genericdatacollectionstableproxy.h"
+#include "searchoptions.h"
 
 GenericDataCollectionsTableProxy::GenericDataCollectionsTableProxy(QObject *parent) :
   QSortFilterProxyModel(parent)
@@ -123,3 +124,151 @@ bool GenericDataCollectionsTableProxy::specialStringLessThan(const QString &left
 
     return false;
 }
+
+bool GenericDataCollectionsTableProxy::oneMatch(const QModelIndex& startIndex, const SearchOptions& options, const QRegularExpression* regexp) const
+{
+  QString s = data(startIndex).toString();
+  if (options.isMatchAsString())
+  {
+    if (options.isContains()) {
+      return s.contains(options.getFindValue(), options.getCaseSensitivity());
+    }
+    if (options.isStartsWith()) {
+      return s.startsWith(options.getFindValue(), options.getCaseSensitivity());
+    }
+    if (options.isEndsWith()) {
+      return s.endsWith(options.getFindValue(), options.getCaseSensitivity());
+    }
+    if (options.isMatchEntireString()) {
+      return s.compare(options.getFindValue(), options.getCaseSensitivity()) == 0;
+    }
+  }
+  else if (regexp != nullptr)
+  {
+    if (options.isContains()) {
+      return s.contains(*regexp);
+    }
+    // TODO: Do I care abotu match entire string, starts with or ends with?
+    return regexp->match(s).hasMatch();
+  }
+  qDebug("regular expression is null in GenericDataCollectionsTableProxy::oneMatch");
+  return false;
+}
+
+QModelIndexList GenericDataCollectionsTableProxy::searchOneColumn(const QModelIndex& startIndex, const SearchOptions& options)
+{
+  qDebug(qPrintable(QString("one col has Row: %2  Col: %1").arg(startIndex.column()).arg(startIndex.row())));
+  QString sFindText = options.getFindValue();
+
+  if (options.isReplace())
+  {
+    qDebug("Replace is not currently supported");
+    return QModelIndexList();
+  }
+
+  if (!options.isBackwards() && options.isMatchAsString())
+  {
+    Qt::MatchFlags matchFlags = options.getMatchFlags();
+    if (options.isAllColumns()) {
+      // If searching everything, then just wrap!
+      matchFlags |= Qt::MatchWrap;
+    }
+    return match(startIndex, Qt::DisplayRole, sFindText, 1, matchFlags);
+  }
+  qDebug("Replace and backwards not yet supported");
+  QModelIndexList list;
+
+  QRegularExpression regexp;
+  if (options.isRegularExpression() || options.isWildCard())
+  {
+    regexp = options.getRegularExpression();
+    if (!regexp.isValid()) {
+      qDebug("Failed to create a valid regular expression");
+      return list;
+    }
+  }
+
+  int startCol = startIndex.column();
+  int startRow = startIndex.row();
+  int numRows = rowCount();
+
+  if (options.isBackwards())
+  {
+    for (int row=startRow - 1; row >= 0; --row) {
+      // Check one cell
+      QModelIndex index = this->index(row, startCol, QModelIndex());
+      if (oneMatch(index, options, &regexp))
+      {
+        list.append(index);
+        return list;
+      }
+    }
+    for (int row=numRows - 1; row <= startRow; --row) {
+      // Check one cell
+      QModelIndex index = this->index(row, startCol, QModelIndex());
+      if (oneMatch(index, options, &regexp))
+      {
+        list.append(index);
+        return list;
+      }
+    }
+  }
+  else
+  {
+    for (int row=startRow + 1; row < numRows; ++row) {
+      // Check one cell
+      QModelIndex index = this->index(row, startCol, QModelIndex());
+      if (oneMatch(index, options, &regexp))
+      {
+        list.append(index);
+        return list;
+      }
+    }
+    for (int row=0; row <= startRow; ++row) {
+      // Check one cell
+      QModelIndex index = this->index(row, startCol, QModelIndex());
+      if (oneMatch(index, options, &regexp))
+      {
+        list.append(index);
+        return list;
+      }
+    }
+  }
+
+  return list;
+}
+
+QModelIndexList GenericDataCollectionsTableProxy::search(const QModelIndex &startIndex, const SearchOptions &options)
+{
+  if (!options.isAllColumns())
+  {
+    return searchOneColumn(startIndex, options);
+  }
+  // For each column, search.
+  QList<int> columnList;
+  int numCols = columnCount();
+  int startCol = startIndex.column();
+  int startRow = startIndex.row();
+  for (int i=startCol; i < numCols; ++i) {
+    columnList << i;
+  }
+
+  for (int i=0; i<startCol; ++i) {
+    columnList << i;
+  }
+
+  QModelIndexList list;
+  for (int i=0; i<columnList.count(); ++i) {
+    qDebug(qPrintable(QString("Index %1 row: %2  col: %3").arg(i).arg(startRow).arg(columnList.at(i))));
+
+    QModelIndex index = sourceModel()->index(startIndex.row(), columnList.at(i), QModelIndex());
+    qDebug(qPrintable(QString("Search index row: %1  col: %2").arg(index.row()).arg(index.column())));
+    list.append(searchOneColumn(index, options));
+    if (list.count() > 0 && !options.isReplaceAll()) {
+      return list;
+    }
+  }
+  qDebug(qPrintable(QString("Cols: %1  Rows: %2").arg(columnCount()).arg(rowCount())));
+  return list;
+}
+

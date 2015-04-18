@@ -22,6 +22,10 @@ QString Constants::Settings_GenericDataCollectionDlgColumnWidths = "GenericDataC
 
 QString Constants::Settings_GenericDataCollectionLastEditedTable = "GenericDataCollectionLastEditedTable";
 
+QString Constants::Settings_SearchFindValue = "SearchFindValue";
+QString Constants::Settings_SearchReplaceValue = "SearchReplaceValue";
+QString Constants::Settings_SearchOptions = "SearchOptions";
+
 Constants::Constants()
 {
 }
