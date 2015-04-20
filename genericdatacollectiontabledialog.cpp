@@ -420,7 +420,10 @@ bool GenericDataCollectionTableDialog::genericSearch(const bool findNext, const 
   {
     GenericDataCollectionTableSearchDialog* dlg = new GenericDataCollectionTableSearchDialog(this, nullptr);
     dlg->set(options);
-
+    dlg->setWindowFlags(dlg->windowFlags() | Qt::WindowStaysOnTopHint);
+    //dlg->show();
+    //dlg->raise();
+    //dlg->activateWindow();
     int rc = dlg->exec();
     if (rc == QDialog::Accepted)
     {
