@@ -70,6 +70,11 @@ public slots:
   void duplicateRowAddUpperA();
   void saveChanges();
   void searchDialog();
+//  void findNext();
+//  void findPrevious();
+
+  bool genericSearch(const bool findNext, const bool findPrevious, const bool findDialog);
+
 
   /*! \brief Call save state before the destructor is called. */
   void clickedOK();
@@ -98,6 +103,8 @@ private:
 
   /*! \brief Return True if a row is currently selected. */
   bool isRowSelected() const;
+
+  void selectCell(const QModelIndex& index);
 
   /*! \brief Copy the selected rows */
   QPushButton* m_duplicateButton;

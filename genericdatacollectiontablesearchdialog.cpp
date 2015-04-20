@@ -13,7 +13,7 @@
 #include <QSortFilterProxyModel>
 #include <QMessageBox>
 #include <QRadioButton>
-#include <QButtonGroup>
+#include <QGroupBox>
 
 GenericDataCollectionTableSearchDialog::GenericDataCollectionTableSearchDialog(GenericDataCollectionTableDialog *tableDialog, QWidget *parent) :
     QDialog(parent), m_tableDialog(tableDialog),
@@ -54,7 +54,7 @@ void GenericDataCollectionTableSearchDialog::buildDialog()
   m_findValueLineEdit = new QLineEdit();
   m_replaceValueLineEdit = new QLineEdit();
 
-  //hLayout = new QHBoxLayout();
+  // ???
   vLayout->addWidget(new QLabel(tr("Search for")));
   button = new QPushButton(tr("Find"));
   connect(button, SIGNAL(released()), this, SLOT(find()));
@@ -92,63 +92,47 @@ void GenericDataCollectionTableSearchDialog::buildDialog()
   hLayout2->addLayout(vLayout2);
 
   vLayout->addLayout(hLayout2);
-  QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Close);
-  connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
-  connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
-  vLayout->addWidget(buttonBox);
+  //??QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+  //??connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
+  //??connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
+  //??vLayout->addWidget(buttonBox);
+
+  QGroupBox *groupBox = new QGroupBox(tr("Match Type"));
 
   QVBoxLayout *vLayoutRBMatchExtent = new QVBoxLayout();
-  QButtonGroup *rbGroup = new QButtonGroup(vLayoutRBMatchExtent);
   m_rbMatchAll = new QRadioButton("Match All");
   m_rbContains = new QRadioButton("Contains");
   m_rbStartsWith = new QRadioButton("Starts With");
   m_rbEndsWith = new QRadioButton("Ends With");
-  rbGroup->addButton(m_rbMatchAll);
-  rbGroup->addButton(m_rbContains);
-  rbGroup->addButton(m_rbStartsWith);
-  rbGroup->addButton(m_rbEndsWith);
   vLayoutRBMatchExtent->addWidget(m_rbMatchAll);
   vLayoutRBMatchExtent->addWidget(m_rbContains);
   vLayoutRBMatchExtent->addWidget(m_rbStartsWith);
   vLayoutRBMatchExtent->addWidget(m_rbEndsWith);
+  groupBox->setLayout(vLayoutRBMatchExtent);
 
+  hLayout2 = new QHBoxLayout();
+  hLayout2->addWidget(groupBox);
 
   QVBoxLayout *vLayoutRBMatchType = new QVBoxLayout();
-  rbGroup = new QButtonGroup(vLayoutRBMatchType);
+  groupBox = new QGroupBox(tr("How to search"));
   m_rbString = new QRadioButton("String");
   m_rbRegExp = new QRadioButton("Regular Expression");
   m_rbWildCard = new QRadioButton("Wild Card");
   vLayoutRBMatchType->addWidget(m_rbString);
   vLayoutRBMatchType->addWidget(m_rbRegExp);
   vLayoutRBMatchType->addWidget(m_rbWildCard);
-  rbGroup->addButton(m_rbString);
-  rbGroup->addButton(m_rbRegExp);
-  rbGroup->addButton(m_rbWildCard);
+  groupBox->setLayout(vLayoutRBMatchType);
 
-  hLayout2 = new QHBoxLayout();
-  hLayout2->addLayout(vLayoutRBMatchExtent);
-  hLayout2->addLayout(vLayoutRBMatchType);
+  hLayout2->addWidget(groupBox);
   vLayout->addLayout(hLayout2);
+
+  QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+  connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
+  connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
+  vLayout->addWidget(buttonBox);
+
 
 //???
-
-  /**
-  hLayout2 = new QHBoxLayout();
-  m_matchCaseCB = new QCheckBox(tr("Match case"));
-  hLayout2->addWidget(m_matchCaseCB);
-  m_matchEntireCellCB = new QCheckBox(tr("Match cell only"));
-  hLayout2->addWidget(m_matchEntireCellCB);
-  vLayout->addLayout(hLayout2);
-
-  hLayout2 = new QHBoxLayout();
-  m_regularExpressionCB = new QCheckBox(tr("Regular expression"));
-  hLayout2->addWidget(m_regularExpressionCB);
-  m_selectionOnlyCB = new QCheckBox(tr("Current Selection Only"));
-  hLayout2->addWidget(m_selectionOnlyCB);
-  vLayout->addLayout(hLayout2);
-**/
-
-
   //vLayout = new QVBoxLayout();
   //vLayout->addWidget(new QLabel(tr("Find: ")));
   //hLayout->addLayout(vLayout);
@@ -461,6 +445,8 @@ SearchOptions GenericDataCollectionTableSearchDialog::getOptions()
 
 void GenericDataCollectionTableSearchDialog::find()
 {
+  // I think that this works from here ****
+  /**
   QString searchString = m_findValueLineEdit->text();
 
   GenericDataCollectionsTableProxy* pm = m_tableDialog->getProxyModel();
@@ -470,6 +456,9 @@ void GenericDataCollectionTableSearchDialog::find()
     pm->setFilterKeyColumn(4);
     pm->setFilterFixedString(searchString);
   }
+  ***/
+  // To Here *********
+
   /**
   QSortFilterProxyModel proxy;
   proxy.setSourceModel(m_tableDialog->getTableModel());

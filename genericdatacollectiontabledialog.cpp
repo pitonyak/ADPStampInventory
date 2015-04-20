@@ -261,19 +261,24 @@ void GenericDataCollectionTableDialog::privateRowDuplicator(const bool autoIncre
       QModelIndex tableIndex = m_tableModel->getIndexByRowCol(row, 1);
       if (tableIndex.isValid())
       {
-        QModelIndex proxyIndex = m_proxyModel->mapFromSource(tableIndex);
-        if (proxyIndex.isValid())
-        {
-          //m_tableView->selectRow(proxyIndex.row());
-          m_tableView->clearSelection();
-          m_tableView->selectionModel()->select(proxyIndex, QItemSelectionModel::Select);
-        }
+        selectCell(m_proxyModel->mapFromSource(tableIndex));
       }
     }
   }
   enableButtons();
 }
 
+void GenericDataCollectionTableDialog::selectCell(const QModelIndex& index)
+{
+  if (index.isValid())
+  {
+    m_tableView->scrollTo(index);
+    //m_tableView->selectRow(index.row());
+    //m_tableView->clearSelection();
+    m_tableView->selectionModel()->select(index, QItemSelectionModel::ClearAndSelect);
+    m_tableView->setCurrentIndex(index);
+  }
+}
 
 void GenericDataCollectionTableDialog::saveState()
 {
@@ -315,16 +320,28 @@ void GenericDataCollectionTableDialog::clickedOK()
 
 void GenericDataCollectionTableDialog::keyPressEvent(QKeyEvent* evt)
 {
-  //if(evt->key() == Qt::Key_Enter || evt->key() == Qt::Key_Return)
-  //  return;
+  bool handled = false;
+
   if ((evt->key() == Qt::Key_F) && ((evt->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier)) == Qt::ControlModifier))
   {
-    // TODO: Ask what to search for
-    // Use F3 for find next.
-    find("499", true);
+    genericSearch(false, false, true);
+    handled = true;
   }
-  else
+  else if ((evt->key() == Qt::Key_F3) && (evt->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier)) == 0)
   {
+    if ((evt->modifiers() & Qt::ShiftModifier) == Qt::ShiftModifier)
+    {
+      // Find previous
+      genericSearch(false, true, false);
+    }
+    else
+    {
+      // Find Next
+      genericSearch(true, false, false);
+    }
+    handled = true;
+  }
+  if (!handled) {
     QDialog::keyPressEvent(evt);
   }
 }
@@ -382,8 +399,105 @@ QModelIndex GenericDataCollectionTableDialog::find(const QString& s, const QMode
 
 #include "genericdatacollectiontablesearchdialog.h"
 
+bool GenericDataCollectionTableDialog::genericSearch(const bool findNext, const bool findPrevious, const bool findDialog)
+{
+  bool foundSomething = false;
+
+  QSettings settings;
+  QString dfltFind = settings.value(Constants::Settings_SearchFindValue, "").toString();
+  QString dfltReplace = settings.value(Constants::Settings_SearchReplaceValue, "").toString();
+  QString dfltOptions = settings.value(Constants::Settings_SearchOptions, "").toString();
+
+  SearchOptions options;
+  options.setFindValue(dfltFind);
+  options.setReplaceValue(dfltReplace);
+
+  if (!dfltOptions.isEmpty()) {
+    options.deserializeSettings(dfltOptions);
+  }
+
+  if (findDialog)
+  {
+    GenericDataCollectionTableSearchDialog* dlg = new GenericDataCollectionTableSearchDialog(this, nullptr);
+    dlg->set(options);
+
+    int rc = dlg->exec();
+    if (rc == QDialog::Accepted)
+    {
+      options = dlg->getOptions();
+      settings.setValue(Constants::Settings_SearchFindValue, options.getFindValue());
+      settings.setValue(Constants::Settings_SearchReplaceValue, options.getReplaceValue());
+      settings.setValue(Constants::Settings_SearchOptions, options.serializeSettings());
+
+      QModelIndexList list = m_proxyModel->search(m_tableView->currentIndex(), options);
+
+      if (list.count() > 0)
+      {
+        QModelIndex matchIndex = list.at(0);
+        qDebug(qPrintable(QString("Found (%1)").arg(m_proxyModel->data(matchIndex).toString())));
+        selectCell(matchIndex);
+        foundSomething = true;
+      }
+      else
+      {
+        qDebug(qPrintable(QString("Did not find anything ")));
+      }
+    }
+    delete dlg;
+  }
+  else
+  {
+    int currentRow = m_tableView->currentIndex().row();
+    int currentColumn = m_tableView->currentIndex().column();
+
+    if (findNext)
+    {
+      qDebug(qPrintable(QString("Find next current row is %1").arg(currentRow)));
+      currentRow = (currentRow + 1) < m_proxyModel->rowCount() ? currentRow + 1 : 0;
+      qDebug(qPrintable(QString("Find next current row is now %1").arg(currentRow)));
+      if (options.isBackwards())
+      {
+        options.setBackwards(false);
+      }
+    }
+    else if (findPrevious)
+    {
+      //currentRow = (currentRow > 0) ? currentRow - 1 : m_proxyModel->rowCount() - 1;
+      if (!options.isBackwards())
+      {
+        options.setBackwards(true);
+      }
+    }
+    else
+    {
+      qDebug("Expected findNext, findPrevious, or searchDialog to be true");
+      return false;
+    }
+
+    qDebug(qPrintable(QString("Search from row %1 col %2").arg(currentRow).arg(currentColumn)));
+    QModelIndex startIndex = m_proxyModel->index(currentRow, currentColumn);
+    QModelIndexList list = m_proxyModel->search(startIndex, options);
+
+    if (list.count() > 0)
+    {
+      QModelIndex matchIndex = list.at(0);
+      qDebug(qPrintable(QString("Found (%1)").arg(m_proxyModel->data(matchIndex).toString())));
+      selectCell(matchIndex);
+      foundSomething = true;
+    }
+    else
+    {
+      qDebug(qPrintable(QString("Did not find anything ")));
+    }
+  }
+  return foundSomething;
+}
+
+
 void GenericDataCollectionTableDialog::searchDialog()
 {
+  genericSearch(false, false, true);
+  /***
   qDebug("in ::searchDialog()");
   GenericDataCollectionTableSearchDialog* dlg = new GenericDataCollectionTableSearchDialog(this, nullptr);
 
@@ -404,8 +518,7 @@ void GenericDataCollectionTableDialog::searchDialog()
   }
 
   int rc = dlg->exec();
-  // TODO: Fix this!
-  if (rc == QDialog::Accepted || rc == QDialog::Rejected)
+  if (rc == QDialog::Accepted)
   {
     options = dlg->getOptions();
     settings.setValue(Constants::Settings_SearchFindValue, options.getFindValue());
@@ -414,17 +527,11 @@ void GenericDataCollectionTableDialog::searchDialog()
 
     QModelIndexList list = m_proxyModel->search(m_tableView->currentIndex(), options);
 
-    /**
-    QString s = options.getFindValue();
-    // Qt::MatchFlags matchFlags = Qt::MatchWrap | Qt::MatchContains | Qt::MatchRecursive;
-    // Qt::MatchFlags matchFlags = Qt::MatchWrap | Qt::MatchFixedString;
-    Qt::MatchFlags matchFlags = options.getMatchFlags();
-    QModelIndexList list = m_proxyModel->match(m_tableView->currentIndex(), Qt::DisplayRole, s, 1, matchFlags);
-    **/
     if (list.count() > 0)
     {
       QModelIndex matchIndex = list.at(0);
       qDebug(qPrintable(QString("Found (%1)").arg(m_proxyModel->data(matchIndex).toString())));
+      selectCell(matchIndex);
     }
     else
     {
@@ -432,6 +539,7 @@ void GenericDataCollectionTableDialog::searchDialog()
     }
   }
   delete dlg;
+**/
 }
 
 void GenericDataCollectionTableDialog::clickedCancel()
