@@ -19,6 +19,7 @@ QString Constants::SortFieldConfigDialogRoutingColumnWidths = "SortFieldConfigDi
 
 QString Constants::Settings_GenericDataCollectionDlgGeometry = "GenericDataCollectionDlgGeometry";
 QString Constants::Settings_GenericDataCollectionDlgColumnWidths = "GenericDataCollectionDlgColumnWidths";
+QString Constants::Settings_GenericDataCollectionDlgSorting = "GenericDataCollectionDlgSorting";
 
 QString Constants::Settings_GenericDataCollectionLastEditedTable = "GenericDataCollectionLastEditedTable";
 

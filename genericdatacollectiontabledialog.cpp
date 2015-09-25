@@ -20,6 +20,8 @@
 #include <QSortFilterProxyModel>
 #include <QMessageBox>
 #include <QKeyEvent>
+#include <QHeaderView>
+#include <QTimer>
 
 GenericDataCollectionTableDialog::GenericDataCollectionTableDialog(const QString& tableName, GenericDataCollection &data, StampDB &db, DescribeSqlTables& schema, GenericDataCollections *tables, QWidget *parent) :
   QDialog(parent),
@@ -130,22 +132,7 @@ void GenericDataCollectionTableDialog::buildDialog()
 
   setLayout(vLayout);
 
-  QSettings settings;
-  restoreGeometry(settings.value(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgGeometry).arg(m_tableName)).toByteArray());
-  QString s = settings.value(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgColumnWidths).arg(m_tableName)).toString();
-  if (s.length() > 0)
-  {
-    QStringList list = s.split(',');
-    bool ok = true;
-    for (int i=0; i<list.size() && i<m_table.getPropertyNameCount(); ++i)
-    {
-      int width = list[i].toInt(&ok);
-      if (ok && width > 0)
-      {
-        m_tableView->setColumnWidth(i, width);
-      }
-    }
-  }
+  restoreState();
   connect(m_tableView->selectionModel(), SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)), this, SLOT(selectionChanged(const QItemSelection &, const QItemSelection &)));
   enableButtons();
 }
@@ -280,6 +267,44 @@ void GenericDataCollectionTableDialog::selectCell(const QModelIndex& index)
   }
 }
 
+void GenericDataCollectionTableDialog::restoreState()
+{
+  QSettings settings;
+  restoreGeometry(settings.value(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgGeometry).arg(m_tableName)).toByteArray());
+  QString s = settings.value(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgColumnWidths).arg(m_tableName)).toString();
+  if (s.length() > 0)
+  {
+    QStringList list = s.split(',');
+    bool ok = true;
+    for (int i=0; i<list.size() && i<m_table.getPropertyNameCount(); ++i)
+    {
+      int width = list[i].toInt(&ok);
+      if (ok && width > 0)
+      {
+        m_tableView->setColumnWidth(i, width);
+      }
+    }
+  }
+  // Restore sort column order.
+  s = settings.value(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgSorting).arg(m_tableName)).toString();
+  if (s.length() > 0)
+  {
+    QStringList list = s.split(',');
+    if (list.size() == 2) {
+      bool ok = true;
+      int sortColumn = list[0].toInt(&ok);
+      if (ok) {
+        //Qt:SortOrder order = list[0].toInt(&ok);
+        int order = list[0].toInt(&ok);
+        if (ok) {
+          m_tableView->horizontalHeader()->setSortIndicator(sortColumn, (Qt::SortOrder) order);
+        }
+      }
+    }
+  }
+
+}
+
 void GenericDataCollectionTableDialog::saveState()
 {
   // This code used to live in the desructor, but, sometime around September 2014, this code
@@ -294,8 +319,12 @@ void GenericDataCollectionTableDialog::saveState()
       QString s = "";
 
       if (m_tableView->isSortingEnabled()) {
-          // TODO: How do I know which column is sorted?
+        int order = m_tableView->horizontalHeader()->sortIndicatorOrder();
+        int sortColumn = m_tableView->horizontalHeader()->sortIndicatorSection();
+        s = QString("%1,%2").arg(sortColumn).arg(order);
       }
+      settings.setValue(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgSorting).arg(m_tableName), s);
+      s = "";
 
       for (int i=0; i<m_table.getPropertyNameCount(); ++i)
       {
@@ -341,6 +370,11 @@ void GenericDataCollectionTableDialog::keyPressEvent(QKeyEvent* evt)
     }
     handled = true;
   }
+  else if(evt->key() == Qt::Key_Escape) {
+    clickedCancel();
+    handled = true;
+  }
+
   if (!handled) {
     QDialog::keyPressEvent(evt);
   }
@@ -418,12 +452,15 @@ bool GenericDataCollectionTableDialog::genericSearch(const bool findNext, const 
 
   if (findDialog)
   {
-    GenericDataCollectionTableSearchDialog* dlg = new GenericDataCollectionTableSearchDialog(this, nullptr);
+    GenericDataCollectionTableSearchDialog* dlg = new GenericDataCollectionTableSearchDialog(this, this);
     dlg->set(options);
     dlg->setWindowFlags(dlg->windowFlags() | Qt::WindowStaysOnTopHint);
+    //dlg->setModal(true);
     //dlg->show();
-    //dlg->raise();
     //dlg->activateWindow();
+    //dlg->raise();
+    //dlg->setFocus();
+    //QTimer::singleShot(50, dlg, SLOT(setAllFocus()));
     int rc = dlg->exec();
     if (rc == QDialog::Accepted)
     {

@@ -47,6 +47,7 @@ public:
 
   static QString Settings_GenericDataCollectionDlgGeometry;
   static QString Settings_GenericDataCollectionDlgColumnWidths;
+  static QString Settings_GenericDataCollectionDlgSorting;
 
   static QString Settings_GenericDataCollectionLastEditedTable;
 

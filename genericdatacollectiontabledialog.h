@@ -28,6 +28,10 @@ public:
   /*! \brief Save the dialogs current state / size. */
   void virtual saveState();
 
+  // Sadly, this cannot be virtual because it is called from the constructor.
+  // I only pulled this out so that it would be in an easily seen separated location.
+  void restoreState();
+
   /*! \brief Find the next instance of the string "s" based on the current cursor position and column.
    * TODO: Should support extra search options such as regular expression, wild card, full match, partial match, etc.
    * TODO: Should support all column search.
