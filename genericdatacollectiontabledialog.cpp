@@ -7,6 +7,7 @@
 #include "stampdb.h"
 #include "describesqltables.h"
 #include "genericdatacollectionstableproxy.h"
+#include "genericdatacollectiontablesearchdialog.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -21,7 +22,6 @@
 #include <QMessageBox>
 #include <QKeyEvent>
 #include <QHeaderView>
-#include <QTimer>
 
 GenericDataCollectionTableDialog::GenericDataCollectionTableDialog(const QString& tableName, GenericDataCollection &data, StampDB &db, DescribeSqlTables& schema, GenericDataCollections *tables, QWidget *parent) :
   QDialog(parent),
@@ -30,7 +30,7 @@ GenericDataCollectionTableDialog::GenericDataCollectionTableDialog(const QString
   m_addButton(nullptr), m_deleteButton(nullptr), m_undoButton(nullptr),
   m_saveChangesButton(nullptr), m_searchButton(nullptr),
   m_table(data), m_tables(tables), m_tableView(nullptr),
-  m_tableName(tableName), m_tableModel(nullptr),
+  m_tableName(tableName), m_tableModel(nullptr),m_searchWindow(nullptr),
   m_db(db), m_schema(schema)
 {
   buildDialog();
@@ -431,8 +431,6 @@ QModelIndex GenericDataCollectionTableDialog::find(const QString& s, const QMode
   return matchIndex;
 }
 
-#include "genericdatacollectiontablesearchdialog.h"
-
 bool GenericDataCollectionTableDialog::genericSearch(const bool findNext, const bool findPrevious, const bool findDialog)
 {
   bool foundSomething = false;
@@ -452,16 +450,29 @@ bool GenericDataCollectionTableDialog::genericSearch(const bool findNext, const 
 
   if (findDialog)
   {
+    if (m_searchWindow == nullptr)
+    {
+      // Will be destroyed when the parent object is destroyed.
+      m_searchWindow = new GenericDataCollectionTableSearchDialog(this, this);
+    }
+
+    m_searchWindow->set(options);
+    m_searchWindow->setWindowFlags(m_searchWindow->windowFlags() | Qt::WindowStaysOnTopHint);
+    m_searchWindow->show();
+    m_searchWindow->raise();
+    m_searchWindow->activateWindow();
+    //m_searchWindow->setFocus();
+    /**
     GenericDataCollectionTableSearchDialog* dlg = new GenericDataCollectionTableSearchDialog(this, this);
     dlg->set(options);
     dlg->setWindowFlags(dlg->windowFlags() | Qt::WindowStaysOnTopHint);
+    dlg->show();
+    dlg->raise();
+    dlg->activateWindow();
     //dlg->setModal(true);
-    //dlg->show();
-    //dlg->activateWindow();
-    //dlg->raise();
-    //dlg->setFocus();
-    //QTimer::singleShot(50, dlg, SLOT(setAllFocus()));
-    int rc = dlg->exec();
+    dlg->setFocus();
+    // ??? int rc = dlg->exec();
+    int rc = -1;
     if (rc == QDialog::Accepted)
     {
       options = dlg->getOptions();
@@ -484,6 +495,7 @@ bool GenericDataCollectionTableDialog::genericSearch(const bool findNext, const 
       }
     }
     delete dlg;
+    ***/
   }
   else
   {
@@ -531,6 +543,42 @@ bool GenericDataCollectionTableDialog::genericSearch(const bool findNext, const 
     }
   }
   return foundSomething;
+}
+
+bool GenericDataCollectionTableDialog::doFind(const SearchOptions& options, const bool includeCurrent)
+{
+  if (includeCurrent)
+  {
+    QModelIndexList list = m_proxyModel->search(m_tableView->currentIndex(), options);
+
+    if (list.count() > 0)
+    {
+      QModelIndex matchIndex = list.at(0);
+      qDebug(qPrintable(QString("Found (%1)").arg(m_proxyModel->data(matchIndex).toString())));
+      selectCell(matchIndex);
+      return true;
+    }
+  }
+  else
+  {
+    int currentRow = m_tableView->currentIndex().row();
+    int currentColumn = m_tableView->currentIndex().column();
+    if (!options.isBackwards())
+    {
+      currentRow = (currentRow + 1) < m_proxyModel->rowCount() ? currentRow + 1 : 0;
+    }
+    QModelIndex startIndex = m_proxyModel->index(currentRow, currentColumn);
+    QModelIndexList list = m_proxyModel->search(startIndex, options);
+
+    if (list.count() > 0)
+    {
+      QModelIndex matchIndex = list.at(0);
+      qDebug(qPrintable(QString("Found (%1)").arg(m_proxyModel->data(matchIndex).toString())));
+      selectCell(matchIndex);
+      return true;
+    }
+  }
+  return false;
 }
 
 

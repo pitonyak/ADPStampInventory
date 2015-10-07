@@ -1,6 +1,7 @@
 #include "genericdatacollectiontablesearchdialog.h"
 #include "genericdatacollectiontabledialog.h"
 #include "genericdatacollectionstablemodel.h"
+#include "constants.h"
 
 #include <QLineEdit>
 #include <QPushButton>
@@ -14,6 +15,7 @@
 #include <QMessageBox>
 #include <QRadioButton>
 #include <QGroupBox>
+#include <QSettings>
 
 GenericDataCollectionTableSearchDialog::GenericDataCollectionTableSearchDialog(GenericDataCollectionTableDialog *tableDialog, QWidget *parent) :
     QDialog(parent), m_tableDialog(tableDialog),
@@ -32,31 +34,17 @@ void GenericDataCollectionTableSearchDialog::buildDialog()
 {
   setWindowTitle(tr("Search Table"));
 
-  // Radio buttons for search:
-  // Column (enable column selector)
-  // table
-  // selected
-
-  // Check boxes for:
-  // case sensitive
-  // entire cell
-
-  // Search value (based on what I want to find)
-  // Replace value (baesd on what I want to find)
-
   QPushButton* button;
   QVBoxLayout *vLayout;
   QVBoxLayout *vLayout2;
-  //QHBoxLayout *hLayout;
   QFormLayout *fLayout = new QFormLayout;
 
   vLayout = new QVBoxLayout();
   m_findValueLineEdit = new QLineEdit();
   m_replaceValueLineEdit = new QLineEdit();
 
-  // ???
-  vLayout->addWidget(new QLabel(tr("Search for")));
-  button = new QPushButton(tr("Find"));
+  vLayout->addWidget(new QLabel(tr("Search Text")));
+  button = new QPushButton(tr("&Find"));
   connect(button, SIGNAL(released()), this, SLOT(find()));
   QHBoxLayout *hLayout2 = new QHBoxLayout();
   hLayout2->addWidget(m_findValueLineEdit);
@@ -92,10 +80,6 @@ void GenericDataCollectionTableSearchDialog::buildDialog()
   hLayout2->addLayout(vLayout2);
 
   vLayout->addLayout(hLayout2);
-  //??QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-  //??connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
-  //??connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
-  //??vLayout->addWidget(buttonBox);
 
   QGroupBox *groupBox = new QGroupBox(tr("Match Type"));
 
@@ -127,29 +111,18 @@ void GenericDataCollectionTableSearchDialog::buildDialog()
   vLayout->addLayout(hLayout2);
 
   QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-  connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
+  connect(buttonBox, SIGNAL(accepted()), this, SLOT(okPressed()));
   connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
   vLayout->addWidget(buttonBox);
 
-
-//???
-  //vLayout = new QVBoxLayout();
-  //vLayout->addWidget(new QLabel(tr("Find: ")));
-  //hLayout->addLayout(vLayout);
-  //vLayout->addWidget(new QLabel(tr("Replace: ")));
-  //hLayout->addLayout(vLayout);
-
-  //hLayout->addLayout(vLayout);
-
-  //vLayout = new QVBoxLayout();
-  //vLayout->addWidget(m_findValueLineEdit);
-  //vLayout->addWidget(m_replaceValueLineEdit);
-  //hLayout->addLayout(vLayout);
-
   fLayout->addRow(vLayout);
   setLayout(fLayout);
-
+  focusFindField();
   enableButtons();
+}
+
+void GenericDataCollectionTableSearchDialog::focusFindField()
+{
   QMetaObject::invokeMethod(m_findValueLineEdit, "setFocus", Qt::QueuedConnection);
   QMetaObject::invokeMethod(m_findValueLineEdit, "selectAll", Qt::QueuedConnection);
 }
@@ -328,7 +301,7 @@ void GenericDataCollectionTableSearchDialog::set(const SearchOptions& options)
   setReplaceValue(options.getReplaceValue());
 }
 
-SearchOptions GenericDataCollectionTableSearchDialog::getOptions()
+SearchOptions GenericDataCollectionTableSearchDialog::getOptions() const
 {
   SearchOptions options;
   if (isMatchAll()) options.setMatchEntireString();
@@ -355,6 +328,12 @@ SearchOptions GenericDataCollectionTableSearchDialog::getOptions()
 
 void GenericDataCollectionTableSearchDialog::find()
 {
+  saveSettings();
+  if (m_tableDialog != nullptr)
+  {
+    m_tableDialog->doFind(getOptions(), false);
+  }
+
   // I think that this works from here ****
   /**
   QString searchString = m_findValueLineEdit->text();
@@ -407,3 +386,34 @@ void GenericDataCollectionTableSearchDialog::replaceAll()
 
 }
 
+void GenericDataCollectionTableSearchDialog::saveSettings() const
+{
+  QSettings settings;
+  SearchOptions options = getOptions();
+  settings.setValue(Constants::Settings_SearchFindValue, options.getFindValue());
+  settings.setValue(Constants::Settings_SearchReplaceValue, options.getReplaceValue());
+  settings.setValue(Constants::Settings_SearchOptions, options.serializeSettings());
+}
+
+void GenericDataCollectionTableSearchDialog::restoreSettings()
+{
+  QSettings settings;
+  SearchOptions options;
+  options.setFindValue(settings.value(Constants::Settings_SearchFindValue, "").toString());
+  options.setReplaceValue(settings.value(Constants::Settings_SearchReplaceValue, "").toString());
+
+  QString dfltOptions = settings.value(Constants::Settings_SearchOptions, "").toString();
+  if (!dfltOptions.isEmpty()) {
+    options.deserializeSettings(dfltOptions);
+  }
+  set(options);
+}
+
+void GenericDataCollectionTableSearchDialog::okPressed()
+{
+  // doFind() saves the settings
+  // saveSettings();
+  // Change the behavior when we actually support replace.
+  find();
+  accept();
+}

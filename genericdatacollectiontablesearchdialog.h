@@ -20,7 +20,7 @@ public:
   explicit GenericDataCollectionTableSearchDialog(GenericDataCollectionTableDialog* tableDialog, QWidget *parent = nullptr);
 
   void set(const SearchOptions& options);
-  SearchOptions getOptions();
+  SearchOptions getOptions() const;
 
   //Requires a reference to the parent dialog.
 
@@ -58,12 +58,19 @@ public:
   void setMatchAsString(const bool b);
   void setRegularExpression(const bool b);
   void setWildCard(const bool b);
+
+  void saveSettings() const;
+  void restoreSettings();
+  void focusFindField();
+
+
 signals:
 
 public slots:
   void find();
   void replace();
   void replaceAll();
+  void okPressed();
 
 private:
   void buildDialog();

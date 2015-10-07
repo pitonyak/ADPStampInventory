@@ -67,8 +67,8 @@ void GenericDataCollectionTableFilterDialog::buildDialog()
   m_replaceValueLineEdit = new QLineEdit();
 
   //hLayout = new QHBoxLayout();
-  vLayout->addWidget(new QLabel(tr("Search for")));
-  button = new QPushButton(tr("Find"));
+  vLayout->addWidget(new QLabel(tr("Search &Text")));
+  button = new QPushButton(tr("&Find"));
   connect(button, SIGNAL(released()), this, SLOT(find()));
   QHBoxLayout *hLayout2 = new QHBoxLayout();
   hLayout2->addWidget(m_findValueLineEdit);

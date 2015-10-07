@@ -15,6 +15,8 @@ class StampDB;
 class DescribeSqlTables;
 class GenericDataCollections;
 class GenericDataCollectionsTableProxy;
+class GenericDataCollectionTableSearchDialog;
+class SearchOptions;
 
 class GenericDataCollectionTableDialog : public QDialog
 {
@@ -57,6 +59,16 @@ public:
    *  \return The location of the found item. Return an invalid index if not found.
    */
   QModelIndex find(const QString& s, const QModelIndex& lastIndex, const bool searchForward);
+
+  /*! \brief Search method called from the search dialog.
+   *
+   *  \param [in] options Search options used to direct the sesarch.
+   *
+   *  \param [in] includeCurrent If true, the current cell is included in a forward search.
+   *
+   *  \return True if something is found.
+   */
+  bool doFind(const SearchOptions& options, const bool includeCurrent);
 
   GenericDataCollectionsTableModel* getTableModel() { return m_tableModel; }
   GenericDataCollectionsTableProxy* getProxyModel() { return m_proxyModel; }
@@ -140,6 +152,8 @@ private:
 
   /*! \brief Used by the view to allow for sorting and similar. the actual table model is contained inside of this. The m_tableModel is the source model for this proxy model. */
   GenericDataCollectionsTableProxy* m_proxyModel;
+
+  GenericDataCollectionTableSearchDialog* m_searchWindow;
   //QSortFilterProxyModel* m_proxyModel;
 
   /*! \brief We need this here so that we can persist the DB. */
