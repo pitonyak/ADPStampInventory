@@ -39,7 +39,8 @@ QModelIndex GenericDataCollectionsTableModel::getIndexByRowCol(int row, int col)
   {
     row = m_table->getObjectCount() - 1;
   }
-  return (col >= 0 && row >= 0) ? createIndex(row, col) : QModelIndex();
+  //return (col >= 0 && row >= 0) ? createIndex(row, col) : QModelIndex();
+  return (col >= 0 && row >= 0) ? index(row, col) : QModelIndex();
 }
 
 
@@ -625,6 +626,60 @@ QString GenericDataCollectionsTableModel::incrementScottNumber(const QString& sc
   }
   return scott;
 }
+
+void GenericDataCollectionsTableModel::copyCell(const int fromRow, const int fromCol, const int toRow, const int toCol, const bool setUpdated)
+{
+  copyCell(getIndexByRowCol(fromRow, fromCol), getIndexByRowCol(toRow, toCol), setUpdated);
+}
+
+void GenericDataCollectionsTableModel::copyCell(const QModelIndex& fromIndex, const QModelIndex& toIndex, const bool setUpdated)
+{
+  if (!fromIndex.isValid()) {
+    qDebug("Invalid from index");
+    return;
+  }
+  if (!toIndex.isValid()) {
+    qDebug("Invalid to index");
+    return;
+  }
+  if (fromIndex.row() == toIndex.row() && fromIndex.column() == toIndex.column()) {
+    qDebug("Cannot copy a cell onto itself.");
+    return;
+  }
+
+  GenericDataObject* fromRow = m_table->getObjectByRow(fromIndex.row());
+  GenericDataObject* toRow = m_table->getObjectByRow(toIndex.row());
+  GenericDataObject* originalToRow = toRow->clone();
+
+  QString fromColumnName = m_table->getPropertyName(fromIndex.column());
+  QString toColumnName = m_table->getPropertyName(toIndex.column());
+
+  QVariant fromValue = fromRow->getValueNative(fromColumnName);
+  QVariant toValue = toRow->getValueNative(toColumnName);
+
+  if (fromValue == toValue) {
+    qDebug("From and To values are the same, not copying cell");
+    return;
+  }
+
+  toRow->setValueNative(toColumnName, fromValue);
+
+  if (setUpdated) {
+    if (toRow->containsValue("updated") && toRow->isDateTime("updated")) {
+      toRow->setValueNative("updated", QDateTime::currentDateTime());
+    }
+  }
+
+  if (m_isTracking)
+  {
+    m_changeTracker.push(toIndex.row(), toIndex.column(), toColumnName, ChangedObjectBase::Edit, toRow->clone(), originalToRow);
+  } else {
+    delete originalToRow;
+  }
+
+  dataChanged(toIndex, toIndex);
+}
+
 
 QList<int> GenericDataCollectionsTableModel::duplicateRows(const QModelIndexList& list, const bool autoIncrement, const bool setUpdated, const bool appendChar, const char charToAppend)
 {

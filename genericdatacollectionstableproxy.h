@@ -77,6 +77,8 @@ public:
 
   bool oneMatch(const QModelIndex& startIndex, const SearchOptions& options, const QRegularExpression* regexp = nullptr) const;
 
+  QModelIndex getIndexByRowCol(int row, int col) const;
+
 
 signals:
 

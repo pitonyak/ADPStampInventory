@@ -13,13 +13,13 @@
  * When a new value is chosen for linked field, a drop down containing all supported values
  * is displayed. This class caches the linked values for a specific table / field combination.
  *
- * For a given table.field that is a link, the displayed values are a set of fields strung together.
+ * For a given "table.field" that is a link, the displayed values are a set of fields strung together.
  * A unique name is derived as "<tableName>|<field1Name>|<field2Name>|...<fieldKName>"
  * This unique name is called the "Cache Identifier Name".
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2014
+ * \date 2014-2016
  ***************************************************************************/
 class LinkedFieldSelectionCache : public QObject
 {

@@ -272,3 +272,21 @@ QModelIndexList GenericDataCollectionsTableProxy::search(const QModelIndex &star
   return list;
 }
 
+QModelIndex GenericDataCollectionsTableProxy::getIndexByRowCol(int row, int col) const
+{
+  if (col < 0) {
+    col = 0;
+  }
+  if (col >= columnCount()) {
+    col = columnCount() - 1;
+  }
+  if (row < 0) {
+    row = 0;
+  }
+  if (row >= rowCount())
+  {
+    row = rowCount() - 1;
+  }
+  return (col >= 0 && row >= 0) ? index(row, col) : QModelIndex();
+}
+

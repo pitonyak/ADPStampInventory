@@ -98,7 +98,19 @@ public:
    ***************************************************************************/
   int columnCount( const QModelIndex &parent = QModelIndex() ) const;
 
+  //**************************************************************************
+  /*! \brief if true, then changes are tracked so that undo will work as expected.
+   *
+   *  \return True if change tracking is on and False otherwise.
+   ***************************************************************************/
   bool isTracking() const {return m_isTracking;}
+
+  //**************************************************************************
+  /*! \brief Set change tracking on / off. This does NOT affect changes that are already tracked, they stay in the change queue.
+   *
+   *  \param [in] isTracking True / False to turn change tracking on / off.
+   *  \return True if change tracking is on and False otherwise.
+   ***************************************************************************/
   void setTracking(const bool isTracking) { m_isTracking = isTracking; }
 
   bool trackerIsEmpty() const { return m_changeTracker.isEmpty(); }
@@ -120,6 +132,9 @@ public:
   int getIndexOf(const int id) const;
   QModelIndex getIndexByRowCol(int row, int col) const;
 
+  void copyCell(const int fromRow, const int fromCol, const int toRow, const int toCol, const bool setUpdated=true);
+  void copyCell(const QModelIndex& fromIndex, const QModelIndex& toIndex, const bool setUpdated=true);
+
 signals:
 
 public slots:
@@ -136,13 +151,20 @@ public slots:
    *  \param [in] list Identifies the rows to duplicate.
    *  \param [in] autoIncrement If true, will attempt to increment the Scott number.
    *  \param [in] setUpdated If true, will attempt to set any date field named "updated"
+   *  \param [in] appendChar If true, append a character to the field if possible.
+   *  \param [in] charToAppend Character to append if appendChar is true.
    *
    *  \return return a list of the inserted IDs in the order that they were inserted.
    ***************************************************************************/
   QList<int> duplicateRows(const QModelIndexList& list, const bool autoIncrement=false, const bool setUpdated=false, const bool appendChar=false, const char charToAppend='a');
 
 private:
+  /*! The DescribeSqlTable object can be configured to list a field as linked to another table.
+   * Setting this to true causes linked fields to be displayed as the linked value rather than as the key it is.
+   */
   bool m_useLinks;
+
+  /*! if true, then changes are tracked so that undo will work as expected. */
   bool m_isTracking;
   QString m_tableName;
   GenericDataCollections& m_tables;

@@ -86,8 +86,6 @@ public slots:
   void duplicateRowAddUpperA();
   void saveChanges();
   void searchDialog();
-//  void findNext();
-//  void findPrevious();
 
   bool genericSearch(const bool findNext, const bool findPrevious, const bool findDialog);
 
@@ -99,11 +97,14 @@ public slots:
   void clickedCancel();
 
 protected:
+  /*! \brief Handle special key press events such as F3 (find next) */
   virtual void keyPressEvent(QKeyEvent* evt);
 
 private:
 
   void privateRowDuplicator(const bool autoIncrement, const bool setUpdated, const bool appendChar=false, const char charToAppend='a');
+
+  void copyCell(bool fromBelow);
 
   /*! \brief Set list columns, delegates, and initial values. */
   void buildDialog();
@@ -121,6 +122,8 @@ private:
   bool isRowSelected() const;
 
   void selectCell(const QModelIndex& index);
+
+  virtual void displayHelp();
 
   /*! \brief Copy the selected rows */
   QPushButton* m_duplicateButton;

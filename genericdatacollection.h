@@ -21,7 +21,7 @@ class CSVWriter;
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2012-2014
+ * \date 2012-2016
  **************************************************************************/
 class GenericDataCollection : public QObject
 {
@@ -41,6 +41,7 @@ public:
      */
     GenericDataCollection(const GenericDataCollection& obj);
 
+    /*! Turn this into a "dummy" generic table with columns: "Id", "Name", "Date", "Time", "Double", and "Bool" with the obvious data types. */
     void makeDummy();
 
   /*! \brief Get a property name.

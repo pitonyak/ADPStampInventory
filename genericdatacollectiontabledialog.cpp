@@ -214,22 +214,45 @@ void GenericDataCollectionTableDialog::saveChanges()
 
 void GenericDataCollectionTableDialog::duplicateRow()
 {
+  // autoIncrement, setUpdated
   privateRowDuplicator(false, true);
 }
 
 void GenericDataCollectionTableDialog::duplicateRowAutoIncrement()
 {
+  // autoIncrement, setUpdated
   privateRowDuplicator(true, true);
 }
 
 void GenericDataCollectionTableDialog::duplicateRowAddLowerA()
 {
+  // autoIncrement, setUpdated, appendChar, charToAppend
   privateRowDuplicator(false, true, true, 'a');
 }
 
 void GenericDataCollectionTableDialog::duplicateRowAddUpperA()
 {
+  // autoIncrement, setUpdated, appendChar, charToAppend
   privateRowDuplicator(false, true, true, 'A');
+}
+
+void GenericDataCollectionTableDialog::copyCell(bool fromBelow)
+{
+  int adder = fromBelow ? 1 : -1;
+  QModelIndex toIndex = m_tableView->selectionModel()->currentIndex();
+  QModelIndex fromIndex = m_proxyModel->getIndexByRowCol(toIndex.row() + adder, toIndex.column());
+
+  qDebug(qPrintable(QString("To (%1, %2)").arg(toIndex.row()).arg(toIndex.column())));
+  qDebug(qPrintable(QString("From (%1, %2)").arg(fromIndex.row()).arg(fromIndex.column())));
+
+  QModelIndex toMappedIndex = m_proxyModel->mapToSource(toIndex);
+  QModelIndex fromMappedIndex = m_proxyModel->mapToSource(fromIndex);
+
+  qDebug(qPrintable(QString("Mapped To (%1, %2)").arg(toMappedIndex.row()).arg(toMappedIndex.column())));
+  qDebug(qPrintable(QString("Mapped From (%1, %2)").arg(fromMappedIndex.row()).arg(fromMappedIndex.column())));
+
+  m_tableModel->copyCell(fromMappedIndex, toMappedIndex);
+  enableButtons();
 }
 
 void GenericDataCollectionTableDialog::privateRowDuplicator(const bool autoIncrement, const bool setUpdated, const bool appendChar, const char charToAppend)
@@ -265,6 +288,11 @@ void GenericDataCollectionTableDialog::selectCell(const QModelIndex& index)
     m_tableView->selectionModel()->select(index, QItemSelectionModel::ClearAndSelect);
     m_tableView->setCurrentIndex(index);
   }
+}
+
+void GenericDataCollectionTableDialog::displayHelp()
+{
+  QMessageBox::about(this, "Supported Keys", "F1 - Help\nF2 - Edit cell\nF3 - Find Next\nShift+F3 - Find Previous\nCtrl+D - Duplicatea column from above\nCtrl+d - Duplicatea column from below\nESC - Cancel");
 }
 
 void GenericDataCollectionTableDialog::restoreState()
@@ -374,6 +402,16 @@ void GenericDataCollectionTableDialog::keyPressEvent(QKeyEvent* evt)
     clickedCancel();
     handled = true;
   }
+  else if ((evt->key() == Qt::Key_D) && (evt->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier)) == Qt::ControlModifier)
+  {
+    bool fromBelow = (evt->modifiers() & Qt::ShiftModifier) == 0;
+    copyCell(fromBelow);
+  }
+  else if ((evt->key() == Qt::Key_F1) && (evt->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier | Qt::ShiftModifier)) == 0)
+  {
+    displayHelp();
+    handled = true;
+  }
 
   if (!handled) {
     QDialog::keyPressEvent(evt);
@@ -386,12 +424,10 @@ QModelIndex GenericDataCollectionTableDialog::find(const QString& s, const bool 
   qDebug(qPrintable(QString("current row (%1) and col (%2)").arg(m_tableView->currentIndex().row()).arg(m_tableView->currentIndex().column())));
   if (m_tableView->currentIndex().row() >= 0)
   {
-    qDebug("One");
     return find(s, m_tableView->currentIndex(), searchForward);
   }
   else if (m_tableModel->rowCount() > 0)
   {
-    qDebug("two");
     // return find(s, m_proxyModel->createIndex(0, 0), searchForward);
   }
 
