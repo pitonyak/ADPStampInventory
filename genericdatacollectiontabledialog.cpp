@@ -438,6 +438,19 @@ QModelIndex GenericDataCollectionTableDialog::find(const QString& s, const QMode
 {
   qDebug("In ::find()");
   QModelIndex matchIndex;
+
+  // Supported match flags
+  // MatchExactly = 0, Performs QVariant-based matching.
+  // MatchContains = 1,
+  // MatchStartsWith = 2,
+  // MatchEndsWith = 3,
+  // MatchRegExp = 4,
+  // MatchWildcard = 5,
+  // MatchFixedString = 8, Performs string-based matching.
+  // MatchCaseSensitive = 16,
+  // MatchWrap = 32,
+  // MatchRecursive = 64 Searches the entire hierarchy, but I do not have heirarchical data.
+
   Qt::MatchFlags matchFlags = Qt::MatchWrap | Qt::MatchContains;
   if (startIndex.isValid())
   {

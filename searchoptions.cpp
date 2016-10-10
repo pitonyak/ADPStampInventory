@@ -113,10 +113,21 @@ void SearchOptions::setWildCard()
 }
 
 
-
-
 Qt::MatchFlags SearchOptions::getMatchFlags() const
 {
+
+    // *** match flags ***
+    // MatchExactly = 0, Performs QVariant-based matching.
+    // MatchContains = 1,
+    // MatchStartsWith = 2,
+    // MatchEndsWith = 3,
+    // MatchRegExp = 4,
+    // MatchWildcard = 5,
+    // MatchFixedString = 8, Performs string-based matching.
+    // MatchCaseSensitive = 16,
+    // MatchWrap = 32,
+    // MatchRecursive = 64 Searches the entire hierarchy, but I do not have heirarchical data.
+
   Qt::MatchFlags flags = Qt::MatchExactly;
   if (isMatchEntireString()) flags |= Qt::MatchFixedString;
   if (isContains()) flags |= Qt::MatchContains;

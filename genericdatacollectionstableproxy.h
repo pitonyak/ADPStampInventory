@@ -63,10 +63,10 @@ public:
    */
   QModelIndexList search(const QModelIndex& startIndex, const SearchOptions& options);
 
-  /*! \brief Search one column, even if the search options specify all of the cells.
+  /*! \brief Search one (or all) column(s), depending on the options.
    *
    * The standard search allows for the general searching, but it only supports searching forward.
-   * This code adds code to allow for "replace", or at least we hope that it does eventually,
+   * This code will hopefully allow for "replace",
    * and it implements "search backwards".
    *
    *  \param [in] startIndex Where to start searching.

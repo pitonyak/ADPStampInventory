@@ -158,7 +158,7 @@ bool GenericDataCollectionsTableProxy::oneMatch(const QModelIndex& startIndex, c
 QModelIndexList GenericDataCollectionsTableProxy::searchOneColumn(const QModelIndex& startIndex, const SearchOptions& options)
 {
   qDebug(qPrintable(QString("one col has Row: %2  Col: %1").arg(startIndex.column()).arg(startIndex.row())));
-  QString sFindText = options.getFindValue();
+  QString sFindText = options.getFindValue();  
 
   if (options.isReplace())
   {
@@ -166,6 +166,8 @@ QModelIndexList GenericDataCollectionsTableProxy::searchOneColumn(const QModelIn
     return QModelIndexList();
   }
 
+  // Although match supports wild-cards and regular expressions,
+  // it seems to ONLY work for an entire match as opposed to contains.
   if (!options.isBackwards() && options.isMatchAsString())
   {
     Qt::MatchFlags matchFlags = options.getMatchFlags();
@@ -175,7 +177,6 @@ QModelIndexList GenericDataCollectionsTableProxy::searchOneColumn(const QModelIn
     }
     return match(startIndex, Qt::DisplayRole, sFindText, 1, matchFlags);
   }
-  qDebug("Replace and backwards not yet supported");
   QModelIndexList list;
 
   QRegularExpression regexp;
