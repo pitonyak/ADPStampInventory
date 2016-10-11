@@ -104,7 +104,11 @@ private:
 
   void privateRowDuplicator(const bool autoIncrement, const bool setUpdated, const bool appendChar=false, const char charToAppend='a');
 
-  void copyCell(bool fromBelow);
+  /*! \brief Copy cell from the same column to the current row.
+   *
+   *  \param [in] rowsDown How many rows down (> 0) or up (< 0) from current row to copy.
+   */
+  void copyCell(const int rowsDown);
 
   /*! \brief Set list columns, delegates, and initial values. */
   void buildDialog();
