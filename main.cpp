@@ -2,6 +2,7 @@
 #include "mainwindow.h"
 #include "simpleloggeradp.h"
 #include "globals.h"
+#include <QLoggingCategory>
 
 SimpleLoggerADP logger;
 QtEnumMapper enumMapper;
@@ -10,6 +11,14 @@ QtEnumMapper enumMapper;
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+
+    // Fedora disables qDebug output at the moment
+    // New configuration thing, so, re-enable it as follows (if you want).
+    // But, you do NOT want all those mouse movement messages
+    QLoggingCategory::setFilterRules("*.debug=true\n"
+                                     "qt.qpa.input*.debug=false\n"
+                                     "qt.widgets.gestures*.debug=false");
+
 
     QCoreApplication::setOrganizationDomain("pitonyak.org");
     QCoreApplication::setOrganizationName("Pitonyak");

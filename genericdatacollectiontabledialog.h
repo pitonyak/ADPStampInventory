@@ -49,6 +49,8 @@ public:
 
   /*! \brief Find the next instance of the string "s" based on the current cursor position and column.
    * TODO: Should support extra search options such as regular expression, wild card, full match, partial match, etc.
+   * TODO: is this even used? Regular expressions and other things do work!
+   * see GenenicDataCollectionsTableProxy
    *
    *  \param [in] s String to find.
    *
