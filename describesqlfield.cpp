@@ -51,7 +51,7 @@ DescribeSqlField DescribeSqlField::readXml(QXmlStreamReader& reader)
     bool ok;
     while (!reader.atEnd()) {
         if (reader.isStartElement()) {
-            if (reader.name().compare("Field", Qt::CaseInsensitive) == 0) {
+            if (reader.name().compare(QLatin1String("Field"), Qt::CaseInsensitive) == 0) {
                 if (foundFieldTag) {
                     // Found a second Table tag.
                     break;
@@ -99,7 +99,7 @@ DescribeSqlField DescribeSqlField::readXml(QXmlStreamReader& reader)
                     }
                 }
                 reader.readNext();
-            } else if (reader.name().compare("Link", Qt::CaseInsensitive) == 0) {
+            } else if (reader.name().compare(QLatin1String("Link"), Qt::CaseInsensitive) == 0) {
                 if (reader.attributes().hasAttribute("table") && reader.attributes().hasAttribute("field")) {
                     field.setLinkTableName(reader.attributes().value("table").toString());
                     field.setLinkFieldName(reader.attributes().value("field").toString());
@@ -117,7 +117,7 @@ DescribeSqlField DescribeSqlField::readXml(QXmlStreamReader& reader)
             reader.readNext();
         } else if (reader.isEndElement()) {
             //qDebug(qPrintable(QString("End element with name '%1' in field '%2'").arg(reader.name().toString()).arg(field.getName())));
-            if (foundFieldTag && reader.name().compare("Field", Qt::CaseInsensitive) == 0) {
+            if (foundFieldTag && reader.name().compare(QLatin1String("Field"), Qt::CaseInsensitive) == 0) {
                 reader.readNext();
                 break;
             }

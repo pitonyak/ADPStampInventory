@@ -236,6 +236,13 @@ void GenericDataCollectionTableDialog::duplicateRowAddUpperA()
   privateRowDuplicator(false, true, true, 'A');
 }
 
+void GenericDataCollectionTableDialog::incrementCell(const int incrementValue)
+{
+  QModelIndex index = m_tableView->selectionModel()->currentIndex();
+  QModelIndex mappedIndex = m_proxyModel->mapToSource(index);
+  m_tableModel->incrementCell(mappedIndex, incrementValue, true);
+}
+
 void GenericDataCollectionTableDialog::copyCell(const int rowsDown)
 {
   QModelIndex toIndex = m_tableView->selectionModel()->currentIndex();
@@ -282,8 +289,6 @@ void GenericDataCollectionTableDialog::selectCell(const QModelIndex& index)
   if (index.isValid())
   {
     m_tableView->scrollTo(index);
-    //m_tableView->selectRow(index.row());
-    //m_tableView->clearSelection();
     m_tableView->selectionModel()->select(index, QItemSelectionModel::ClearAndSelect);
     m_tableView->setCurrentIndex(index);
   }
@@ -291,7 +296,7 @@ void GenericDataCollectionTableDialog::selectCell(const QModelIndex& index)
 
 void GenericDataCollectionTableDialog::displayHelp()
 {
-  QMessageBox::about(this, "Supported Keys", "F1 - Help\nF2 - Edit cell\nF3 - Find Next\nShift+F3 - Find Previous\nCtrl+D - Copy value from column above\nCtrl+d - Copy value from column below\nCtrl+E - Copy value from 2 rows above\nCtrl+e - Copy value from w rows below\nESC - Cancel");
+  QMessageBox::about(this, "Supported Keys", "F1 - Help\nF2 - Edit cell\nF3 - Find Next\nShift+F3 - Find Previous\nF10 - Increment current cell\nShift+F10 - Decrement current cell\nCtrl+D - Copy value from column above\nCtrl+d - Copy value from column below\nCtrl+E - Copy value from 2 rows above\nCtrl+e - Copy value from 2 rows below\nESC - Cancel");
 }
 
 void GenericDataCollectionTableDialog::restoreState()
@@ -405,11 +410,19 @@ void GenericDataCollectionTableDialog::keyPressEvent(QKeyEvent* evt)
   {
     int rowsDown = (evt->modifiers() & Qt::ShiftModifier) == 0 ? 1 : -1;
     copyCell(rowsDown);
+    handled = true;
   }
   else if ((evt->key() == Qt::Key_E) && (evt->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier)) == Qt::ControlModifier)
   {
     int rowsDown = (evt->modifiers() & Qt::ShiftModifier) == 0 ? 2 : -2;
     copyCell(rowsDown);
+    handled = true;
+  }
+  else if ((evt->key() == Qt::Key_F10) && (evt->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier)) == 0)
+  {
+    int incValue = (evt->modifiers() & Qt::ShiftModifier) == 0 ? 1 : -1;
+    incrementCell(incValue);
+    handled = true;
   }
   else if ((evt->key() == Qt::Key_F1) && (evt->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier | Qt::ShiftModifier)) == 0)
   {

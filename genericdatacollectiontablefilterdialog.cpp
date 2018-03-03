@@ -50,7 +50,8 @@ void GenericDataCollectionTableFilterDialog::buildDialog()
   // Search value (based on what I want to find)
   // Replace value (baesd on what I want to find)
 
-  QGroupBox* filterType = new QGroupBox();
+  // TODO: what was I going to do with this variable?
+  //QGroupBox* filterType = new QGroupBox();
   m_rbString = new QRadioButton(tr("String"));
   m_rbRegExp = new QRadioButton(tr("Regular Expression"));
   m_rbWild = new QRadioButton(tr("Wild Card"));

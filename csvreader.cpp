@@ -427,7 +427,7 @@ bool CSVReader::readNextRecord(bool clearBeforeReading)
                         uint c = 0;
                         int cLen = 0;
                         moveToNextChar();
-                        while (hasChar() && cLen < 4 && isHexDigit(currentChar()));
+                        while (hasChar() && cLen < 4 && isHexDigit(currentChar()))
                         {
                             c = c * 16 + hexDigitToDecimalValue(currentChar());
                             moveToNextChar();
@@ -444,7 +444,7 @@ bool CSVReader::readNextRecord(bool clearBeforeReading)
                             {
                                 moveToNextChar();
                                 // Hex number
-                                while (hasChar() && cLen < 2 && isHexDigit(currentChar()));
+                                while (hasChar() && cLen < 2 && isHexDigit(currentChar()))
                                 {
                                     c = c * 16 + hexDigitToDecimalValue(currentChar());
                                     moveToNextChar();

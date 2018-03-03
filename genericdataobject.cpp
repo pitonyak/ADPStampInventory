@@ -244,6 +244,34 @@ bool GenericDataObject::isTime(const QString& name) const
   return (QMetaType::QTime == (QMetaType::Type) v.type());
 }
 
+void GenericDataObject::increment(const QString& name, const int incValue, QVariant& variantValue)
+{
+  const QVariant v = m_properties.value(name.toLower());
+  if (QMetaType::QDateTime == (QMetaType::Type) v.type()) {
+    variantValue = QVariant(variantValue.toDateTime().addDays(incValue));
+  } else if (QMetaType::QDate == (QMetaType::Type) v.type()) {
+    variantValue = QVariant(variantValue.toDate().addDays(incValue));
+  } else if (QMetaType::QTime == (QMetaType::Type) v.type()) {
+    variantValue = QVariant(variantValue.toTime().addSecs(incValue));
+  } else if (QMetaType::Int == (QMetaType::Type) v.type() ||
+             QMetaType::Short == (QMetaType::Type) v.type()) {
+    variantValue = QVariant(variantValue.toInt() + incValue);
+  } else if (QMetaType::UInt == (QMetaType::Type) v.type() ||
+             QMetaType::UShort == (QMetaType::Type) v.type()) {
+    variantValue = QVariant(variantValue.toUInt() + incValue);
+  } else if (QMetaType::Long == (QMetaType::Type) v.type() ||
+             QMetaType::LongLong == (QMetaType::Type) v.type()) {
+    variantValue = QVariant(variantValue.toLongLong() + incValue);
+  } else if (QMetaType::ULong == (QMetaType::Type) v.type() ||
+             QMetaType::ULongLong == (QMetaType::Type) v.type()) {
+    variantValue = QVariant(variantValue.toULongLong() + incValue);
+  } else if (QMetaType::Double == (QMetaType::Type) v.type()) {
+    variantValue = QVariant(variantValue.toDouble() + ((double)incValue) / 100.0);
+  } else if (QMetaType::Float == (QMetaType::Type) v.type()) {
+    variantValue = QVariant(variantValue.toFloat() + ((double)incValue) / 100.0);
+  }
+}
+
 const QVariant GenericDataObject::getValue(const QString& name) const
 {
   /**

@@ -109,6 +109,8 @@ public:
    */
   bool isTime(const QString& name) const;
 
+  void increment(const QString& name, const int incValue, QVariant& variantValue);
+
   /*! \brief Get the proprety as a string.
    *  \param [in] name Property name of interest.
    *  \return Return the property as a string value. Return "" if the property does not exist.

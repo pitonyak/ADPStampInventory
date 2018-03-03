@@ -55,7 +55,7 @@ DescribeSqlTable::DescribeSqlTable(const QString definitions[], const int n, boo
       if (!ok) {
         qDebug(qPrintable(QString("Cannot build a length from '%1'").arg(definitions[i-1])));
       }
-      if (idIsAutoInc && field.getName().compare("id") == 0) {
+      if (idIsAutoInc && field.getName().compare(QLatin1String("id")) == 0) {
         field.setIsAutoIncrement(true);
       }
       if (!addField(field)) {
@@ -202,7 +202,7 @@ DescribeSqlTable DescribeSqlTable::readXml(QXmlStreamReader& reader)
     bool foundTableTag = false;
     while (!reader.atEnd()) {
         if (reader.isStartElement()) {
-            if (reader.name().compare("Table", Qt::CaseInsensitive) == 0) {
+            if (reader.name().compare(QLatin1String("Table"), Qt::CaseInsensitive) == 0) {
                 if (foundTableTag) {
                     // Found a second Table tag.
                     break;
@@ -215,7 +215,7 @@ DescribeSqlTable DescribeSqlTable::readXml(QXmlStreamReader& reader)
                 if (reader.attributes().hasAttribute("description"))
                     table.setDescription(reader.attributes().value("description").toString());
                 reader.readNext();
-            } else if (reader.name().compare("Field", Qt::CaseInsensitive) == 0) {
+            } else if (reader.name().compare(QLatin1String("Field"), Qt::CaseInsensitive) == 0) {
                 DescribeSqlField field = DescribeSqlField::readXml(reader);
                 //qDebug(qPrintable(QString("Add field name = '%1' to table '%2'").arg(field.getName()).arg(table.getName())));
                 if (field.getName().isEmpty() || !table.addField(field)) {
@@ -230,7 +230,7 @@ DescribeSqlTable DescribeSqlTable::readXml(QXmlStreamReader& reader)
         } else if (reader.isStartDocument()) {
             reader.readNext();
         } else if (reader.isEndElement()) {
-            if (foundTableTag && reader.name().compare("Table", Qt::CaseInsensitive) == 0) {
+            if (foundTableTag && reader.name().compare(QLatin1String("Table"), Qt::CaseInsensitive) == 0) {
                 reader.readNext();
                 break;
             }

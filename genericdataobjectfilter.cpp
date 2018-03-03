@@ -239,8 +239,7 @@ bool GenericDataObjectFilter::objectMatchesFilter(const GenericDataObject& obj) 
 
 bool GenericDataObjectFilter::variantMatchesFilter(const QVariant& obj) const
 {
-  QVariant dummy;
-  if (m_expressions != nullptr && (m_compareType == VariantComparer::RegularExpression || m_compareType == VariantComparer::FileSpec || VariantComparer::RegExpPartial))
+  if (m_expressions != nullptr && (m_compareType == VariantComparer::RegularExpression || m_compareType == VariantComparer::FileSpec || m_compareType == VariantComparer::RegExpPartial))
   {
     foreach (QRegExp* expression, *m_expressions)
     {

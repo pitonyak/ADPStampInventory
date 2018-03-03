@@ -173,6 +173,8 @@ void GenericDataCollectionTableModel::deleteRows(const QModelIndexList &list)
 
 bool GenericDataCollectionTableModel::saveTrackedChanges(const QString& tableName, const GenericDataCollection &data, QSqlDatabase &db, const DescribeSqlTables& schema)
 {
+  // Remove unused variable warning.
+  (void)schema;
   bool trackState = isTracking();
   setTracking(false);
   bool errorOccurred = false;

@@ -303,15 +303,15 @@ QStack<ChangedObject<GenericDataObject>*> *GenericDataCollectionsTableModel::pop
 void GenericDataCollectionsTableModel::getRowsAscending(const QModelIndexList& list, QList<int>& rows) const
 {
   rows.clear();
-  QHash<int, int> rowHash;
+  // Contains unique row numbers to prevent the same row from being included twice.
+  QSet<int> rowSet;
   for (int i=0; i<list.size(); ++i)
   {
     //qDebug(qPrintable(QString("Checking entry %1 / %2").arg(i).arg(list.size())));
-    if (!rowHash.contains(list.at(i).row()))
-    {
-      rowHash.insert(list.at(i).row(), i);
+    if (!rowSet.contains(list.at(i).row())) {
+      // This row not included, so, add it.
+      rowSet.insert(list.at(i).row());
       rows.append(list.at(i).row());
-      //qDebug(qPrintable(QString(" row = %1 / %2").arg(list.at(i).row()).arg(rows.size())));
     }
   }
   qSort(rows);
@@ -334,6 +334,11 @@ void GenericDataCollectionsTableModel::addRow()
   {
     m_changeTracker.push(lastChanges);
   }
+}
+
+void GenericDataCollectionsTableModel::incCell(const QModelIndex& index, int incrementValue, const bool setUpdated)
+{
+  incrementCell(index, incrementValue, setUpdated);
 }
 
 void GenericDataCollectionsTableModel::deleteRows(const QModelIndexList &list)
@@ -627,6 +632,41 @@ QString GenericDataCollectionsTableModel::incrementScottNumber(const QString& sc
   return scott;
 }
 
+void GenericDataCollectionsTableModel::incrementCell(const int row, const int col, int incrementValue, const bool setUpdated)
+{
+  incrementCell(getIndexByRowCol(row, col), incrementValue, setUpdated);
+}
+
+void GenericDataCollectionsTableModel::incrementCell(const QModelIndex& index, int incrementValue, const bool setUpdated)
+{
+  if (!index.isValid()) {
+    qDebug("Invalid index in incrementCell");
+    return;
+  }
+  GenericDataObject* rowData = m_table->getObjectByRow(index.row());
+  QString columnName = m_table->getPropertyName(index.column());
+  QVariant cellValue = rowData->getValueNative(columnName);
+  GenericDataObject* originalRowData = rowData->clone();
+
+  rowData->increment(columnName, incrementValue, cellValue);
+  rowData->setValueNative(columnName, cellValue);
+
+  if (setUpdated) {
+    if (rowData->containsValue("updated") && rowData->isDateTime("updated")) {
+      rowData->setValueNative("updated", QDateTime::currentDateTime());
+    }
+  }
+
+  if (m_isTracking) {
+    m_changeTracker.push(index.row(), index.column(), columnName, ChangedObjectBase::Edit, rowData->clone(), originalRowData);
+  } else {
+    delete originalRowData;
+  }
+
+  dataChanged(index, index);
+}
+
+
 void GenericDataCollectionsTableModel::copyCell(const int fromRow, const int fromCol, const int toRow, const int toCol, const bool setUpdated)
 {
   copyCell(getIndexByRowCol(fromRow, fromCol), getIndexByRowCol(toRow, toCol), setUpdated);
@@ -635,11 +675,11 @@ void GenericDataCollectionsTableModel::copyCell(const int fromRow, const int fro
 void GenericDataCollectionsTableModel::copyCell(const QModelIndex& fromIndex, const QModelIndex& toIndex, const bool setUpdated)
 {
   if (!fromIndex.isValid()) {
-    qDebug("Invalid from index");
+    qDebug("Invalid from index in copyCell");
     return;
   }
   if (!toIndex.isValid()) {
-    qDebug("Invalid to index");
+    qDebug("Invalid to index in copyCell");
     return;
   }
   if (fromIndex.row() == toIndex.row() && fromIndex.column() == toIndex.column()) {
@@ -680,19 +720,23 @@ void GenericDataCollectionsTableModel::copyCell(const QModelIndex& fromIndex, co
   dataChanged(toIndex, toIndex);
 }
 
-
 QList<int> GenericDataCollectionsTableModel::duplicateRows(const QModelIndexList& list, const bool autoIncrement, const bool setUpdated, const bool appendChar, const char charToAppend)
 {
   QList<int> addedIds;
   qDebug(qPrintable(QString("duplicateRows %1").arg(list.size())));
+
+  // Will contain a sorted list or row numbers in the list.
   QList<int> rows;
   getRowsAscending(list, rows);
+
+  // Will contain a list or rows in sorted order.
   QQueue<GenericDataObject*> dataToCopy;
   for (int i=0; i<rows.size(); ++i)
   {
     //qDebug(qPrintable(QString("Copying %1").arg(i)));
     dataToCopy.enqueue(m_table->getObjectByRow(rows.at(i)));
   }
+
   //qDebug(qPrintable(QString("duplicateRows %1").arg(rows.size())));
   if (!rows.isEmpty())
   {

@@ -39,7 +39,7 @@ TableEditFieldDescriptors TableEditFieldDescriptors::readXml(QXmlStreamReader& r
   bool foundMainTag = false;
   while (!reader.atEnd()) {
     if (reader.isStartElement()) {
-      if (reader.name().compare("FieldViewDescriptors", Qt::CaseInsensitive) == 0) {
+      if (reader.name().compare(QLatin1String("FieldViewDescriptors"), Qt::CaseInsensitive) == 0) {
 
         if (reader.attributes().hasAttribute("name"))
           descriptors.setName(reader.attributes().value("name").toString());
@@ -50,7 +50,7 @@ TableEditFieldDescriptors TableEditFieldDescriptors::readXml(QXmlStreamReader& r
         }
         foundMainTag = true;
         reader.readNext();
-      } else if (reader.name().compare("FieldViewDescriptor", Qt::CaseInsensitive) == 0) {
+      } else if (reader.name().compare(QLatin1String("FieldViewDescriptor"), Qt::CaseInsensitive) == 0) {
         TableEditFieldDescriptor x = TableEditFieldDescriptor::readXml(reader);
         descriptors.append(x);
       } else {
@@ -62,7 +62,7 @@ TableEditFieldDescriptors TableEditFieldDescriptors::readXml(QXmlStreamReader& r
       reader.readNext();
     } else if (reader.isEndElement()) {
       //qDebug(qPrintable(QString("End element with name '%1' in field '%2'").arg(reader.name().toString()).arg(field.getName())));
-      if (foundMainTag && reader.name().compare("FieldViewDescriptors", Qt::CaseInsensitive) == 0) {
+      if (foundMainTag && reader.name().compare(QLatin1String("FieldViewDescriptors"), Qt::CaseInsensitive) == 0) {
         reader.readNext();
         break;
       }

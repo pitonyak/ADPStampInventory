@@ -116,8 +116,12 @@ public:
   bool trackerIsEmpty() const { return m_changeTracker.isEmpty(); }
   QStack<ChangedObject<GenericDataObject>*> *popLastChange();
 
-  // Return an ascending list of rows so that they can be deleted without
-  // changing the row number of another row.
+  //**************************************************************************
+  /*! \brief Return an ascending list of rows so that they can be deleted without changing the row number of another row.
+   *
+   *  \param [in] list - rows to be sorted
+   *  \param [in, out] rows - first this is cleared, then populated with indexes to traverse the list in sorted order.
+   ***************************************************************************/
   void getRowsAscending(const QModelIndexList &list, QList<int> &rows) const;
 
   // Write tracked changes to the backing DB.
@@ -135,12 +139,24 @@ public:
   void copyCell(const int fromRow, const int fromCol, const int toRow, const int toCol, const bool setUpdated=true);
   void copyCell(const QModelIndex& fromIndex, const QModelIndex& toIndex, const bool setUpdated=true);
 
+  //**************************************************************************
+  /*! \brief Add a value to the specified cell. The purpose is really to add one.
+   *
+   *  \param [in] row - Row number to increment.
+   *  \param [in] col - Column number to increment.
+   *  \param [in] incrementValue - Number to add.
+   *  \param [in] setUpdated
+   ***************************************************************************/
+  void incrementCell(const int row, const int col, int incrementValue, const bool setUpdated=true);
+  void incrementCell(const QModelIndex& index, int incrementValue, const bool setUpdated=true);
+
 signals:
 
 public slots:
   void addRow();
   void deleteRows(const QModelIndexList& list);
   void undoChange();
+  void incCell(const QModelIndex& index, int incrementValue, const bool setUpdated=true);
 
   //**************************************************************************
   /*! \brief Duplicate the specified rows and return a list of the inserted IDs.

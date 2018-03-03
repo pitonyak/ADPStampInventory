@@ -90,7 +90,7 @@ TableEditFieldDescriptor TableEditFieldDescriptor::readXml(QXmlStreamReader& rea
   bool foundMainTag = false;
   while (!reader.atEnd()) {
     if (reader.isStartElement()) {
-      if (reader.name().compare("FieldViewDescriptor", Qt::CaseInsensitive) == 0) {
+      if (reader.name().compare(QLatin1String("FieldViewDescriptor"), Qt::CaseInsensitive) == 0) {
         if (foundMainTag) {
           // Found the main tag a second time!
           break;
@@ -109,7 +109,7 @@ TableEditFieldDescriptor TableEditFieldDescriptor::readXml(QXmlStreamReader& rea
           fieldDescriptor.setReadOnly(XMLUtility::stringToBoolean(reader.attributes().value("readonly").toString()));
         }
         reader.readNext();
-      } else if (reader.name().compare("Descriptors", Qt::CaseInsensitive) == 0) {
+      } else if (reader.name().compare(QLatin1String("Descriptors"), Qt::CaseInsensitive) == 0) {
         reader.readNext();
         while (atDescriptor(reader))
         {
@@ -124,7 +124,7 @@ TableEditFieldDescriptor TableEditFieldDescriptor::readXml(QXmlStreamReader& rea
       reader.readNext();
     } else if (reader.isEndElement()) {
       //qDebug(qPrintable(QString("End element with name '%1' in field '%2'").arg(reader.name().toString()).arg(field.getName())));
-      if (foundMainTag && reader.name().compare("FieldViewDescriptor", Qt::CaseInsensitive) == 0) {
+      if (foundMainTag && reader.name().compare(QLatin1String("FieldViewDescriptor"), Qt::CaseInsensitive) == 0) {
         reader.readNext();
         break;
       }
@@ -143,16 +143,16 @@ bool TableEditFieldDescriptor::atDescriptor(QXmlStreamReader& reader)
   {
     if (reader.isStartElement())
     {
-      return reader.name().compare("FieldViewDescriptor", Qt::CaseInsensitive) == 0;
+      return reader.name().compare(QLatin1String("FieldViewDescriptor"), Qt::CaseInsensitive) == 0;
     }
     if (reader.isEndElement())
     {
-      if (reader.name().compare("FieldViewDescriptor", Qt::CaseInsensitive) == 0)
+      if (reader.name().compare(QLatin1String("FieldViewDescriptor"), Qt::CaseInsensitive) == 0)
       {
         reader.readNext();
         return atDescriptor(reader);
       }
-      else if (reader.name().compare("Descriptors", Qt::CaseInsensitive) == 0)
+      else if (reader.name().compare(QLatin1String("Descriptors"), Qt::CaseInsensitive) == 0)
       {
         reader.readNext();
       }

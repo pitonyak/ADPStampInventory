@@ -112,6 +112,13 @@ private:
    */
   void copyCell(const int rowsDown);
 
+  /*! \brief Increment current cell
+   *
+   *  \param [in] incrementValue
+   */
+  void incrementCell(const int incrementValue);
+
+
   /*! \brief Set list columns, delegates, and initial values. */
   void buildDialog();
 
