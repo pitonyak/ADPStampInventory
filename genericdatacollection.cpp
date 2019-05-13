@@ -4,6 +4,7 @@
 #include <QMetaType>
 #include <QUrl>
 #include <QUuid>
+#include <QDebug>
 
 GenericDataCollection::GenericDataCollection(QObject *parent) :
   QObject(parent), m_largestId(-1), m_trackChanges(false)
@@ -341,7 +342,7 @@ GenericDataObject* GenericDataCollection::createEmptyObject() const
                 break;
 
             default:
-              qDebug(qPrintable(QString("Type %1 not supported").arg(QMetaType::typeName(m_metaTypes.at(i)))));
+              qDebug() << qPrintable(QString("Type %1 not supported").arg(QMetaType::typeName(m_metaTypes.at(i))));
             }
         }
     }

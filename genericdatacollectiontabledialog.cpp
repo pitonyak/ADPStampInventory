@@ -22,8 +22,9 @@
 #include <QMessageBox>
 #include <QKeyEvent>
 #include <QHeaderView>
+#include <QDebug>
 
-GenericDataCollectionTableDialog::GenericDataCollectionTableDialog(const QString& tableName, GenericDataCollection &data, StampDB &db, DescribeSqlTables& schema, GenericDataCollections *tables, QWidget *parent) :
+GenericDataCollectionTableDialog::GenericDataCollectionTableDialog(const QString& tableName, GenericDataCollection &data, StampDB &db, DescribeSqlTables& schema, GenericDataCollections *tables, int defaultSourceId, QWidget *parent) :
   QDialog(parent),
   m_duplicateButton(nullptr), m_duplicateButtonIncrement(nullptr),
   m_duplicateButtonAppendLowerA(nullptr), m_duplicateButtonAppendUpperA(nullptr),
@@ -31,7 +32,7 @@ GenericDataCollectionTableDialog::GenericDataCollectionTableDialog(const QString
   m_saveChangesButton(nullptr), m_searchButton(nullptr),
   m_table(data), m_tables(tables), m_tableView(nullptr),
   m_tableName(tableName), m_tableModel(nullptr),m_searchWindow(nullptr),
-  m_db(db), m_schema(schema)
+  m_db(db), m_schema(schema), m_defaultSourceId(defaultSourceId)
 {
   buildDialog();
 }
@@ -49,7 +50,7 @@ void GenericDataCollectionTableDialog::buildDialog()
   // Build the primary table.
   m_tableView = new QTableView();
   Q_ASSERT_X(m_tables != nullptr, "GenericDataCollectionTableDialog::buildDialog()", "m_tables is null");
-  m_tableModel = new GenericDataCollectionsTableModel(true, m_tableName, *m_tables, m_schema);
+  m_tableModel = new GenericDataCollectionsTableModel(true, m_tableName, *m_tables, m_schema, m_defaultSourceId);
 
   // I could use QSortFilterProxyModel(this), but I want to use a
   // "natural" sort, which recognizes numbers.
@@ -63,7 +64,7 @@ void GenericDataCollectionTableDialog::buildDialog()
   m_tableView->setModel(m_proxyModel);
   m_tableView->setSortingEnabled(true);
 
-  qDebug(qPrintable(QString("Num columns %1").arg(m_table.getPropertyNameCount())));
+  qDebug() << "Num columns " << m_table.getPropertyNameCount();
 
   // Parameter sets the owning parent that will delete the delegate.
   LinkBackFilterDelegate* delegate = new LinkBackFilterDelegate(m_tableView);
@@ -83,7 +84,7 @@ void GenericDataCollectionTableDialog::buildDialog()
   }
 
   vLayout = new QVBoxLayout();
-  vLayout->addWidget(m_tableView, 0, 0);
+  vLayout->addWidget(m_tableView, 0, nullptr);
 
   QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal);
   connect(buttonBox, SIGNAL(accepted()), this, SLOT(clickedOK()));
@@ -248,14 +249,14 @@ void GenericDataCollectionTableDialog::copyCell(const int rowsDown)
   QModelIndex toIndex = m_tableView->selectionModel()->currentIndex();
   QModelIndex fromIndex = m_proxyModel->getIndexByRowCol(toIndex.row() + rowsDown, toIndex.column());
 
-  qDebug(qPrintable(QString("To (%1, %2)").arg(toIndex.row()).arg(toIndex.column())));
-  qDebug(qPrintable(QString("From (%1, %2)").arg(fromIndex.row()).arg(fromIndex.column())));
+  qDebug() << "To (" << toIndex.row() << ", " << toIndex.column() << ")";
+  qDebug() << "From (" << fromIndex.row() << ", " << fromIndex.column() << ")";
 
   QModelIndex toMappedIndex = m_proxyModel->mapToSource(toIndex);
   QModelIndex fromMappedIndex = m_proxyModel->mapToSource(fromIndex);
 
-  qDebug(qPrintable(QString("Mapped To (%1, %2)").arg(toMappedIndex.row()).arg(toMappedIndex.column())));
-  qDebug(qPrintable(QString("Mapped From (%1, %2)").arg(fromMappedIndex.row()).arg(fromMappedIndex.column())));
+  qDebug() << "Mapped To (" << toMappedIndex.row() << ", " << toMappedIndex.column() << ")";
+  qDebug() << "Mapped From (" << fromMappedIndex.row() << ", " << fromMappedIndex.column() << ")";
 
   m_tableModel->copyCell(fromMappedIndex, toMappedIndex);
   enableButtons();
@@ -438,7 +439,7 @@ void GenericDataCollectionTableDialog::keyPressEvent(QKeyEvent* evt)
 QModelIndex GenericDataCollectionTableDialog::find(const QString& s, const bool searchForward)
 {
   // Determine a start index and go from there!
-  qDebug(qPrintable(QString("current row (%1) and col (%2)").arg(m_tableView->currentIndex().row()).arg(m_tableView->currentIndex().column())));
+  qDebug() << "current row (" << m_tableView->currentIndex().row() << ") (" << m_tableView->currentIndex().column() << ")";
   if (m_tableView->currentIndex().row() >= 0)
   {
     return find(s, m_tableView->currentIndex(), searchForward);
@@ -475,11 +476,11 @@ QModelIndex GenericDataCollectionTableDialog::find(const QString& s, const QMode
     if (list.count() > 0)
     {
       matchIndex = list.at(0);
-      qDebug(qPrintable(QString("Found (%1)").arg(m_proxyModel->data(matchIndex).toString())));
+      qDebug() << "Found (" << m_proxyModel->data(matchIndex).toString() << ")";
     }
     else
     {
-      qDebug(qPrintable(QString("Did not find anything (%1) (%2)").arg(s).arg(m_proxyModel->data(startIndex).toString())));
+      qDebug() << "Did not find anything (" << s << ") (" << m_proxyModel->data(startIndex).toString() << ")";
     }
   }
   else
@@ -592,20 +593,20 @@ bool GenericDataCollectionTableDialog::genericSearch(const bool findNext, const 
       return false;
     }
 
-    qDebug(qPrintable(QString("Search from row %1 col %2").arg(currentRow).arg(currentColumn)));
+    qDebug() << "Search from row " << currentRow << " col " << currentColumn;
     QModelIndex startIndex = m_proxyModel->index(currentRow, currentColumn);
     QModelIndexList list = m_proxyModel->search(startIndex, options);
 
     if (list.count() > 0)
     {
       QModelIndex matchIndex = list.at(0);
-      qDebug(qPrintable(QString("Found (%1)").arg(m_proxyModel->data(matchIndex).toString())));
+      qDebug() << "Found (" << m_proxyModel->data(matchIndex).toString() << ")";
       selectCell(matchIndex);
       foundSomething = true;
     }
     else
     {
-      qDebug(qPrintable(QString("Did not find anything ")));
+      qDebug() << "Did not find anything ";
     }
   }
   return foundSomething;
@@ -620,7 +621,7 @@ bool GenericDataCollectionTableDialog::doFind(const SearchOptions& options, cons
     if (list.count() > 0)
     {
       QModelIndex matchIndex = list.at(0);
-      qDebug(qPrintable(QString("Found (%1)").arg(m_proxyModel->data(matchIndex).toString())));
+      qDebug() << "Found (" << m_proxyModel->data(matchIndex).toString() << ")";
       selectCell(matchIndex);
       return true;
     }
@@ -639,7 +640,7 @@ bool GenericDataCollectionTableDialog::doFind(const SearchOptions& options, cons
     if (list.count() > 0)
     {
       QModelIndex matchIndex = list.at(0);
-      qDebug(qPrintable(QString("Found (%1)").arg(m_proxyModel->data(matchIndex).toString())));
+      qDebug() << "Found (" << m_proxyModel->data(matchIndex).toString() << ")";
       selectCell(matchIndex);
       return true;
     }

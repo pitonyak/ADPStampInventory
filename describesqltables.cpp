@@ -3,6 +3,7 @@
 
 #include <QXmlStreamWriter>
 #include <QXmlStreamReader>
+#include <QDebug>
 
 DescribeSqlTables::DescribeSqlTables()
 {
@@ -38,7 +39,7 @@ QString DescribeSqlTables::getNameByIndex(const int index) const
   if (0 <= index && index < getTableCount()) {
     return m_names.at(index);
   } else {
-    qDebug(qPrintable(QString("Field index = %1 is out of range for table %2").arg(index).arg(getName())));
+    qDebug() << qPrintable(QString("Field index = %1 is out of range for table %2").arg(index).arg(getName()));
   }
   return "";
 }
@@ -56,7 +57,7 @@ const DescribeSqlTable *DescribeSqlTables::getTableByName(const QString& tableNa
   if (m_tables.contains(simpleName)) {
     return &const_cast<QHash<QString, DescribeSqlTable>&>(m_tables)[simpleName];
   } else {
-    qDebug(qPrintable(QString("Table name = '%1' is contained in table set %2").arg(tableName).arg(getName())));
+    qDebug() << qPrintable(QString("Table name = '%1' is contained in table set %2").arg(tableName).arg(getName()));
   }
   return nullptr;
 }
@@ -101,12 +102,12 @@ DescribeSqlTables DescribeSqlTables::readXml(QXmlStreamReader& reader)
             } else if (reader.name().compare(QLatin1String("Table"), Qt::CaseInsensitive) == 0) {
                 DescribeSqlTable table = DescribeSqlTable::readXml(reader);
                 if (table.getName().isEmpty() || !tables.addTable(table)) {
-                    qDebug(qPrintable(QString("Failed to add Table name = '%1'").arg(table.getName())));
+                    qDebug() << qPrintable(QString("Failed to add Table name = '%1'").arg(table.getName()));
                     break;
                 }
             } else {
                 // Unexpected element, what to do!
-                qDebug(qPrintable(QString("Found unexpected XML element %1").arg(reader.name().toString())));
+                qDebug() << qPrintable(QString("Found unexpected XML element %1").arg(reader.name().toString()));
                 break;
             }
         } else if (reader.isStartDocument()) {
@@ -167,7 +168,7 @@ DescribeSqlTables DescribeSqlTables::getStampSchema()
 
   SqlFieldTypeMaster typeMaster;
 
-  qDebug("Ready for catalog type");
+  qDebug() << "Ready for catalog type";
   // Name, View Name, Type, Description, length
 
   QString catalogType[] = {"catalogtype", "Catalog Type", "Stamp category such as Air Mail, Postage, or Envelope",

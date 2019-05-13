@@ -3,6 +3,7 @@
 #include <QDateTime>
 #include <QTime>
 #include <QUuid>
+#include <QDebug>
 
 TypeMapper Comparer::mapper;
 
@@ -78,42 +79,42 @@ int Comparer::compare(const QVariant& x1, const QVariant& x2, Qt::CaseSensitivit
         QChar c2 = x2.toChar();
         return (c1 == c2) ? 0 : ((c1 < c2) ? -1 : 1);
       }
-      break;
+      //break;
     case QMetaType::Bool :
       return (x1.toBool() < x2.toBool()) ? -1 : 1;
-      break;
+      //break;
     case QMetaType::QDate :
       return (x1.toDate() < x2.toDate()) ? -1 : 1;
-      break;
+      //break;
     case QMetaType::QDateTime :
       return (x1.toDateTime() < x2.toDateTime()) ? -1 : 1;
-      break;
+      //break;
     case QMetaType::QTime :
       return (x1.toTime() < x2.toTime()) ? -1 : 1;
-      break;
+      //break;
     case QMetaType::Double :
     case QMetaType::Float :
       return (x1.toDouble() < x2.toDouble()) ? -1 : 1;
-      break;
+      //break;
     case QMetaType::Int :
     case QMetaType::Short :
       return (x1.toInt() < x2.toInt()) ? -1 : 1;
-      break;
+      //break;
     case QMetaType::LongLong :
     case QMetaType::Long :
       return (x1.toLongLong() < x2.toLongLong()) ? -1 : 1;
-      break;
+      //break;
     case QMetaType::UInt :
     case QMetaType::UShort :
       return (x1.toUInt() < x2.toUInt()) ? -1 : 1;
-      break;
+      //break;
     case QMetaType::ULongLong :
     case QMetaType::ULong :
       return (x1.toULongLong() < x2.toULongLong()) ? -1 : 1;
-      break;
+      //break;
     case QMetaType::QUuid :
       return (x1.toUuid() < x2.toUuid()) ? -1 : 1;
-      break;
+      //break;
     default:
       break;
     }
@@ -200,7 +201,7 @@ int Comparer::compare(const QVariant& x1, const QVariant& x2, Qt::CaseSensitivit
     }
   }
 
-  qDebug(qPrintable(QString(tr("Unexpected type2 in Comparer::compare: (%1)(%2)")).arg(x1.typeName()).arg(x2.typeName())));
+  qDebug() << qPrintable(QString(tr("Unexpected type2 in Comparer::compare: (%1)(%2)")).arg(x1.typeName()).arg(x2.typeName()));
   return compare(x1.toString(), x2.toString(), cs);
 }
 

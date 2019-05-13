@@ -22,7 +22,7 @@ class GenericDataCollectionTableDialog : public QDialog
 {
   Q_OBJECT
 public:
-  explicit GenericDataCollectionTableDialog(const QString& tableName, GenericDataCollection& data, StampDB& db, DescribeSqlTables& schema, GenericDataCollections *tables, QWidget *parent=nullptr);
+  explicit GenericDataCollectionTableDialog(const QString& tableName, GenericDataCollection& data, StampDB& db, DescribeSqlTables& schema, GenericDataCollections *tables, int defaultSourceId = -1, QWidget *parent=nullptr);
 
   /*! \brief Destructor saves dialog geometry. */
   virtual ~GenericDataCollectionTableDialog();
@@ -176,6 +176,8 @@ private:
   StampDB& m_db;
 
   DescribeSqlTables& m_schema;
+
+  int m_defaultSourceId = -1;
 };
 
 #endif // GENERICDATACOLLECTIONTABLEDIALOG_H

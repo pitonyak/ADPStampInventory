@@ -4,12 +4,6 @@
 #include <QFile>
 #include <QDebug>
 
-#if defined(__GNUC__)
-#if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 6)
-#include "nullptr.h"
-#endif
-#endif
-
 CSVController::CSVController(QObject *parent) : QObject(parent)
 {
     setControllerDefaults();

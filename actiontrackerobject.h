@@ -11,7 +11,7 @@
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2014
+ * \date 2019
  ***************************************************************************/
 
 template<class T>

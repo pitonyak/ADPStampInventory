@@ -2,6 +2,7 @@
 #include "xmlutility.h"
 #include "sqlfieldtypemaster.h"
 
+#include <QDebug>
 #include <QXmlStreamWriter>
 
 DescribeSqlField::DescribeSqlField()
@@ -68,7 +69,7 @@ DescribeSqlField DescribeSqlField::readXml(QXmlStreamReader& reader)
                     SqlFieldTypeMaster typeMaster;
                     SqlFieldType fieldType = typeMaster.findByName(sType);
                     if (!fieldType.isValid()) {
-                        qDebug(qPrintable(QString("Invalid field type found '%1' in field '%2'").arg(sType).arg(field.getName())));
+                        qDebug() << qPrintable(QString("Invalid field type found '%1' in field '%2'").arg(sType).arg(field.getName()));
                     } else {
                         field.setFieldType(fieldType);
                         field.setPreferredTypeName(sType);
@@ -89,13 +90,13 @@ DescribeSqlField DescribeSqlField::readXml(QXmlStreamReader& reader)
                 if (reader.attributes().hasAttribute("precision")) {
                     field.setFieldPrecision(reader.attributes().value("precision").toInt(&ok));
                     if (!ok) {
-                        qDebug(qPrintable(QString("Failed to set field precision '%1' in field '%2'").arg(reader.attributes().value("precision").toString()).arg(field.getName())));
+                        qDebug() << qPrintable(QString("Failed to set field precision '%1' in field '%2'").arg(reader.attributes().value("precision").toString()).arg(field.getName()));
                     }
                 }
                 if (reader.attributes().hasAttribute("len")) {
                     field.setFieldLength(reader.attributes().value("len").toInt(&ok));
                     if (!ok) {
-                        qDebug(qPrintable(QString("Failed to set field length '%1' in field '%2'").arg(reader.attributes().value("len").toString()).arg(field.getName())));
+                        qDebug() << qPrintable(QString("Failed to set field length '%1' in field '%2'").arg(reader.attributes().value("len").toString()).arg(field.getName()));
                     }
                 }
                 reader.readNext();
@@ -105,7 +106,7 @@ DescribeSqlField DescribeSqlField::readXml(QXmlStreamReader& reader)
                     field.setLinkFieldName(reader.attributes().value("field").toString());
                     field.m_linkDisplayField = reader.attributes().value("displayfield").toString();
                 } else {
-                    qDebug(qPrintable(QString("Link in field '%1' does not reference a table and field").arg(field.getName())));
+                    qDebug() << qPrintable(QString("Link in field '%1' does not reference a table and field").arg(field.getName()));
                 }
                 reader.readNext();
             } else {

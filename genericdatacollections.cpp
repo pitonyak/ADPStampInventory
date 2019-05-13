@@ -15,7 +15,7 @@ void GenericDataCollections::addCollection(const QString& name, GenericDataColle
     if (!m_tables.contains(lowerName))
     {
         m_names << name;
-        m_tables[name] = collection;
+        m_tables[lowerName] = collection;
     }
 }
 

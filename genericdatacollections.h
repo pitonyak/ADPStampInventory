@@ -22,7 +22,22 @@ public:
     explicit GenericDataCollections(QObject *parent = nullptr);
 
     void addCollection(const QString& name, GenericDataCollection* collection);
+
+    //**************************************************************************
+    /*! \brief Does this collection contain a table as named. The name is not case sensitive.
+     *
+     *  \param [in] tableName Is the case insensitive table name.
+     *  \return True if the tables collection contains a table with the specified name.
+     ***************************************************************************/
     bool contains(const QString& tableName) const;
+
+    //**************************************************************************
+    /*! \brief Does this collection contain a table with the specified field name, both case insensitive.
+     *
+     *  \param [in] tableName Is the case insensitive table name.
+     *  \param [in] fieldName Is the case insensitive field name.
+     *  \return True if the tables collection contains the table and field.
+     ***************************************************************************/
     bool contains(const QString& tableName, const QString& fieldName) const;
 
     QStringList getNames() const;
@@ -34,6 +49,14 @@ public:
 
     GenericDataObject* getObject(const QString& tableName, const int id);
 
+    //**************************************************************************
+    /*! \brief Get the data value from a table if the ID (database key) exists, otherwise, return meta-data about the field.
+     *
+     *  \param [in] tableName Is the case insensitive table name.
+     *  \param [in] id is the database key. If this exists, the data value from the table is returned. If not, column meta-data is returned.
+     *  \param [in] fieldName Is the case insensitive field name.
+     *  \return Data from the table, or, meta-data about the column if the ID is not present.
+     ***************************************************************************/
     QVariant getValue(const QString& tableName, const int id, const QString& fieldName);
 
 signals:
@@ -52,7 +75,7 @@ inline bool GenericDataCollections::contains(const QString& tableName) const
 
 inline bool GenericDataCollections::contains(const QString& tableName, const QString& fieldName) const
 {
-    return contains(tableName) && m_tables[tableName]->containsProperty(fieldName);
+    return contains(tableName) && m_tables[tableName.toLower()]->containsProperty(fieldName);
 }
 
 inline GenericDataCollection* GenericDataCollections::operator[](const QString& tableName)
@@ -62,12 +85,12 @@ inline GenericDataCollection* GenericDataCollections::operator[](const QString& 
 
 inline GenericDataCollection* GenericDataCollections::getTable(const QString& tableName)
 {
-  return contains(tableName) ? m_tables.value(tableName) : nullptr;
+  return contains(tableName) ? m_tables.value(tableName.toLower()) : nullptr;
 }
 
 inline const GenericDataCollection* GenericDataCollections::getTable(const QString& tableName) const
 {
-  return contains(tableName) ? m_tables.value(tableName) : nullptr;
+  return contains(tableName) ? m_tables.value(tableName.toLower()) : nullptr;
 }
 
 

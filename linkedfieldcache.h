@@ -9,7 +9,7 @@
  *
  * \brief Quick link for a <Table, object ID, Field Name, Cached Value>
  *
- * A linked field is used when say a catalog id is stored in the inventory table.
+ * A linked field is used when a catalog id is stored in the inventory table.
  * Showing the ID is useless, so, it references fields in the catalog table;
  * For example, the country, scott value, and type. These fields are then
  * concatenated together and shown as a descriptive value for that field.
@@ -23,7 +23,7 @@
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2014
+ * \date 2014 - 2019
  ***************************************************************************/
 class LinkedFieldCache : public QObject
 {

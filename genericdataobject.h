@@ -16,9 +16,13 @@ class SqlFieldType;
 /*! \class GenericDataObject
  * \brief Generic object with named properties.
  *
+ * This is a Hash of names to values stored in a QVariant with some smart methods to get values.
+ *
+ * This adds the ability to bind named values to SQL parameters and to compare values.
+ *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2012-2014
+ * \date 2012-2019
  **************************************************************************/
 class GenericDataObject : public QObject
 {

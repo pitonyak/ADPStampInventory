@@ -19,12 +19,7 @@
 #include <QTextStream>
 #include <QList>
 #include <QtGlobal>
-
-#if defined(__GNUC__)
-#if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 6)
-#include "nullptr.h"
-#endif
-#endif
+#include <QInputDialog>
 
 StampDB::StampDB(QObject *parent) :
   QObject(parent),
@@ -376,26 +371,71 @@ int StampDB::getMaxId(const QString& tableName)
 int StampDB::getMaxId(const QString& tableName, const QString& fieldName)
 {
     QString sql = QString("SELECT MAX(%2) FROM %1").arg(tableName).arg(fieldName);
-    QSqlDatabase& db = getDB();
-    QSqlQuery query(db);
-
-    if (!query.exec(sql))
-    {
-        QString errMsg = QString("SQL: %1\n\nError:\n%2").arg(sql).arg(query.lastError().text());
-        ScrollMessageBox::information(nullptr, "ERROR", errMsg);
-    }
-    else if (query.isSelect() && query.isActive() && query.next() && !query.record().isNull(0))
-    {
-        bool ok = true;
-        int rc = query.record().value(0).toInt(&ok);
-        if (ok) {
-            return rc;
-        }
-        QString errMsg = QString("SQL: %1\n\nError:\nCannot convert returned value to an integer").arg(sql);
-        ScrollMessageBox::information(nullptr, "ERROR", errMsg);
-    }
-    return -1;
+    return getIdFromSql(sql);
 }
+
+int StampDB::getIdFromSql(const QString& sql) {
+  QSqlDatabase& db = getDB();
+  QSqlQuery query(db);
+
+  if (!query.exec(sql))
+  {
+      QString errMsg = QString("SQL: %1\n\nError:\n%2").arg(sql).arg(query.lastError().text());
+      ScrollMessageBox::information(nullptr, "ERROR", errMsg);
+  }
+  else if (query.isSelect() && query.isActive() && query.next() && !query.record().isNull(0))
+  {
+      bool ok = true;
+      int rc = query.record().value(0).toInt(&ok);
+      if (ok) {
+          return rc;
+      }
+      QString errMsg = QString("SQL: %1\n\nError:\nCannot convert returned value to an integer").arg(sql);
+      ScrollMessageBox::information(nullptr, "ERROR", errMsg);
+  }
+  return -1;
+}
+
+int StampDB::selectValueSourceId(QWidget *parent)
+{
+  int errorReturn = 0;
+  QString sql = "select id, (\"id\" || ' - ' || \"description\") As x from valuesource where ID > 0 order by valuesource.year DESC ";
+  QList<QSqlRecord> records;
+
+  QString keyField;
+  QHash<int, int> keys;
+
+  if (!executeQuery(sql, records, keyField, keys)) {
+    QMessageBox::warning(parent, tr("ERROR"), tr("Failed to execute SQL."));
+    return errorReturn;
+  } else if (records.size() < 1) {
+    QMessageBox::warning(parent, tr("No Records Found"), tr("No catalog entries found without values."));
+    return errorReturn;
+  }
+
+  QStringList items;
+  for (QSqlRecord r : records) {
+    if (!r.isNull(1)) {
+      items << r.field(1).value().toString();
+    }
+  }
+  bool ok;
+  QString item = QInputDialog::getItem(parent, tr("Select Catalog To Use"),
+                                           tr("Catalog:"), items, 0, false, &ok);
+  if (ok && !item.isEmpty())
+    for (QSqlRecord r : records) {
+      if (!r.isNull(1) && r.field(1).value().toString() == item) {
+        return r.field(0).value().toInt();
+      }
+    }
+
+  return errorReturn;
+}
+
+int StampDB::getMaxValueSourceId() {
+  return getIdFromSql("select id from valuesource order by valuesource.year DESC limit 1");
+}
+
 
 GenericDataCollection *StampDB::readTableName(const QString& tableName, const bool sortByKey, const bool useSchema)
 {
@@ -734,6 +774,7 @@ bool StampDB::executeQuery(const QString& sqlSelect, QList<QSqlRecord>& records,
                 if (keys.contains(recordKey)) {
 
                     // I really do not expect this, but, do it anyway.
+                    // Replace the previous record.
                     records[keys[recordKey]] = rec;
                 } else {
                     keys.insert(recordKey, records.size());

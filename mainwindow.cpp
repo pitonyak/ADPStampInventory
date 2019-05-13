@@ -11,7 +11,10 @@
 #include "describesqltables.h"
 #include "genericdatacollections.h"
 
+#include <QDebug>
 #include <QMessageBox>
+#include <QSqlRecord>
+#include <QSqlField>
 #include <QStringList>
 #include <QFileDialog>
 #include <QCoreApplication>
@@ -20,12 +23,6 @@
 #include <QInputDialog>
 
 #include <QSqlQuery>
-
-#if defined(__GNUC__)
-#if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 6)
-#include "nullptr.h"
-#endif
-#endif
 
 MainWindow::MainWindow(QWidget *parent) :
   QMainWindow(parent),
@@ -49,6 +46,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::setupMenuBar()
 {
+  // Use the menu bar from the main window, we do not need to create one.
   QMenu *menu = menuBar()->addMenu(tr("&File"));
   //QAction *action = nullptr;
 
@@ -66,6 +64,7 @@ void MainWindow::setupMenuBar()
   menu->addAction(tr("&Quit"), this, SLOT(close()));
 
   menu = menuBar()->addMenu(tr("&Edit"));
+  menu->addAction(tr("&Test"), this, SLOT(testing()));
 
   menu = menuBar()->addMenu(tr("&Tools"));
   menu->addAction(tr("&Create DB"), this, SLOT(createDB()));
@@ -75,6 +74,7 @@ void MainWindow::setupMenuBar()
   menu->addAction(tr("&Export CSV"), this, SLOT(exportCSV()));
   menu->addAction(tr("&SQL Window"), this, SLOT(openSQLWindow()));
   menu->addAction(tr("Configure"), this, SLOT(configure()));
+  menu->addAction(tr("Add Missing Values"), this, SLOT(addMissingBookValues()));
   menu->addAction(tr("Edit Table"), this, SLOT(editTable()));
 
   menu = menuBar()->addMenu(tr("&Help"));
@@ -203,7 +203,7 @@ void MainWindow::readCSV()
     // Nothing to do
     return;
   }
-  qDebug(qPrintable(QString("File Read Path:(%1)").arg(fileReadPath)));
+  qDebug() << tr("File Read Path:(") << fileReadPath << ")";
 
   QFileInfo fileInfo(fileReadPath);
   if (!fileInfo.exists()) {
@@ -219,7 +219,7 @@ void MainWindow::readCSV()
   // The file exists, so it cannot be empty.
   if (lastReadDir.compare(fileInfo.absolutePath()) != 0)
   {
-    qDebug(qPrintable(QString("Setting Path:(%1)").arg(fileInfo.absolutePath())));
+    qDebug() << tr("Setting Path:(") << fileInfo.absolutePath() << ")";
     settings.setValue(Constants::Settings_LastCSVDirOpen, fileInfo.absolutePath());
   }
   CSVReader reader(TypeMapper::PreferSigned | TypeMapper::PreferInt);
@@ -412,6 +412,95 @@ void MainWindow::configure()
   }
 }
 
+
+void MainWindow::testing() {
+  if (createDBWorker()) {
+    QString sql = "select id, (\"id\" || ' - ' || \"description\") As x from valuesource where ID > 0 order by valuesource.year DESC ";
+    QList<QSqlRecord> records;
+
+    QString keyField;
+    QHash<int, int> keys;
+
+    if (!m_db->executeQuery(sql, records, keyField, keys)) {
+      QMessageBox::warning(this, tr("ERROR"), tr("Failed to execute SQL."));
+      return;
+    } else if (records.size() < 1) {
+      QMessageBox::warning(this, tr("No Records Found"), tr("No catalog entries found without values."));
+      return;
+    }
+
+    QStringList items;
+    for (QSqlRecord r : records) {
+      if (!r.isNull(1)) {
+        items << r.field(1).value().toString();
+      }
+    }
+    bool ok;
+    QString item = QInputDialog::getItem(this, tr("Select Catalog To Use"),
+                                             tr("Catalog:"), items, 0, false, &ok);
+    if (ok && !item.isEmpty())
+      for (QSqlRecord r : records) {
+        if (!r.isNull(1) && r.field(1).value().toString() == item) {
+          qDebug() << r.field(0).value().toInt();
+        }
+      }
+  }
+}
+
+void MainWindow::addMissingBookValues()
+{
+  if (createDBWorker()) {
+    // Get stamps with no entry in "book values"
+    QString sql = "select catalog.id from catalog left outer join bookvalues on catalog.id = bookvalues.catalogid where bookvalues.catalogid IS NULL";
+    QList<QSqlRecord> records;
+
+    // We only want the IDs, so, these fields will be ignored.
+    QString keyField;
+    QHash<int, int> keys;
+
+    if (!m_db->executeQuery(sql, records, keyField, keys)) {
+      QMessageBox::warning(this, tr("ERROR"), tr("Failed to execute SQL to find missing entries."));
+      return;
+    } else if (records.size() < 1) {
+      QMessageBox::warning(this, tr("No Records Found"), tr("No catalog entries found without values."));
+      return;
+    }
+    if (ScrollMessageBox::question(this, "Question", QString(tr("Add %1 stamps to the book values table?")).arg(records.size())) != QDialogButtonBox::Yes)
+    {
+        return;
+    }
+
+    // Set the sourceID based on the latest year that we have
+    // select id from valuesource order by valuesource.year DESC limit 1
+    // TODO; Create a dialog to prompt for the value source to use.
+    int sourceId = m_db->selectValueSourceId(this);
+
+    QList<QSqlRecord> ignoredRecords;
+    int added = 0;
+    int failed = 0;
+
+    // Do the work!
+    for (int i=0; i<records.size() && failed == 0; ++i) {
+      int catalogId = records[i].value("id").toInt();
+      QString q1 = QString("INSERT INTO bookvalues (Catalogid, sourceid, valuetypeid, bookvalue) VALUES (%1, %2, 1, 0)").arg(catalogId).arg(sourceId);
+      QString q2 = QString("INSERT INTO bookvalues (Catalogid, sourceid, valuetypeid, bookvalue) VALUES (%1, %2, 2, 0)").arg(catalogId).arg(sourceId);
+      if (!m_db->executeQuery(q1, ignoredRecords, keyField, keys)) {
+        ++failed;
+        QMessageBox::warning(this, tr("ERROR"), q1);
+      } else {
+        ++added;
+        if (!m_db->executeQuery(q2, ignoredRecords, keyField, keys)) {
+          ++failed;
+          QMessageBox::warning(this, tr("ERROR"), q2);
+        } else {
+          ++added;
+        }
+      }
+    }
+    ScrollMessageBox::question(this, "Done", QString(tr("Added %1 entries to the book values table. %2 failed.")).arg(added).arg(failed));
+  }
+}
+
 #include <QXmlStreamReader>
 
 void MainWindow::editTable()
@@ -480,8 +569,12 @@ void MainWindow::editTable()
         Q_ASSERT_X(data->contains(tableName), "MainWindow::editTable", "Table not returned");
         if (data != nullptr)
         {
+          int defaultSourceId = -1;
+          if (tableName.compare("bookvalues", Qt::CaseInsensitive) == 0) {
+            defaultSourceId = m_db->selectValueSourceId(this);
+          }
           //GenericDataCollectionTableDialog dlg(tableName, *data, *m_db, schema);
-          GenericDataCollectionTableDialog dlg(tableName, *data->getTable(tableName), *m_db, schema, data);
+          GenericDataCollectionTableDialog dlg(tableName, *data->getTable(tableName), *m_db, schema, data, defaultSourceId);
           dlg.exec();
           delete data;
         }

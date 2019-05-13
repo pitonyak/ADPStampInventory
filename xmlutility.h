@@ -10,6 +10,11 @@ class QXmlStreamReader;
 //**************************************************************************
 //! Utility methods used while reading and writing XML.
 /*!
+ *
+ * This class contains generic methods to do things such as converting strings to values.
+ * Also ability to write a regular expression object as safe XML.
+ *
+ *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
  * \date 2011-2013

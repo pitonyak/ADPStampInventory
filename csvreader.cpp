@@ -6,15 +6,8 @@
 #include <QTextCodec>
 #include <QList>
 #include <QVariant>
+#include <QDebug>
 #include "csvline.h"
-
-#if defined(__GNUC__)
-#if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 6)
-#include "nullptr.h"
-#endif
-#endif
-
-
 
 CSVReader::CSVReader(QObject *parent) :
     CSVController(parent),
@@ -637,7 +630,7 @@ void CSVReader::guessColumnTypes(TypeMapper::ColumnConversionPreferences flags )
       s = s + ", " + QMetaType::typeName(m_columnTypes->at(i));
     }
   }
-  qDebug(qPrintable(s));
+  qDebug() << qPrintable(s);
 }
 
 

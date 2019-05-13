@@ -19,7 +19,7 @@
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2014-2016
+ * \date 2014-2019
  ***************************************************************************/
 class LinkedFieldSelectionCache : public QObject
 {
@@ -30,7 +30,6 @@ public:
      *  \param [in, out] parent The object's owner. The parent's destructor destroys this object.
      */
     explicit LinkedFieldSelectionCache(QObject *parent = nullptr);
-
 
     /*! \brief Get a pointer to the cached value; returns nullptr if the value does not exist.
      *

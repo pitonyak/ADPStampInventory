@@ -2,6 +2,7 @@
 #include "sqlfieldtypemaster.h"
 #include <QXmlStreamWriter>
 #include <QXmlStreamReader>
+#include <QDebug>
 
 DescribeSqlTable::DescribeSqlTable()
 {
@@ -21,12 +22,12 @@ DescribeSqlTable::DescribeSqlTable(const QString definitions[], const int n, boo
     int delta = 5;
     QString thisTableName = (n < 1) ? "No Table Name Provided" : definitions[0];
     if (n < 3) {
-      qDebug(qPrintable(QString("Cannot build a table with %1 strings for '%2'").arg(n).arg(thisTableName)));
+      qDebug() << qPrintable(QString("Cannot build a table with %1 strings for '%2'").arg(n).arg(thisTableName));
       return;
     }
     int k = (n - 3) / delta;
     if (n != (k * delta + 3)) {
-      qDebug(qPrintable(QString("Cannot build a table with %1 strings, must be representable as (3 + %2k) for some value of k for '%3'").arg(n).arg(delta).arg(thisTableName)));
+      qDebug() << qPrintable(QString("Cannot build a table with %1 strings, must be representable as (3 + %2k) for some value of k for '%3'").arg(n).arg(delta).arg(thisTableName));
       return;
     }
     int i = 0;
@@ -45,7 +46,7 @@ DescribeSqlTable::DescribeSqlTable(const QString definitions[], const int n, boo
       field.setViewName(definitions[i++]);
       SqlFieldType fieldType = typemaster->findByName(definitions[i++]);
       if (!fieldType.isValid()) {
-        qDebug(qPrintable(QString("Cannot build a valid type from '%1'").arg(definitions[i-1])));
+        qDebug() << qPrintable(QString("Cannot build a valid type from '%1'").arg(definitions[i-1]));
       } else {
           field.setPreferredTypeName(definitions[i-1]);
           field.setFieldType(fieldType);
@@ -53,13 +54,13 @@ DescribeSqlTable::DescribeSqlTable(const QString definitions[], const int n, boo
       field.setDescription(definitions[i++]);
       field.setFieldLength(QString(definitions[i++]).toInt(&ok));
       if (!ok) {
-        qDebug(qPrintable(QString("Cannot build a length from '%1'").arg(definitions[i-1])));
+        qDebug() << qPrintable(QString("Cannot build a length from '%1'").arg(definitions[i-1]));
       }
       if (idIsAutoInc && field.getName().compare(QLatin1String("id")) == 0) {
         field.setIsAutoIncrement(true);
       }
       if (!addField(field)) {
-        qDebug(qPrintable(QString("Failed to add field at index %1 with name").arg(definitions[i-delta]).arg(field.getName())));
+        qDebug() << qPrintable(QString("Failed to add field at index %1 with name").arg(definitions[i-delta]).arg(field.getName()));
       }
     }
     if (ownTypeMaster) {
@@ -109,7 +110,7 @@ QString DescribeSqlTable::getFieldNameByIndex(const int index) const
   if (0 <= index && index < getFieldCount()) {
     return m_names.at(index);
   } else {
-    qDebug(qPrintable(QString("Field index = %1 is out of range for table %2").arg(index).arg(getName())));
+    qDebug() << qPrintable(QString("Field index = %1 is out of range for table %2").arg(index).arg(getName()));
   }
   return "";
 }
@@ -120,7 +121,7 @@ const DescribeSqlField* DescribeSqlTable::getFieldByName(const QString& name) co
   if (m_fields.contains(simpleName)) {
     return &const_cast<QHash<QString, DescribeSqlField>&>(m_fields)[simpleName];
   } else {
-    qDebug(qPrintable(QString("Field name = '%1' is contained in table %2").arg(name).arg(getName())));
+    qDebug() << qPrintable(QString("Field name = '%1' is contained in table %2").arg(name).arg(getName()));
   }
   return nullptr;
 }
@@ -134,7 +135,7 @@ bool DescribeSqlTable::addField(const DescribeSqlField& field)
 {
   QString simpleName = field.getName().toLower();
   if (m_fields.contains(simpleName)) {
-    qDebug(qPrintable(QString("Field name = '%1' is already contained in table %2").arg(simpleName).arg(getName())));
+    qDebug() << qPrintable(QString("Field name = '%1' is already contained in table %2").arg(simpleName).arg(getName()));
     return false;
   } else {
     m_names.append(simpleName);
@@ -149,7 +150,7 @@ void DescribeSqlTable::setFieldKey(const QString& name, bool x)
   if (m_fields.contains(simpleName)) {
     m_fields[simpleName].setIsKey(x);
   } else {
-    qDebug(qPrintable(QString("Field name = '%1' is not found in table %2").arg(simpleName).arg(getName())));
+    qDebug() << qPrintable(QString("Field name = '%1' is not found in table %2").arg(simpleName).arg(getName()));
   }
 }
 
@@ -159,7 +160,7 @@ void DescribeSqlTable::setFieldAutoIncrement(const QString& name, bool x)
   if (m_fields.contains(simpleName)) {
     m_fields[simpleName].setIsAutoIncrement(x);
   } else {
-    qDebug(qPrintable(QString("Field name = '%1' is not found in table %2").arg(simpleName).arg(getName())));
+    qDebug() << qPrintable(QString("Field name = '%1' is not found in table %2").arg(simpleName).arg(getName()));
   }
 }
 
@@ -169,7 +170,7 @@ void DescribeSqlTable::setFieldRequired(const QString& name, bool x)
   if (m_fields.contains(simpleName)) {
     m_fields[simpleName].setIsRequired(x);
   } else {
-    qDebug(qPrintable(QString("Field name = '%1' is not found in table %2").arg(simpleName).arg(getName())));
+    qDebug() << qPrintable(QString("Field name = '%1' is not found in table %2").arg(simpleName).arg(getName()));
   }
 }
 
@@ -181,7 +182,7 @@ void DescribeSqlTable::setFieldLink(const QString& name, const QString& linkTabl
     m_fields[simpleName].setLinkFieldName(linkFieldName);
     m_fields[simpleName].setLinkDisplayField(linkDisplayFields);
   } else {
-    qDebug(qPrintable(QString("Field name = '%1' is not found in table %2").arg(simpleName).arg(getName())));
+    qDebug() << qPrintable(QString("Field name = '%1' is not found in table %2").arg(simpleName).arg(getName()));
   }
 }
 
@@ -191,7 +192,7 @@ void DescribeSqlTable::setFieldCurrencySymbol(const QString& name, const QString
   if (m_fields.contains(simpleName)) {
     m_fields[simpleName].setCurrencySymbol(currencySymbol);
   } else {
-    qDebug(qPrintable(QString("Field name = '%1' is not found in table %2").arg(simpleName).arg(getName())));
+    qDebug() << qPrintable(QString("Field name = '%1' is not found in table %2").arg(simpleName).arg(getName()));
   }
 }
 
@@ -217,14 +218,14 @@ DescribeSqlTable DescribeSqlTable::readXml(QXmlStreamReader& reader)
                 reader.readNext();
             } else if (reader.name().compare(QLatin1String("Field"), Qt::CaseInsensitive) == 0) {
                 DescribeSqlField field = DescribeSqlField::readXml(reader);
-                //qDebug(qPrintable(QString("Add field name = '%1' to table '%2'").arg(field.getName()).arg(table.getName())));
+                //qDebug() << qPrintable(QString("Add field name = '%1' to table '%2'").arg(field.getName()).arg(table.getName()));
                 if (field.getName().isEmpty() || !table.addField(field)) {
-                    qDebug(qPrintable(QString("*** Failed to add field name = '%1' to table '%2'").arg(field.getName()).arg(table.getName())));
+                    qDebug() << qPrintable(QString("*** Failed to add field name = '%1' to table '%2'").arg(field.getName()).arg(table.getName()));
                     break;
                 }
             } else {
                 // Unexpected element, finished with Table!
-                // qDebug(qPrintable(QString("Found unexpected XML element '%1' in table '%2'").arg(reader.name().toString()).arg(table.getName())));
+                // qDebug() << qPrintable(QString("Found unexpected XML element '%1' in table '%2'").arg(reader.name().toString()).arg(table.getName()));
                 break;
             }
         } else if (reader.isStartDocument()) {

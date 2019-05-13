@@ -19,14 +19,9 @@
 #include <QLineEdit>
 #include <QTableWidget>
 #include <QSettings>
+#include <QDebug>
 #include "csvreader.h"
 #include "csvline.h"
-
-#if defined(__GNUC__)
-#if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 6)
-#include "nullptr.h"
-#endif
-#endif
 
 CSVReaderDialog::CSVReaderDialog(CSVReader* reader, QWidget *parent) :
   QDialog(parent),
@@ -229,7 +224,7 @@ void CSVReaderDialog::separatorToggled(bool enabled)
 
 void CSVReaderDialog::tableCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn)
 {
-  qDebug(qPrintable(QString("(%1,%2)(%3,%4)").arg(currentRow).arg(currentColumn).arg(previousRow).arg(previousColumn)));
+  qDebug() << qPrintable(QString("(%1,%2)(%3,%4)").arg(currentRow).arg(currentColumn).arg(previousRow).arg(previousColumn));
   if (m_reader != nullptr)
   {
     // TODO: Add a listener to the drop down to push type changes back to the reader.
@@ -252,7 +247,7 @@ void CSVReaderDialog::columnTypeChanged(const QString& text)
 {
   //int iCol = getCurrentColumn();
   //?? Save the type for the column if it is a known type.
-  qDebug(qPrintable(QString("New type %1 for column %2").arg(text).arg(getCurrentColumn())));
+  qDebug() << qPrintable(QString("New type %1 for column %2").arg(text).arg(getCurrentColumn()));
 }
 
 int CSVReaderDialog::getCurrentColumn() const
@@ -262,7 +257,7 @@ int CSVReaderDialog::getCurrentColumn() const
 
 void CSVReaderDialog::tableSelectionChanged()
 {
-  qDebug("Table selection changed");
+  qDebug() << "Table selection changed";
   QList<QTableWidgetSelectionRange> ranges = m_tableWidget->selectedRanges();
 }
 

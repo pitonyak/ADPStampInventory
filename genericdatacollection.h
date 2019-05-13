@@ -21,7 +21,7 @@ class CSVWriter;
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2012-2016
+ * \date 2012-2018
  **************************************************************************/
 class GenericDataCollection : public QObject
 {
@@ -126,7 +126,7 @@ public:
   bool containsObject(const int id) const;
 
   /*! \brief Get a generic data object with the specified ID.
-   *  \param [in] id Unique object identifier.
+   *  \param [in] id Unique object identifier (think database key).
    *  \return The object if it exists and null if it does not.
    */
   const GenericDataObject* getObjectById (const int id) const;

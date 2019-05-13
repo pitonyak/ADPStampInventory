@@ -1,11 +1,5 @@
 #include "sqlfieldtype.h"
 
-#if defined(__GNUC__)
-#if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 6)
-#include "nullptr.h"
-#endif
-#endif
-
 SqlFieldType::SqlFieldType(QMetaType::Type qType, bool supportsLen, bool supportsPrec) :
     m_supportsLength(supportsLen),
     m_supportsPrecision(supportsPrec),

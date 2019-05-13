@@ -180,11 +180,56 @@ public:
    */
   GenericDataCollection* readTableBySchema(const QString& tableName, const QStringList& orderByList);
 
+  /*! \brief Return a collection of tables including referenced tables, and yes, it pulls it all into memory.
+   *
+   * Fields know if they link to another table. For example, bookvalues.catalogid references catalog.id.
+   * When I ask for the bookvalues table, therefore, it will also return the catalog table.
+   *
+   *  \param [in] tableName
+   *  \param [in] maxLinkDepth - Just in case. Set to -1 to just keep going.
+   *  \param [in] sortByKey If true, reads the data ordered by "id" (database key), otherwise, do not purposely sort the data.
+   *
+   *  \return a new generic data collection that you now own and must delete (or, nullptr if it fails).
+   */
   GenericDataCollections* readTableWithLinks(const QString& tableName, const int maxLinkDepth=-1, const bool sortByKey=true);
 
-
+  /*! \brief Return the maximum value from the field "id" in the specified tablename.
+   *
+   *  \param [in] tableName
+   *
+   *  \return Maximum value from the field "id" in the specified tablename.
+   */
   int getMaxId(const QString& tableName);
+
+  /*! \brief Return the maximum value from the specified field and table.
+   *
+   *  \param [in] tableName
+   *  \param [in] fieldName
+   *
+   *  \return Maximum value from the specified field and table.
+   */
   int getMaxId(const QString& tableName, const QString& fieldName);
+
+  /*! \brief Return the first value in the first column, which is assumed to be an ID.
+   *
+   * The first column returned by the SQL command had better be convertable to an int.
+   * Best bet is to have the SQL return a single value.
+   *
+   *  \param [in] sql
+   *
+   *  \return First value in the first column, which is assumed to be an ID.
+   */
+  int getIdFromSql(const QString& sql);
+
+  /*! \brief Sort the value source alphabtically and return the first ID.
+   *
+   * This should return the "newest" book value.
+   *
+   *  \return The ID for the latest book values.
+   */
+  int getMaxValueSourceId();
+
+  int selectValueSourceId(QWidget* parent);
 
   //GenericDataCollection* readTableName(const QString& tableName, const bool useSchema, const bool includeLinks);
 
@@ -210,6 +255,15 @@ public:
 
   QSqlDatabase& getDB() { return m_db; }
 
+  //**************************************************************************
+  /*! \brief Execute an SQL Query
+   *
+   *  \param [in] sqlSelect Query to execute
+   *  \param [out] records List of records as returned by the SQL command.
+   *  \param [in] keyField Field name containing the DB Key, probably "id". May be blank.
+   *  \param [out] keys If we have a valid keyField, then this associates the ID to the returned record.
+   *  \return True on success, false otherwise.
+   ***************************************************************************/
   bool executeQuery(const QString& sqlSelect, QList<QSqlRecord>& records, const QString& keyField, QHash<int, int>& keys);
 
   /*!

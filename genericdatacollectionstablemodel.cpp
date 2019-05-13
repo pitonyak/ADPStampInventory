@@ -10,11 +10,12 @@
 #include <QRegularExpressionMatch>
 #include <QCollator>
 #include <algorithm>
+#include <QDebug>
 
-GenericDataCollectionsTableModel::GenericDataCollectionsTableModel(const bool useLinks, const QString& tableName, GenericDataCollections& tables, DescribeSqlTables& schema, QObject *parent) :
+GenericDataCollectionsTableModel::GenericDataCollectionsTableModel(const bool useLinks, const QString& tableName, GenericDataCollections& tables, DescribeSqlTables& schema, int defaultSourceId, QObject *parent) :
   QAbstractTableModel(parent),
   m_useLinks(useLinks), m_isTracking(true),
-  m_tableName(tableName), m_tables(tables), m_table(nullptr), m_schemas(schema)
+  m_tableName(tableName), m_tables(tables), m_table(nullptr), m_schemas(schema), m_defaultSourceId(defaultSourceId)
 {
   m_table = m_tables.getTable(tableName);
   Q_ASSERT_X(m_table != nullptr, "GenericDataCollectionsTableModel::GenericDataCollectionsTableModel", qPrintable(QString("Collection does not contain table %1").arg(tableName)));
@@ -78,13 +79,33 @@ bool GenericDataCollectionsTableModel::setData ( const QModelIndex & index, cons
       {
         object->setValueNative(fieldName, value);
       }
+      bool updateSourceId = (m_defaultSourceId >= 0 && fieldName.compare("bookvalue", Qt::CaseInsensitive) == 0 && m_table->containsProperty("sourceid") && object->getValueNative("sourceid") != m_defaultSourceId);
+      if (updateSourceId) {
+        // Cannot just set the value or it will not update the DB, just the display.
+        // If I do it the obvious way, it acts as a two "undo" actions. So, just set it
+        // and handle it when I push the changes.
+        //QModelIndex sourceIndex = getIndexByRowCol(index.row(), m_table->getPropertyIndex("sourceid"));
+        //setData(sourceIndex, m_defaultSourceId, role);
+        object->setValueNative("sourceid", m_defaultSourceId);
+      }
       if (fieldName.compare("updated", Qt::CaseInsensitive) != 0 && m_table->containsProperty("updated"))
       {
+        // This sets the data from a visual standpoint, but, this does not cause the data to be
+        // updated in the DB because data is pushed when tracked changes are saved.
         object->setValueNative("updated", QDateTime::currentDateTime());
       }
       if (isTracking())
       {
-        m_changeTracker.push(index.row(), index.column(), fieldName, ChangedObjectBase::Edit, object->clone(), originalObject);
+        if (!updateSourceId) {
+          m_changeTracker.push(index.row(), index.column(), fieldName, ChangedObjectBase::Edit, object->clone(), originalObject);
+        } else {
+          // Doing it this way groups the two field changes as a single "undo" group.
+          // OK, so I use the same changed and original object both times, but, I don't think that it will matter.
+          QStack<ChangedObject<GenericDataObject>*> * lastChanges = new QStack<ChangedObject<GenericDataObject>*>();
+          lastChanges->push(new ChangedObject<GenericDataObject>(index.row(), m_table->getPropertyIndex("sourceid"), "sourceid", ChangedObjectBase::Edit, object->clone(), originalObject->clone()) );
+          lastChanges->push(new ChangedObject<GenericDataObject>(index.row(), index.column(), fieldName, ChangedObjectBase::Edit, object->clone(), originalObject) );
+          m_changeTracker.push(lastChanges);
+        }
       }
       emit dataChanged(index, index);
       return true;
@@ -363,7 +384,7 @@ void GenericDataCollectionsTableModel::deleteRows(const QModelIndexList &list)
         }
         lastChanges->push(new ChangedObject<GenericDataObject>(row, -1, "", ChangedObjectBase::Delete, nullptr, oldData) );
       }
-      qDebug(qPrintable(QString("Removing row %1").arg(row)));
+      qDebug() << "Removing row "<< row;
       beginRemoveRows(QModelIndex(), row, row);
       m_table->removeRow(row);
       endRemoveRows();
@@ -388,6 +409,7 @@ bool GenericDataCollectionsTableModel::saveTrackedChanges(const QString& tableNa
     qDebug("tableSchema is NULL");
   }
   // TODO: Pull set updated field when saving as a configuration option.
+
   bool setUpdateField = (tableSchema != nullptr && tableSchema->containsField("updated"));
 
   DBTransactionHandler transactionHandler(db);
@@ -479,7 +501,7 @@ bool GenericDataCollectionsTableModel::saveTrackedChanges(const QString& tableNa
                   currentObj->setValueNative("updated", now);
                 }
               }
-              qDebug(qPrintable(QString("[%2] where id = %1").arg(oldData->getInt("id")).arg(s)));
+              qDebug() << "[" << oldData->getInt("id") << "] where id = " << s;
 
               if (!newData->containsValue(fieldName))
               {
@@ -538,7 +560,7 @@ void GenericDataCollectionsTableModel::undoChange()
           qDebug("Undo the add!");
           //GenericDataObject* newData = topObject->getNewData();
           //row = m_table->getIndexOf(newData->getInt("id", -1));
-          qDebug(qPrintable(QString("Delete row %1").arg(row)));
+          qDebug() << "Delete row " << row;
           beginRemoveRows(QModelIndex(), row, row);
           m_table->removeRow(row);
           endRemoveRows();
@@ -551,7 +573,7 @@ void GenericDataCollectionsTableModel::undoChange()
           qDebug("Got the old data!");
           if (oldData != nullptr)
           {
-            qDebug(qPrintable(QString("Inserting row %1").arg(row)));
+            qDebug() << "Insert row " << row;
             beginInsertRows(QModelIndex(), row, row);
             qDebug("Ready for insert");
             m_table->insertRow(row, topObject->takeOldData());
@@ -588,45 +610,55 @@ void GenericDataCollectionsTableModel::undoChange()
 
 QString GenericDataCollectionsTableModel::incrementScottNumber(const QString& scott) const
 {
-  if (!scott.isEmpty()) {
-    QString regs = "^(\\D*)(\\d*)(.*)$";
-    qDebug(qPrintable(regs));
-    qDebug(qPrintable(scott));
-    QRegularExpression re(regs);
-    QRegularExpressionMatch match = re.match(scott);
-    if (match.hasMatch())
-    {
-      qDebug("We have a match");
-      QString lead = match.captured(1);   // No numbers
-      QString middle = match.captured(2); // Only numbers
-      QString tail = match.captured(3);   // Anything, but it starts without a number.
-      if (middle.isEmpty())
-      {
-        return scott;
-      }
-      if (tail.isEmpty() || tail.startsWith('/'))
-      {
-        return QString("%1%2%3").arg(lead).arg(1 + middle.toLongLong()).arg(tail);
-      }
-      if (tail.contains('/'))
-      {
-        QStringList list = tail.split('/');
-        QString x = list.at(0);
-        if (x.at(x.length() - 1).isLetter())
-        {
-          QChar c(x.at(x.length() - 1).unicode() + 1);
-          x.truncate(x.length() - 1);
-          list.replace(0, QString("%1%2").arg(x).arg(c));
-          return QString("%1%2%3").arg(lead).arg(middle).arg(list.join('/'));
-        }
+  // This is eather the scotts number, or something like
+  // <country>/<Scotts>/<type>
 
+  QRegularExpression reDigit("\\d");
+
+  // If the number does not contain at least one number
+  // this is not a scott number of any sort.
+  if (!scott.contains(reDigit)) {
+    return scott;
+  }
+
+  if (scott.contains('/')) {
+    // Assume that the scott number is the first one that contains a numeric value.
+    // The default is to keep empty parts.
+    QStringList list = scott.split('/');
+    for (int i=0; i<list.size(); ++i) {
+      QString x = list.at(i);
+      if (x.contains(reDigit)) {
+        list.replace(i, incrementScottNumber(x));
+        return list.join('/');
       }
-      else if (tail.at(tail.length() - 1).isLetter())
-      {
-        QChar c(tail.at(tail.length() - 1).unicode() + 1);
-        tail.truncate(tail.length() - 1);
-        return QString("%1%2%3%4").arg(lead).arg(middle).arg(tail).arg(c);
-      }
+    }
+    // It should be impossible to arrive here.
+    return scott;
+  }
+
+  QString scottReg = "^(.*?)(\\d*)(\\D*)$";
+
+  QRegularExpression re(scottReg);
+  QRegularExpressionMatch match = re.match(scott);
+  if (match.hasMatch())
+  {
+    QString lead = match.captured(1);   // Leading portion
+    QString middle = match.captured(2); // Only numbers
+    QString tail = match.captured(3);   // trailing portion with no number.
+    if (middle.isEmpty())
+    {
+      // This should NEVER happen.
+      return scott;
+    }
+    if (tail.isEmpty())
+    {
+      return QString("%1%2").arg(lead).arg(1 + middle.toLongLong());
+    }
+    if (tail.at(tail.length() - 1).isLetter())
+    {
+      QChar c(tail.at(tail.length() - 1).unicode() + 1);
+      tail.truncate(tail.length() - 1);
+      return QString("%1%2%3%4").arg(lead).arg(middle).arg(tail).arg(c);
     }
   }
   return scott;
@@ -675,15 +707,15 @@ void GenericDataCollectionsTableModel::copyCell(const int fromRow, const int fro
 void GenericDataCollectionsTableModel::copyCell(const QModelIndex& fromIndex, const QModelIndex& toIndex, const bool setUpdated)
 {
   if (!fromIndex.isValid()) {
-    qDebug("Invalid from index in copyCell");
+    qDebug() << "Invalid from index in copyCell";
     return;
   }
   if (!toIndex.isValid()) {
-    qDebug("Invalid to index in copyCell");
+    qDebug() << "Invalid to index in copyCell";
     return;
   }
   if (fromIndex.row() == toIndex.row() && fromIndex.column() == toIndex.column()) {
-    qDebug("Cannot copy a cell onto itself.");
+    qDebug() << "Cannot copy a cell onto itself.";
     return;
   }
 
@@ -698,7 +730,7 @@ void GenericDataCollectionsTableModel::copyCell(const QModelIndex& fromIndex, co
   QVariant toValue = toRow->getValueNative(toColumnName);
 
   if (fromValue == toValue) {
-    qDebug("From and To values are the same, not copying cell");
+    qDebug() << "From and To values are the same, not copying cell";
     return;
   }
 
@@ -723,7 +755,7 @@ void GenericDataCollectionsTableModel::copyCell(const QModelIndex& fromIndex, co
 QList<int> GenericDataCollectionsTableModel::duplicateRows(const QModelIndexList& list, const bool autoIncrement, const bool setUpdated, const bool appendChar, const char charToAppend)
 {
   QList<int> addedIds;
-  qDebug(qPrintable(QString("duplicateRows %1").arg(list.size())));
+  qDebug() << "duplicateRows " << list.size();
 
   // Will contain a sorted list or row numbers in the list.
   QList<int> rows;

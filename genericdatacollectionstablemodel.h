@@ -41,9 +41,10 @@ public:
    *  \param [in] tableName
    *  \param [in] tables
    *  \param [in] schema
+   *  \param [in] defaultSourceId Used only if it is relevant because the bookvalue field was updated.
    *  \param [in, out] parent The object's owner. The parent's destructor destroys this object.
    */
-  explicit GenericDataCollectionsTableModel(const bool useLinks, const QString& tableName, GenericDataCollections& tables, DescribeSqlTables& schema, QObject *parent = nullptr);
+  explicit GenericDataCollectionsTableModel(const bool useLinks, const QString& tableName, GenericDataCollections& tables, DescribeSqlTables& schema, int defaultSourceId = -1, QObject *parent = nullptr);
 
   //**************************************************************************
   /*! \brief Returns the flags used to describe the item identified by the index.
@@ -195,6 +196,8 @@ private:
   //LinkedFieldCache m_linkedFieldCache;
   LinkedFieldSelectionCache m_linkCache;
 
+  /*! Used when editing the value table. When a value is updated, the "source" is set. */
+  int m_defaultSourceId = -1;
 };
 
 inline int GenericDataCollectionsTableModel::getIndexOf(const int id) const
