@@ -1,7 +1,7 @@
 #include "genericdatacollectiontablefilterdialog.h"
 #include "genericdatacollectiontabledialog.h"
 #include "genericdatacollectionstablemodel.h"
-
+#include "globals.h"
 
 #include <QLineEdit>
 #include <QPushButton>
@@ -15,6 +15,7 @@
 #include <QMessageBox>
 #include <QGroupBox>
 #include <QRadioButton>
+#include <QScopedPointer>
 
 GenericDataCollectionTableFilterDialog::GenericDataCollectionTableFilterDialog(GenericDataCollectionTableDialog* tableDialog, QWidget *parent) :
   QDialog(parent), m_tableDialog(tableDialog),
@@ -216,10 +217,10 @@ void GenericDataCollectionTableFilterDialog::buildDialog()
 
   setLayout(fLayout);
 
-  QSettings settings;
-  restoreGeometry(settings.value(Constants::Settings_SortFieldDlgGeometry).toByteArray());
-  setConfigFilePath(settings.value(Constants::SortFieldConfigDialogLastConfigPath).toString());
-  QString s = settings.value(Constants::SortFieldConfigDialogRoutingColumnWidths).toString();
+  QScopedPointer<QSettings> pSettings(getQSettings());
+  restoreGeometry(pSettings->value(Constants::Settings_SortFieldDlgGeometry).toByteArray());
+  setConfigFilePath(pSettings->value(Constants::SortFieldConfigDialogLastConfigPath).toString());
+  QString s = pSettings->value(Constants::SortFieldConfigDialogRoutingColumnWidths).toString();
   if (s.length() > 0)
   {
     QStringList list = s.split(',');

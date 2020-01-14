@@ -4,6 +4,7 @@
 #include "simpleloggeradp.h"
 #include "qtenummapper.h"
 #include <QDateTime>
+#include <QSettings>
 
 //**************************************************************************
 /*! \brief Get the single global instance of the logger.
@@ -28,5 +29,9 @@ void infoMessage(const QString& message, const QString& location, const QDateTim
 void traceMessage(const QString& message, const QString& location, const QDateTime& dateTime, int level=1);
 void debugMessage(const QString& message, const QString& location, const QDateTime& dateTime, int level=1);
 void userMessage(const QString& message, const QString& location, const QDateTime& dateTime, int level=1);
+
+inline QSettings* getQSettings() {
+    return new QSettings(QSettings::IniFormat, QSettings::UserScope, "ADPStampInventory", "Stamp Inventory ADP");
+}
 
 #endif // GLOBALCOPYLINEUTIL_H

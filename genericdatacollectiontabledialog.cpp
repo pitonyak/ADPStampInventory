@@ -8,6 +8,7 @@
 #include "describesqltables.h"
 #include "genericdatacollectionstableproxy.h"
 #include "genericdatacollectiontablesearchdialog.h"
+#include "globals.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -23,6 +24,7 @@
 #include <QKeyEvent>
 #include <QHeaderView>
 #include <QDebug>
+#include <QScopedPointer>
 
 GenericDataCollectionTableDialog::GenericDataCollectionTableDialog(const QString& tableName, GenericDataCollection &data, StampDB &db, DescribeSqlTables& schema, GenericDataCollections *tables, int defaultSourceId, QWidget *parent) :
   QDialog(parent),
@@ -302,9 +304,9 @@ void GenericDataCollectionTableDialog::displayHelp()
 
 void GenericDataCollectionTableDialog::restoreState()
 {
-  QSettings settings;
-  restoreGeometry(settings.value(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgGeometry).arg(m_tableName)).toByteArray());
-  QString s = settings.value(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgColumnWidths).arg(m_tableName)).toString();
+  QScopedPointer<QSettings> pSettings(getQSettings());
+  restoreGeometry(pSettings->value(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgGeometry).arg(m_tableName)).toByteArray());
+  QString s = pSettings->value(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgColumnWidths).arg(m_tableName)).toString();
   if (s.length() > 0)
   {
     QStringList list = s.split(',');
@@ -319,7 +321,7 @@ void GenericDataCollectionTableDialog::restoreState()
     }
   }
   // Restore sort column order.
-  s = settings.value(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgSorting).arg(m_tableName)).toString();
+  s = pSettings->value(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgSorting).arg(m_tableName)).toString();
   if (s.length() > 0)
   {
     QStringList list = s.split(',');
@@ -344,8 +346,8 @@ void GenericDataCollectionTableDialog::saveState()
   // started failing in the destructor because  the the m_dataCollection no longer contained data
   // by the time that this objects destructor was called. So, now this is called before the destructor.
   // save the dialog state.
-  QSettings settings;
-  settings.setValue(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgGeometry).arg(m_tableName), saveGeometry());
+  QScopedPointer<QSettings> pSettings(getQSettings());
+  pSettings->setValue(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgGeometry).arg(m_tableName), saveGeometry());
 
     if (m_tableView != nullptr)
     {
@@ -356,7 +358,7 @@ void GenericDataCollectionTableDialog::saveState()
         int sortColumn = m_tableView->horizontalHeader()->sortIndicatorSection();
         s = QString("%1,%2").arg(sortColumn).arg(order);
       }
-      settings.setValue(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgSorting).arg(m_tableName), s);
+      pSettings->setValue(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgSorting).arg(m_tableName), s);
       s = "";
 
       for (int i=0; i<m_table.getPropertyNameCount(); ++i)
@@ -368,8 +370,8 @@ void GenericDataCollectionTableDialog::saveState()
         }
         s.append(QString("%1").arg(m_tableView->columnWidth(i)));
       }
-      qDebug(qPrintable(QString("(%1)(%2)").arg(m_tableName).arg(s)));
-      settings.setValue(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgColumnWidths).arg(m_tableName), s);
+      qDebug() << "(" << m_tableName << ")(" << s << ")";
+      pSettings->setValue(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgColumnWidths).arg(m_tableName), s);
     }
 }
 
@@ -454,6 +456,7 @@ QModelIndex GenericDataCollectionTableDialog::find(const QString& s, const bool 
 
 QModelIndex GenericDataCollectionTableDialog::find(const QString& s, const QModelIndex& startIndex, const bool searchForward)
 {
+  // TODO: Deal with unused parameter searchForward.
   qDebug("In ::find()");
   QModelIndex matchIndex;
 
@@ -502,10 +505,10 @@ bool GenericDataCollectionTableDialog::genericSearch(const bool findNext, const 
 {
   bool foundSomething = false;
 
-  QSettings settings;
-  QString dfltFind = settings.value(Constants::Settings_SearchFindValue, "").toString();
-  QString dfltReplace = settings.value(Constants::Settings_SearchReplaceValue, "").toString();
-  QString dfltOptions = settings.value(Constants::Settings_SearchOptions, "").toString();
+  QScopedPointer<QSettings> pSettings(getQSettings());
+  QString dfltFind = pSettings->value(Constants::Settings_SearchFindValue, "").toString();
+  QString dfltReplace = pSettings->value(Constants::Settings_SearchReplaceValue, "").toString();
+  QString dfltOptions = pSettings->value(Constants::Settings_SearchOptions, "").toString();
 
   SearchOptions options;
   options.setFindValue(dfltFind);
@@ -543,9 +546,9 @@ bool GenericDataCollectionTableDialog::genericSearch(const bool findNext, const 
     if (rc == QDialog::Accepted)
     {
       options = dlg->getOptions();
-      settings.setValue(Constants::Settings_SearchFindValue, options.getFindValue());
-      settings.setValue(Constants::Settings_SearchReplaceValue, options.getReplaceValue());
-      settings.setValue(Constants::Settings_SearchOptions, options.serializeSettings());
+      pSettings->setValue(Constants::Settings_SearchFindValue, options.getFindValue());
+      pSettings->setValue(Constants::Settings_SearchReplaceValue, options.getReplaceValue());
+      pSettings->setValue(Constants::Settings_SearchOptions, options.serializeSettings());
 
       QModelIndexList list = m_proxyModel->search(m_tableView->currentIndex(), options);
 
@@ -571,9 +574,7 @@ bool GenericDataCollectionTableDialog::genericSearch(const bool findNext, const 
 
     if (findNext)
     {
-      qDebug(qPrintable(QString("Find next current row is %1").arg(currentRow)));
       currentRow = (currentRow + 1) < m_proxyModel->rowCount() ? currentRow + 1 : 0;
-      qDebug(qPrintable(QString("Find next current row is now %1").arg(currentRow)));
       if (options.isBackwards())
       {
         options.setBackwards(false);
@@ -656,10 +657,10 @@ void GenericDataCollectionTableDialog::searchDialog()
   qDebug("in ::searchDialog()");
   GenericDataCollectionTableSearchDialog* dlg = new GenericDataCollectionTableSearchDialog(this, nullptr);
 
-  QSettings settings;
-  QString dfltFind = settings.value(Constants::Settings_SearchFindValue, "").toString();
-  QString dfltReplace = settings.value(Constants::Settings_SearchReplaceValue, "").toString();
-  QString dfltOptions = settings.value(Constants::Settings_SearchOptions, "").toString();
+  QScopedPointer<QSettings> pSettings(getQSettings());
+  QString dfltFind = pSettings->value(Constants::Settings_SearchFindValue, "").toString();
+  QString dfltReplace = pSettings->value(Constants::Settings_SearchReplaceValue, "").toString();
+  QString dfltOptions = pSettings->value(Constants::Settings_SearchOptions, "").toString();
   SearchOptions options;
 
   if (!dfltOptions.isEmpty()) {
@@ -676,9 +677,9 @@ void GenericDataCollectionTableDialog::searchDialog()
   if (rc == QDialog::Accepted)
   {
     options = dlg->getOptions();
-    settings.setValue(Constants::Settings_SearchFindValue, options.getFindValue());
-    settings.setValue(Constants::Settings_SearchReplaceValue, options.getReplaceValue());
-    settings.setValue(Constants::Settings_SearchOptions, options.serializeSettings());
+    pSettings->setValue(Constants::Settings_SearchFindValue, options.getFindValue());
+    pSettings->setValue(Constants::Settings_SearchReplaceValue, options.getReplaceValue());
+    pSettings->setValue(Constants::Settings_SearchOptions, options.serializeSettings());
 
     QModelIndexList list = m_proxyModel->search(m_tableView->currentIndex(), options);
 

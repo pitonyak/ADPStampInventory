@@ -1,5 +1,8 @@
 #include "csvreaderdialog.h"
 #include "constants.h"
+#include "csvreader.h"
+#include "csvline.h"
+#include "globals.h"
 
 #include <QGroupBox>
 #include <QVBoxLayout>
@@ -20,8 +23,7 @@
 #include <QTableWidget>
 #include <QSettings>
 #include <QDebug>
-#include "csvreader.h"
-#include "csvline.h"
+#include <QScopedPointer>
 
 CSVReaderDialog::CSVReaderDialog(CSVReader* reader, QWidget *parent) :
   QDialog(parent),
@@ -41,14 +43,14 @@ CSVReaderDialog::CSVReaderDialog(CSVReader* reader, QWidget *parent) :
   m_reader(reader)
 {
   buildDialog();
-  QSettings settings;
-  restoreGeometry(settings.value(Constants::Settings_CSVDialogGeometry).toByteArray());
+  QScopedPointer<QSettings> pSettings(getQSettings());
+  restoreGeometry(pSettings->value(Constants::Settings_CSVDialogGeometry).toByteArray());
 }
 
 CSVReaderDialog::~CSVReaderDialog()
 {
-  QSettings settings;
-  settings.setValue(Constants::Settings_CSVDialogGeometry, saveGeometry());
+  QScopedPointer<QSettings> pSettings(getQSettings());
+  pSettings->setValue(Constants::Settings_CSVDialogGeometry, saveGeometry());
   if (m_separatedMap != nullptr)
   {
     delete m_separatedMap;

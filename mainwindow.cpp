@@ -10,6 +10,7 @@
 #include "genericdatacollectiontabledialog.h"
 #include "describesqltables.h"
 #include "genericdatacollections.h"
+#include "globals.h"
 
 #include <QDebug>
 #include <QMessageBox>
@@ -21,6 +22,7 @@
 #include <QSettings>
 #include <QXmlStreamWriter>
 #include <QInputDialog>
+#include <QScopedPointer>
 
 #include <QSqlQuery>
 
@@ -33,14 +35,15 @@ MainWindow::MainWindow(QWidget *parent) :
   ui->setupUi(this);
   setupMenuBar();
   setWindowTitle(tr("Stamp Inventory"));
-  QSettings settings;
-  restoreGeometry(settings.value(Constants::Settings_MainWindowGeometry).toByteArray());
+  QScopedPointer<QSettings> pSettings(getQSettings());
+  restoreGeometry(pSettings->value(Constants::Settings_MainWindowGeometry).toByteArray());
 }
 
 MainWindow::~MainWindow()
 {
-  QSettings settings;
-  settings.setValue(Constants::Settings_MainWindowGeometry, saveGeometry());
+  QScopedPointer<QSettings> pSettings(getQSettings());
+  pSettings->setValue(Constants::Settings_MainWindowGeometry, saveGeometry());
+  qDebug() << "file name for settings: " << pSettings->fileName();
   delete ui;
 }
 
@@ -124,19 +127,19 @@ void MainWindow::createDB()
 bool MainWindow::createDBWorker()
 {
   if (m_db == nullptr) {
-    QSettings settings;
-    QString dbName = settings.value(Constants::Settings_DBName, "").toString();
+    QScopedPointer<QSettings> pSettings(getQSettings());
+    QString dbName = pSettings->value(Constants::Settings_DBName, "").toString();
     if (dbName.isEmpty()) {
       dbName = "stamps.db.sqlite";
-      settings.setValue(Constants::Settings_DBName, dbName);
+      pSettings->setValue(Constants::Settings_DBName, dbName);
     }
-    QString path = settings.value(Constants::Settings_DBPath, "").toString();
+    QString path = pSettings->value(Constants::Settings_DBPath, "").toString();
     if (path.isEmpty()) {
       path = QFileDialog::getExistingDirectory(nullptr, "Select DB Path", path);
       if (path.isEmpty()) {
         return false;
       }
-      settings.setValue(Constants::Settings_DBPath, path);
+      pSettings->setValue(Constants::Settings_DBPath, path);
     } else {
 
     }
@@ -156,15 +159,15 @@ bool MainWindow::createDBWorker()
 
     // There was an error, so give the user the chance to select the location.
     if (pressed_btn == QMessageBox::Yes) {
-      QSettings settings;
-      QString path = settings.value(Constants::Settings_DBPath, "").toString();
+      QScopedPointer<QSettings> pSettings(getQSettings());
+      QString path = pSettings->value(Constants::Settings_DBPath, "").toString();
       if (!path.isEmpty()) {
-        settings.setValue(Constants::Settings_DBPath, "");
+        pSettings->setValue(Constants::Settings_DBPath, "");
       }
       bool rc = createDBWorker();
       if (!rc) {
         // Failure, so simply restore the initial value.
-        settings.setValue(Constants::Settings_DBPath, path);
+        pSettings->setValue(Constants::Settings_DBPath, path);
       }
       return rc;
     }
@@ -196,8 +199,8 @@ void MainWindow::getSchema() {
 void MainWindow::readCSV()
 {
   QString defaultExtension = tr("CSV files (*.csv)");
-  QSettings settings;
-  QString lastReadDir = settings.value(Constants::Settings_LastCSVDirOpen).toString();
+  QScopedPointer<QSettings> pSettings(getQSettings());
+  QString lastReadDir = pSettings->value(Constants::Settings_LastCSVDirOpen).toString();
   QString fileReadPath = QFileDialog::getOpenFileName(nullptr, "Import CSV", lastReadDir, tr("Text files (*.txt);;CSV files (*.csv);;All files (*.*)"), &defaultExtension);
   if (fileReadPath.isEmpty()) {
     // Nothing to do
@@ -220,7 +223,7 @@ void MainWindow::readCSV()
   if (lastReadDir.compare(fileInfo.absolutePath()) != 0)
   {
     qDebug() << tr("Setting Path:(") << fileInfo.absolutePath() << ")";
-    settings.setValue(Constants::Settings_LastCSVDirOpen, fileInfo.absolutePath());
+    pSettings->setValue(Constants::Settings_LastCSVDirOpen, fileInfo.absolutePath());
   }
   CSVReader reader(TypeMapper::PreferSigned | TypeMapper::PreferInt);
   if (!reader.setStreamFromPath(fileReadPath))
@@ -294,10 +297,10 @@ void MainWindow::exportCSV()
         return;
     }
 
-    QSettings settings;
-    QString lastWritePath = settings.value(Constants::Settings_LastCSVDirWrite).toString();
+    QScopedPointer<QSettings> pSettings(getQSettings());
+    QString lastWritePath = pSettings->value(Constants::Settings_LastCSVDirWrite).toString();
     if (lastWritePath.isEmpty()) {
-        lastWritePath = settings.value(Constants::Settings_LastCSVDirOpen).toString();
+        lastWritePath = pSettings->value(Constants::Settings_LastCSVDirOpen).toString();
     }
 
     QString fileWritePath = QFileDialog::getExistingDirectory(nullptr, tr("Export To CSV"), lastWritePath);
@@ -324,7 +327,7 @@ void MainWindow::exportCSV()
             return;
         }
     }
-    settings.setValue(Constants::Settings_LastCSVDirWrite, writeDir.canonicalPath());
+    pSettings->setValue(Constants::Settings_LastCSVDirWrite, writeDir.canonicalPath());
 
     m_db->exportToCSV(writeDir.canonicalPath(), false);
 }
@@ -543,10 +546,10 @@ void MainWindow::editTable()
       //QString s = schema.getDDL(true).join("\n\n");
       //ScrollMessageBox::information(this, "Schema", s);
 
-      QSettings settings;
+      QScopedPointer<QSettings> pSettings(getQSettings());
       int focusedNameIndex = 0;
       if (tableNames.size() > 0) {
-        QString startName = settings.value(Constants::Settings_GenericDataCollectionLastEditedTable, tableNames.at(0)).toString();
+        QString startName = pSettings->value(Constants::Settings_GenericDataCollectionLastEditedTable, tableNames.at(0)).toString();
         focusedNameIndex = tableNames.indexOf(startName);
         if (focusedNameIndex < 0) {
           focusedNameIndex = 0;
@@ -558,7 +561,7 @@ void MainWindow::editTable()
       //int maxID = m_db->getMaxId(tableName);
       //ScrollMessageBox::information(this, "Max ID", QString("Max ID is %1").arg(maxID));
       if (ok && !tableName.isEmpty()) {
-        settings.setValue(Constants::Settings_GenericDataCollectionLastEditedTable, tableName);
+        pSettings->setValue(Constants::Settings_GenericDataCollectionLastEditedTable, tableName);
         //GenericDataCollection* data = m_db->readTableName(tableName);
         //GenericDataCollection* data = m_db->readTableBySchema(tableName);
         GenericDataCollections* data = m_db->readTableWithLinks(tableName);

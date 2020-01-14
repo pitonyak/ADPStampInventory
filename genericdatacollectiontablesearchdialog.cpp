@@ -2,6 +2,7 @@
 #include "genericdatacollectiontabledialog.h"
 #include "genericdatacollectionstablemodel.h"
 #include "constants.h"
+#include "globals.h"
 
 #include <QLineEdit>
 #include <QPushButton>
@@ -16,6 +17,7 @@
 #include <QRadioButton>
 #include <QGroupBox>
 #include <QSettings>
+#include <QScopedPointer>
 
 GenericDataCollectionTableSearchDialog::GenericDataCollectionTableSearchDialog(GenericDataCollectionTableDialog *tableDialog, QWidget *parent) :
     QDialog(parent), m_tableDialog(tableDialog),
@@ -388,21 +390,21 @@ void GenericDataCollectionTableSearchDialog::replaceAll()
 
 void GenericDataCollectionTableSearchDialog::saveSettings() const
 {
-  QSettings settings;
+  QScopedPointer<QSettings> pSettings(getQSettings());
   SearchOptions options = getOptions();
-  settings.setValue(Constants::Settings_SearchFindValue, options.getFindValue());
-  settings.setValue(Constants::Settings_SearchReplaceValue, options.getReplaceValue());
-  settings.setValue(Constants::Settings_SearchOptions, options.serializeSettings());
+  pSettings->setValue(Constants::Settings_SearchFindValue, options.getFindValue());
+  pSettings->setValue(Constants::Settings_SearchReplaceValue, options.getReplaceValue());
+  pSettings->setValue(Constants::Settings_SearchOptions, options.serializeSettings());
 }
 
 void GenericDataCollectionTableSearchDialog::restoreSettings()
 {
-  QSettings settings;
+  QScopedPointer<QSettings> pSettings(getQSettings());
   SearchOptions options;
-  options.setFindValue(settings.value(Constants::Settings_SearchFindValue, "").toString());
-  options.setReplaceValue(settings.value(Constants::Settings_SearchReplaceValue, "").toString());
+  options.setFindValue(pSettings->value(Constants::Settings_SearchFindValue, "").toString());
+  options.setReplaceValue(pSettings->value(Constants::Settings_SearchReplaceValue, "").toString());
 
-  QString dfltOptions = settings.value(Constants::Settings_SearchOptions, "").toString();
+  QString dfltOptions = pSettings->value(Constants::Settings_SearchOptions, "").toString();
   if (!dfltOptions.isEmpty()) {
     options.deserializeSettings(dfltOptions);
   }

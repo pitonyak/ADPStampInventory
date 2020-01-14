@@ -3,6 +3,7 @@
 #include "linkbackfilterdelegate.h"
 #include "checkboxonlydelegate.h"
 #include "logroutinginfodialog.h"
+#include "globals.h"
 
 #include <QSettings>
 #include <QVBoxLayout>
@@ -17,6 +18,7 @@
 #include <QXmlStreamWriter>
 #include <QXmlStreamReader>
 #include <QMessageBox>
+#include <QScopedPointer>
 
 LogConfigDialog::LogConfigDialog(QWidget *parent) :
   QDialog(parent), m_configFilePath(nullptr), m_logFilePath(nullptr), m_routingTableView(nullptr)
@@ -26,9 +28,9 @@ LogConfigDialog::LogConfigDialog(QWidget *parent) :
 
 LogConfigDialog::~LogConfigDialog()
 {
-  QSettings settings;
-  settings.setValue("LogConfigDialogGeometry", saveGeometry());
-  settings.setValue("LogConfigDialogLastConfigPath", getConfigFilePath());
+  QScopedPointer<QSettings> pSettings(getQSettings());
+  pSettings->setValue("LogConfigDialogGeometry", saveGeometry());
+  pSettings->setValue("LogConfigDialogLastConfigPath", getConfigFilePath());
   if (m_tableModel != nullptr && m_routingTableView != nullptr)
   {
     QString s;
@@ -43,7 +45,7 @@ LogConfigDialog::~LogConfigDialog()
         s = QString("%1").arg(m_routingTableView->columnWidth(i));
       }
     }
-    settings.setValue("LogConfigDialogRoutingColumnWidths", s);
+    pSettings->setValue("LogConfigDialogRoutingColumnWidths", s);
   }
 }
 
@@ -129,10 +131,10 @@ void LogConfigDialog::buildDialog()
 
   setLayout(fLayout);
 
-  QSettings settings;
-  restoreGeometry(settings.value("LogConfigDialogGeometry").toByteArray());
-  setConfigFilePath(settings.value("LogConfigDialogLastConfigPath").toString());
-  QString s = settings.value("LogConfigDialogRoutingColumnWidths").toString();
+  QScopedPointer<QSettings> pSettings(getQSettings());
+  restoreGeometry(pSettings->value("LogConfigDialogGeometry").toByteArray());
+  setConfigFilePath(pSettings->value("LogConfigDialogLastConfigPath").toString());
+  QString s = pSettings->value("LogConfigDialogRoutingColumnWidths").toString();
   if (s.length() > 0)
   {
     QStringList list = s.split(',');

@@ -2,6 +2,7 @@
 #include "constants.h"
 #include "linkbackfilterdelegate.h"
 #include "checkboxonlydelegate.h"
+#include "globals.h"
 
 #include <QSettings>
 #include <QTableView>
@@ -16,6 +17,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QDialogButtonBox>
+#include <QScopedPointer>
 
 TableSortFieldDialog::TableSortFieldDialog(const GenericDataCollection *dataCollection, QWidget *parent) :
   QDialog(parent), m_upButton(nullptr), m_downButton(nullptr), m_addButton(nullptr), m_deleteButton(nullptr),
@@ -26,9 +28,9 @@ TableSortFieldDialog::TableSortFieldDialog(const GenericDataCollection *dataColl
 
 TableSortFieldDialog::~TableSortFieldDialog()
 {
-  QSettings settings;
-  settings.setValue(Constants::Settings_SortFieldDlgGeometry, saveGeometry());
-  settings.setValue(Constants::SortFieldConfigDialogLastConfigPath, getConfigFilePath());
+  QScopedPointer<QSettings> pSettings(getQSettings());
+  pSettings->setValue(Constants::Settings_SortFieldDlgGeometry, saveGeometry());
+  pSettings->setValue(Constants::SortFieldConfigDialogLastConfigPath, getConfigFilePath());
 
     if (m_tableView != nullptr)
     {
@@ -44,7 +46,7 @@ TableSortFieldDialog::~TableSortFieldDialog()
           s = QString("%1").arg(m_tableView->columnWidth(i));
         }
       }
-      settings.setValue(Constants::SortFieldConfigDialogRoutingColumnWidths, s);
+      pSettings->setValue(Constants::SortFieldConfigDialogRoutingColumnWidths, s);
     }
 }
 
@@ -280,10 +282,10 @@ void TableSortFieldDialog::buildDialog()
 
   setLayout(fLayout);
 
-  QSettings settings;
-  restoreGeometry(settings.value(Constants::Settings_SortFieldDlgGeometry).toByteArray());
-  setConfigFilePath(settings.value(Constants::SortFieldConfigDialogLastConfigPath).toString());
-  QString s = settings.value(Constants::SortFieldConfigDialogRoutingColumnWidths).toString();
+  QScopedPointer<QSettings> pSettings(getQSettings());
+  restoreGeometry(pSettings->value(Constants::Settings_SortFieldDlgGeometry).toByteArray());
+  setConfigFilePath(pSettings->value(Constants::SortFieldConfigDialogLastConfigPath).toString());
+  QString s = pSettings->value(Constants::SortFieldConfigDialogRoutingColumnWidths).toString();
   if (s.length() > 0)
   {
     QStringList list = s.split(',');

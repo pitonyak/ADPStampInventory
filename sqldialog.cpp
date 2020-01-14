@@ -2,6 +2,7 @@
 #include "constants.h"
 #include "stampdb.h"
 #include "scrollmessagebox.h"
+#include "globals.h"
 
 #include <QDialogButtonBox>
 #include <QPushButton>
@@ -14,16 +15,19 @@
 #include <QTextBlock>
 #include <QSqlQuery>
 #include <QSqlRecord>
+#include <QScopedPointer>
 
 SQLDialog::SQLDialog(StampDB &db, QWidget *parent) :
   QDialog(parent), m_db(db), m_textEdit(nullptr), m_tableWidget(nullptr), m_statusBar(nullptr)
 {
-  QSettings settings;
+
+  QScopedPointer<QSettings> pSettings(getQSettings());
+
   QVBoxLayout *vBox = new QVBoxLayout();
   QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Close, Qt::Horizontal);
 
   // Sadly, new lines are removed when the string is restored.... very sad!
-  QStringList sqlList = settings.value(Constants::Settings_LastSQLDialogString, "").toString().split("\n");
+  QStringList sqlList = pSettings->value(Constants::Settings_LastSQLDialogString, "").toString().split("\n");
   m_textEdit = new QPlainTextEdit();
 
   for (int i=0; i<sqlList.size(); ++i)
@@ -55,18 +59,17 @@ SQLDialog::SQLDialog(StampDB &db, QWidget *parent) :
   vBox->addWidget(m_statusBar);
 
   setLayout(vBox);
-  restoreGeometry(settings.value(Constants::Settings_SQLDialogGeometry).toByteArray());
+  restoreGeometry(pSettings->value(Constants::Settings_SQLDialogGeometry).toByteArray());
 
   m_statusBar->showMessage(tr("Ready!"));
-
 }
 
 
 SQLDialog::~SQLDialog()
 {
-  QSettings settings;
-  settings.setValue(Constants::Settings_SQLDialogGeometry, saveGeometry());
-  settings.setValue(Constants::Settings_LastSQLDialogString, getSqlText());
+  QScopedPointer<QSettings> pSettings(getQSettings());
+  pSettings->setValue(Constants::Settings_SQLDialogGeometry, saveGeometry());
+  pSettings->setValue(Constants::Settings_LastSQLDialogString, getSqlText());
 }
 
 
