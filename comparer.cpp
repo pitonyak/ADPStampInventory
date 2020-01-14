@@ -201,7 +201,7 @@ int Comparer::compare(const QVariant& x1, const QVariant& x2, Qt::CaseSensitivit
     }
   }
 
-  qDebug() << qPrintable(QString(tr("Unexpected type2 in Comparer::compare: (%1)(%2)")).arg(x1.typeName()).arg(x2.typeName()));
+  qDebug() << qPrintable(QString(tr("Unexpected type in Comparer::compare: (%1)(%2)")).arg(x1.typeName()).arg(x2.typeName()));
   return compare(x1.toString(), x2.toString(), cs);
 }
 

@@ -9,10 +9,14 @@
 //**************************************************************************
 /*! \class Comparer
  * \brief Filter to decide if a value matches some criteria.
+ * This object is used to compare two values. These values are either both of type QString or QVariant.
+ * Two values are passed into this object, which then decides how these compare.
+ * Flags and configuration does not control the comparisons, that is left to the object deciding what to do with the results;
+ * for example, this class never checks to see if a value is multi-valued or if the result should be inverted, the class that calls this one does that.
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2011-2014
+ * \date 2011-2020
  ***************************************************************************/
 class Comparer : public QObject
 {
@@ -40,7 +44,7 @@ public:
   enum FilterFlags {None=0, InvertResult=1, MultiValued=2, MatchMeansReject=4};
 
   explicit Comparer(QObject *parent = 0);
-  
+
   static bool isEqual(const QString& x1, const QString& x2, Qt::CaseSensitivity cs = Qt::CaseInsensitive);
   static bool isEqual(const QVariant& x1, const QVariant& x2, Qt::CaseSensitivity cs = Qt::CaseInsensitive);
 
@@ -90,12 +94,11 @@ public:
   void setMatchMeansReject(const bool b=true);
 
 signals:
-  
+
 public slots:
 
 private:
   FilterFlags m_flags;
-  QString m_fieldName;
   static TypeMapper mapper;
 };
 

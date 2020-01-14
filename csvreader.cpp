@@ -258,8 +258,7 @@ bool CSVReader::readNLines(int n, bool clearBeforeReading)
         {
             noError = readNextRecord(false);
         }
-        QString s = QString("Number of lines is %1").arg(m_lines.size());
-        qDebug(qPrintable(s));
+        qDebug() << "Number of lines is " << m_lines.size();
     }
     return noError;
 }

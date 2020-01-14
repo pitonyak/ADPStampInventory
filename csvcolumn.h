@@ -6,9 +6,14 @@
 #include "typemapper.h"
 
 //**************************************************************************
-//! Represent a single column in a single row.
-/*!
+/*! \class CSVColumn
+ * \brief Represent a single column in a single row.
+ * This class stores the value as a string and remembers if it is "qualified" (was surrounded by quotes).
+ * This object is also able to "guess" the type of this particular cell.
  *
+ * \author Andrew Pitonyak
+ * \copyright Andrew Pitonyak, but you may use without restriction.
+ * \date 2011-2020
  **************************************************************************/
 
 class CSVColumn : public QObject
@@ -106,7 +111,10 @@ public:
     const CSVColumn& operator=(const CSVColumn& x);
     const CSVColumn& copyFrom(const CSVColumn& x);
 
-    // TODO: Support more types for set value.
+    // Support more types for set value; this used to be marked as a "to do task".
+    // The only reason to support setting by more types is so that code can
+    // set a value as say a float without converting it to a string. It might also be possible
+    // to then keep type information for that object. Until I have need, however, do not bother.
 
     QString toString(bool brief=true) const;
     QVariant toVariant() const;

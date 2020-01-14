@@ -23,6 +23,7 @@ public:
   };
 
   ActionTrackerObjectBase();
+  ActionTrackerObjectBase(const TrackerAction action);
   ActionTrackerObjectBase(const ActionTrackerObjectBase& obj);
   virtual ~ActionTrackerObjectBase();
 

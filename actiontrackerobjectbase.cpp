@@ -8,6 +8,11 @@ ActionTrackerObjectBase::~ActionTrackerObjectBase()
 {
 }
 
+ActionTrackerObjectBase::ActionTrackerObjectBase(const TrackerAction action)
+{
+    m_action = action;
+}
+
 ActionTrackerObjectBase::ActionTrackerObjectBase(const ActionTrackerObjectBase& obj)
 {
   setAction(obj.getAction());

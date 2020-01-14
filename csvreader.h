@@ -41,9 +41,6 @@ public:
 
   bool setStreamFromPath(const QString& fullPath);
 
-  //TODO: Deal with devices and associate them to the stream.
-
-
   //**************************************************************************
   //! Begin Parsing CSV contained in a string assuming that everything is in this string.
   /*!

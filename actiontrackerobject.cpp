@@ -10,7 +10,9 @@ template <class T>
 ActionTrackerObject<T>::ActionTrackerObject(const ActionTrackerObjectBase::TrackerAction action, T* obj) :
   ActionTrackerObjectBase(action), m_object(obj)
 {
-  setObject(obj.getObject());
+  if (obj != nullptr) {
+    setObject(obj->getObject());
+  }
 }
 
 template <class T>

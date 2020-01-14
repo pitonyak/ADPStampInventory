@@ -9,6 +9,9 @@
 /*! \class CSVLine
  * \brief Represent a single row from a CSV file. Contains the original line as well as the parsed columns.
  *
+ * \author Andrew Pitonyak
+ * \copyright Andrew Pitonyak, but you may use without restriction.
+ * \date 2011-2020
  **************************************************************************/
 
 class CSVLine : public QObject

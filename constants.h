@@ -5,11 +5,11 @@
 
 //**************************************************************************
 /*! \class Constants
- *  \brief Encapulate constants in a typesafe way.
+ *  \brief Encapulate constants in a typesafe way. These values are used in the application configuration file, for example.
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2011-2013
+ * \date 2011-2020
  *
  **************************************************************************/
 
