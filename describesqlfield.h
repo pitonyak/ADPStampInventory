@@ -54,8 +54,8 @@ public:
   /*! \brief If this field is a foreign key to another table, this returns the key field name in the linked table. */
   QString getLinkFieldName() const { return m_linkField; }
 
+  /*! \brief Comma delimted list of field names for link display fields and also for concatenated fields. */
   QStringList getLinkDisplayField() const;
-
 
   /*! \brief If this is currency, return an appropriate currency symbol, such as "$". */
   QString getCurrencySymbol() const { return m_currencySymbol; }

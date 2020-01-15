@@ -128,8 +128,39 @@ public:
   // Write tracked changes to the backing DB.
   bool saveTrackedChanges(const QString& tableName, GenericDataCollection& data, QSqlDatabase& db, const DescribeSqlTables& schema);
 
-  QString getLinkValues(const QString& tableName, const int id, QStringList fields) const;
+  //**************************************************************************
+  /*! \brief Builds the display value such as "USA/123/Postal"
+   *
+   *  If a value comes from another link field, then that value is used as another link.
+   *
+   *  \param [in] tableName Name of the table from which to pull linked values.
+   *  \param [in] id Key used to find the row from which values are pulled.
+   *  \param [in] fields Field names from which to pull linked values.
+   *  \return Display value such as "USA/123/Postal"
+   ***************************************************************************/
+  QString getLinkValues(const QString& tableName, const int id, const QStringList& fields) const;
 
+  //**************************************************************************
+  /*! \brief Builds the display value such as "USA/123/Postal"
+   *
+   *   These values are always pulled from the same row as the value; or they should be.
+   *   Link fields are NOT pulled as links, the actual value is used.
+   *
+   *  \param [in] object Row from which to pull linked values.
+   *  \param [in] fields Field names from which to pull linked values.
+   *  \return Display value such as "USA/123/Postal"
+   ***************************************************************************/
+  QString getConcatenatedValues(const GenericDataObject* object, const QStringList& fields) const;
+
+  //**************************************************************************
+  /*! \brief This does a lot of fancy things to pull cached values.
+   *
+   *  This confuses me a bit, not sure why we need it, but we use it so...
+   *
+   *  \param [in] tableName Name of the table from which to pull linked values.
+   *  \param [in] fields Field names from which to pull linked values.
+   *  \return Returns a list with the single edit value.
+   ***************************************************************************/
   QStringList getLinkEditValues(const QString& tableName, QStringList fields) const;
 
   QString incrementScottNumber(const QString& scott) const;

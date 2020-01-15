@@ -71,7 +71,7 @@ bool DescribeSqlTables::addTable(const DescribeSqlTable& table)
 {
   QString simpleName = table.getName().toLower();
   if (m_tables.contains(simpleName)) {
-    qDebug(qPrintable(QString("Table name = '%1' is already contained in table set %2").arg(simpleName).arg(getName())));
+    qDebug() << "Table name = '" << simpleName << "' is already contained in table set " << getName();
     return false;
   } else {
     m_names.append(simpleName);

@@ -287,20 +287,20 @@ QString DescribeSqlTable::getDDL(const bool prettyPrint) const
   QString ddl;
   ddl = ddl.append("CREATE TABLE %1 ( ").arg(m_name);
 
-  int numFieldsAdded = 0;
+  bool aFieldAdded = false;
   for (int i=0; i<m_names.size(); ++i) {
     const DescribeSqlField& field = m_fields.value(m_names.at(i));
 
     // Ignore a field that is not really in the DB.
     if (!field.isConcatenatedFields()) {
-      if (numFieldsAdded > 0) {
+      if (aFieldAdded) {
         ddl = ddl.append(",");
       }
       if (prettyPrint) {
         ddl = ddl.append("\n  ");
       }
       ddl = ddl.append(" %1").arg(field.getDDL());
-      ++numFieldsAdded;
+      aFieldAdded = true;
     }
   }
 
