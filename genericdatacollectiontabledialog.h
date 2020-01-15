@@ -18,10 +18,30 @@ class GenericDataCollectionsTableProxy;
 class GenericDataCollectionTableSearchDialog;
 class SearchOptions;
 
+//**************************************************************************
+/*! \class GenericDataCollectionTableDialog
+ * \brief Generic dialog for editing a single table.
+ *
+ *
+ * \author Andrew Pitonyak
+ * \copyright Andrew Pitonyak, but you may use without restriction.
+ * \date 2012-2019
+ **************************************************************************/
+
 class GenericDataCollectionTableDialog : public QDialog
 {
   Q_OBJECT
 public:
+  /*! \brief Constructor
+   *
+   *  \param [in] tableName Name of the table that will be edited.
+   *  \param [in, out] data This is essentially the table that will be edited.
+   *  \param [in, out] db Encapsulates data acccess.
+   *  \param [in, out] schema For a set of tables.
+   *  \param [in, out] tables Data for all of the related tables.
+   *  \param [in, out] defaultSourceId Used only if it is relevant because the bookvalue field was updated. So only used for a single table listing what a stamp is worth.
+   *  \param [in, out] parent The object's owner. The parent's destructor destroys this object.
+   */
   explicit GenericDataCollectionTableDialog(const QString& tableName, GenericDataCollection& data, StampDB& db, DescribeSqlTables& schema, GenericDataCollections *tables, int defaultSourceId = -1, QWidget *parent=nullptr);
 
   /*! \brief Destructor saves dialog geometry. */
@@ -104,7 +124,7 @@ protected:
 
 private:
 
-  void privateRowDuplicator(const bool autoIncrement, const bool setUpdated, const bool appendChar=false, const char charToAppend='a');
+  void privateRowDuplicator(const bool autoIncrement, const bool appendChar=false, const char charToAppend='a');
 
   /*! \brief Copy cell from the same column to the current row.
    *
@@ -175,8 +195,10 @@ private:
   /*! \brief We need this here so that we can persist the DB. */
   StampDB& m_db;
 
+  /*! \brief Describes all the tables. */
   DescribeSqlTables& m_schema;
 
+  /*! \brief Used only if it is relevant because the bookvalue field was updated. So only used for a single table listing what a stamp is worth. */
   int m_defaultSourceId = -1;
 };
 

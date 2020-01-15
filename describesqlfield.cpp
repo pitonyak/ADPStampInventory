@@ -12,6 +12,7 @@ DescribeSqlField::DescribeSqlField()
   m_isAutoIncrement = false;
   m_isKey = false;
   m_isRequired = false;
+  m_isConcatenatedFields = false;
 }
 
 DescribeSqlField::DescribeSqlField(const DescribeSqlField& field)
@@ -36,6 +37,7 @@ const DescribeSqlField& DescribeSqlField::copy(const DescribeSqlField& field)
     setFieldPrecision(field.getFieldPrecision());
     setCurrencySymbol(field.getCurrencySymbol());
     setLinkDisplayField(field.m_linkDisplayField);
+    setIsConcatenatedFields(field.isConcatenatedFields());
   }
   return *this;
 }
@@ -83,6 +85,9 @@ DescribeSqlField DescribeSqlField::readXml(QXmlStreamReader& reader)
                 }
                 if (reader.attributes().hasAttribute("required")) {
                     field.setIsRequired(XMLUtility::stringToBoolean(reader.attributes().value("required").toString()));
+                }
+                if (reader.attributes().hasAttribute("concatfields")) {
+                    field.setIsConcatenatedFields(XMLUtility::stringToBoolean(reader.attributes().value("concatfields").toString()));
                 }
                 if (reader.attributes().hasAttribute("key")) {
                     field.setIsKey(XMLUtility::stringToBoolean(reader.attributes().value("key").toString()));
@@ -150,6 +155,8 @@ QXmlStreamWriter& DescribeSqlField::writeXml(QXmlStreamWriter& writer) const
     writer.writeAttribute("autoincrement", "true");
   if (isRequired())
     writer.writeAttribute("required", "true");
+  if (isConcatenatedFields())
+    writer.writeAttribute("concatfields", "true");
   if (isKey())
     writer.writeAttribute("key", "true");
   if (getFieldLength() > 0)
@@ -173,6 +180,9 @@ QXmlStreamWriter& DescribeSqlField::writeXml(QXmlStreamWriter& writer) const
 
 QString DescribeSqlField::getDDL() const
 {
+  if (isConcatenatedFields())
+    return "";
+
   QString ddl = QString("%1 %2").arg(m_name).arg(getFieldType().getFirstSupportedName());
 
   if (getFieldType().supportsLength() && getFieldLength() > 0) {
@@ -188,20 +198,15 @@ QString DescribeSqlField::getDDL() const
     ddl = ddl.append(" AUTOINCREMENT");
   }
 
-  // ddl = ddl.append(QString(" [%1, %2, %3]").arg(getViewName()).arg(getFieldLength()).arg(getDescription()));
-
   return ddl;
 }
-
 
 QStringList DescribeSqlField::getLinkDisplayField() const
 {
   if (!m_linkDisplayField.contains(',')) {
     QStringList l;
     l << m_linkDisplayField;
-    //qDebug(qPrintable(QString("adding [%1] to the list").arg(m_linkDisplayField)));
     return l;
   }
-  //qDebug(qPrintable(QString("Spliting [%1]").arg(m_linkDisplayField)));
   return m_linkDisplayField.split(',');
 }

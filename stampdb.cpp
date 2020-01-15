@@ -321,7 +321,13 @@ QString StampDB::getSchema(const QSqlField& field) const
     s += "TIMESTAMP";
     break;
   default:
-    s += QVariant::typeToName(field.type());
+    // This code is crazy, but, it prevent a compile time warning while converting the unsigned QVariant::Type to an int to get the typename.
+    unsigned u = field.type();
+    if (u > std::numeric_limits<int>::max()) {
+      throw std::overflow_error("QVariant::Type cannot be stored in a variable of type int.");
+    } else {
+      s += QVariant::typeToName(static_cast<int>(u));
+    }
   }
 
   if (field.isAutoValue()) {
@@ -451,6 +457,7 @@ GenericDataCollection *StampDB::readTableName(const QString& tableName, const bo
 
 GenericDataCollections* StampDB::readTableWithLinks(const QString& tableName, const int maxLinkDepth, const bool sortByKey)
 {
+    // This is a collection of tables.
     GenericDataCollections* tables = new GenericDataCollections();
     QHash<QString, int> tableDepth;
     QSet<QString> tablesToRead;
@@ -462,8 +469,11 @@ GenericDataCollections* StampDB::readTableWithLinks(const QString& tableName, co
         QString tableNameToReadNow = *tablesToRead.begin();
         if (!tables->contains(tableNameToReadNow) && (maxLinkDepth < 0 || tableDepth[tableNameToReadNow.toLower()] <= maxLinkDepth)) {
             int currentLevel = tableDepth[tableNameToReadNow.toLower()];
+
+            // This is a single table. Read it and set the types based on the schema.
             GenericDataCollection* table = readTableBySchema(tableNameToReadNow, sortByKey);
             if (table != nullptr) {
+                // so that when tables is deleted, table is also deleted.
                 table->setParent(tables);
                 tables->addCollection(tableNameToReadNow, table);
                 if (((maxLinkDepth < 0) || (currentLevel + 1 <= maxLinkDepth)) && m_schema.containsTable(tableNameToReadNow)) {

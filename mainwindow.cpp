@@ -564,6 +564,8 @@ void MainWindow::editTable()
         pSettings->setValue(Constants::Settings_GenericDataCollectionLastEditedTable, tableName);
         //GenericDataCollection* data = m_db->readTableName(tableName);
         //GenericDataCollection* data = m_db->readTableBySchema(tableName);
+
+        // This reads the table along with all linked / related tables.
         GenericDataCollections* data = m_db->readTableWithLinks(tableName);
         Q_ASSERT_X(data != nullptr, "MainWindow::editTable", "Returned data is null");
 
@@ -576,7 +578,6 @@ void MainWindow::editTable()
           if (tableName.compare("bookvalues", Qt::CaseInsensitive) == 0) {
             defaultSourceId = m_db->selectValueSourceId(this);
           }
-          //GenericDataCollectionTableDialog dlg(tableName, *data, *m_db, schema);
           GenericDataCollectionTableDialog dlg(tableName, *data->getTable(tableName), *m_db, schema, data, defaultSourceId);
           dlg.exec();
           delete data;

@@ -16,7 +16,7 @@ class QXmlStreamReader;
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date September 2014
+ * \date September 2014-2020
  **************************************************************************/
 class DescribeSqlField
 {
@@ -73,6 +73,8 @@ public:
   /*! \brief Determines if this is a currency field by inspecting the currency symbol to see if it is empty. */
   bool isCurrency() const { return !m_currencySymbol.isEmpty(); }
 
+  bool isConcatenatedFields() const { return m_isConcatenatedFields; }
+
   int getFieldLength() const { return m_fieldLength; }
   int getFieldPrecision() const { return m_fieldPrecision; }
 
@@ -90,6 +92,7 @@ public:
   void setIsKey(const bool isK) { m_isKey = isK; }
   void setFieldLength(const int len) { m_fieldLength = len; }
   void setFieldPrecision(const int len) { m_fieldPrecision = len; }
+  void setIsConcatenatedFields(const bool ido) { m_isConcatenatedFields = ido; }
 
   const DescribeSqlField& operator=(const DescribeSqlField& field) { return copy(field); }
 
@@ -153,6 +156,9 @@ private:
 
   /*! Field precision (not that this is used right now) */
   int m_fieldPrecision;
+
+  /*! \brief True This column is ONLY for display and is NOT really in the database. The field is made up of other fields in this table. */
+  bool m_isConcatenatedFields;
 };
 
 #endif // DESCRIBESQLFIELD_H

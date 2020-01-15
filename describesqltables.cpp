@@ -218,6 +218,7 @@ DescribeSqlTables DescribeSqlTables::getStampSchema()
              "description", "Description", "VARCHAR", "Describe the stamp", "200"};
   n=sizeof(catalog) / sizeof(catalog[0]);
   DescribeSqlTable catalogTable(catalog, n, true, &typeMaster);
+  // ??? catalogTable.setFieldLink("catalogid", "catalog", "id", "countryid,scott,typeid");
   catalogTable.setFieldLink("countryid", "country", "id", "a3");
   catalogTable.setFieldLink("typeid", "catalogtype", "id", "name");
   catalogTable.setFieldCurrencySymbol("facevalue", "$");

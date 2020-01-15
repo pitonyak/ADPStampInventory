@@ -217,26 +217,26 @@ void GenericDataCollectionTableDialog::saveChanges()
 
 void GenericDataCollectionTableDialog::duplicateRow()
 {
-  // autoIncrement, setUpdated
-  privateRowDuplicator(false, true);
+  // autoIncrement
+  privateRowDuplicator(false);
 }
 
 void GenericDataCollectionTableDialog::duplicateRowAutoIncrement()
 {
-  // autoIncrement, setUpdated
-  privateRowDuplicator(true, true);
+  // autoIncrement
+  privateRowDuplicator(true);
 }
 
 void GenericDataCollectionTableDialog::duplicateRowAddLowerA()
 {
-  // autoIncrement, setUpdated, appendChar, charToAppend
-  privateRowDuplicator(false, true, true, 'a');
+  // autoIncrement, appendChar, charToAppend
+  privateRowDuplicator(false, true, 'a');
 }
 
 void GenericDataCollectionTableDialog::duplicateRowAddUpperA()
 {
-  // autoIncrement, setUpdated, appendChar, charToAppend
-  privateRowDuplicator(false, true, true, 'A');
+  // autoIncrement, appendChar, charToAppend
+  privateRowDuplicator(false, true, 'A');
 }
 
 void GenericDataCollectionTableDialog::incrementCell(const int incrementValue)
@@ -264,14 +264,14 @@ void GenericDataCollectionTableDialog::copyCell(const int rowsDown)
   enableButtons();
 }
 
-void GenericDataCollectionTableDialog::privateRowDuplicator(const bool autoIncrement, const bool setUpdated, const bool appendChar, const char charToAppend)
+void GenericDataCollectionTableDialog::privateRowDuplicator(const bool autoIncrement, const bool appendChar, const char charToAppend)
 {
   QModelIndexList proxyList = m_tableView->selectionModel()->selectedIndexes();
   QModelIndexList mappedList;
   for (int i=0; i<proxyList.size(); ++i) {
     mappedList.append(m_proxyModel->mapToSource(proxyList.at(i)));
   }
-  QList<int> addedIds = m_tableModel->duplicateRows(mappedList, autoIncrement, setUpdated, appendChar, charToAppend);
+  QList<int> addedIds = m_tableModel->duplicateRows(mappedList, autoIncrement, appendChar, charToAppend);
   if (!addedIds.isEmpty())
   {
     int row = m_tableModel->getIndexOf(addedIds.first());

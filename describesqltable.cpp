@@ -174,6 +174,16 @@ void DescribeSqlTable::setFieldRequired(const QString& name, bool x)
   }
 }
 
+void DescribeSqlTable::setFieldIsConcatenatedFields(const QString& name, bool x)
+{
+  QString simpleName = name.toLower();
+  if (m_fields.contains(simpleName)) {
+    m_fields[simpleName].setIsConcatenatedFields(x);
+  } else {
+    qDebug() << qPrintable(QString("Field name = '%1' is not found in table %2").arg(simpleName).arg(getName()));
+  }
+}
+
 void DescribeSqlTable::setFieldLink(const QString& name, const QString& linkTableName, const QString& linkFieldName, const QString& linkDisplayFields)
 {
   QString simpleName = name.toLower();
@@ -277,14 +287,21 @@ QString DescribeSqlTable::getDDL(const bool prettyPrint) const
   QString ddl;
   ddl = ddl.append("CREATE TABLE %1 ( ").arg(m_name);
 
+  int numFieldsAdded = 0;
   for (int i=0; i<m_names.size(); ++i) {
-    if (i > 0) {
-      ddl = ddl.append(",");
+    const DescribeSqlField& field = m_fields.value(m_names.at(i));
+
+    // Ignore a field that is not really in the DB.
+    if (!field.isConcatenatedFields()) {
+      if (numFieldsAdded > 0) {
+        ddl = ddl.append(",");
+      }
+      if (prettyPrint) {
+        ddl = ddl.append("\n  ");
+      }
+      ddl = ddl.append(" %1").arg(field.getDDL());
+      ++numFieldsAdded;
     }
-    if (prettyPrint) {
-      ddl = ddl.append("\n  ");
-    }
-    ddl = ddl.append(" %1").arg(m_fields.value(m_names.at(i)).getDDL());
   }
 
   ddl = ddl.append(" )");

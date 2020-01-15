@@ -26,7 +26,7 @@ class GenericDataCollection;
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2012-2014
+ * \date 2012-2020
  **************************************************************************/
 
 class StampDB : public QObject
@@ -37,7 +37,7 @@ public:
    *
    *  \param [in, out] parent The object's owner. The parent's destructor destroys this object.
    */
-  explicit StampDB(QObject *parent = 0);
+  explicit StampDB(QObject *parent = nullptr);
 
   /*! Destructor */
   ~StampDB();
