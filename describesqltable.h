@@ -211,7 +211,7 @@ public:
    ***************************************************************************/
   void setFieldRequired(const QString& name, bool x);
 
-  void setFieldIsConcatenatedFields(const QString& name, bool x);
+  void setFieldIsConcatenatedFields(const QString& name, bool x, const QString& concatFields);
 
   //**************************************************************************
   /*! \brief

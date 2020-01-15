@@ -7,6 +7,7 @@
 
 #include <QFile>
 #include <QDir>
+#include <QDebug>
 #include <QSqlField>
 #include <QSqlQuery>
 #include <QSqlRecord>
@@ -15,6 +16,7 @@
 #include <QMessageBox>
 #include <QVariant>
 #include <QMap>
+#include <QSet>
 #include <QSqlDriver>
 #include <QTextStream>
 #include <QList>
@@ -158,7 +160,7 @@ bool StampDB::openDB()
       if (!fileInfo.absoluteDir().exists()) {
         // TODO: error handling
         qDebug("FileInfo absolute dir");
-        qDebug(qPrintable(fileInfo.absoluteDir().absolutePath()));
+        qDebug() << fileInfo.absoluteDir().absolutePath();
         return false;
       }
     }
@@ -534,6 +536,7 @@ GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, cons
   if (table == nullptr) {
       return nullptr;
   }
+  QHash<QString, QStringList> concatFields;
   QStringList fieldNames = table->getFieldNames();
 
   QString orderBy = "";
@@ -542,10 +545,14 @@ GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, cons
   {
     QString fieldName = fieldSortIterator.next();
     Q_ASSERT_X(table->containsField(fieldName), "readTableBySchema", qPrintable(QString("Table [%1] does not have a field named [%2].").arg(tableName).arg(fieldName)));
-    if (orderBy.isEmpty()) {
-        orderBy = QString("%1.%2").arg(tableName).arg(fieldName);
-    } else {
-        orderBy = orderBy.append(QString(", %1.%2").arg(tableName).arg(fieldName));
+    // Do not allow ordering by a concatinated field.
+    if (!table->isConcatenatedFields((fieldName)))
+    {
+      if (orderBy.isEmpty()) {
+          orderBy = QString("%1.%2").arg(tableName).arg(fieldName);
+      } else {
+          orderBy = orderBy.append(QString(", %1.%2").arg(tableName).arg(fieldName));
+      }
     }
   }
 
@@ -561,10 +568,17 @@ GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, cons
   for (QStringListIterator fieldIterator(fieldNames); fieldIterator.hasNext(); )
   {
       QString fieldName = fieldIterator.next();
-      if (sqlFields.isEmpty()) {
-          sqlFields = QString("%1.%2").arg(tableName).arg(fieldName);;
-      } else {
-          sqlFields = sqlFields.append(QString(", %1.%2").arg(tableName).arg(fieldName));
+      if (table->isConcatenatedFields((fieldName)))
+      {
+        concatFields[fieldName.toLower()] = table->getFieldByName(fieldName.toLower())->getLinkDisplayField();
+      }
+      else
+      {
+        if (sqlFields.isEmpty()) {
+            sqlFields = QString("%1.%2").arg(tableName).arg(fieldName);;
+        } else {
+            sqlFields = sqlFields.append(QString(", %1.%2").arg(tableName).arg(fieldName));
+        }
       }
   }
 
@@ -577,7 +591,7 @@ GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, cons
 
   if (openDB())
   {
-    qDebug(qPrintable(QString("Reading table using [%1]").arg(sql)));
+    qDebug() << "(1) Reading table using [" << sql << "]";
     QSqlDatabase& db = getDB();
     QSqlQuery query(db);
 
@@ -599,6 +613,17 @@ GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, cons
           duplicateColumns.append(query.record().fieldName(i));
         }
       }
+      // Does this add it on?
+      QHash<QString, QStringList>::const_iterator i = concatFields.constBegin();
+      while (i != concatFields.constEnd())
+      {
+        if (!collection->appendPropertyName(i.key(), m_schema.getFieldMetaType(tableName,  i.key())))
+        {
+          duplicateColumns.append(i.key());
+        }
+        ++i;
+      }
+
       if (duplicateColumns.size() > 0)
       {
         ScrollMessageBox::information(nullptr, "ERROR", QString(tr("Problem converting the following SQL\n\n%1\n\nThe following columns are duplicated:\n%2")).arg(sql).arg(duplicateColumns.join("\n")));
@@ -613,13 +638,11 @@ GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, cons
         firstKeyField = "id";
       }
 
-
       // In case a different name is used for the property name in the field.
       // I doubt if this ever happens.
       bool hasIdColumn = collection->containsProperty(firstKeyField);
       QString idString = hasIdColumn ? collection->getPropertyName(firstKeyField) : "";
       int iCount = 0;
-
       TypeMapper mapper;
       bool ok;
       while (query.isActive() && query.next())
@@ -635,10 +658,35 @@ GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, cons
             // This is particularly problematic with SQL Light that uses strings for many things.
             // If a BIT Varying type is used, and, if the string length is greater than 1, then string should be used
             // rather than a boolean value. I don't have this problem at the moment, so,ignore it for now.
-            //gdo->setValue(collection->getPropertyName(i), query.record().value(i));
+            // gdo->setValue(collection->getPropertyName(i), query.record().value(i));
+            //
+            // This should NEVER be a concatinated field (because we are looking at what came back from the query)
+            // so just ignore that problem.
             gdo->setValueNative(collection->getPropertyName(i), mapper.forceToType(query.record().value(i), table->getFieldMetaType(collection->getPropertyName(i)), &ok));
           }
         }
+        // Populate the "concatinated fields" from concatFields. Should not be needed, but, do it anyway.
+        // TODO: Test if I need to do this or not. Perhaps I do not need to do this.
+        /*** ???????? This is all wrong
+        QHash<QString, QStringList>::const_iterator i = concatFields.constBegin();
+        while (i != concatFields.constEnd()) {
+          QString s;
+          bool oneAdded = false;
+          foreach (const QString &fieldName, i.value())
+          {
+            if (oneAdded)
+            {
+              s = s.append('/');
+            }
+            s = s.append(gdo->getString(fieldName));
+          }
+          gdo->setValueNative(i.key(), s);
+          ++i;
+        }
+        // Concatenated field values set.
+
+        ***/
+
         collection->appendObject(hasIdColumn ? gdo->getInt(idString) : iCount, gdo);
         ++iCount;
       }
@@ -654,7 +702,7 @@ GenericDataCollection* StampDB::readTableSql(const QString& sql)
 {
   if (openDB())
   {
-    qDebug(qPrintable(QString("Reading table using [%1]").arg(sql)));
+    qDebug() << "Reading table using [" << sql << "]";
     QSqlDatabase& db = getDB();
     QSqlQuery query(db);
 
@@ -1014,7 +1062,7 @@ bool StampDB::loadCSV(CSVReader& reader, const QString& tableName)
       }
       else
       {
-        qDebug(qPrintable(QString("E: %1 %2").arg(iRow).arg(iCol)));
+        qDebug() << "E: " << iRow << " " << iCol;
       }
     }
     if (csvKeyValue < 0 || !keys.contains(csvKeyValue))

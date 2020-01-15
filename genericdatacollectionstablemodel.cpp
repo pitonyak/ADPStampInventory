@@ -267,7 +267,7 @@ QString GenericDataCollectionsTableModel::getConcatenatedValues(const GenericDat
         s = s.append('/');
       }
       // Get the value based on the field name.
-      s.append(object->getString(fields.at(i)));
+      s = s.append(object->getString(fields.at(i)));
     }
   }
   return s;

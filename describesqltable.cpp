@@ -174,11 +174,12 @@ void DescribeSqlTable::setFieldRequired(const QString& name, bool x)
   }
 }
 
-void DescribeSqlTable::setFieldIsConcatenatedFields(const QString& name, bool x)
+void DescribeSqlTable::setFieldIsConcatenatedFields(const QString& name, bool x, const QString &concatFields)
 {
   QString simpleName = name.toLower();
   if (m_fields.contains(simpleName)) {
     m_fields[simpleName].setIsConcatenatedFields(x);
+    m_fields[simpleName].setLinkDisplayField(concatFields);
   } else {
     qDebug() << qPrintable(QString("Field name = '%1' is not found in table %2").arg(simpleName).arg(getName()));
   }
