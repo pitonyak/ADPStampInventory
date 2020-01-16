@@ -209,7 +209,6 @@ DescribeSqlTables DescribeSqlTables::getStampSchema()
 
   QString catalog[] = {"catalog", "Catalog", "Catalog of stamp definitions.",
              "id", "Id", "INTEGER", "Table Key", "10",
-             //"sort", "Sort", "VARCHAR", "Sort", "15",
              "scott", "Scott", "VARCHAR", "Scott Number", "10",
              "countryid", "Country Id", "INTEGER", "Country or origin", "10",
              "typeid", "Type Id", "INTEGER", "Stamp type such as Air Mail", "10",
@@ -219,10 +218,7 @@ DescribeSqlTables DescribeSqlTables::getStampSchema()
              "description", "Description", "VARCHAR", "Describe the stamp", "200"};
   n=sizeof(catalog) / sizeof(catalog[0]);
   DescribeSqlTable catalogTable(catalog, n, true, &typeMaster);
-  // TODO: ??? This is one way to try and do this.
    catalogTable.setFieldLink("id", "catalog", "id", "countryid,scott,typeid");
-  // How about doing it this way instead?
-  //catalogTable.setFieldIsConcatenatedFields("sort", true, "countryid,scott,typeid");
 
   catalogTable.setFieldLink("countryid", "country", "id", "a3");
   catalogTable.setFieldLink("typeid", "catalogtype", "id", "name");

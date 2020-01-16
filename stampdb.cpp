@@ -536,7 +536,6 @@ GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, cons
   if (table == nullptr) {
       return nullptr;
   }
-  QHash<QString, QStringList> concatFields;
   QStringList fieldNames = table->getFieldNames();
 
   QString orderBy = "";
@@ -545,14 +544,10 @@ GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, cons
   {
     QString fieldName = fieldSortIterator.next();
     Q_ASSERT_X(table->containsField(fieldName), "readTableBySchema", qPrintable(QString("Table [%1] does not have a field named [%2].").arg(tableName).arg(fieldName)));
-    // Do not allow ordering by a concatinated field.
-    if (!table->isConcatenatedFields((fieldName)))
-    {
-      if (orderBy.isEmpty()) {
-          orderBy = QString("%1.%2").arg(tableName).arg(fieldName);
-      } else {
-          orderBy = orderBy.append(QString(", %1.%2").arg(tableName).arg(fieldName));
-      }
+    if (orderBy.isEmpty()) {
+        orderBy = QString("%1.%2").arg(tableName).arg(fieldName);
+    } else {
+        orderBy = orderBy.append(QString(", %1.%2").arg(tableName).arg(fieldName));
     }
   }
 
@@ -568,17 +563,10 @@ GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, cons
   for (QStringListIterator fieldIterator(fieldNames); fieldIterator.hasNext(); )
   {
       QString fieldName = fieldIterator.next();
-      if (table->isConcatenatedFields((fieldName)))
-      {
-        concatFields[fieldName.toLower()] = table->getFieldByName(fieldName.toLower())->getLinkDisplayField();
-      }
-      else
-      {
-        if (sqlFields.isEmpty()) {
-            sqlFields = QString("%1.%2").arg(tableName).arg(fieldName);;
-        } else {
-            sqlFields = sqlFields.append(QString(", %1.%2").arg(tableName).arg(fieldName));
-        }
+      if (sqlFields.isEmpty()) {
+          sqlFields = QString("%1.%2").arg(tableName).arg(fieldName);;
+      } else {
+          sqlFields = sqlFields.append(QString(", %1.%2").arg(tableName).arg(fieldName));
       }
   }
 
@@ -612,16 +600,6 @@ GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, cons
         {
           duplicateColumns.append(query.record().fieldName(i));
         }
-      }
-      // Does this add it on?
-      QHash<QString, QStringList>::const_iterator i = concatFields.constBegin();
-      while (i != concatFields.constEnd())
-      {
-        if (!collection->appendPropertyName(i.key(), m_schema.getFieldMetaType(tableName,  i.key())))
-        {
-          duplicateColumns.append(i.key());
-        }
-        ++i;
       }
 
       if (duplicateColumns.size() > 0)
@@ -659,33 +637,9 @@ GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, cons
             // If a BIT Varying type is used, and, if the string length is greater than 1, then string should be used
             // rather than a boolean value. I don't have this problem at the moment, so,ignore it for now.
             // gdo->setValue(collection->getPropertyName(i), query.record().value(i));
-            //
-            // This should NEVER be a concatinated field (because we are looking at what came back from the query)
-            // so just ignore that problem.
             gdo->setValueNative(collection->getPropertyName(i), mapper.forceToType(query.record().value(i), table->getFieldMetaType(collection->getPropertyName(i)), &ok));
           }
         }
-        // Populate the "concatinated fields" from concatFields. Should not be needed, but, do it anyway.
-        // TODO: Test if I need to do this or not. Perhaps I do not need to do this.
-        /*** ???????? This is all wrong
-        QHash<QString, QStringList>::const_iterator i = concatFields.constBegin();
-        while (i != concatFields.constEnd()) {
-          QString s;
-          bool oneAdded = false;
-          foreach (const QString &fieldName, i.value())
-          {
-            if (oneAdded)
-            {
-              s = s.append('/');
-            }
-            s = s.append(gdo->getString(fieldName));
-          }
-          gdo->setValueNative(i.key(), s);
-          ++i;
-        }
-        // Concatenated field values set.
-
-        ***/
 
         collection->appendObject(hasIdColumn ? gdo->getInt(idString) : iCount, gdo);
         ++iCount;

@@ -137,8 +137,6 @@ public:
    ***************************************************************************/
   bool containsField(const QString& name) const;
 
-  bool isConcatenatedFields(const QString& name) const;
-
   //**************************************************************************
   /*! \brief
    *
@@ -210,8 +208,6 @@ public:
    *  \return
    ***************************************************************************/
   void setFieldRequired(const QString& name, bool x);
-
-  void setFieldIsConcatenatedFields(const QString& name, bool x, const QString& concatFields);
 
   //**************************************************************************
   /*! \brief
@@ -291,11 +287,6 @@ private:
 inline bool DescribeSqlTable::containsField(const QString& name) const
 {
   return m_fields.contains(name.toLower());
-}
-
-inline bool DescribeSqlTable::isConcatenatedFields(const QString& name) const
-{
-  return containsField(name) ? m_fields[name.toLower()].isConcatenatedFields() : false;
 }
 
 #endif // DESCRIBESQLTABLE_H

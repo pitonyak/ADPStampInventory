@@ -141,18 +141,6 @@ public:
   QString getLinkValues(const QString& tableName, const int id, const QStringList& fields) const;
 
   //**************************************************************************
-  /*! \brief Builds the display value such as "USA/123/Postal"
-   *
-   *   These values are always pulled from the same row as the value; or they should be.
-   *   Link fields are NOT pulled as links, the actual value is used.
-   *
-   *  \param [in] object Row from which to pull linked values.
-   *  \param [in] fields Field names from which to pull linked values.
-   *  \return Display value such as "USA/123/Postal"
-   ***************************************************************************/
-  QString getConcatenatedValues(const GenericDataObject* object, const QStringList& fields) const;
-
-  //**************************************************************************
   /*! \brief This does a lot of fancy things to pull cached values.
    *
    *  This confuses me a bit, not sure why we need it, but we use it so...

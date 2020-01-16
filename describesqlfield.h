@@ -54,7 +54,7 @@ public:
   /*! \brief If this field is a foreign key to another table, this returns the key field name in the linked table. */
   QString getLinkFieldName() const { return m_linkField; }
 
-  /*! \brief Comma delimted list of field names for link display fields and also for concatenated fields. */
+  /*! \brief Comma delimted list of field names for link display fields. */
   QStringList getLinkDisplayField() const;
 
   /*! \brief If this is currency, return an appropriate currency symbol, such as "$". */
@@ -73,8 +73,6 @@ public:
   /*! \brief Determines if this is a currency field by inspecting the currency symbol to see if it is empty. */
   bool isCurrency() const { return !m_currencySymbol.isEmpty(); }
 
-  bool isConcatenatedFields() const { return m_isConcatenatedFields; }
-
   int getFieldLength() const { return m_fieldLength; }
   int getFieldPrecision() const { return m_fieldPrecision; }
 
@@ -92,7 +90,6 @@ public:
   void setIsKey(const bool isK) { m_isKey = isK; }
   void setFieldLength(const int len) { m_fieldLength = len; }
   void setFieldPrecision(const int len) { m_fieldPrecision = len; }
-  void setIsConcatenatedFields(const bool ido) { m_isConcatenatedFields = ido; }
 
   const DescribeSqlField& operator=(const DescribeSqlField& field) { return copy(field); }
 
@@ -156,9 +153,6 @@ private:
 
   /*! Field precision (not that this is used right now) */
   int m_fieldPrecision;
-
-  /*! \brief True This column is ONLY for display and is NOT really in the database. The field is made up of other fields in this table. */
-  bool m_isConcatenatedFields;
 };
 
 #endif // DESCRIBESQLFIELD_H

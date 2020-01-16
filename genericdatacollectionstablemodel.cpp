@@ -77,7 +77,6 @@ bool GenericDataCollectionsTableModel::setData ( const QModelIndex & index, cons
       }
       else
       {
-        // Doing nothing special for fieldSchema->isConcatenatedFields().
         object->setValueNative(fieldName, value);
       }
       bool updateSourceId = (m_defaultSourceId >= 0 && fieldName.compare("bookvalue", Qt::CaseInsensitive) == 0 && m_table->containsProperty("sourceid") && object->getValueNative("sourceid") != m_defaultSourceId);
@@ -95,9 +94,6 @@ bool GenericDataCollectionsTableModel::setData ( const QModelIndex & index, cons
         // updated in the DB because data is pushed when tracked changes are saved.
         object->setValueNative("updated", QDateTime::currentDateTime());
       }
-      // I should probably check fieldSchema->isConcatenatedFields() and not bother in that case
-      // as far as tracking goes, but, the update method will ignore it anyway and it allows undo to work
-      // as expected I suppose.
       if (isTracking())
       {
         if (!updateSourceId) {
@@ -137,15 +133,6 @@ QVariant GenericDataCollectionsTableModel::data( const QModelIndex &index, int r
         returnList.append(getLinkEditValues(fieldSchema->getLinkTableName(), fieldSchema->getLinkDisplayField()));
         return returnList;
       }
-      else if (fieldSchema->isConcatenatedFields())
-      {
-        QVariant currentValue = data(index, Qt::DisplayRole);
-        QStringList returnList;
-        returnList << currentValue.toString();
-        // Note sure if this is correct?
-        returnList << getConcatenatedValues(object, fieldSchema->getLinkDisplayField());
-        return returnList;
-      }
       return object->getValue(m_table->getPropertyName(index.column()));
     }
     else if (role == Qt::DisplayRole)
@@ -160,9 +147,6 @@ QVariant GenericDataCollectionsTableModel::data( const QModelIndex &index, int r
       {
         int linkId = object->getInt(m_table->getPropertyName(index.column()));
         return getLinkValues(fieldSchema->getLinkTableName(), linkId, fieldSchema->getLinkDisplayField());
-      }
-      else if (fieldSchema->isConcatenatedFields()) {
-        return getConcatenatedValues(object, fieldSchema->getLinkDisplayField());
       }
       return object->getValue(m_table->getPropertyName(index.column()));
     }
@@ -255,22 +239,6 @@ QStringList GenericDataCollectionsTableModel::getLinkEditValues(const QString& t
 
   const_cast<LinkedFieldSelectionCache&>(m_linkCache).setCachedList(cacheId, list);
   return list;
-}
-
-QString GenericDataCollectionsTableModel::getConcatenatedValues(const GenericDataObject* object, const QStringList &fields) const
-{
-  QString s = "";
-  if (object != nullptr) {
-    for (int i=0; i<fields.size(); ++i)
-    {
-      if (i > 0) {
-        s = s.append('/');
-      }
-      // Get the value based on the field name.
-      s = s.append(object->getString(fields.at(i)));
-    }
-  }
-  return s;
 }
 
 QString GenericDataCollectionsTableModel::getLinkValues(const QString& tableName, const int id, const QStringList& fields) const
@@ -468,30 +436,25 @@ bool GenericDataCollectionsTableModel::saveTrackedChanges(const QString& tableNa
               bool aFieldAdded = false;
               for (int iCol=0; iCol<data.getPropertNames().size(); ++iCol)
               {
-                // Ignore any "fake" fields that are just for display purposes.
-                if (tableSchema == nullptr || !tableSchema->isConcatenatedFields(data.getPropertyName(iCol))) {
-                  if (aFieldAdded) {
-                    s = s.append(", ");
-                    sValues = sValues.append(", ");
-                  }
-                  s = s.append(data.getPropertyName(iCol));
-                  sValues = sValues.append(":").append(data.getPropertyName(iCol));
-                  aFieldAdded = true;
+                if (aFieldAdded) {
+                  s = s.append(", ");
+                  sValues = sValues.append(", ");
                 }
+                s = s.append(data.getPropertyName(iCol));
+                sValues = sValues.append(":").append(data.getPropertyName(iCol));
+                aFieldAdded = true;
               }
               QString sSQL = s.append(") ").append(sValues).append(")");
               query.prepare(sSQL);
               for (int iCol=0; iCol<data.getPropertNames().size(); ++iCol)
               {
-                if (tableSchema == nullptr || !tableSchema->isConcatenatedFields(data.getPropertyName(iCol))) {
-                  if (!newData->containsValue(data.getPropertyName(iCol)))
-                  {
-                      TypeMapper mapper;
-                      query.bindValue(QString(":%1").arg(data.getPropertyName(iCol)), QVariant(mapper.metaToVariantType(data.getPropertyTypeMeta(iCol))));
-                  } else {
-                      // Assume that it converts to the correct type!
-                      query.bindValue(QString(":%1").arg(data.getPropertyName(iCol)), newData->getValueNative(data.getPropertyName(iCol)));
-                  }
+                if (!newData->containsValue(data.getPropertyName(iCol)))
+                {
+                    TypeMapper mapper;
+                    query.bindValue(QString(":%1").arg(data.getPropertyName(iCol)), QVariant(mapper.metaToVariantType(data.getPropertyTypeMeta(iCol))));
+                } else {
+                    // Assume that it converts to the correct type!
+                    query.bindValue(QString(":%1").arg(data.getPropertyName(iCol)), newData->getValueNative(data.getPropertyName(iCol)));
                 }
               }
               if (!query.exec())
@@ -520,40 +483,37 @@ bool GenericDataCollectionsTableModel::saveTrackedChanges(const QString& tableNa
             // TODO: What if changed a key field referenced by another table.
             QString fieldName = bottomObject->getChangeInfo();
 
-            if (tableSchema == nullptr || !tableSchema->isConcatenatedFields(fieldName))
+            // Info contains the modified field name!
+            GenericDataObject* oldData = bottomObject->getOldData();
+            GenericDataObject* newData = bottomObject->getNewData();
+            if (oldData != nullptr && newData != nullptr)
             {
-              // Info contains the modified field name!
-              GenericDataObject* oldData = bottomObject->getOldData();
-              GenericDataObject* newData = bottomObject->getNewData();
-              if (oldData != nullptr && newData != nullptr)
-              {
-                QSqlQuery query(db);
-                QString s = setUpdateField ? QString("UPDATE %1 SET %2=:%2, updated=:updated WHERE %3=:id").arg(tableName).arg(fieldName).arg("id") : QString("UPDATE %1 SET %2=:%2 WHERE %3=:id").arg(tableName).arg(fieldName).arg("id");
-                query.prepare(s);
-                query.bindValue(":id", oldData->getInt("id"));
-                if (setUpdateField) {
-                  QDateTime now = QDateTime::currentDateTime();
-                  query.bindValue(":updated", now);
-                  GenericDataObject* currentObj = data.getObjectById(newData->getInt("id"));
-                  if (currentObj != nullptr)
-                  {
-                    currentObj->setValueNative("updated", now);
-                  }
+              QSqlQuery query(db);
+              QString s = setUpdateField ? QString("UPDATE %1 SET %2=:%2, updated=:updated WHERE %3=:id").arg(tableName).arg(fieldName).arg("id") : QString("UPDATE %1 SET %2=:%2 WHERE %3=:id").arg(tableName).arg(fieldName).arg("id");
+              query.prepare(s);
+              query.bindValue(":id", oldData->getInt("id"));
+              if (setUpdateField) {
+                QDateTime now = QDateTime::currentDateTime();
+                query.bindValue(":updated", now);
+                GenericDataObject* currentObj = data.getObjectById(newData->getInt("id"));
+                if (currentObj != nullptr)
+                {
+                  currentObj->setValueNative("updated", now);
                 }
-                qDebug() << "[" << oldData->getInt("id") << "] where id = " << s;
+              }
+              qDebug() << "[" << oldData->getInt("id") << "] where id = " << s;
 
-                if (!newData->containsValue(fieldName))
-                {
-                    TypeMapper mapper;
-                    query.bindValue(QString(":%1").arg(fieldName), QVariant(mapper.metaToVariantType(data.getPropertyTypeMeta(fieldName))));
-                } else {
-                    // Assume that it converts to the correct type!
-                    query.bindValue(QString(":%1").arg(fieldName), newData->getValueNative(fieldName));
-                }
-                if (!query.exec())
-                {
-                  qDebug("Failed to update row");
-                }
+              if (!newData->containsValue(fieldName))
+              {
+                  TypeMapper mapper;
+                  query.bindValue(QString(":%1").arg(fieldName), QVariant(mapper.metaToVariantType(data.getPropertyTypeMeta(fieldName))));
+              } else {
+                  // Assume that it converts to the correct type!
+                  query.bindValue(QString(":%1").arg(fieldName), newData->getValueNative(fieldName));
+              }
+              if (!query.exec())
+              {
+                qDebug("Failed to update row");
               }
             }
           }
