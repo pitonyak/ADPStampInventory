@@ -610,7 +610,7 @@ void GenericDataCollectionsTableModel::undoChange()
 
 QString GenericDataCollectionsTableModel::incrementScottNumber(const QString& scott) const
 {
-  // This is eather the scotts number, or something like
+  // This is either the scotts number, or something like
   // <country>/<Scotts>/<type>
 
   QRegularExpression reDigit("\\d");
@@ -784,9 +784,12 @@ QList<int> GenericDataCollectionsTableModel::duplicateRows(const QModelIndexList
       if (autoIncrement || appendChar) {
         if (newData->containsValue("scott")) {
           if (autoIncrement) {
+            qDebug() << "?? auto increment is true so increment: " << newData->getString("scott");
             newData->setValueNative("scott", incrementScottNumber(newData->getString("scott")));
+            qDebug() << "?? After increment, value is : " << newData->getString("scott");
           }
           if (appendChar) {
+            qDebug() << "?? append char is true so append a character";
             newData->setValueNative("scott", newData->getString("scott").append(charToAppend));
           }
         }

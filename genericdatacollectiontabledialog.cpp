@@ -223,8 +223,8 @@ void GenericDataCollectionTableDialog::duplicateRow()
 
 void GenericDataCollectionTableDialog::duplicateRowAutoIncrement()
 {
-  // autoIncrement
-  privateRowDuplicator(true);
+  // autoIncrement, appendChar, charToAppend
+  privateRowDuplicator(true, false, 'a');
 }
 
 void GenericDataCollectionTableDialog::duplicateRowAddLowerA()
@@ -271,7 +271,7 @@ void GenericDataCollectionTableDialog::privateRowDuplicator(const bool autoIncre
   for (int i=0; i<proxyList.size(); ++i) {
     mappedList.append(m_proxyModel->mapToSource(proxyList.at(i)));
   }
-  QList<int> addedIds = m_tableModel->duplicateRows(mappedList, autoIncrement, appendChar, charToAppend);
+  QList<int> addedIds = m_tableModel->duplicateRows(mappedList, autoIncrement, true, appendChar, charToAppend);
   if (!addedIds.isEmpty())
   {
     int row = m_tableModel->getIndexOf(addedIds.first());

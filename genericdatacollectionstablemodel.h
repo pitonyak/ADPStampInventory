@@ -192,7 +192,7 @@ public slots:
    *
    *  \return return a list of the inserted IDs in the order that they were inserted.
    ***************************************************************************/
-  QList<int> duplicateRows(const QModelIndexList& list, const bool autoIncrement=false, const bool setUpdated=false, const bool appendChar=false, const char charToAppend='a');
+  QList<int> duplicateRows(const QModelIndexList& list, const bool autoIncrement, const bool setUpdated, const bool appendChar, const char charToAppend);
 
 private:
   /*! The DescribeSqlTable object can be configured to list a field as linked to another table.
