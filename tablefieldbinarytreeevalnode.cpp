@@ -2,6 +2,7 @@
 
 #include <QTextStream>
 #include <QStack>
+#include <QDebug>
 
 TableFieldBinaryTreeEvalNode::TableFieldBinaryTreeEvalNode(QObject *parent) :
     QObject(parent), m_treeParent(nullptr), m_node(nullptr)
@@ -46,7 +47,7 @@ QTextStream& TableFieldBinaryTreeEvalNode::toStream(QTextStream& stream) const
 {
     if (m_node == nullptr)
     {
-      qDebug(qPrintable(tr("called toStream with a null node.")));
+      qDebug() << "called toStream with a null node.";
         return stream;
     }
     if (m_node->nodeType() == TableFieldEvalNode::VALUE)
@@ -54,12 +55,12 @@ QTextStream& TableFieldBinaryTreeEvalNode::toStream(QTextStream& stream) const
       stream << m_node->nodeValue();
       if (m_children.size() > 0)
       {
-        qDebug(qPrintable(tr("Value element contains children!")));
+        qDebug() << "Value element contains children!";
       }
     }
     else if (m_node->nodeType() == TableFieldEvalNode::NO_TYPE || m_node->nodeType() == TableFieldEvalNode::R_PAREN || m_node->nodeType() == TableFieldEvalNode::L_PAREN)
     {
-      qDebug(qPrintable(tr("Found a node of type NO_TYPE, L_PAREN, or R_PAREN.")));
+      qDebug() << "Found a node of type NO_TYPE, L_PAREN, or R_PAREN.";
     }
     else
     {
@@ -90,7 +91,7 @@ QTextStream& TableFieldBinaryTreeEvalNode::toStream(QTextStream& stream) const
       if (m_node->isSuffix())
       {
         stream << " " << m_node->nodeValue() << " ";
-        qDebug(qPrintable(tr(" %1 ").arg(m_node->nodeValue())));
+        qDebug() << QString(" %1 ").arg(m_node->nodeValue());
       }
     }
     return stream;
@@ -100,17 +101,17 @@ bool TableFieldBinaryTreeEvalNode::processOneTreeLevel(QStack<TableFieldBinaryTr
 {
   if (operators.isEmpty())
   {
-    qDebug(qPrintable(tr("Operator stack is prematurely empty")));
+    qDebug() << "Operator stack is prematurely empty";
     return true;
   }
   TableFieldBinaryTreeEvalNode* opNode = operators.pop();
-  //qDebug(qPrintable(tr("processOneTreeLevel Op Node value(%1) type(%2) priority(%3)").arg(opNode->nodeValue()).arg(opNode->nodeType()).arg(opNode->nodePriority())));
+  //qDebug() << "processOneTreeLevel Op Node value(%1) type(%2) priority(%3)").arg(opNode->nodeValue()).arg(opNode->nodeType()).arg(opNode->nodePriority())));
   if (opNode->m_node->isInfix())
   {
     // Two operands
     if (values.size() < 2)
     {
-        qDebug(qPrintable(tr("Found an INFIX operator that requires two values, and have %1 value(s).").arg(values.size())));
+        qDebug() << QString("Found an INFIX operator that requires two values, and have %1 value(s).").arg(values.size());
         return true;
     }
     else
@@ -157,7 +158,7 @@ bool TableFieldBinaryTreeEvalNode::processOneTreeLevel(QStack<TableFieldBinaryTr
       // Need one value.
       if (values.isEmpty())
       {
-          qDebug(qPrintable(tr("Found a PREFIX or SUFFIX operator with an empty value list.")));
+          qDebug() << "Found a PREFIX or SUFFIX operator with an empty value list.";
           return true;
       }
       else
@@ -166,7 +167,7 @@ bool TableFieldBinaryTreeEvalNode::processOneTreeLevel(QStack<TableFieldBinaryTr
           // I suppose if the value is boolean...
           if (child1->isValue())
           {
-            qDebug(qPrintable(tr("Cannot take the NOT of a value.")));
+            qDebug() << "Cannot take the NOT of a value.";
             return true;
           }
           // make the value a child of the NOT operator and push the NOT operator
@@ -177,7 +178,7 @@ bool TableFieldBinaryTreeEvalNode::processOneTreeLevel(QStack<TableFieldBinaryTr
   }
   else
   {
-      qDebug(qPrintable(tr("Found an operator node with an unknown type.")));
+      qDebug() << "Found an operator node with an unknown type.";
       return true;
   }
   return false;
@@ -210,7 +211,7 @@ TableFieldBinaryTreeEvalNode* TableFieldBinaryTreeEvalNode::buildTree(QList<Tabl
       TableFieldEvalNode* eNode = i.next();
       if (eNode == nullptr)
       {
-        qDebug(qPrintable(tr("Cannot build a tree from null nodes.")));
+        qDebug() << "Cannot build a tree from null nodes.";
         isError = true;
       }
       else if (eNode->isValue())
@@ -240,7 +241,7 @@ TableFieldBinaryTreeEvalNode* TableFieldBinaryTreeEvalNode::buildTree(QList<Tabl
         {
           if (operators.isEmpty())
           {
-            qDebug(qPrintable(tr("Have a ')' without a '('")));
+            qDebug() << "Have a ')' without a '('";
             isError = true;
           }
           else
@@ -253,7 +254,7 @@ TableFieldBinaryTreeEvalNode* TableFieldBinaryTreeEvalNode::buildTree(QList<Tabl
       }
       else if (eNode->isNoType())
       {
-          qDebug(qPrintable(tr("Cannot build a tree from raw nodes with no type")));
+          qDebug() << "Cannot build a tree from raw nodes with no type";
           isError = true;
       }
       else
@@ -281,12 +282,12 @@ TableFieldBinaryTreeEvalNode* TableFieldBinaryTreeEvalNode::buildTree(QList<Tabl
     if (!operators.isEmpty())
     {
       isError = true;
-      qDebug(qPrintable(tr("Unprocessed Operators left in the stack after processing")));
+      qDebug() << "Unprocessed Operators left in the stack after processing";
     }
     else if (values.size() != 1)
     {
       isError = true;
-      qDebug(qPrintable(tr("There should be only one value left after processing, not %1").arg(values.size())));
+      qDebug() << "There should be only one value left after processing, not " << values.size();
     }
     else
     {

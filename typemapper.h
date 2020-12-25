@@ -12,7 +12,7 @@
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2013-2014
+ * \date 2013-2020
  *
  **************************************************************************/
 
@@ -41,41 +41,12 @@ public:
    */
     explicit TypeMapper(QObject *parent = 0);
 
-  /*! \brief Map from a meta-type to a variant-type.
-   *
-   *  Meta-types are usually used to associate a type name to a type so that it can be created and destructed dynamically at run-time.
-   *  The QMetaType class manages named types and is used as a helper to marshall types in QVariant, queued signals, and slots.
-   *  This method attempts to equate types in the two systems. I believe that the QVariant::Type is (or will be) deprecated.
-   *
-   *  \param [in] metaType Type of interest.
-   *  \return Equivalent variant type if known, or QVariant::Invalid otherwise.
-   */
-    QVariant::Type metaToVariantType(const QMetaType::Type metaType) const;
-
-    /*! \brief Map from a variant-type to a meta-type.
-     *
-     *  Meta-types are usually used to associate a type name to a type so that it can be created and destructed dynamically at run-time.
-     *  The QMetaType class manages named types and is used as a helper to marshall types in QVariant, queued signals, and slots.
-     *  This method attempts to equate types in the two systems. I believe that the QVariant::Type is (or will be) deprecated.
-     *
-     *  \param [in] variantType Type of interest.
-     *  \return Equivalent meta type if known, or QMetaType::Void otherwise.
-     */
-    QMetaType::Type variantTypeToMetaType(const QVariant::Type variantType) const;
-
     /*! \brief Determine if this class knows the type.
      *
      *  \param [in] metaType Type of interest.
      *  \return True if the type is known by this class, false otherwise.
      */
     bool containsMetaTypeEntry(const QMetaType::Type metaType) const;
-
-    /*! \brief Determine if this class knows the type.
-     *
-     *  \param [in] variantType Type of interest.
-     *  \return True if the type is known by this class, false otherwise.
-     */
-    bool containsVariantTypeEntry(const QVariant::Type variantType) const;
 
     /*! \brief Try to parse the string and guess the type.
      *
@@ -102,13 +73,6 @@ public:
      */
     QMetaType::Type toSignedInteger(const QMetaType::Type metaType1) const;
 
-    /*! \brief Get a null version of the specified variant type.
-     *
-     *  \param [in] variantType Variant type of interest.
-     *  \return A variant of the specified type that is considered NULL.
-     */
-    QVariant getNullVariant(QVariant::Type variantType) const;
-
     /*! \brief Convert the meta type to a variant type, and return a null version of the specified type as a variant.
      *
      *  \param [in] metaType Type of interest.
@@ -117,10 +81,8 @@ public:
     QVariant getNullVariant(QMetaType::Type metaType) const;
 
     QString getMetaName(QMetaType::Type aType) const;
-    QString getVariantName(QVariant::Type aType) const;
 
     QMetaType::Type getMetaType(const QString& name) const;
-    QVariant::Type getVariantType(const QString& name) const;
 
     QVariant forceToType(const QVariant& x, const QMetaType::Type aType, bool* ok = nullptr) const;
 
@@ -136,12 +98,6 @@ private:
     /*! \brief Initialize the maps between the two types. */
     void initialize();
 
-    /*! \brief Map from Meta types to Variant types for fast conversion. */
-    QMap<QMetaType::Type, QVariant::Type> m_typeMapMetaToVariant;
-
-    /*! \brief Map from Variant types to Meta types for fast conversion. */
-    QMap<QVariant::Type, QMetaType::Type> m_typeMapVariantToMeta;
-
     /*! \brief List of signed numeric types from smallest (short) to largest (double) for use with conversions. */
     QList<QMetaType::Type> m_NumList;
 
@@ -149,54 +105,14 @@ private:
     QList<QMetaType::Type> m_UNumList;
 
     QMap<QMetaType::Type, QString> m_MetaToName;
-    QMap<QVariant::Type, QString> m_VariantToName;
-
     QMap<QString, QMetaType::Type> m_NameToMetaTo;
-    QMap<QString, QVariant::Type> m_NameToVariant;
-
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(TypeMapper::ColumnConversionPreferences)
 
-inline QVariant::Type TypeMapper::metaToVariantType(const QMetaType::Type metaType) const
-{
-    return containsMetaTypeEntry(metaType) ? m_typeMapMetaToVariant[metaType] : QVariant::Invalid;
-}
-
-inline QMetaType::Type TypeMapper::variantTypeToMetaType(const QVariant::Type variantType) const
-{
-  return containsVariantTypeEntry(variantType) ? m_typeMapVariantToMeta[variantType] : QMetaType::Void;
-}
-
-inline bool TypeMapper::containsMetaTypeEntry(const QMetaType::Type metaType) const
-{
-    return m_typeMapMetaToVariant.contains(metaType);
-}
-
-inline bool TypeMapper::containsVariantTypeEntry(const QVariant::Type variantType) const
-{
-  return m_typeMapVariantToMeta.contains(variantType);
-}
-
-
-inline QVariant TypeMapper::getNullVariant(QVariant::Type variantType) const
-{
-  return QVariant(variantType);
-}
-
-inline QVariant TypeMapper::getNullVariant(QMetaType::Type metaType) const
-{
-  return getNullVariant(metaToVariantType(metaType));
-}
-
 inline QString TypeMapper::getMetaName(QMetaType::Type aType) const
 {
-    return m_MetaToName.value(aType);
-}
-
-inline QString TypeMapper::getVariantName(QVariant::Type aType) const
-{
-    return m_VariantToName.value(aType);
+  return QMetaType(aType).name();
 }
 
 inline QMetaType::Type TypeMapper::getMetaType(const QString& name) const
@@ -204,10 +120,10 @@ inline QMetaType::Type TypeMapper::getMetaType(const QString& name) const
     return m_NameToMetaTo.contains(name.toLower()) ? m_NameToMetaTo.value(name.toLower()) : QMetaType::UnknownType;
 }
 
-inline QVariant::Type TypeMapper::getVariantType(const QString& name) const
-{
-    return m_NameToVariant.contains(name.toLower()) ? m_NameToVariant.value(name.toLower()) : QVariant::Invalid;
-}
 
+inline QVariant TypeMapper::getNullVariant(QMetaType::Type metaType) const
+{
+  return QVariant(QMetaType(metaType));
+}
 
 #endif // TYPEMAPPER_H

@@ -2,7 +2,6 @@
 #include "globals.h"
 #include <QXmlStreamWriter>
 #include <QXmlStreamReader>
-#include <QRegExp>
 
 XMLUtility::XMLUtility()
 {
@@ -29,36 +28,36 @@ Qt::CaseSensitivity XMLUtility::stringToCase(const QString& sensitivity)
 }
 
 
-void XMLUtility::write(QXmlStreamWriter& writer, const QRegExp& regExp, const QString& name)
+void XMLUtility::write(QXmlStreamWriter& writer, const QRegularExpression& regExp, const QString& name)
 {
-  if (regExp.isEmpty() || !regExp.isValid() || name.length() == 0)
+  if (regExp.pattern().isEmpty() || !regExp.isValid() || name.length() == 0)
   {
     return;
   }
 
   writer.writeStartElement(name);
-  writer.writeAttribute("IsMinimal", booleanToString(regExp.isMinimal()));
-  writer.writeAttribute("CaseSensitive", caseToString(regExp.caseSensitivity()));
-  writer.writeAttribute("PatternSyntax", getEnumMapper().PatternSyntaxToString(regExp.patternSyntax()));
+  writer.writeAttribute("PatternOptions", QString::number((int) regExp.patternOptions()));
+  //writer.writeAttribute("IsMinimal", booleanToString(regExp.isMinimal()));
+  //writer.writeAttribute("CaseSensitive", caseToString(regExp.caseSensitivity()));
+  //writer.writeAttribute("PatternSyntax", getEnumMapper().PatternSyntaxToString(regExp.patternSyntax()));
   writer.writeCharacters(regExp.pattern());
   writer.writeEndElement();
 }
 
-QRegExp* XMLUtility::readRegExp(QXmlStreamReader& reader)
+QRegularExpression* XMLUtility::readRegExp(QXmlStreamReader& reader)
 {
-  QRegExp* regExp = new QRegExp();
-  if (reader.attributes().hasAttribute("IsMinimal"))
+  QRegularExpression* regExp = new QRegularExpression();
+  if (reader.attributes().hasAttribute("PatternOptions"))
   {
-    regExp->setMinimal(stringToBoolean(reader.attributes().value("IsMinimal").toString()));
+    regExp->setPatternOptions((QRegularExpression::PatternOptions) reader.attributes().value("PatternOptions").toInt());
   }
-  if (reader.attributes().hasAttribute("CaseSensitive"))
-  {
-    regExp->setCaseSensitivity(stringToCase(reader.attributes().value("CaseSensitive").toString()));
+  else if (reader.attributes().hasAttribute("CaseSensitive")) {
+    QString cs = reader.attributes().value("CaseSensitive").toString();
+    if (cs.compare("False", Qt::CaseInsensitive)) {
+      regExp->setPatternOptions(QRegularExpression::CaseInsensitiveOption);
+    }
   }
-  if (reader.attributes().hasAttribute("PatternSyntax"))
-  {
-    regExp->setPatternSyntax(getEnumMapper().stringToPatternSyntax(reader.attributes().value("PatternSyntax").toString()));
-  }
+
   while (!reader.isEndElement())
   {
     if (reader.isCharacters())

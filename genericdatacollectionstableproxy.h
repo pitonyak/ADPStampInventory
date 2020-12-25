@@ -3,14 +3,18 @@
 
 #include <QSortFilterProxyModel>
 #include <QCollator>
+#include <QLoggingCategory>
 
 //**************************************************************************
 /*! \class GenericDataCollectionsTableProxy
  * \brief Allow for sorting strings in "natural" order.
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2014
+ * \date 2014 - 2020
  ***************************************************************************/
+
+Q_DECLARE_LOGGING_CATEGORY(GenericDataCollectionsTableProxyCategory)
+
 class SearchOptions;
 class GenericDataCollectionsTableProxy : public QSortFilterProxyModel
 {

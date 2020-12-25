@@ -169,54 +169,54 @@ int GenericDataObject::compare(const GenericDataObject& obj, const QStringList& 
         {
             QVariant v1 = getValue(fields.at(i));
             QVariant v2 = obj.getValue(fields.at(i));
-            if (v1.type() != v2.type())
+            if (v1.metaType().id() != v2.metaType().id())
             {
                 // This should never happen.
-                qDebug(qPrintable(QString(tr("Comparing two variants of different types in column : %1")).arg(fields.at(i))));
+                qDebug() << "Comparing two variants of different types in column : " << fields.at(i);
                 rc = v1.toString().compare(v2.toString(), sensitive);
             }
             else if (v1 != v2)
             {
-                switch (v1.type())
+                switch (v1.metaType().id())
                 {
-                case QVariant::Int:
+                case QMetaType::Int:
                     rc = v1.toInt() < v2.toInt() ? -1 : 1;
                     break;
-                case QVariant::String:
+                case QMetaType::QString:
                     rc = v1.toString().compare(v2.toString(), sensitive);
                     break;
-                case QVariant::Double:
+                case QMetaType::Double:
                     rc = v1.toDouble() < v2.toDouble() ? -1 : 1;
                     break;
-                case QVariant::Date:
+                case QMetaType::QDate:
                     rc = v1.toDate() < v2.toDate() ? -1 : 1;
                     break;
-                case QVariant::DateTime:
+                case QMetaType::QDateTime:
                     rc = v1.toDateTime() < v2.toDateTime() ? -1 : 1;
                     break;
-                case QVariant::LongLong:
+                case QMetaType::LongLong:
                     rc = v1.toLongLong() < v2.toLongLong() ? -1 : 1;
                     break;
-                case QVariant::ULongLong:
+                case QMetaType::ULongLong:
                     rc = v1.toULongLong() < v2.toULongLong() ? -1 : 1;
                     break;
-                case QVariant::UInt:
+                case QMetaType::UInt:
                     rc = v1.toUInt() < v2.toUInt() ? -1 : 1;
                     break;
-                case QVariant::Time:
+                case QMetaType::QTime:
                     rc = v1.toTime() < v2.toTime() ? -1 : 1;
                     break;
-                case QVariant::Uuid:
+                case QMetaType::QUuid:
                     rc = v1.toUuid() < v2.toUuid() ? -1 : 1;
                     break;
-                case QVariant::Char:
+                case QMetaType::Char:
                     rc = v1.toChar() < v2.toChar() ? -1 : 1;
                     break;
-                case QVariant::Bool:
+                case QMetaType::Bool:
                     rc = v1.toBool() < v2.toBool() ? -1 : 1;
                     break;
                 default:
-                    qDebug(qPrintable(QString(tr("Comparing two unsupported types in column : %1")).arg(fields.at(i))));
+                    qDebug() << "Comparing two unsupported types in column : " << fields.at(i);
                     rc = v1.toString().compare(v2.toString(), sensitive);
                     break;
                 }
@@ -229,45 +229,45 @@ int GenericDataObject::compare(const GenericDataObject& obj, const QStringList& 
 bool GenericDataObject::isDateTime(const QString& name) const
 {
   const QVariant v = m_properties.value(name.toLower());
-  return (QMetaType::QDateTime == (QMetaType::Type) v.type());
+  return (QMetaType::QDateTime == v.metaType().id());
 }
 
 bool GenericDataObject::isDate(const QString& name) const
 {
   const QVariant v = m_properties.value(name.toLower());
-  return (QMetaType::QDate == (QMetaType::Type) v.type());
+  return (QMetaType::QDate == v.metaType().id());
 }
 
 bool GenericDataObject::isTime(const QString& name) const
 {
   const QVariant v = m_properties.value(name.toLower());
-  return (QMetaType::QTime == (QMetaType::Type) v.type());
+  return (QMetaType::QTime == v.metaType().id());
 }
 
 void GenericDataObject::increment(const QString& name, const int incValue, QVariant& variantValue)
 {
   const QVariant v = m_properties.value(name.toLower());
-  if (QMetaType::QDateTime == (QMetaType::Type) v.type()) {
+  if (QMetaType::QDateTime == v.metaType().id()) {
     variantValue = QVariant(variantValue.toDateTime().addDays(incValue));
-  } else if (QMetaType::QDate == (QMetaType::Type) v.type()) {
+  } else if (QMetaType::QDate == v.metaType().id()) {
     variantValue = QVariant(variantValue.toDate().addDays(incValue));
-  } else if (QMetaType::QTime == (QMetaType::Type) v.type()) {
+  } else if (QMetaType::QTime == v.metaType().id()) {
     variantValue = QVariant(variantValue.toTime().addSecs(incValue));
-  } else if (QMetaType::Int == (QMetaType::Type) v.type() ||
-             QMetaType::Short == (QMetaType::Type) v.type()) {
+  } else if (QMetaType::Int == v.metaType().id() ||
+             QMetaType::Short == v.metaType().id()) {
     variantValue = QVariant(variantValue.toInt() + incValue);
-  } else if (QMetaType::UInt == (QMetaType::Type) v.type() ||
-             QMetaType::UShort == (QMetaType::Type) v.type()) {
+  } else if (QMetaType::UInt == v.metaType().id() ||
+             QMetaType::UShort == v.metaType().id()) {
     variantValue = QVariant(variantValue.toUInt() + incValue);
-  } else if (QMetaType::Long == (QMetaType::Type) v.type() ||
-             QMetaType::LongLong == (QMetaType::Type) v.type()) {
+  } else if (QMetaType::Long == v.metaType().id() ||
+             QMetaType::LongLong == v.metaType().id()) {
     variantValue = QVariant(variantValue.toLongLong() + incValue);
-  } else if (QMetaType::ULong == (QMetaType::Type) v.type() ||
-             QMetaType::ULongLong == (QMetaType::Type) v.type()) {
+  } else if (QMetaType::ULong == v.metaType().id() ||
+             QMetaType::ULongLong == v.metaType().id()) {
     variantValue = QVariant(variantValue.toULongLong() + incValue);
-  } else if (QMetaType::Double == (QMetaType::Type) v.type()) {
+  } else if (QMetaType::Double == v.metaType().id()) {
     variantValue = QVariant(variantValue.toDouble() + ((double)incValue) / 100.0);
-  } else if (QMetaType::Float == (QMetaType::Type) v.type()) {
+  } else if (QMetaType::Float == v.metaType().id()) {
     variantValue = QVariant(variantValue.toFloat() + ((double)incValue) / 100.0);
   }
 }
@@ -278,12 +278,12 @@ const QVariant GenericDataObject::getValue(const QString& name) const
   if (fieldNameMeansDate(name))
   {
     const QVariant v = m_properties.value(name.toLower());
-    return (QMetaType::QDate == (QMetaType::Type) v.type()) ? v : v.toDate();
+    return (QMetaType::QDate == v.metaType().id()) ? v : v.toDate();
   }
   else if (fieldNameMeansDateTime(name))
   {
     const QVariant v = m_properties.value(name.toLower());
-    return (QMetaType::QDateTime != (QMetaType::Type) v.type()) ? v.toDateTime() : v;
+    return (QMetaType::QDateTime != v.metaType().id()) ? v.toDateTime() : v;
   }
   **/
   return m_properties.value(name.toLower());
@@ -308,7 +308,7 @@ bool GenericDataObject::setBindValue(QSqlQuery& query, const QString& paramName,
     } else {
         if (missingMeansNull) {
             TypeMapper mapper;
-            query.bindValue(paramName, QVariant(mapper.metaToVariantType(fieldType.qtType())));
+            query.bindValue(paramName, QVariant(QMetaType(fieldType.qtType())));
         } else {
             // Go for default values
             switch (fieldType.qtType()) {
@@ -378,13 +378,11 @@ bool GenericDataObject::setBindValue(QSqlQuery& query, const QString& paramName,
             case QMetaType::QTextFormat :
             case QMetaType::QRect :
             case QMetaType::QPoint :
-            case QMetaType::QRegExp :
             case QMetaType::QRegularExpression :
             case QMetaType::QPointF :
             case QMetaType::QPalette :
             case QMetaType::QFont :
             case QMetaType::QBrush :
-            case QMetaType::QRegion :
             case QMetaType::QBitArray :
             case QMetaType::QImage :
             case QMetaType::QKeySequence :
@@ -392,7 +390,6 @@ bool GenericDataObject::setBindValue(QSqlQuery& query, const QString& paramName,
             case QMetaType::QPixmap :
             case QMetaType::QLocale :
             case QMetaType::QBitmap :
-            case QMetaType::QMatrix :
             case QMetaType::QTransform :
             case QMetaType::QMatrix4x4 :
             case QMetaType::QVector2D :

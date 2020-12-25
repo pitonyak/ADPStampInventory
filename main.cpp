@@ -17,8 +17,13 @@ int main(int argc, char *argv[])
     // But, you do NOT want all those mouse movement messages
     QLoggingCategory::setFilterRules("*.debug=true\n"
                                      "qt.qpa.input*.debug=false\n"
+                                     "qt.qpa.events*.debug=false\n"
+                                     "qt.pointer*.debug=false\n"
+                                     "qt.accessibility*.debug=false\n"
+                                     "qt.text.layout*.debug=false\n"
+                                     "qt.text*.debug=false\n"
                                      "qt.widgets.gestures*.debug=false");
-
+// text.layout drawing
 
     QCoreApplication::setOrganizationDomain("pitonyak.org");
     QCoreApplication::setOrganizationName("Pitonyak");

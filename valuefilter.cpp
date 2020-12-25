@@ -3,10 +3,9 @@
 
 #include <QFileInfo>
 #include <QDir>
-#include <QRegExp>
-#include <QRegExp>
 #include <QMetaObject>
 #include <QMetaEnum>
+#include <QString>
 #include <QXmlStreamReader>
 #include <QXmlStreamWriter>
 #include <QUuid>
@@ -72,7 +71,7 @@ void ValueFilter::clearLists(bool deleteLists, bool createIfDoNotExist)
     }
     if (m_expressions == nullptr)
     {
-      m_expressions = new QList<QRegExp*>();
+      m_expressions = new QList<QRegularExpression*>();
     }
   }
 }
@@ -106,9 +105,6 @@ ValueFilter* ValueFilter::clone(QObject *parent) const
 
 void ValueFilter::setCompareType(CompareType compareType)
 {
-    if (compareType == ValueFilter::RegularExpression) {
-        compareType = ValueFilter::RegExpFull;
-    }
   if (compareType != m_compareType)
   {
     m_compareType = compareType;
@@ -132,7 +128,13 @@ void ValueFilter::setCaseSensitivity(Qt::CaseSensitivity caseSensitivity)
     m_caseSensitivity = caseSensitivity;
     for (int i=0; i<m_expressions->size(); ++i)
     {
-      m_expressions->at(i)->setCaseSensitivity(m_caseSensitivity);
+      if (m_caseSensitivity == Qt::CaseInsensitive) {
+        m_expressions->at(i)->setPatternOptions(QRegularExpression::CaseInsensitiveOption);
+      } else {
+        QString s = m_expressions->at(i)->pattern();
+        delete m_expressions->at(i);
+        m_expressions->replace(i, new QRegularExpression(s));
+      }
     }
     emit caseSensitivityChanged(caseSensitivity);
   }
@@ -228,13 +230,13 @@ void ValueFilter::setValue(const QVariant& value)
 void ValueFilter::createLists()
 {
   clearLists(false, true);
-  if (!isMultiValued() || mapper.variantTypeToMetaType(m_value.type()) != QMetaType::QString)
+  if (!isMultiValued() || m_value.metaType().id() != QMetaType::QString)
   {
     m_values->append(m_value);
   }
   else
   {
-    QStringList list = m_value.toString().split(',', QString::SkipEmptyParts);
+    QStringList list = m_value.toString().split(QLatin1Char(','), Qt::SkipEmptyParts);
     foreach (QString s, list)
     {
       m_values->append(QVariant(s));
@@ -249,17 +251,19 @@ void ValueFilter::createRegularExpressions()
   {
     if (value.isValid() && !value.isNull())
     {
-      if (mapper.variantTypeToMetaType(value.type()) == QMetaType::QRegExp)
-      {
-        m_expressions->append(new QRegExp(value.toRegExp()));
-      }
-      else if (m_compareType == ValueFilter::RegularExpression || m_compareType == ValueFilter::RegExpFull || m_compareType == ValueFilter::RegExpPartial)
-      {
-        m_expressions->append(new QRegExp(value.toString(), m_caseSensitivity, QRegExp::RegExp2));
+      //if (value.metaType().id() == QMetaType::QRegularExpression)
+      if (m_compareType == ValueFilter::FileSpec) {
+        QRegularExpression* re = new QRegularExpression(value.toRegularExpression());
+        if (m_caseSensitivity == Qt::CaseInsensitive) {
+          re->setPatternOptions(QRegularExpression::CaseInsensitiveOption);
+        }
+        m_expressions->append(re);
       }
       else if (m_compareType == ValueFilter::FileSpec)
       {
-        m_expressions->append(new QRegExp(value.toString(), m_caseSensitivity, QRegExp::WildcardUnix));
+
+        QRegularExpression* re = new QRegularExpression(QRegularExpression::fromWildcard(value.toString(), m_caseSensitivity));
+        m_expressions->append(re);
       }
       else
       {
@@ -324,7 +328,7 @@ bool ValueFilter::passes(const QStringList& value) const
 
 bool ValueFilter::passes(const QVariant& value) const
 {
-    switch (mapper.variantTypeToMetaType(value.type()))
+    switch (value.metaType().id())
     {
     case QMetaType::Bool :
         return passes(value.toBool());
@@ -430,23 +434,17 @@ bool ValueFilter::compareValues(const double value) const
 {
   switch (m_compareType)
   {
-  case ValueFilter::RegExpFull:
   case ValueFilter::RegularExpression:
   case ValueFilter::FileSpec:
-    foreach (QRegExp* expression, *m_expressions)
+    foreach (QRegularExpression* expression, *m_expressions)
     {
-      if ((expression != nullptr) && expression->exactMatch(QString::number(value)))
+      if (expression != nullptr)
       {
-        return true;
-      }
-    }
-    break;
-  case ValueFilter::RegExpPartial:
-    foreach (QRegExp* expression, *m_expressions)
-    {
-      if ((expression != nullptr) && (expression->indexIn(QString::number(value)) >= 0))
-      {
-        return true;
+        QString n = QString::number(value);
+        QRegularExpressionMatch match = expression->match(n);
+        if (match.hasMatch() && match.capturedLength(0) == n.length()) {
+          return true;
+        }
       }
     }
     break;
@@ -508,30 +506,23 @@ bool ValueFilter::compareValues(const double value) const
 
 bool ValueFilter::compareValues(const bool value) const
 {
-  return compareValues(value ? "Y" : "N");
+  return value ? "Y" : "N";
 }
 
 bool ValueFilter::compareValues(const qlonglong value) const
 {
   switch (m_compareType)
   {
-  case ValueFilter::RegExpFull:
   case ValueFilter::RegularExpression:
   case ValueFilter::FileSpec:
-    foreach (QRegExp* expression, *m_expressions)
+    foreach (QRegularExpression* expression, *m_expressions)
     {
-      if ((expression != nullptr) && expression->exactMatch(QString::number(value)))
-      {
-        return true;
-      }
-    }
-    break;
-  case ValueFilter::RegExpPartial:
-    foreach (QRegExp* expression, *m_expressions)
-    {
-      if ((expression != nullptr) && (expression->indexIn(QString::number(value)) >= 0))
-      {
-        return true;
+      if (expression != nullptr) {
+        QString stringValue = QString::number(value);
+        QRegularExpressionMatch match = expression->match(stringValue);
+        if (match.hasMatch() && match.capturedLength(0) == stringValue.length()) {
+          return true;
+        }
       }
     }
     break;
@@ -595,23 +586,16 @@ bool ValueFilter::compareValues(const qulonglong value) const
 {
   switch (m_compareType)
   {
-  case ValueFilter::RegExpFull:
   case ValueFilter::RegularExpression:
   case ValueFilter::FileSpec:
-    foreach (QRegExp* expression, *m_expressions)
+    foreach (QRegularExpression* expression, *m_expressions)
     {
-      if ((expression != nullptr) && expression->exactMatch(QString::number(value)))
-      {
-        return true;
-      }
-    }
-    break;
-  case ValueFilter::RegExpPartial:
-    foreach (QRegExp* expression, *m_expressions)
-    {
-      if ((expression != nullptr) && (expression->indexIn(QString::number(value)) >= 0))
-      {
-        return true;
+      if (expression != nullptr) {
+        QString stringValue = QString::number(value);
+        QRegularExpressionMatch match = expression->match(stringValue);
+        if (match.hasMatch() && match.capturedLength(0) == stringValue.length()) {
+          return true;
+        }
       }
     }
     break;
@@ -677,23 +661,16 @@ bool ValueFilter::compareValues(const QTime& aTime) const
 {
   switch (m_compareType)
   {
-  case ValueFilter::RegExpFull:
   case ValueFilter::RegularExpression:
   case ValueFilter::FileSpec:
-    foreach (QRegExp* expression, *m_expressions)
+    foreach (QRegularExpression* expression, *m_expressions)
     {
-      if ((expression != nullptr) && expression->exactMatch(aTime.toString(Qt::TextDate)))
-      {
-        return true;
-      }
-    }
-    break;
-  case ValueFilter::RegExpPartial:
-    foreach (QRegExp* expression, *m_expressions)
-    {
-      if ((expression != nullptr) && (expression->indexIn(aTime.toString(Qt::TextDate)) >= 0))
-      {
-        return true;
+      if (expression != nullptr) {
+        QString stringValue = aTime.toString(Qt::TextDate);
+        QRegularExpressionMatch match = expression->match(stringValue);
+        if (match.hasMatch() && match.capturedLength(0) == stringValue.length()) {
+          return true;
+        }
       }
     }
     break;
@@ -756,23 +733,16 @@ bool ValueFilter::compareValues(const QDate& aDate) const
 {
   switch (m_compareType)
   {
-  case ValueFilter::RegExpFull:
   case ValueFilter::RegularExpression:
   case ValueFilter::FileSpec:
-    foreach (QRegExp* expression, *m_expressions)
+    foreach (QRegularExpression* expression, *m_expressions)
     {
-      if ((expression != nullptr) && expression->exactMatch(aDate.toString(Qt::TextDate)))
-      {
-        return true;
-      }
-    }
-    break;
-  case ValueFilter::RegExpPartial:
-    foreach (QRegExp* expression, *m_expressions)
-    {
-      if ((expression != nullptr) && (expression->indexIn(aDate.toString(Qt::TextDate)) >= 0))
-      {
-        return true;
+      if (expression != nullptr) {
+        QString stringValue = aDate.toString(Qt::TextDate);
+        QRegularExpressionMatch match = expression->match(stringValue);
+        if (match.hasMatch() && match.capturedLength(0) == stringValue.length()) {
+          return true;
+        }
       }
     }
     break;
@@ -835,23 +805,16 @@ bool ValueFilter::compareValues(const QDateTime& aDateTime) const
 {
   switch (m_compareType)
   {
-  case ValueFilter::RegExpFull:
   case ValueFilter::RegularExpression:
   case ValueFilter::FileSpec:
-    foreach (QRegExp* expression, *m_expressions)
+    foreach (QRegularExpression* expression, *m_expressions)
     {
-      if ((expression != nullptr) && expression->exactMatch(aDateTime.toString(Qt::TextDate)))
-      {
-        return true;
-      }
-    }
-    break;
-  case ValueFilter::RegExpPartial:
-    foreach (QRegExp* expression, *m_expressions)
-    {
-      if ((expression != nullptr) && (expression->indexIn(aDateTime.toString(Qt::TextDate)) >= 0))
-      {
-        return true;
+      if (expression != nullptr) {
+        QString stringValue = aDateTime.toString(Qt::TextDate);
+        QRegularExpressionMatch match = expression->match(stringValue);
+        if (match.hasMatch() && match.capturedLength(0) == stringValue.length()) {
+          return true;
+        }
       }
     }
     break;
@@ -915,30 +878,18 @@ bool ValueFilter::compareValues(const QString& value) const
   int i;
   switch (m_compareType)
   {
-  case ValueFilter::RegExpFull:
   case ValueFilter::RegularExpression:
   case ValueFilter::FileSpec:
     for (i=0; i<m_expressions->size(); ++i)
     {
-      QRegExp* expression = m_expressions->at(i);
+      QRegularExpression* expression = m_expressions->at(i);
       //TRACE_MSG(QString("Checking fileportion (%1) against (%2)").arg(value, m_values->at(i).toString()), 6);
-      if ((expression != nullptr) && expression->exactMatch(value))
-      {
-        //TRACE_MSG(QString("PASSED fileportion (%1) against (%2)").arg(value, m_values->at(i).toString()), 5);
-        return true;
-      }
-      else
-      {
-        //TRACE_MSG(QString("FAILED fileportion (%1) against (%2)").arg(value, m_values->at(i).toString()), 5);
-      }
-    }
-    break;
-  case ValueFilter::RegExpPartial:
-    foreach (QRegExp* expression, *m_expressions)
-    {
-      if ((expression != nullptr) && (expression->indexIn(value) >= 0))
-      {
-        return true;
+
+      if (expression != nullptr) {
+        QRegularExpressionMatch match = expression->match(value);
+        if (match.hasMatch() && match.capturedLength(0) == value.length()) {
+          return true;
+        }
       }
     }
     break;

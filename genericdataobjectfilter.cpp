@@ -4,8 +4,7 @@
 
 #include <QFileInfo>
 #include <QDir>
-#include <QRegExp>
-#include <QRegExp>
+#include <QRegularExpression>
 #include <QMetaObject>
 #include <QMetaEnum>
 #include <QXmlStreamReader>
@@ -69,7 +68,7 @@ void GenericDataObjectFilter::clearLists(bool deleteLists, bool createIfDoNotExi
     }
     if (m_expressions == nullptr)
     {
-      m_expressions = new QList<QRegExp*>();
+      m_expressions = new QList<QRegularExpression*>();
     }
   }
 }
@@ -125,7 +124,13 @@ void GenericDataObjectFilter::setCaseSensitivity(Qt::CaseSensitivity caseSensiti
     m_caseSensitivity = caseSensitivity;
     for (int i=0; i<m_expressions->size(); ++i)
     {
-      m_expressions->at(i)->setCaseSensitivity(m_caseSensitivity);
+      if (m_caseSensitivity == Qt::CaseInsensitive) {
+        m_expressions->at(i)->setPatternOptions(QRegularExpression::CaseInsensitiveOption);
+      } else {
+        QRegularExpression* reg = new QRegularExpression(m_expressions->at(i)->pattern());
+        delete m_expressions->at(i);
+        m_expressions->replace(i, reg);
+      }
     }
   }
 }
@@ -177,13 +182,13 @@ void GenericDataObjectFilter::setValue(const QVariant& value)
 void GenericDataObjectFilter::createLists()
 {
   clearLists(false, true);
-  if (!isMultiValued() || m_value.type() != QVariant::String)
+  if (!isMultiValued() || m_value.metaType().id() != QMetaType::QString)
   {
     m_values->append(m_value);
   }
   else
   {
-    QStringList list = m_value.toString().split(',', QString::SkipEmptyParts);
+    QStringList list = m_value.toString().split(',', Qt::SkipEmptyParts);
     foreach (QString s, list)
     {
       m_values->append(QVariant(s));
@@ -198,17 +203,21 @@ void GenericDataObjectFilter::createRegularExpressions()
   {
     if (value.isValid() && !value.isNull())
     {
-      if (value.type() == QVariant::RegExp)
+      //if (value.type() == QVariant::RegExp)
+      //{
+      //  m_expressions->append(new QRegularExpression(value.toRegExp()));
+      //}
+      //else
+      if (m_compareType == VariantComparer::RegularExpression || m_compareType == VariantComparer::RegExpFull || m_compareType == VariantComparer::RegExpPartial)
       {
-        m_expressions->append(new QRegExp(value.toRegExp()));
-      }
-      else if (m_compareType == VariantComparer::RegularExpression || m_compareType == VariantComparer::RegExpFull || m_compareType == VariantComparer::RegExpPartial)
-      {
-        m_expressions->append(new QRegExp(value.toString(), m_caseSensitivity, QRegExp::RegExp2));
+        QRegularExpression* reg = new QRegularExpression(value.toString());
+        if (m_caseSensitivity == Qt::CaseInsensitive) {
+          reg->setPatternOptions(QRegularExpression::CaseInsensitiveOption);
+        }
       }
       else if (m_compareType == VariantComparer::FileSpec)
       {
-        m_expressions->append(new QRegExp(value.toString(), m_caseSensitivity, QRegExp::WildcardUnix));
+        m_expressions->append(new QRegularExpression(QRegularExpression::fromWildcard(value.toString(), m_caseSensitivity)));
       }
       else
       {
@@ -218,12 +227,6 @@ void GenericDataObjectFilter::createRegularExpressions()
   }
 }
 
-
-void GenericDataObjectFilter::setValueDefault(const QVariant::Type aType)
-{
-    // TODO: Consider this
-    setValue(TypeMapper::getDefaultValue((const QMetaType::Type)aType));
-}
 
 void GenericDataObjectFilter::setValueDefault(const QMetaType::Type aType)
 {
@@ -241,7 +244,7 @@ bool GenericDataObjectFilter::variantMatchesFilter(const QVariant& obj) const
 {
   if (m_expressions != nullptr && (m_compareType == VariantComparer::RegularExpression || m_compareType == VariantComparer::FileSpec || m_compareType == VariantComparer::RegExpPartial))
   {
-    foreach (QRegExp* expression, *m_expressions)
+    foreach (QRegularExpression* expression, *m_expressions)
     {
       if (VariantComparer::matches(obj, obj, m_compareType, m_caseSensitivity, expression))
       {

@@ -11,7 +11,7 @@
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2014-2014
+ * \date 2014-2020
  ***************************************************************************/
 class VariantComparer : public QObject
 {
@@ -64,7 +64,7 @@ public:
    *  \param [in] expression Regular expression for an appropriate compare type.
    *  \return True if there is a match based on the compare type, false otherwise.
    ***************************************************************************/
-  static bool matches(const QVariant& v1, const QVariant& v2, const CompareType compareType, const Qt::CaseSensitivity cs = Qt::CaseInsensitive, const QRegExp* expression=nullptr);
+  static bool matches(const QVariant& v1, const QVariant& v2, const CompareType compareType, const Qt::CaseSensitivity cs = Qt::CaseInsensitive, const QRegularExpression* expression=nullptr);
 
 signals:
 

@@ -22,14 +22,24 @@ class QXmlStreamReader;
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2013-2014
+ * \date 2013-2020
  ***************************************************************************/
 class TableSortField : public QObject
 {
     Q_OBJECT
 public:
+  //**************************************************************************
+  /*! \brief Constructor copied from the specified filter object.
+   *
+   *  This assumes that the parent object is a nullptr.
+   *  I only added this version because it confused compilers when I moved to QT 6.
+   *
+   *  \param [in] filter This filter object is copied into this object.
+   *
+   ***************************************************************************/
+   TableSortField(const TableSortField& obj);
 
-    //**************************************************************************
+  //**************************************************************************
     /*! \brief Default constructor with the specified parent.
      *
      *  All objects owned by the parent are destroyed in the destructor.
@@ -44,7 +54,7 @@ public:
      *  \param [in] filter This filter object is copied into this object.
      *  \param [in] parent The object's owner.
      ***************************************************************************/
-    explicit TableSortField(const TableSortField& obj, QObject *parent = nullptr);
+    explicit TableSortField(const TableSortField& obj, QObject *parent);
 
     //**************************************************************************
     /*! \brief Constructor

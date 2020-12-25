@@ -4,19 +4,18 @@
 #include <QObject>
 #include <QVariant>
 #include <QDate>
-#include <QRegExp>
+#include <QRegularExpression>
 #include <QXmlStreamWriter>
 #include <QXmlStreamReader>
 
 class QFileInfo;
-class QRegExp;
 
 //**************************************************************************
 /*! \class ValueFilter
  * \brief Filter to decide if a specific value, file, or directory matches some criteria.
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2011-2013
+ * \date 2011-2020
  ***************************************************************************/
 
 class ValueFilter : public QObject
@@ -38,7 +37,7 @@ public:
     //**************************************************************************
     /*! \brief Enumerate the supported comparisons such as Less and Less Equal.*/
     //**************************************************************************
-    enum CompareType {Less, LessEqual, Equal, GreaterEqual, Greater, NotEqual, RegularExpression, FileSpec, Contains, RegExpPartial, RegExpFull};
+    enum CompareType {Less, LessEqual, Equal, GreaterEqual, Greater, NotEqual, RegularExpression, FileSpec, Contains};
 
     //**************************************************************************
     /*! \brief Enumerate the parts of a file that can be compared. */
@@ -210,7 +209,7 @@ public:
     void setValue(const QTime&);
     void setValue(const QDateTime&);
     void setValue(const QString&);
-    void setValue(const QRegExp&);
+    void setValue(const QRegularExpression&);
     void setValue(const double);
     void setValue(const int);
 
@@ -300,7 +299,7 @@ private:
     QList<QVariant>* m_values;
 
     /*! \brief If the value type is a regular expression, the regular expressions are stored here. */
-    QList<QRegExp*>* m_expressions;
+    QList<QRegularExpression*>* m_expressions;
 };
 
 
@@ -389,14 +388,14 @@ inline void ValueFilter::setValue(const QString& x)
   setValue(QVariant(x));
 }
 
-inline void ValueFilter::setValue(const QRegExp& x)
+inline void ValueFilter::setValue(const QRegularExpression& x)
 {
   setValue(QVariant(x));
 }
 
 inline QString ValueFilter::getMainValueAsString() const
 {
-  if (m_value.canConvert(QVariant::String))
+  if (m_value.canConvert(QMetaType(QMetaType::QString)))
   {
     return m_value.toString();
   } else {

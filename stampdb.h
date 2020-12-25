@@ -13,7 +13,6 @@
 
 class QSqlRecord;
 class QSqlField;
-class QStringList;
 class CSVReader;
 class QDir;
 class DataObjectBase;
@@ -288,7 +287,7 @@ private:
   QMap<QString, QSqlRecord> *m_tableMap;
 
   /*! Regular expression that matches on "create table  <name> (...)"  */
-  QRegExp *m_outerDDLRegExp;
+  QRegularExpression *m_outerDDLRegExp;
 
   // TODO: Replace this with the DDL returned by DescribeTables class.
   /*! Each string is the DDL to create a single table. */

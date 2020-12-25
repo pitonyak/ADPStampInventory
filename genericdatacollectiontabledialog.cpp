@@ -86,7 +86,7 @@ void GenericDataCollectionTableDialog::buildDialog()
   }
 
   vLayout = new QVBoxLayout();
-  vLayout->addWidget(m_tableView, 0, nullptr);
+  vLayout->addWidget(m_tableView, 0);
 
   QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal);
   connect(buttonBox, SIGNAL(accepted()), this, SLOT(clickedOK()));

@@ -31,17 +31,17 @@ QWidget *LinkBackFilterDelegate::createEditor(QWidget *parent, const QStyleOptio
     return nullptr;
   }
   QVariant qvar = index.model()->data(index, Qt::EditRole);
-  if (qvar.type() == QVariant::StringList)
+  if (qvar.metaType().id() == QMetaType::QStringList)
   {
     return new QComboBox(parent);
   }
-  else if (qvar.type() == QVariant::Bool)
+  else if (qvar.metaType().id() == QMetaType::Bool)
   {
     QCheckBox* checkBox = new QCheckBox(parent);
     checkBox->setTristate(false);
     return checkBox;
   }
-  else if (qvar.type() == QVariant::Date && !getDateFormatString().isEmpty())
+  else if (qvar.metaType().id() == QMetaType::QDate && !getDateFormatString().isEmpty())
   {
     QDateEdit* editor = new QDateEdit(parent);
     editor->setDisplayFormat(getDateFormatString());
@@ -49,7 +49,7 @@ QWidget *LinkBackFilterDelegate::createEditor(QWidget *parent, const QStyleOptio
     editor->setAutoFillBackground(true);
     return editor;
   }
-  else if (qvar.type() == QVariant::DateTime && !getDateTimeFormatString().isEmpty())
+  else if (qvar.metaType().id() == QMetaType::QDateTime && !getDateTimeFormatString().isEmpty())
   {
     QDateTimeEdit* editor = new QDateTimeEdit(parent);
     editor->setDisplayFormat(getDateTimeFormatString());
@@ -57,7 +57,7 @@ QWidget *LinkBackFilterDelegate::createEditor(QWidget *parent, const QStyleOptio
     editor->setAutoFillBackground(true);
     return editor;
   }
-  else if (qvar.type() == QVariant::Time && !getTimeFormatString().isEmpty())
+  else if (qvar.metaType().id() == QMetaType::QTime && !getTimeFormatString().isEmpty())
   {
     QTimeEdit* editor = new QTimeEdit(parent);
     editor->setDisplayFormat(getTimeFormatString());
@@ -79,20 +79,20 @@ QWidget *LinkBackFilterDelegate::createEditor(QWidget *parent, const QStyleOptio
 
 QString LinkBackFilterDelegate::displayText(const QVariant & value, const QLocale & locale ) const
 {
-  if (value.type() == QVariant::Date && !getDateFormatString().isEmpty())
+  if (value.metaType().id() == QMetaType::QDate && !getDateFormatString().isEmpty())
   {
     //qDebug(qPrintable(QString("%1 %2 %3").arg(value.toDate().toString()).arg(value.toDate().toString("")).arg(value.toDate().toString("MM/dd/yyy"))));
     return value.toDate().toString(getDateFormatString());
   }
-  else if (value.type() == QVariant::DateTime && !getDateTimeFormatString().isEmpty())
+  else if (value.metaType().id() == QMetaType::QDateTime && !getDateTimeFormatString().isEmpty())
   {
     return value.toDateTime().toString(getDateTimeFormatString());
   }
-  else if (value.type() == QVariant::Time && !getTimeFormatString().isEmpty())
+  else if (value.metaType().id() == QMetaType::QTime && !getTimeFormatString().isEmpty())
   {
       return value.toTime().toString(getTimeFormatString());
   }
-  else if (value.type() == QVariant::Bool)
+  else if (value.metaType().id() == QMetaType::Bool)
   {
       if (value.toBool())
       {
@@ -116,7 +116,7 @@ void LinkBackFilterDelegate::setEditorData(QWidget *editor, const QModelIndex &i
     return;
   }
   QVariant qvar = index.model()->data(index, Qt::EditRole);
-  if (qvar.type() == QVariant::StringList)
+  if (qvar.metaType().id() == QMetaType::QStringList)
   {
     QComboBox* comboBox = dynamic_cast<QComboBox*>(editor);
     QStringList qsl = qvar.toStringList();
@@ -134,21 +134,21 @@ void LinkBackFilterDelegate::setEditorData(QWidget *editor, const QModelIndex &i
       {
         if (QString::compare(comboBox->itemText(i), desiredItemText) == 0)
         {
-          qDebug(qPrintable(QString("Found item text %1 at %2").arg(desiredItemText).arg(i)));
+          qDebug() << QString("Found item text %1 at %2").arg(desiredItemText, i);
           comboBox->setCurrentIndex(i);
           return;
         }
       }
-      qDebug(qPrintable(QString("Did not find item text %1").arg(desiredItemText)));
+      qDebug() << QString("Did not find item text %1").arg(desiredItemText);
       comboBox->setCurrentIndex(0);
     }
   }
-//  else if (qvar.type() == QVariant::Bool)
+//  else if (qvar.metaType().id() == QMetaType::Bool)
 //  {
 //    QCheckBox* checkBox = dynamic_cast<QCheckBox*>(editor);
 //    checkBox->setChecked(qvar.toBool());
 //  }
-  else if (QMetaType::Bool == (QMetaType::Type) qvar.type())
+  else if (QMetaType::Bool == qvar.metaType().id())
   {
     QCheckBox* checkBox = dynamic_cast<QCheckBox*>(editor);
     checkBox->setChecked(qvar.toBool());
@@ -158,7 +158,7 @@ void LinkBackFilterDelegate::setEditorData(QWidget *editor, const QModelIndex &i
     QStyledItemDelegate::setEditorData(editor, index);
 
     /**
-    if (QMetaType::Double == (QMetaType::Type) qvar.type()) {
+    if (QMetaType::Double == qvar.metaType().id()) {
       QDoubleSpinBox edit = nullptr;
     }
     qDebug(qPrintable(QString("Edit type is: %1").arg(qvar.typeName())));

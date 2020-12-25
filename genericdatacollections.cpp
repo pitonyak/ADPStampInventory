@@ -29,7 +29,7 @@ QVariant GenericDataCollections::getValue(const QString& tableName, const int id
           return table->getObjectById(id)->getValueNative(fieldName);
       } else if (table->containsProperty(fieldName)) {
           TypeMapper mapper;
-          return QVariant(mapper.metaToVariantType(table->getPropertyTypeMeta(fieldName)));
+          return QVariant(QMetaType(table->getPropertyTypeMeta(fieldName)));
       }
   }
   return QVariant();

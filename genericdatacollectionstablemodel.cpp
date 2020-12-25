@@ -334,7 +334,7 @@ void GenericDataCollectionsTableModel::getRowsAscending(const QModelIndexList& l
       rows.append(list.at(i).row());
     }
   }
-  qSort(rows);
+  std::sort(rows.begin(), rows.end());
 }
 
 void GenericDataCollectionsTableModel::addRow()
@@ -451,7 +451,7 @@ bool GenericDataCollectionsTableModel::saveTrackedChanges(const QString& tableNa
                 if (!newData->containsValue(data.getPropertyName(iCol)))
                 {
                     TypeMapper mapper;
-                    query.bindValue(QString(":%1").arg(data.getPropertyName(iCol)), QVariant(mapper.metaToVariantType(data.getPropertyTypeMeta(iCol))));
+                    query.bindValue(QString(":%1").arg(data.getPropertyName(iCol)), QVariant(QMetaType((data.getPropertyTypeMeta(iCol)))));
                 } else {
                     // Assume that it converts to the correct type!
                     query.bindValue(QString(":%1").arg(data.getPropertyName(iCol)), newData->getValueNative(data.getPropertyName(iCol)));
@@ -506,7 +506,7 @@ bool GenericDataCollectionsTableModel::saveTrackedChanges(const QString& tableNa
               if (!newData->containsValue(fieldName))
               {
                   TypeMapper mapper;
-                  query.bindValue(QString(":%1").arg(fieldName), QVariant(mapper.metaToVariantType(data.getPropertyTypeMeta(fieldName))));
+                  query.bindValue(QString(":%1").arg(fieldName), QVariant(QMetaType(data.getPropertyTypeMeta(fieldName))));
               } else {
                   // Assume that it converts to the correct type!
                   query.bindValue(QString(":%1").arg(fieldName), newData->getValueNative(fieldName));

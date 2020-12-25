@@ -1,9 +1,12 @@
 #include "sqlfieldtype.h"
 
+
+Q_LOGGING_CATEGORY(sqlFieldTypeCategory, "andy.sqlfieldtype")
+
 SqlFieldType::SqlFieldType(QMetaType::Type qType, bool supportsLen, bool supportsPrec) :
     m_supportsLength(supportsLen),
     m_supportsPrecision(supportsPrec),
-    m_qtVariantType(qType)
+    m_qtMetaType(qType)
 {
 }
 
@@ -11,7 +14,7 @@ SqlFieldType::SqlFieldType(QMetaType::Type qType, bool supportsLen, bool support
 SqlFieldType::SqlFieldType(const QString& firstName, QMetaType::Type qType, bool supportsLen, bool supportsPrec) :
     m_supportsLength(supportsLen),
     m_supportsPrecision(supportsPrec),
-    m_qtVariantType(qType)
+    m_qtMetaType(qType)
 {
     addName(firstName);
 }
@@ -20,7 +23,7 @@ SqlFieldType::SqlFieldType(const QString& firstName, QMetaType::Type qType, bool
 SqlFieldType::SqlFieldType(const QString& firstName, const QString& secondName, QMetaType::Type qType, bool supportsLen, bool supportsPrec) :
     m_supportsLength(supportsLen),
     m_supportsPrecision(supportsPrec),
-    m_qtVariantType(qType)
+    m_qtMetaType(qType)
 {
     addName(firstName);
     addName(secondName);
@@ -51,42 +54,44 @@ SqlFieldType::~SqlFieldType()
 
 bool SqlFieldType::ddlMatches(const QString& ddl) const
 {
-    QScopedPointer<QRegExp> regExp(firstMatchingRegExp(ddl));
+    QScopedPointer<QRegularExpression> regExp(firstMatchingRegExp(ddl));
     return regExp ? true : false;
 }
 
 QString SqlFieldType::name(const QString& ddl) const
 {
-    QScopedPointer<QRegExp> regExp(firstMatchingRegExp(ddl));
+    QScopedPointer<QRegularExpression> regExp(firstMatchingRegExp(ddl));
     if (!regExp)
     {
         return "";
     }
-    return regExp->cap(1);
+
+    return regExp->match(ddl).captured(1);
 }
 QString SqlFieldType::declaration(const QString& ddl) const
 {
-    QScopedPointer<QRegExp> regExp(firstMatchingRegExp(ddl));
+    QScopedPointer<QRegularExpression> regExp(firstMatchingRegExp(ddl));
     if (!regExp)
     {
         return "";
     }
-    return regExp->cap(0);
+    return regExp->match(ddl).captured(0);
 }
 
 int SqlFieldType::length(const QString& ddl) const
 {
-    QScopedPointer<QRegExp> regExp(firstMatchingRegExp(ddl));
+    QScopedPointer<QRegularExpression> regExp(firstMatchingRegExp(ddl));
     if (!regExp)
     {
         return -1;
     }
-    return regExp->captureCount() > 1 ? regExp->cap(2).toInt() : -1;
+
+    return regExp->captureCount() > 1 ? regExp->match(ddl).captured(2).toInt() : -1;
 }
 
 QString SqlFieldType::stripNameAndLength(const QString& ddl) const
 {
-    QScopedPointer<QRegExp> regExp(firstMatchingRegExp(ddl));
+    QScopedPointer<QRegularExpression> regExp(firstMatchingRegExp(ddl));
     if (!regExp)
     {
         return ddl;
@@ -97,12 +102,12 @@ QString SqlFieldType::stripNameAndLength(const QString& ddl) const
 
 QMetaType::Type SqlFieldType::qtType() const
 {
-    return m_qtVariantType;
+    return m_qtMetaType;
 }
 
 void SqlFieldType::qtType(QMetaType::Type qType)
 {
-    m_qtVariantType = qType;
+    m_qtMetaType = qType;
 }
 
 bool SqlFieldType::supportsLength() const
@@ -124,20 +129,29 @@ void SqlFieldType::supportsPrecision(bool supportsPrec)
     m_supportsPrecision = supportsPrec;
 }
 
-QRegExp* SqlFieldType::firstMatchingRegExp(const QString& aName) const
+QRegularExpression* SqlFieldType::firstMatchingRegExp(const QString& aName) const
 {
+    // bases contains three different regular expressions.
+    // Each regular expression is some variant on white spaces and numbers.
+    // Initial testing shows that I am only testing against things such as "VARCHAR"
     const char* bases[] = {"\\(\\s*(-?\\d+)\\s*,\\s*(-?\\d+)\\s*\\)\\s*", "\\(\\s*(-?\\d+)\\s*\\)\\s*", ""};
     for (int iName=0; iName<m_supportedNames.size(); ++iName)
     {
-        QString temp = m_supportedNames.at(iName);
-        QString regExpStr_base = QString("^\\s*(%1)\\s*").arg(temp.replace(' ', "\\s+"));
+        QString aSupportedName = m_supportedNames.at(iName);
+        QString regExpStr_base = QString("^\\s*(%1)\\s*").arg(aSupportedName.replace(' ', "\\s+"));
         for (int iBase=0; iBase<3; ++iBase)
         {
-            QRegExp regExp(regExpStr_base + bases[iBase]);
-            regExp.setCaseSensitivity(Qt::CaseInsensitive);
-            if (regExp.indexIn(aName) >= 0)
-            {
-                return new QRegExp(regExpStr_base + bases[iBase]);
+            QRegularExpression regExp(regExpStr_base + bases[iBase]);
+            //qDebug(sqlFieldTypeCategory) << "Testing Regular Expression (2) " << regExp.pattern();
+            regExp.setPatternOptions(QRegularExpression::CaseInsensitiveOption);
+            if (!regExp.isValid()) {
+              // TODO: Do something
+              qWarning(sqlFieldTypeCategory) << "Invalid Regular Expression " << regExp.pattern();
+            }
+            QRegularExpressionMatch match = regExp.match(aName);
+            if (match.hasMatch()) {
+              //qDebug() << "Matched (" << aName << ") to " << "(" << match.capturedTexts().join(")(") << ")";
+              return new QRegularExpression(regExpStr_base + bases[iBase]);
             }
         }
     }
@@ -163,5 +177,5 @@ bool SqlFieldType::containsName(const QString& aName) const
 
 bool SqlFieldType::isValid()
 {
-    return m_qtVariantType != QMetaType::Void;
+    return m_qtMetaType != QMetaType::Void;
 }

@@ -59,14 +59,14 @@ QString CSVColumn::getQualifiedAsString() const
 
 QString CSVColumn::getTypeAsString() const
 {
-  return QMetaType::typeName(m_type);
+  return QMetaType(m_type).name();
 }
 
 QString CSVColumn::toString(bool brief) const
 {
   // TODO: get string delimiters from the controller
   QString value = m_qualified ? QString("\"%1\"").arg(m_value) : m_value;
-  return brief ? value : QString(tr("(%1, %2)")).arg(value).arg(getTypeAsString());
+  return brief ? value : QString(tr("(%1, %2)")).arg(value, getTypeAsString());
 }
 
 QMetaType::Type CSVColumn::guessType(const QString& s, const TypeMapper::ColumnConversionPreferences preference)
@@ -74,15 +74,15 @@ QMetaType::Type CSVColumn::guessType(const QString& s, const TypeMapper::ColumnC
   return m_typeMap.guessType(s, preference);
 }
 
-bool CSVColumn::canConvertToVariant() const
-{
-  return QVariant::fromValue(m_value).canConvert(m_typeMap.metaToVariantType(m_type));
-}
+// ?? TODO: bool CSVColumn::canConvertToVariant() const
+// ?? TODO: {
+  // ?? TODO: return QVariant::fromValue(m_value).canConvert(m_typeMap.metaToVariantType(m_type));
+// ?? TODO: }
 
 QVariant CSVColumn::toVariant() const
 {
   QVariant v = QVariant::fromValue(m_value);
-  if (v.convert(m_type))
+  if (v.convert(QMetaType(m_type)))
   {
     return v;
   }

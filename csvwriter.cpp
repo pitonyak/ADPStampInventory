@@ -18,21 +18,14 @@ CSVWriter::~CSVWriter()
 QString CSVWriter::prepForWriting(const QVariant& columnValue)
 {
     QVariant x(columnValue);
-    if (!x.convert(QMetaType::QString))
+    if (!x.convert(QMetaType(QMetaType::QString)))
     {
         // TODO: Error
 
     }
     else
     {
-        if (columnValue == QVariant::String)
-        {
-            return makeSafe(reduceSpaces(x.toString()));
-        }
-        else
-        {
-            return makeSafe(x.toString());
-        }
+        return makeSafe(reduceSpaces(x.toString()));
     }
     return QString();
 }

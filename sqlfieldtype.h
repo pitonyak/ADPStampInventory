@@ -3,6 +3,8 @@
 
 #include <QVariant>
 #include <QStringList>
+#include <QRegularExpression>
+#include <QLoggingCategory>
 
 //**************************************************************************
 //! Used to track types in DDL.
@@ -12,7 +14,10 @@
  * No attempt has been made to make this efficient. Ease of coding was
  * put in front of efficiency. That can be fixed if this is seen as
  * a choke point.
+ * \date 2011-2020
  **************************************************************************/
+
+Q_DECLARE_LOGGING_CATEGORY(sqlFieldTypeCategory)
 
 class SqlFieldType
 {
@@ -177,11 +182,25 @@ public:
     QString getFirstSupportedName() const { return m_supportedNames.size() > 0 ? m_supportedNames.first() : "Unknown"; }
 
 private:
-    QRegExp* firstMatchingRegExp(const QString& aName) const;
+    //**************************************************************************
+    //! I have no idea what this does
+    /*!
+     * Search the list of supported names. Supported names may contain a space, but the space is converted to a regular expression for one or more spaces.
+     *
+     * Check to see if the provided name is some variant of the supported name.
+     *
+     * \param aName Search the list of supported names for aName.
+     *
+     * \returns Regular expression
+     *
+     ***************************************************************************/
+    QRegularExpression* firstMatchingRegExp(const QString& aName) const;
 
     bool m_supportsLength;
     bool m_supportsPrecision;
-    QMetaType::Type m_qtVariantType;
+    QMetaType::Type m_qtMetaType;
+
+    // List of supported field names
     QStringList m_supportedNames;
 };
 

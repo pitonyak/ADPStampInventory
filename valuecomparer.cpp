@@ -48,9 +48,9 @@ int ValueComparer::valueCompare(const QVariant& v1, const QVariant& v2) const
     {
         return 0;
     }
-    if (v1.type() == v2.type())
+    if (v1.metaType().id() == v2.metaType().id())
     {
-        switch ((QMetaType::Type)(v1.type()))
+        switch ((v1.metaType().id()))
         {
         case QMetaType::QString :
         case QMetaType::QUrl :

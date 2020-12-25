@@ -12,8 +12,9 @@
 #include <QSqlQuery>
 #include <QSqlRecord>
 #include <QStringList>
-#include <QRegExp>
+#include <QRegularExpression>
 #include <QMessageBox>
+#include <QMetaType>
 #include <QVariant>
 #include <QMap>
 #include <QSet>
@@ -107,8 +108,8 @@ StampDB::StampDB(QObject *parent) :
                              " typeid INTEGER,"
                              " valuemultiplier FLOAT)";
 
-  m_outerDDLRegExp = new QRegExp("^\\s*create\\s+table\\s+([a-z0-9_\\-\\.]+)\\s*\\((.*)\\)\\s*$");
-  m_outerDDLRegExp->setCaseSensitivity(Qt::CaseInsensitive);
+  m_outerDDLRegExp = new QRegularExpression("^\\s*create\\s+table\\s+([a-z0-9_\\-\\.]+)\\s*\\((.*)\\)\\s*$");
+  m_outerDDLRegExp->setPatternOptions(QRegularExpression::CaseInsensitiveOption);
 
   // There are now two distinct methods to get the stamp schema!
   m_schema = DescribeSqlTables::getStampSchema();
@@ -201,15 +202,18 @@ bool StampDB::createSchema()
   bool ret = false;
   if (openDB()) {
 
-    QRegExp tableNameRegExp("create\\s+table\\s+(\\w+)");
-    tableNameRegExp.setCaseSensitivity(Qt::CaseInsensitive);
+    QRegularExpression tableNameRegExp("create\\s+table\\s+(\\w+)");
+    tableNameRegExp.setPatternOptions(QRegularExpression::CaseInsensitiveOption);
 
     QSqlQuery query(m_db);
     QStringList tables = m_db.tables(QSql::Tables);
     ret = true;
     for (int i=0; i<m_desiredSchemaDDLList->size() && ret; ++i) {
       const QString& ddl = m_desiredSchemaDDLList->at(i);
-      if (tableNameRegExp.indexIn(ddl) == -1) {
+      QRegularExpressionMatch match = tableNameRegExp.match(ddl);
+
+
+      if (!match.hasMatch()) {
 
         QMessageBox msgBox;
         msgBox.setText(tr("Schema Error: DDL does not contain 'create table'"));
@@ -219,8 +223,7 @@ bool StampDB::createSchema()
         msgBox.exec();
         ret = false;
 
-      } else if (tables.contains(tableNameRegExp.cap(1), Qt::CaseInsensitive)) {
-
+      } else if (tables.contains(match.captured(1), Qt::CaseInsensitive)) {
         // Table already exists.
         /*
                 QMessageBox msgBox;
@@ -233,7 +236,7 @@ bool StampDB::createSchema()
         //query.exec(QString("DROP TABLE %1").arg(tableNameRegExp.cap(1)));
 
       } else {
-        QString tableName = tableNameRegExp.cap(1);
+        QString tableName = match.captured(1);
         ret = query.exec(ddl);
         if (!ret) {
           QMessageBox msgBox;
@@ -298,8 +301,9 @@ QString StampDB::getSchema(const QString& tableName, const QSqlRecord& record) c
 QString StampDB::getSchema(const QSqlField& field) const
 {
   QString s = field.name() + " ";
-  switch (field.type()) {
-  case QVariant::String :
+
+  switch (field.metaType().id()) {
+  case QMetaType::QString :
     if (field.length() <= 0) {
       // Length is not available from the DB.
       // This must be SQLite.
@@ -308,28 +312,22 @@ QString StampDB::getSchema(const QSqlField& field) const
       s += QString("VARCHAR(%1)").arg(field.length());
     }
     break;
-  case QVariant::Int :
+  case QMetaType::Int :
     s += "INTEGER";
     break;
-  case QVariant::Double :
+  case QMetaType::Double :
     s += "DOUBLE";
     break;
-  case QVariant::Date :
+  case QMetaType::QDate :
     // SQLite returns a String for date.
     s += "DATE";
     break;
-  case QVariant::DateTime :
+  case QMetaType::QDateTime :
     // SQLite returns a String for date / time.
     s += "TIMESTAMP";
     break;
   default:
-    // This code is crazy, but, it prevent a compile time warning while converting the unsigned QVariant::Type to an int to get the typename.
-    unsigned u = field.type();
-    if (u > std::numeric_limits<int>::max()) {
-      throw std::overflow_error("QVariant::Type cannot be stored in a variable of type int.");
-    } else {
-      s += QVariant::typeToName(static_cast<int>(u));
-    }
+    s += field.metaType().name();
   }
 
   if (field.isAutoValue()) {
@@ -674,7 +672,7 @@ GenericDataCollection* StampDB::readTableSql(const QString& sql)
       QStringList duplicateColumns;
       for (int i=0; i<query.record().count(); ++i)
       {
-        if (!collection->appendPropertyName(query.record().fieldName(i), mapper.variantTypeToMetaType(query.record().field(i).type())))
+        if (!collection->appendPropertyName(query.record().fieldName(i), (QMetaType::Type) query.record().field(i).metaType().id()))
         {
           duplicateColumns.append(query.record().fieldName(i));
         }

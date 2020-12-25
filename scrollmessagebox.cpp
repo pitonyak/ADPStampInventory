@@ -8,9 +8,9 @@
 #include <QPushButton>
 #include <QAbstractButton>
 #include <QApplication>
-#include <QDesktopWidget>
 #include <QStringList>
-
+#include <QFontMetrics>
+#include <QScreen>
 
 ScrollMessageBox::ScrollMessageBox(QWidget * parent) : QDialog(parent)
 {
@@ -122,8 +122,8 @@ void ScrollMessageBox::updateSize()
   if (!isVisible())
     return;
 
-  QSize screenSize = QApplication::desktop()->availableGeometry(QCursor::pos()).size();
-
+  //QSize screenSize = QApplication::desktop()->availableGeometry(QCursor::pos()).size();
+  QSize screenSize = QGuiApplication::screens()[0]->size();
   // Limit screen size to 85% width except for screens less than 1024.
   // Since on a smaller screen I may really want the entire width; especially for even smaller screens.
   int hardLimit = screenSize.width() - screenSize.width() / 15;
@@ -137,7 +137,7 @@ void ScrollMessageBox::updateSize()
 
   {
     QFontMetrics fm(QApplication::font("QWorkspaceTitleBar"));
-    int windowTitleWidth = qMin(fm.width(windowTitle()) + 50, hardLimit);
+    int windowTitleWidth = qMin(fm.boundingRect(windowTitle()).width() + 50, hardLimit);
     if (windowTitleWidth > width)
     {
       width = windowTitleWidth;
@@ -157,7 +157,7 @@ void ScrollMessageBox::updateSize()
     QStringList sl = label->text().split("\n");
     for (int k=0; k<sl.size(); ++k)
     {
-        width = qMax(width, fm.width(sl[k])+100);
+        width = qMax(width, fm.boundingRect(sl[k]).width()+100);
     }
     width = qMin(width, hardLimit);
     width = qMax(width, hardLimit / 10);

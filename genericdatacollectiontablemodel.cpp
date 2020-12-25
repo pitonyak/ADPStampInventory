@@ -106,15 +106,15 @@ void GenericDataCollectionTableModel::getRowsAscending(const QModelIndexList& li
   QHash<int, int> rowHash;
   for (int i=0; i<list.size(); ++i)
   {
-    qDebug(qPrintable(QString("Checking entry %1 / %2").arg(i).arg(list.size())));
+    qDebug() << QString("Checking entry %1 / %2").arg(i, list.size());
     if (!rowHash.contains(list.at(i).row()))
     {
       rowHash.insert(list.at(i).row(), i);
       rows.append(list.at(i).row());
-      qDebug(qPrintable(QString(" row = %1 / %2").arg(list.at(i).row()).arg(rows.size())));
+      qDebug() << QString(" row = %1 / %2").arg(list.at(i).row(), rows.size());
     }
   }
-  qSort(rows);
+  std::sort(rows.begin(), rows.end());
 }
 
 void GenericDataCollectionTableModel::addRow()
@@ -158,7 +158,7 @@ void GenericDataCollectionTableModel::deleteRows(const QModelIndexList &list)
         }
         lastChanges->push(new ChangedObject<GenericDataObject>(row, -1, "", ChangedObjectBase::Delete, nullptr, oldData) );
       }
-      qDebug(qPrintable(QString("Removing row %1").arg(row)));
+      qDebug() << QString("Removing row %1").arg(row);
       beginRemoveRows(QModelIndex(), row, row);
       m_collection.removeRow(row);
       endRemoveRows();
@@ -216,7 +216,7 @@ bool GenericDataCollectionTableModel::saveTrackedChanges(const QString& tableNam
                 if (!newData->containsValue(data.getPropertyName(iCol)))
                 {
                     TypeMapper mapper;
-                    query.bindValue(QString(":%1").arg(data.getPropertyName(iCol)), QVariant(mapper.metaToVariantType(data.getPropertyTypeMeta(iCol))));
+                    query.bindValue(QString(":%1").arg(data.getPropertyName(iCol)), QVariant(QMetaType(data.getPropertyTypeMeta(iCol))));
                 } else {
                     // Assume that it converts to the correct type!
                     query.bindValue(QString(":%1").arg(data.getPropertyName(iCol)), newData->getValueNative(data.getPropertyName(iCol)));
@@ -301,15 +301,15 @@ bool GenericDataCollectionTableModel::saveTrackedChanges(const QString& tableNam
               QSqlQuery query(db);
               // TODO: What if the key field is not id.
               QString s = QString("UPDATE %1 SET %2=:%2 WHERE %3=:id").arg(tableName).arg(fieldName).arg("id");
-              qDebug(qPrintable(QString("Update (%1)").arg(s)));
+              qDebug() << QString("Update (%1)").arg(s);
               query.prepare(s);
               query.bindValue(":id", oldData->getInt("id"));
-              qDebug(qPrintable(QString("where id = %1").arg(oldData->getInt("id"))));
+              qDebug() << QString("where id = %1").arg(oldData->getInt("id"));
 
               if (!newData->containsValue(fieldName))
               {
                   TypeMapper mapper;
-                  query.bindValue(QString(":%1").arg(fieldName), QVariant(mapper.metaToVariantType(data.getPropertyTypeMeta(fieldName))));
+                  query.bindValue(QString(":%1").arg(fieldName), QVariant(QMetaType(data.getPropertyTypeMeta(fieldName))));
               } else {
                   // Assume that it converts to the correct type!
                   query.bindValue(QString(":%1").arg(fieldName), newData->getValueNative(fieldName));
@@ -392,7 +392,7 @@ void GenericDataCollectionTableModel::undoChange()
           qDebug("Undo the add!");
           //GenericDataObject* newData = topObject->getNewData();
           //row = m_collection.getIndexOf(newData->getInt("id", -1));
-          qDebug(qPrintable(QString("Delete row %1").arg(row)));
+          qDebug() << QString("Delete row %1").arg(row);
           beginRemoveRows(QModelIndex(), row, row);
           m_collection.removeRow(row);
           endRemoveRows();
@@ -405,7 +405,7 @@ void GenericDataCollectionTableModel::undoChange()
           qDebug("Got the old data!");
           if (oldData != nullptr)
           {
-            qDebug(qPrintable(QString("Inserting row %1").arg(row)));
+            qDebug() << QString("Inserting row %1").arg(row);
             beginInsertRows(QModelIndex(), row, row);
             qDebug("Ready for insert");
             m_collection.insertRow(row, topObject->takeOldData());
@@ -442,16 +442,16 @@ void GenericDataCollectionTableModel::undoChange()
 
 void GenericDataCollectionTableModel::duplicateRows(const QModelIndexList& list)
 {
-  qDebug(qPrintable(QString("duplicateRows %1").arg(list.size())));
+  qDebug() << QString("duplicateRows %1").arg(list.size());
   QList<int> rows;
   getRowsAscending(list, rows);
   QQueue<GenericDataObject*> dataToCopy;
   for (int i=0; i<rows.size(); ++i)
   {
-    qDebug(qPrintable(QString("Copying %1").arg(i)));
+    qDebug() << QString("Copying %1").arg(i);
     dataToCopy.enqueue(m_collection.getObjectByRow(rows.at(i)));
   }
-  qDebug(qPrintable(QString("duplicateRows %1").arg(rows.size())));
+  qDebug() << QString("duplicateRows %1").arg(rows.size());
   if (!rows.isEmpty())
   {
     int largestId = m_collection.getLargestId();

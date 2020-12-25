@@ -2,8 +2,6 @@
 #include <QIODevice>
 #include <QFile>
 #include <QTextStream>
-#include <QTextDecoder>
-#include <QTextCodec>
 #include <QList>
 #include <QVariant>
 #include <QDebug>
@@ -75,29 +73,7 @@ bool CSVReader::setStreamFromString(const QString& s)
 
 bool CSVReader::parseFromDevice(QIODevice* device)
 {
-    return parseFromDevice(device, QTextCodec::codecForLocale());
-}
-
-bool CSVReader::parseFromDevice(QIODevice* device, const char* codecName)
-{
-    return parseFromDevice(device, QTextCodec::codecForName(codecName));
-}
-
-bool CSVReader::parseFromDevice(QIODevice* device, QTextCodec *codec)
-{
-    if (device != nullptr && device->isReadable())
-    {
-        if (codec == nullptr)
-        {
-            codec = QTextCodec::codecForLocale();
-        }
-        if (codec != nullptr)
-        {
-            QTextDecoder textDecoder(codec);
-            return setStreamFromString(textDecoder.toUnicode(device->readAll()));
-        }
-    }
-    return false;
+  return setStreamFromString(device->readAll());
 }
 
 void CSVReader::readerInitialization()
@@ -107,7 +83,7 @@ void CSVReader::readerInitialization()
     m_positionInBuffer = 0;
     m_hasChar = false;
     m_hasLastChar = false;
-    m_lastChar = 0;
+    m_lastChar = (QChar) 0;
 
     // The buffer is 10MB in size.
     m_maxBufferRead = 10485760;
@@ -193,18 +169,18 @@ bool CSVReader::readToNextLine()
     bool lineSkipped = false;
     while (!lineSkipped && hasChar())
     {
-        if (currentChar() == 13)
+        if (currentChar().toLatin1() == 13)
         {
             lineSkipped = true;
-            if (moveToNextChar() && currentChar() == 10)
+            if (moveToNextChar() && currentChar().toLatin1() == 10)
             {
                 moveToNextChar();
             }
         }
-        else if (currentChar() == 10)
+        else if (currentChar().toLatin1() == 10)
         {
             lineSkipped = true;
-            if (moveToNextChar() && currentChar() == 13)
+            if (moveToNextChar() && currentChar().toLatin1() == 13)
             {
                 moveToNextChar();
             }
@@ -622,11 +598,11 @@ void CSVReader::guessColumnTypes(TypeMapper::ColumnConversionPreferences flags )
   {
     if (i == 0)
     {
-      s = QMetaType::typeName(m_columnTypes->at(i));
+      s = QMetaType(m_columnTypes->at(i)).name();
     }
     else
     {
-      s = s + ", " + QMetaType::typeName(m_columnTypes->at(i));
+      s = s + ", " + QMetaType(m_columnTypes->at(i)).name();
     }
   }
   qDebug() << qPrintable(s);

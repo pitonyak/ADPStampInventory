@@ -134,7 +134,7 @@ Qt::MatchFlags SearchOptions::getMatchFlags() const
   if (isStartsWith()) flags |= Qt::MatchStartsWith;
   if (isEndsWith()) flags |= Qt::MatchEndsWith;
   //if (isMatchAsString()) flags |= Qt::MatchFixedString;
-  if (isRegularExpression()) flags |= Qt::MatchRegExp;
+  if (isRegularExpression()) flags |= Qt::MatchRegularExpression;
   if (isWildCard()) flags |= Qt::MatchWildcard;
   if (isCaseSensitive()) flags |= Qt::MatchCaseSensitive;
   if (isWrap()) flags |= Qt::MatchWrap;
@@ -145,7 +145,7 @@ void SearchOptions::setMatchFlags(const Qt::MatchFlags flags)
 {
   if ((flags & Qt::MatchWildcard) == Qt::MatchWildcard) {
       setWildCard();
-  } else if ((flags & Qt::MatchRegExp) == Qt::MatchRegExp) {
+  } else if ((flags & Qt::MatchRegularExpression) == Qt::MatchRegularExpression) {
       setRegularExpression();
   } else {
     setMatchAsString();

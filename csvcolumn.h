@@ -118,7 +118,6 @@ public:
 
     QString toString(bool brief=true) const;
     QVariant toVariant() const;
-    bool canConvertToVariant() const;
 
     static QMetaType::Type guessType(const QString& s, const TypeMapper::ColumnConversionPreferences preference);
 

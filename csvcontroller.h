@@ -17,7 +17,7 @@
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2011-2013
+ * \date 2011-2020
  *
  **************************************************************************/
 
@@ -408,7 +408,7 @@ inline bool CSVController::isRecordDelimiter(const QChar c) const
 {
   if (m_recordDelimiterIsDefault)
   {
-    return (c == 13 || c == 10);
+    return (c.toLatin1() == 13 || c.toLatin1() == 10);
   }
   return (m_textDelimiter == c);
 }

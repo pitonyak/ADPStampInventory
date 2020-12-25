@@ -39,8 +39,8 @@ int Comparer::compare(const QString& x1, const QString& x2, Qt::CaseSensitivity 
 
 int Comparer::compare(const QVariant& x1, const QVariant& x2, Qt::CaseSensitivity cs)
 {
-  QMetaType::Type x1Type = mapper.variantTypeToMetaType(x1.type());
-  QMetaType::Type x2Type = mapper.variantTypeToMetaType(x2.type());
+  QMetaType::Type x1Type = (QMetaType::Type) x1.metaType().id();
+  QMetaType::Type x2Type = (QMetaType::Type) x2.metaType().id();
 
   if (x1.isNull() || !x1.isValid())
   {
@@ -50,7 +50,7 @@ int Comparer::compare(const QVariant& x1, const QVariant& x2, Qt::CaseSensitivit
   {
     return 1;
   }
-  else if (x1.type() == x2.type())
+  else if (x1.metaType().id() == x2.metaType().id())
   {
     if (x1Type == QMetaType::QString || x1Type == QMetaType::QUrl || x1Type == QMetaType::QUuid)
     {

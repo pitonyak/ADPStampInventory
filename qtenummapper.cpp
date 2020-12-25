@@ -57,15 +57,6 @@ const QMap<int, QString> *QtEnumMapper::getEnumData(const QString &typeName) con
 
 void QtEnumMapper::initialize()
 {
-  QMap<int, QString>* regExpPatterns = new QMap<int, QString>();
-  (*regExpPatterns)[QRegExp::RegExp] = "Perl-Like";
-  (*regExpPatterns)[QRegExp::RegExp2] = "Greedy Perl-Like";
-  (*regExpPatterns)[QRegExp::Wildcard] = "Wild Card";
-  (*regExpPatterns)[QRegExp::WildcardUnix] = "Wild Card Unix";
-  (*regExpPatterns)[QRegExp::FixedString] = "Fixed String";
-  (*regExpPatterns)[QRegExp::W3CXmlSchema11] = "W3C XML Schema";
-  m_valueToName["PatternSyntax"] = regExpPatterns;
-
   // Names match those in the XmlUtility class.
   QMap<int, QString>* caseNames = new QMap<int, QString>();
   (*caseNames)[Qt::CaseInsensitive] = "CaseInsensitive";

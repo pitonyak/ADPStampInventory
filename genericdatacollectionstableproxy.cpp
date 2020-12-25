@@ -1,6 +1,10 @@
 #include "genericdatacollectionstableproxy.h"
 #include "searchoptions.h"
 
+Q_DECLARE_LOGGING_CATEGORY(GenericDataCollectionsTableProxyCategory)
+Q_LOGGING_CATEGORY(GenericDataCollectionsTableProxyCategory, "andy.genericdatacollectionstableproxycategory")
+
+
 GenericDataCollectionsTableProxy::GenericDataCollectionsTableProxy(QObject *parent) :
   QSortFilterProxyModel(parent)
 {
@@ -32,7 +36,7 @@ bool GenericDataCollectionsTableProxy::lessThan(const QModelIndex &left, const Q
   QVariant leftData = sourceModel()->data(left);
   QVariant rightData = sourceModel()->data(right);
 
-  if (leftData.type() == QVariant::String)
+  if (leftData.metaType().id() == QMetaType::QString)
   {
     QString leftString = leftData.toString();
     QString rightString = rightData.toString();
@@ -157,7 +161,7 @@ bool GenericDataCollectionsTableProxy::oneMatch(const QModelIndex& startIndex, c
 
 QModelIndexList GenericDataCollectionsTableProxy::searchOneColumn(const QModelIndex& startIndex, const SearchOptions& options)
 {
-  qDebug(qPrintable(QString("one col has Row: %2  Col: %1").arg(startIndex.column()).arg(startIndex.row())));
+  qDebug(GenericDataCollectionsTableProxyCategory) << "searchOneColumn startIndex (row,col) : (" << startIndex.row() << ", " << startIndex.column() << ")";
   QString sFindText = options.getFindValue();  
 
   if (options.isReplace())
@@ -249,7 +253,7 @@ QModelIndexList GenericDataCollectionsTableProxy::search(const QModelIndex &star
   QList<int> columnList;
   int numCols = columnCount();
   int startCol = startIndex.column();
-  int startRow = startIndex.row();
+  //int startRow = startIndex.row();
   for (int i=startCol; i < numCols; ++i) {
     columnList << i;
   }
@@ -260,16 +264,16 @@ QModelIndexList GenericDataCollectionsTableProxy::search(const QModelIndex &star
 
   QModelIndexList list;
   for (int i=0; i<columnList.count(); ++i) {
-    qDebug(qPrintable(QString("Index %1 row: %2  col: %3").arg(i).arg(startRow).arg(columnList.at(i))));
+    //qDebug(GenericDataCollectionsTableProxyCategory) << QString("Index %1 row: %2  col: %3").arg(i, startRow, columnList.at(i));
 
     QModelIndex index = sourceModel()->index(startIndex.row(), columnList.at(i), QModelIndex());
-    qDebug(qPrintable(QString("Search index row: %1  col: %2").arg(index.row()).arg(index.column())));
+    //qDebug(GenericDataCollectionsTableProxyCategory) << QString("Search index row: %1  col: %2").arg(index.row(), index.column());
     list.append(searchOneColumn(index, options));
     if (list.count() > 0 && !options.isReplaceAll()) {
       return list;
     }
   }
-  qDebug(qPrintable(QString("Cols: %1  Rows: %2").arg(columnCount()).arg(rowCount())));
+  //qDebug(GenericDataCollectionsTableProxyCategory) << QString("Cols: %1  Rows: %2").arg(columnCount(), rowCount());
   return list;
 }
 

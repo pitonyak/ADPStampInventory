@@ -5,6 +5,7 @@
 #include <QUrl>
 #include <QUuid>
 #include <QDebug>
+#include <algorithm>
 
 GenericDataCollection::GenericDataCollection(QObject *parent) :
   QObject(parent), m_largestId(-1), m_trackChanges(false)
@@ -126,7 +127,7 @@ bool GenericDataCollection::exportToCSV(CSVWriter& writer) const
 
   // Export the data ordered by ID
   QList<int> objKeys = m_objects.keys();
-  qSort(objKeys);
+  std::sort(objKeys.begin(), objKeys.end());
 
   for (int idx=0; idx < objKeys.size(); ++idx)
   {
@@ -269,7 +270,7 @@ void GenericDataCollection::sort()
     m_sortedIDs = m_objects.keys();
     if (m_sortFields.size() == 0)
     {
-        qSort(m_sortedIDs);
+        std::sort(m_sortedIDs.begin(), m_sortedIDs.end());
     }
     else
     {
@@ -316,7 +317,7 @@ GenericDataObject* GenericDataCollection::createEmptyObject() const
                 data->setValueNative(m_propertyNames.at(i), QUrl());
                 break;
 
-            case QVariant::Uuid :
+            case QMetaType::QUuid :
                 data->setValueNative(m_propertyNames.at(i), QUuid());
                 break;
 
@@ -342,7 +343,7 @@ GenericDataObject* GenericDataCollection::createEmptyObject() const
                 break;
 
             default:
-              qDebug() << qPrintable(QString("Type %1 not supported").arg(QMetaType::typeName(m_metaTypes.at(i))));
+              qDebug() << QString("Type %1 not supported").arg(QMetaType(m_metaTypes.at(i)).name());
             }
         }
     }

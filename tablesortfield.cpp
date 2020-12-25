@@ -6,14 +6,14 @@
 #include <QXmlStreamReader>
 #include <QXmlStreamAttributes>
 
-const QString s_Ascending = "Ascending";
-const QString s_Descending = "Descending";
-
-
 TableSortField::TableSortField(QObject *parent) : QObject(parent),
     m_comparer(nullptr), m_fieldIndex(-1), m_sortOrder(Qt::AscendingOrder), m_MetaType(QMetaType::UnknownType)
 {
     m_comparer = new ValueComparer(Qt::CaseInsensitive);
+}
+
+TableSortField::TableSortField(const TableSortField& obj) : TableSortField(obj, nullptr) {
+
 }
 
 TableSortField::TableSortField(const TableSortField& obj, QObject *parent) : QObject(parent)
@@ -60,19 +60,19 @@ const TableSortField& TableSortField::operator=(const TableSortField& obj)
 
 QString TableSortField::sortOrderToName(const Qt::SortOrder sortOrder)
 {
-    return sortOrder == Qt::AscendingOrder ? s_Ascending : s_Descending;
+    return sortOrder == Qt::AscendingOrder ? "Ascending" : "Descending";
 }
 
 Qt::SortOrder TableSortField::sortOrderFromName(const QString& name)
 {
-    return name.compare(s_Descending, Qt::CaseInsensitive) == 0 ? Qt::DescendingOrder : Qt::AscendingOrder;
+    return name.compare("Descending", Qt::CaseInsensitive) == 0 ? Qt::DescendingOrder : Qt::AscendingOrder;
 }
 
 QStringList TableSortField::sortOrderNames()
 {
     QStringList list;
-    list << s_Ascending;
-    list << s_Descending;
+    list << "Ascending";
+    list << "Descending";
     return list;
 }
 
@@ -84,7 +84,7 @@ QXmlStreamWriter& TableSortField::write(QXmlStreamWriter& writer) const
   writer.writeAttribute("Index", QString("%1").arg(m_fieldIndex));
   writer.writeAttribute("CaseSensitive", m_comparer != nullptr && m_comparer->caseSensitivity() == Qt::CaseSensitive ? "True" : "False");
   writer.writeAttribute("Type", mapper.getMetaName(m_MetaType));
-  writer.writeAttribute(s_Ascending, isAscending() ? "True" : "False");
+  writer.writeAttribute("Ascending", isAscending() ? "True" : "False");
   writer.writeEndElement();
   return writer;
 }
@@ -147,9 +147,9 @@ QXmlStreamReader& TableSortField::read(QList<TableSortField>& list, QXmlStreamRe
               if (attr.hasAttribute("Type")) {
                 field.setFieldType(mapper.getMetaType(attr.value("Type").toString()));
               }
-              if (attr.hasAttribute(s_Ascending)) {
-                //qDebug(qPrintable(QString("ascending = %1").arg(attr.value(s_Ascending).toString())));
-                field.setSortOrder(XMLUtility::stringToBoolean(attr.value(s_Ascending).toString()) ? Qt::AscendingOrder : Qt::DescendingOrder);
+              if (attr.hasAttribute("Ascending")) {
+                //qDebug(qPrintable(QString("ascending = %1").arg(attr.value("Ascending").toString())));
+                field.setSortOrder(XMLUtility::stringToBoolean(attr.value("Ascending").toString()) ? Qt::AscendingOrder : Qt::DescendingOrder);
               }
               list.append(field);
               //qDebug(qPrintable(QString("Read field %1").arg(field.fieldName())));

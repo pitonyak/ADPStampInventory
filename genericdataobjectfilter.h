@@ -6,11 +6,17 @@
 #include <QObject>
 #include <QVariant>
 #include <QMetaType>
+#include <QDate>
+#include <QDateTime>
+#include <QTime>
+#include <QString>
+#include <QRegularExpression>
 
 
 class QXmlStreamWriter;
 class QXmlStreamReader;
 class GenericDataObject;
+class QRegularExpression;
 
 //**************************************************************************
 /*! \class GenericDataObjectFilter
@@ -142,7 +148,6 @@ public:
      ***************************************************************************/
     const QVariant& getValue() const;
     void setValue(const QVariant& value);
-    void setValueDefault(const QVariant::Type aType);
     void setValueDefault(const QMetaType::Type aType);
 
     void setValue(const qlonglong);
@@ -150,7 +155,7 @@ public:
     void setValue(const QTime&);
     void setValue(const QDateTime&);
     void setValue(const QString&);
-    void setValue(const QRegExp&);
+    void setValue(const QRegularExpression&);
 
     QXmlStreamWriter& operator<<(QXmlStreamWriter& writer) const;
     QXmlStreamReader& operator>>(QXmlStreamReader& reader);
@@ -184,9 +189,8 @@ private:
     /*! \brief Single value representation of this filter. */
     QVariant m_value;
 
-    //QRegExp* m_regularExpression;
     QList<QVariant>* m_values;
-    QList<QRegExp*>* m_expressions;
+    QList<QRegularExpression*>* m_expressions;
 
     // TODO: New things!
     QMetaType::Type m_fieldType;
@@ -263,7 +267,7 @@ inline void GenericDataObjectFilter::setValue(const QString& x)
   setValue(QVariant(x));
 }
 
-inline void GenericDataObjectFilter::setValue(const QRegExp& x)
+inline void GenericDataObjectFilter::setValue(const QRegularExpression& x)
 {
   setValue(QVariant(x));
 }

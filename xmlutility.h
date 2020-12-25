@@ -2,7 +2,7 @@
 #define XMLUTILITY_H
 
  #include <QString>
-#include <QRegExp>
+#include <QRegularExpression>
 
 class QXmlStreamWriter;
 class QXmlStreamReader;
@@ -17,7 +17,7 @@ class QXmlStreamReader;
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2011-2013
+ * \date 2013-2020
  ***************************************************************************/
 
 class XMLUtility
@@ -65,11 +65,13 @@ public:
      * Writes the name with attributes "IsMinimal", "Pattern" (pattern syntax), and
      * "CaseSensitive". The regular expression is written as characters in the XML.
      *
+     * Note that Pattern Syntax is no longer valid, so this will for certain cause problems.
+     *
      *  \param [in, out] writer XML Writer to which the regular expression is written.
      *  \param [in] regexp Regulra expression to write.
      *  \param [in] name Element name.
      ***************************************************************************/
-    static void write(QXmlStreamWriter& writer, const QRegExp& regexp, const QString& name);
+    static void write(QXmlStreamWriter& writer, const QRegularExpression& regexp, const QString& name);
 
     //**************************************************************************
     /*! \brief Read a regular expression object into a newly allocated regular expression object. You own it, delete it when you are finished.
@@ -79,7 +81,7 @@ public:
      *  \param [in, out] reader
      *  \return Pointer to the newly allocated regular expression object. You own it, delete it when you are finished.
      ***************************************************************************/
-    static QRegExp* readRegExp(QXmlStreamReader& reader);
+    static QRegularExpression* readRegExp(QXmlStreamReader& reader);
 
     //**************************************************************************
     /*! \brief Shortcut to quickly write an elment with one attribute.

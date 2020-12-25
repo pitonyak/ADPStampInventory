@@ -3,6 +3,7 @@
 #include <QDateTime>
 #include <QDate>
 #include <QTime>
+#include <QRegularExpression>
 
 
 VariantComparer::VariantComparer(QObject *parent) :
@@ -12,26 +13,26 @@ VariantComparer::VariantComparer(QObject *parent) :
 
 QString VariantComparer::variantToString(const QVariant& v)
 {
-  if (v.type() == QVariant::DateTime)
+  if (v.metaType().id() == QMetaType::QDateTime)
   {
     return v.toDateTime().toString("MM/dd/yyyy hh:mm:ss A");
   }
-  else if (v.type() == QVariant::Date)
+  else if (v.metaType().id() == QMetaType::QDate)
   {
     return v.toDate().toString("MM/dd/yyyy");
   }
-  else if (v.type() == QVariant::DateTime)
+  else if (v.metaType().id() == QMetaType::QDateTime)
   {
     return v.toTime().toString("hh:mm:ss A");
   }
-  else if (v.type() == QVariant::Bool)
+  else if (v.metaType().id() == QMetaType::Bool)
   {
     return v.toBool() ? "TRUE" : "FALSE";
   }
   return v.toString();
 }
 
-bool VariantComparer::matches(const QVariant& v1, const QVariant& v2, const CompareType compareType, const Qt::CaseSensitivity cs, const QRegExp* expression)
+bool VariantComparer::matches(const QVariant& v1, const QVariant& v2, const CompareType compareType, const Qt::CaseSensitivity cs, const QRegularExpression* expression)
 {
   switch (compareType)
   {
@@ -76,11 +77,11 @@ bool VariantComparer::matches(const QVariant& v1, const QVariant& v2, const Comp
     {
       if (compareType == RegExpFull || compareType == RegularExpression || compareType == FileSpec)
       {
-        return expression->exactMatch(variantToString(v1));
+        return expression->match(variantToString(v1)).hasMatch();
       }
       else if (compareType == RegExpPartial)
       {
-        return (expression->indexIn(variantToString(v1)) >= 0);
+        return (expression->match(variantToString(v1)).hasPartialMatch());
       }
     }
     else
@@ -95,9 +96,9 @@ bool VariantComparer::matches(const QVariant& v1, const QVariant& v2, const Comp
 
 int VariantComparer::compare(const QVariant& v1, const QVariant& v2, const Qt::CaseSensitivity cs)
 {
-  QMetaType::Type m1 = (QMetaType::Type)v1.type();
-  QMetaType::Type m2 = (QMetaType::Type)v2.type();
-  if (v1.type() == v2.type())
+  QMetaType::Type m1 = (QMetaType::Type) v1.metaType().id();
+  QMetaType::Type m2 = (QMetaType::Type) v2.metaType().id();
+  if (m1 == m2)
   {
     return compareSameType(v1, v2, cs);
   }
@@ -112,8 +113,8 @@ int VariantComparer::compare(const QVariant& v1, const QVariant& v2, const Qt::C
   {
     return v1.toString().compare(v2.toString(), cs);
   }
-  else if (((m1 == QMetaType::Double || m1 == QMetaType::Float) && v2.canConvert(QVariant::Double)) ||
-           ((m2 == QMetaType::Double || m2 == QMetaType::Float) && v1.canConvert(QVariant::Double)))
+  else if (((m1 == QMetaType::Double || m1 == QMetaType::Float) && v2.canConvert(QMetaType(QMetaType::Double))) ||
+           ((m2 == QMetaType::Double || m2 == QMetaType::Float) && v1.canConvert(QMetaType(QMetaType::Double))))
   {
     double d1 = v1.toDouble();
     double d2 = v2.toDouble();
@@ -136,14 +137,14 @@ int VariantComparer::compare(const QVariant& v1, const QVariant& v2, const Qt::C
     QDateTime dt2 = v2.toDateTime();
     return (dt1 == dt2) ? 0 : (dt1 < dt2 ? -1 : 1);
   }
-  qDebug(qPrintable(QString("cannot convert from type %1 to type %2").arg(v2.typeName()).arg(v1.typeName())));
+  qDebug() << QString("cannot convert from type %1 to type %2").arg(v2.typeName(), v1.typeName());
   return 0;
 }
 
 int VariantComparer::compareSameType(const QVariant& v1, const QVariant& v2, const Qt::CaseSensitivity cs)
 {
-  Q_ASSERT_X(v2.canConvert(v1.type()), "VariantComparer::compareSameType", qPrintable(QString("cannot convert from type %1 to type %2").arg(v2.typeName()).arg(v1.typeName())));
-  switch ((QMetaType::Type)v1.type())
+  Q_ASSERT_X(v2.canConvert(v1.metaType()), "VariantComparer::compareSameType", qPrintable(QString("cannot convert from type %1 to type %2").arg(v2.typeName()).arg(v1.typeName())));
+  switch (v1.metaType().id())
   {
   case QMetaType::Bool :
   {
@@ -261,13 +262,11 @@ int VariantComparer::compareSameType(const QVariant& v1, const QVariant& v2, con
   case QMetaType::QTextFormat :
   case QMetaType::QRect :
   case QMetaType::QPoint :
-  case QMetaType::QRegExp :
   case QMetaType::QRegularExpression :
   case QMetaType::QPointF :
   case QMetaType::QPalette :
   case QMetaType::QFont :
   case QMetaType::QBrush :
-  case QMetaType::QRegion :
   case QMetaType::QBitArray :
   case QMetaType::QImage :
   case QMetaType::QKeySequence :
@@ -275,8 +274,6 @@ int VariantComparer::compareSameType(const QVariant& v1, const QVariant& v2, con
   case QMetaType::QPixmap :
   case QMetaType::QLocale :
   case QMetaType::QBitmap :
-  case QMetaType::QMatrix :
-  case QMetaType::QTransform :
   case QMetaType::QMatrix4x4 :
   case QMetaType::QVector2D :
   case QMetaType::QVector3D :

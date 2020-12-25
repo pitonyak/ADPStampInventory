@@ -4,7 +4,6 @@
 #include <QMap>
 #include <QString>
 
-#include <QRegExp>
 #include <QList>
 
 //**************************************************************************
@@ -18,7 +17,7 @@
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2011-2014
+ * \date 2011-2020
  ***************************************************************************/
 class QtEnumMapper
 {
@@ -58,22 +57,6 @@ public:
    ***************************************************************************/
   QString enumToString(const QString& typeName, const int value, const QString& defaultName = "") const;
 
-  //**************************************************************************
-  /*! \brief Courtesy method for calling stringToEnum for regular expression syntax types.
-   *  \param [in] name Expression pattern name.
-   *  \param [in] defaultValue Value to use if the name is not found (defaults to RegExp2).
-   *  \return Regular Expression pattern syntax for the given name.
-   ***************************************************************************/
-  QRegExp::PatternSyntax stringToPatternSyntax(const QString& name, const QRegExp::PatternSyntax defaultValue = QRegExp::RegExp2) const;
-
-  //**************************************************************************
-  /*! \brief Courtesy method for calling enumToString for regular expression syntax types.
-   *  \param [in] value Enum value of interest.
-   *  \param [in] defaultName Enum name to use if it is not found. Defaults to "Greedy Perl-Like"
-   *  \return String representation of the enum value.
-   ***************************************************************************/
-  QString PatternSyntaxToString(const int value, const QString& defaultName = "Greedy Perl-Like") const;
-
 private:
   //**************************************************************************
   /*! \brief Get the map from enum value to enum Name.
@@ -95,14 +78,6 @@ private:
    ***************************************************************************/
   QMap<QString, QMap<int, QString>* > m_valueToName;
 };
-
-inline QRegExp::PatternSyntax QtEnumMapper::stringToPatternSyntax(const QString& name, const QRegExp::PatternSyntax defaultValue) const {
-  return static_cast<QRegExp::PatternSyntax>(stringToEnum("PatternSyntax", name, defaultValue));
-}
-
-inline QString QtEnumMapper::PatternSyntaxToString(const int value, const QString& defaultName) const {
-  return enumToString("PatternSyntax", value, defaultName);
-}
 
 
 #endif // QTENUMMAPPER_H

@@ -12,11 +12,11 @@ bool LinkedFieldSelectionCache::hasCacheIdentifier(const QString& tableName, con
 
 QString LinkedFieldSelectionCache::buildCacheIdentifier(const QString& targetTableName, const QStringList fields) const
 {
-    return QString("%1|%2").arg(targetTableName).arg(fields.join('|'));
+    return QString("%1|%2").arg(targetTableName, fields.join('|'));
 }
 QString LinkedFieldSelectionCache::buildCacheIdentifier(const QString& targetTableName, const QString& field) const
 {
-    return QString("%1|%2").arg(targetTableName).arg(field);
+    return QString("%1|%2").arg(targetTableName, field);
 }
 
 QString LinkedFieldSelectionCache::setCacheIdentifier(const QString& tableName, const QString& fieldName, const QString& targetTableName, const QStringList fields)

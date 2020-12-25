@@ -1,13 +1,13 @@
 #include "simpleloggerroutinginfo.h"
 #include "xmlutility.h"
-#include <QRegExp>
+#include <QRegularExpression>
 #include <QMetaEnum>
 #include <QMetaObject>
 #include <QMapIterator>
 
 SimpleLoggerRoutingInfo SimpleLoggerRoutingInfo::privateObjectForMetaData;
 
-SimpleLoggerRoutingInfo::SimpleLoggerRoutingInfo(QObject *parent) : QObject(parent), m_levels(nullptr), m_routing(nullptr), m_locationRegExp(nullptr), m_messageRegExp(nullptr), m_locationRegExpPatternSyntax(QRegExp::RegExp2), m_messageRegExpPatternSyntax(QRegExp::RegExp2), m_enabled(true)
+SimpleLoggerRoutingInfo::SimpleLoggerRoutingInfo(QObject *parent) : QObject(parent), m_levels(nullptr), m_routing(nullptr), m_locationRegExp(nullptr), m_messageRegExp(nullptr), m_enabled(true)
 {
   const QMetaObject* metaObj = metaObject();
   QMetaEnum metaEnum = metaObj->enumerator(metaObj->indexOfEnumerator("MessageCategory"));
@@ -130,14 +130,17 @@ int SimpleLoggerRoutingInfo::getCategoryLevel(MessageCategory category) const
 
 bool SimpleLoggerRoutingInfo::setLocationRegExp(const QString& regExp)
 {
-  QRegExp* newRegExpr = nullptr;
+  QRegularExpression* newRegExpr = nullptr;
   if (regExp.length() > 0)
   {
-    newRegExpr = new QRegExp(regExp, Qt::CaseInsensitive, m_locationRegExpPatternSyntax);
+    newRegExpr = new QRegularExpression(regExp);
     if (!newRegExpr->isValid())
     {
       delete newRegExpr;
       return false;
+    }
+    if (getLocationRegExpCaseSensitivity() == Qt::CaseInsensitive) {
+      newRegExpr->setPatternOptions(QRegularExpression::CaseInsensitiveOption);
     }
   }
 
@@ -155,20 +158,6 @@ QString SimpleLoggerRoutingInfo::getLocationRegExpString() const
   return (m_locationRegExp == nullptr) ? "" : m_locationRegExp->pattern();
 }
 
-QRegExp::PatternSyntax SimpleLoggerRoutingInfo::getLocationRegExpPatternSyntax() const
-{
-  return m_locationRegExpPatternSyntax;
-}
-
-void SimpleLoggerRoutingInfo::setLocationRegExpPatternSyntax(const QRegExp::PatternSyntax syntax)
-{
-  m_locationRegExpPatternSyntax = syntax;
-  if (m_locationRegExp != nullptr)
-  {
-    m_locationRegExp->setPatternSyntax(syntax);
-  }
-}
-
 Qt::CaseSensitivity SimpleLoggerRoutingInfo::getLocationRegExpCaseSensitivity() const
 {
   return m_locRegExpCaseSensitivity;
@@ -181,21 +170,30 @@ void SimpleLoggerRoutingInfo::setLocationRegExpCaseSensitivity(const Qt::CaseSen
     m_locRegExpCaseSensitivity = cs;
     if (m_locationRegExp != nullptr)
     {
-      m_locationRegExp->setCaseSensitivity(cs);
+      if (cs == Qt::CaseInsensitive) {
+        m_locationRegExp->setPatternOptions(QRegularExpression::CaseInsensitiveOption);
+      } else {
+        QString s = m_locationRegExp->pattern();
+        delete m_locationRegExp;
+        m_locationRegExp = new QRegularExpression(s);
+      }
     }
   }
 }
 
 bool SimpleLoggerRoutingInfo::setMessageRegExp(const QString& regExp)
 {
-  QRegExp* newRegExpr = nullptr;
+  QRegularExpression* newRegExpr = nullptr;
   if (regExp.length() > 0)
   {
-    newRegExpr = new QRegExp(regExp, Qt::CaseInsensitive, m_locationRegExpPatternSyntax);
+    newRegExpr = new QRegularExpression(regExp);
     if (!newRegExpr->isValid())
     {
       delete newRegExpr;
       return false;
+    }
+    if (getMessageRegExpCaseSensitivity() == Qt::CaseInsensitive) {
+      newRegExpr->setPatternOptions(QRegularExpression::CaseInsensitiveOption);
     }
   }
 
@@ -212,20 +210,6 @@ QString SimpleLoggerRoutingInfo::getMessageRegExpString() const
   return (m_messageRegExp == nullptr) ? "" : m_messageRegExp->pattern();
 }
 
-QRegExp::PatternSyntax SimpleLoggerRoutingInfo::getMessageRegExpPatternSyntax() const
-{
-  return m_messageRegExpPatternSyntax;
-}
-
-void SimpleLoggerRoutingInfo::setMessageRegExpPatternSyntax(const QRegExp::PatternSyntax syntax)
-{
-  m_messageRegExpPatternSyntax = syntax;
-  if (m_messageRegExp != nullptr)
-  {
-    m_messageRegExp->setPatternSyntax(syntax);
-  }
-}
-
 Qt::CaseSensitivity SimpleLoggerRoutingInfo::getMessageRegExpCaseSensitivity() const
 {
   return m_messageRegExpCaseSensitivity;
@@ -238,7 +222,13 @@ void SimpleLoggerRoutingInfo::setMessageRegExpCaseSensitivity(const Qt::CaseSens
     m_messageRegExpCaseSensitivity = cs;
     if (m_messageRegExp != nullptr)
     {
-      m_messageRegExp->setCaseSensitivity(cs);
+      if (cs == Qt::CaseInsensitive) {
+        m_messageRegExp->setPatternOptions(QRegularExpression::CaseInsensitiveOption);
+      } else {
+        QString s = m_messageRegExp->pattern();
+        delete m_messageRegExp;
+        m_messageRegExp = new QRegularExpression(s);
+      }
     }
   }
 }
@@ -251,7 +241,7 @@ bool SimpleLoggerRoutingInfo::passes(const QString& source, const MessageCategor
   int containedLevel = m_levels->value(category, 0);
   qDebug(qPrintable(QString("Contained level %1").arg(containedLevel)));
   **/
-  bool rc = m_enabled && level <= m_levels->value(category, 0) && source.length() > 0 && (m_locationRegExp == nullptr || m_locationRegExp->indexIn(source) >= 0) && (m_messageRegExp == nullptr || m_messageRegExp->indexIn(message) >= 0);
+  bool rc = m_enabled && level <= m_levels->value(category, 0) && source.length() > 0 && (m_locationRegExp == nullptr || m_locationRegExp->match(source).hasMatch()) && (m_messageRegExp == nullptr || m_messageRegExp->match(message).hasMatch());
   // qDebug(qPrintable(QString("Passes %1").arg(rc)));
   return rc;
 }
@@ -340,7 +330,7 @@ SimpleLoggerRoutingInfo& SimpleLoggerRoutingInfo::operator=(const SimpleLoggerRo
     }
     if (obj.m_locationRegExp != nullptr)
     {
-      m_locationRegExp = new QRegExp(*(obj.m_locationRegExp));
+      m_locationRegExp = new QRegularExpression(*(obj.m_locationRegExp));
     }
 
     if (m_messageRegExp != nullptr)
@@ -350,7 +340,7 @@ SimpleLoggerRoutingInfo& SimpleLoggerRoutingInfo::operator=(const SimpleLoggerRo
     }
     if (obj.m_messageRegExp != nullptr)
     {
-      m_messageRegExp = new QRegExp(*(obj.m_messageRegExp));
+      m_messageRegExp = new QRegularExpression(*(obj.m_messageRegExp));
     }
 
     *m_levels = *obj.m_levels;

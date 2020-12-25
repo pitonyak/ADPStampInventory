@@ -13,7 +13,7 @@
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2012-2013
+ * \date 2011-2020
  *
  **************************************************************************/
 
@@ -68,17 +68,7 @@ public:
    * \returns True if initial parsing worked fine.
    *
    ***************************************************************************/
-  bool parseFromDevice(QIODevice* device, const char* codecName);
-
-  //**************************************************************************
-  //! Begin Parsing CSV contained in the open device. It is assumed that readAll reads everything available.
-  /*!
-   * \param device Opened device containing the CSV to parse.
-   * \param codec Codec to use for parsing; so that other locales can be specified.
-   * \returns True if initial parsing worked fine.
-   *
-   ***************************************************************************/
-  bool parseFromDevice(QIODevice* device, QTextCodec *codec);
+  // TODO: ?? bool parseFromDevice(QIODevice* device, const char* codecName);
 
   //**************************************************************************
   //! Read the header record. Headers are always cleared before reading, so previous headers are lost.
