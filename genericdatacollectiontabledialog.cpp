@@ -25,6 +25,7 @@
 #include <QHeaderView>
 #include <QDebug>
 #include <QScopedPointer>
+#include <QShortcut>
 
 GenericDataCollectionTableDialog::GenericDataCollectionTableDialog(const QString& tableName, GenericDataCollection &data, StampDB &db, DescribeSqlTables& schema, GenericDataCollections *tables, int defaultSourceId, QWidget *parent) :
   QDialog(parent),
@@ -119,6 +120,51 @@ void GenericDataCollectionTableDialog::buildDialog()
   m_saveChangesButton = new QPushButton(tr("Save Changes"));
   hLayout->addWidget(m_saveChangesButton);
   hLayout->addWidget(buttonBox);
+
+
+  connect(new QShortcut(tr("Ctrl+1"), this), SIGNAL(activated()), this, SLOT(copyCellFrom1Above()));
+  connect(new QShortcut(tr("Ctrl+2"), this), SIGNAL(activated()), this, SLOT(copyCellFrom2Above()));
+  connect(new QShortcut(tr("Ctrl+3"), this), SIGNAL(activated()), this, SLOT(copyCellFrom3Above()));
+  connect(new QShortcut(tr("Ctrl+4"), this), SIGNAL(activated()), this, SLOT(copyCellFrom4Above()));
+  connect(new QShortcut(tr("Ctrl+5"), this), SIGNAL(activated()), this, SLOT(copyCellFrom5Above()));
+  connect(new QShortcut(tr("Ctrl+6"), this), SIGNAL(activated()), this, SLOT(copyCellFrom6Above()));
+  connect(new QShortcut(tr("Ctrl+7"), this), SIGNAL(activated()), this, SLOT(copyCellFrom7Above()));
+  connect(new QShortcut(tr("Ctrl+8"), this), SIGNAL(activated()), this, SLOT(copyCellFrom8Above()));
+  connect(new QShortcut(tr("Ctrl+9"), this), SIGNAL(activated()), this, SLOT(copyCellFrom9Above()));
+
+  connect(new QShortcut(tr("Ctrl+Shift+1"), this), SIGNAL(activated()), this, SLOT(copyCellFrom1Below()));
+  connect(new QShortcut(tr("Ctrl+Shift+2"), this), SIGNAL(activated()), this, SLOT(copyCellFrom2Below()));
+  connect(new QShortcut(tr("Ctrl+Shift+3"), this), SIGNAL(activated()), this, SLOT(copyCellFrom3Below()));
+  connect(new QShortcut(tr("Ctrl+Shift+4"), this), SIGNAL(activated()), this, SLOT(copyCellFrom4Below()));
+  connect(new QShortcut(tr("Ctrl+Shift+5"), this), SIGNAL(activated()), this, SLOT(copyCellFrom5Below()));
+  connect(new QShortcut(tr("Ctrl+Shift+6"), this), SIGNAL(activated()), this, SLOT(copyCellFrom6Below()));
+  connect(new QShortcut(tr("Ctrl+Shift+7"), this), SIGNAL(activated()), this, SLOT(copyCellFrom7Below()));
+  connect(new QShortcut(tr("Ctrl+Shift+8"), this), SIGNAL(activated()), this, SLOT(copyCellFrom8Below()));
+  connect(new QShortcut(tr("Ctrl+Shift+9"), this), SIGNAL(activated()), this, SLOT(copyCellFrom9Below()));
+
+  connect(new QShortcut(tr("Alt+1"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom1Above()));
+  connect(new QShortcut(tr("Alt+2"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom2Above()));
+  connect(new QShortcut(tr("Alt+3"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom3Above()));
+  connect(new QShortcut(tr("Alt+4"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom4Above()));
+  connect(new QShortcut(tr("Alt+5"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom5Above()));
+  connect(new QShortcut(tr("Alt+6"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom6Above()));
+  connect(new QShortcut(tr("Alt+7"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom7Above()));
+  connect(new QShortcut(tr("Alt+8"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom8Above()));
+  connect(new QShortcut(tr("Alt+9"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom9Above()));
+
+  connect(new QShortcut(tr("Alt+Shift+1"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom1Below()));
+  connect(new QShortcut(tr("Alt+Shift+2"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom2Below()));
+  connect(new QShortcut(tr("Alt+Shift+3"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom3Below()));
+  connect(new QShortcut(tr("Alt+Shift+4"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom4Below()));
+  connect(new QShortcut(tr("Alt+Shift+5"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom5Below()));
+  connect(new QShortcut(tr("Alt+Shift+6"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom6Below()));
+  connect(new QShortcut(tr("Alt+Shift+7"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom7Below()));
+  connect(new QShortcut(tr("Alt+Shift+8"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom8Below()));
+  connect(new QShortcut(tr("Alt+Shift+9"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom9Below()));
+
+  connect(new QShortcut(tr("Ctrl+Shift+D"), this), SIGNAL(activated()), this, SLOT(copyCellFrom1Above()));
+  connect(new QShortcut(tr("Ctrl+D"), this), SIGNAL(activated()), this, SLOT(copyCellFrom1Below()));
+  connect(new QShortcut(tr("Ctrl+Z"), this), SIGNAL(activated()), this, SLOT(undoChange()));
 
   connect(m_addButton, SIGNAL(clicked()), this, SLOT(addRow()));
   connect(m_deleteButton, SIGNAL(clicked()), this, SLOT(deleteRow()));
@@ -246,21 +292,32 @@ void GenericDataCollectionTableDialog::incrementCell(const int incrementValue)
   m_tableModel->incrementCell(mappedIndex, incrementValue, true);
 }
 
-void GenericDataCollectionTableDialog::copyCell(const int rowsDown)
+void GenericDataCollectionTableDialog::copyCells(const int rowsDown, const int numCells)
 {
-  QModelIndex toIndex = m_tableView->selectionModel()->currentIndex();
-  QModelIndex fromIndex = m_proxyModel->getIndexByRowCol(toIndex.row() + rowsDown, toIndex.column());
+  if (rowsDown == 0 || numCells < 1) {
+    qDebug() << "GenericDataCollectionTableDialog::copyCells rowsDown:" << rowsDown << " numCells:" << numCells;
+    return;
+  }
 
-  qDebug() << "To (" << toIndex.row() << ", " << toIndex.column() << ")";
-  qDebug() << "From (" << fromIndex.row() << ", " << fromIndex.column() << ")";
+  QModelIndex firstToIndex = m_tableView->selectionModel()->currentIndex();
+  int direction = (rowsDown < 0) ? 1 : -1;
+  for (int i=0; i < numCells; ++i)
+  {
+    int destinationRow = firstToIndex.row() + i * direction;
+    QModelIndex fromIndex = m_proxyModel->getIndexByRowCol(destinationRow + rowsDown, firstToIndex.column());
+    QModelIndex toIndex = m_proxyModel->getIndexByRowCol(destinationRow, firstToIndex.column());
 
-  QModelIndex toMappedIndex = m_proxyModel->mapToSource(toIndex);
-  QModelIndex fromMappedIndex = m_proxyModel->mapToSource(fromIndex);
+    qDebug() << "To (" << toIndex.row() << ", " << toIndex.column() << ")";
+    qDebug() << "From (" << fromIndex.row() << ", " << fromIndex.column() << ")";
 
-  qDebug() << "Mapped To (" << toMappedIndex.row() << ", " << toMappedIndex.column() << ")";
-  qDebug() << "Mapped From (" << fromMappedIndex.row() << ", " << fromMappedIndex.column() << ")";
+    QModelIndex toMappedIndex = m_proxyModel->mapToSource(toIndex);
+    QModelIndex fromMappedIndex = m_proxyModel->mapToSource(fromIndex);
 
-  m_tableModel->copyCell(fromMappedIndex, toMappedIndex);
+    qDebug() << "Mapped To (" << toMappedIndex.row() << ", " << toMappedIndex.column() << ")";
+    qDebug() << "Mapped From (" << fromMappedIndex.row() << ", " << fromMappedIndex.column() << ")";
+
+    m_tableModel->copyCell(fromMappedIndex, toMappedIndex);
+  }
   enableButtons();
 }
 
@@ -299,7 +356,7 @@ void GenericDataCollectionTableDialog::selectCell(const QModelIndex& index)
 
 void GenericDataCollectionTableDialog::displayHelp()
 {
-  QMessageBox::about(this, "Supported Keys", "F1 - Help\nF2 - Edit cell\nF3 - Find Next\nShift+F3 - Find Previous\nF10 - Increment current cell\nShift+F10 - Decrement current cell\nCtrl+D - Copy value from column above\nCtrl+d - Copy value from column below\nCtrl+E - Copy value from 2 rows above\nCtrl+e - Copy value from 2 rows below\nESC - Cancel");
+  QMessageBox::about(this, "Supported Keys", "F1 - Help\nF2 - Edit cell\nF3 - Find Next\nShift+F3 - Find Previous\nF10 - Increment current cell\nShift+F10 - Decrement current cell\nCtrl+n - Copy one cell from n above\nAlt+n - Copy n cells from above\nShift+Ctrl+n - Copy one cell from n below\nAlt+Shift+n - Copy n cells from below\nCtrl+D - Copy value from column above\nCtrl+d - Copy value from column below\nESC - Cancel");
 }
 
 void GenericDataCollectionTableDialog::restoreState()
@@ -321,7 +378,7 @@ void GenericDataCollectionTableDialog::restoreState()
     }
   }
   // Restore sort column order.
-  s = pSettings->value(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgSorting).arg(m_tableName)).toString();
+  s = pSettings->value(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgSorting, m_tableName)).toString();
   if (s.length() > 0)
   {
     QStringList list = s.split(',');
@@ -347,7 +404,7 @@ void GenericDataCollectionTableDialog::saveState()
   // by the time that this objects destructor was called. So, now this is called before the destructor.
   // save the dialog state.
   QScopedPointer<QSettings> pSettings(getQSettings());
-  pSettings->setValue(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgGeometry).arg(m_tableName), saveGeometry());
+  pSettings->setValue(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgGeometry, m_tableName), saveGeometry());
 
     if (m_tableView != nullptr)
     {
@@ -358,12 +415,12 @@ void GenericDataCollectionTableDialog::saveState()
         int sortColumn = m_tableView->horizontalHeader()->sortIndicatorSection();
         s = QString("%1,%2").arg(sortColumn).arg(order);
       }
-      pSettings->setValue(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgSorting).arg(m_tableName), s);
+      pSettings->setValue(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgSorting, m_tableName), s);
       s = "";
 
       for (int i=0; i<m_table.getPropertyNameCount(); ++i)
       {
-        //qDebug(qPrintable(QString("(%1)(%2)").arg(i).arg(m_tableView->columnWidth(i))));
+        //qDebug(qPrintable(QString("(%1)(%2)").arg(i, m_tableView->columnWidth(i))));
         if (s.length() > 0)
         {
           s.append(',');
@@ -371,7 +428,7 @@ void GenericDataCollectionTableDialog::saveState()
         s.append(QString("%1").arg(m_tableView->columnWidth(i)));
       }
       qDebug() << "(" << m_tableName << ")(" << s << ")";
-      pSettings->setValue(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgColumnWidths).arg(m_tableName), s);
+      pSettings->setValue(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgColumnWidths, m_tableName), s);
     }
 }
 
@@ -385,6 +442,9 @@ void GenericDataCollectionTableDialog::clickedOK()
 void GenericDataCollectionTableDialog::keyPressEvent(QKeyEvent* evt)
 {
   bool handled = false;
+
+  // TODO: Can I just use a QShortCut to associate hot keys to my desired things?
+  qDebug() << "keyPressEvent: " << evt->modifiers() << " key: " << evt->key();
 
   if ((evt->key() == Qt::Key_F) && ((evt->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier)) == Qt::ControlModifier))
   {
@@ -407,18 +467,6 @@ void GenericDataCollectionTableDialog::keyPressEvent(QKeyEvent* evt)
   }
   else if(evt->key() == Qt::Key_Escape) {
     clickedCancel();
-    handled = true;
-  }
-  else if ((evt->key() == Qt::Key_D) && (evt->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier)) == Qt::ControlModifier)
-  {
-    int rowsDown = (evt->modifiers() & Qt::ShiftModifier) == 0 ? 1 : -1;
-    copyCell(rowsDown);
-    handled = true;
-  }
-  else if ((evt->key() == Qt::Key_E) && (evt->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier)) == Qt::ControlModifier)
-  {
-    int rowsDown = (evt->modifiers() & Qt::ShiftModifier) == 0 ? 2 : -2;
-    copyCell(rowsDown);
     handled = true;
   }
   else if ((evt->key() == Qt::Key_F10) && (evt->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier)) == 0)

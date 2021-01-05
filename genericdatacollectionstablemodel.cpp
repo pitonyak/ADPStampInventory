@@ -84,25 +84,38 @@ bool GenericDataCollectionsTableModel::setData ( const QModelIndex & index, cons
         // Cannot just set the value or it will not update the DB, just the display.
         // If I do it the obvious way, it acts as a two "undo" actions. So, just set it
         // and handle it when I push the changes.
-        //QModelIndex sourceIndex = getIndexByRowCol(index.row(), m_table->getPropertyIndex("sourceid"));
+        QModelIndex sourceIndex = getIndexByRowCol(index.row(), m_table->getPropertyIndex("sourceid"));
         //setData(sourceIndex, m_defaultSourceId, role);
         object->setValueNative("sourceid", m_defaultSourceId);
+        emit dataChanged(sourceIndex, sourceIndex);
       }
-      if (fieldName.compare("updated", Qt::CaseInsensitive) != 0 && m_table->containsProperty("updated"))
+
+      bool updateUpdatedField = fieldName.compare("updated", Qt::CaseInsensitive) != 0 && m_table->containsProperty("updated");
+      if (updateUpdatedField)
       {
         // This sets the data from a visual standpoint, but, this does not cause the data to be
         // updated in the DB because data is pushed when tracked changes are saved.
         object->setValueNative("updated", QDateTime::currentDateTime());
+        QModelIndex updatedIndex = getIndexByRowCol(index.row(), m_table->getPropertyIndex("updated"));
+        emit dataChanged(updatedIndex, updatedIndex);
       }
-      if (isTracking())
+
+      // isTrack() and (originalObject != nullptr) are synonymous.
+      // Testing originalObject prevents a warning about a memory leak!
+      if (originalObject != nullptr)
       {
-        if (!updateSourceId) {
+        if (!updateSourceId && !updateUpdatedField) {
           m_changeTracker.push(index.row(), index.column(), fieldName, ChangedObjectBase::Edit, object->clone(), originalObject);
         } else {
           // Doing it this way groups the two field changes as a single "undo" group.
           // OK, so I use the same changed and original object both times, but, I don't think that it will matter.
           QStack<ChangedObject<GenericDataObject>*> * lastChanges = new QStack<ChangedObject<GenericDataObject>*>();
-          lastChanges->push(new ChangedObject<GenericDataObject>(index.row(), m_table->getPropertyIndex("sourceid"), "sourceid", ChangedObjectBase::Edit, object->clone(), originalObject->clone()) );
+          if (updateSourceId) {
+            lastChanges->push(new ChangedObject<GenericDataObject>(index.row(), m_table->getPropertyIndex("sourceid"), "sourceid", ChangedObjectBase::Edit, object->clone(), originalObject->clone()) );
+          }
+          if (updateUpdatedField) {
+            lastChanges->push(new ChangedObject<GenericDataObject>(index.row(), m_table->getPropertyIndex("updated"), "sourceid", ChangedObjectBase::Edit, object->clone(), originalObject->clone()) );
+          }
           lastChanges->push(new ChangedObject<GenericDataObject>(index.row(), index.column(), fieldName, ChangedObjectBase::Edit, object->clone(), originalObject) );
           m_changeTracker.push(lastChanges);
         }
@@ -658,7 +671,7 @@ QString GenericDataCollectionsTableModel::incrementScottNumber(const QString& sc
     {
       QChar c(tail.at(tail.length() - 1).unicode() + 1);
       tail.truncate(tail.length() - 1);
-      return QString("%1%2%3%4").arg(lead).arg(middle).arg(tail).arg(c);
+      return QString("%1%2%3%4").arg(lead, middle, tail, c);
     }
   }
   return scott;
@@ -695,16 +708,16 @@ void GenericDataCollectionsTableModel::incrementCell(const QModelIndex& index, i
     delete originalRowData;
   }
 
-  dataChanged(index, index);
+  emit dataChanged(index, index);
 }
 
 
-void GenericDataCollectionsTableModel::copyCell(const int fromRow, const int fromCol, const int toRow, const int toCol, const bool setUpdated)
+void GenericDataCollectionsTableModel::copyCell(const int fromRow, const int fromCol, const int toRow, const int toCol)
 {
-  copyCell(getIndexByRowCol(fromRow, fromCol), getIndexByRowCol(toRow, toCol), setUpdated);
+  copyCell(getIndexByRowCol(fromRow, fromCol), getIndexByRowCol(toRow, toCol));
 }
 
-void GenericDataCollectionsTableModel::copyCell(const QModelIndex& fromIndex, const QModelIndex& toIndex, const bool setUpdated)
+void GenericDataCollectionsTableModel::copyCell(const QModelIndex& fromIndex, const QModelIndex& toIndex)
 {
   if (!fromIndex.isValid()) {
     qDebug() << "Invalid from index in copyCell";
@@ -721,7 +734,6 @@ void GenericDataCollectionsTableModel::copyCell(const QModelIndex& fromIndex, co
 
   GenericDataObject* fromRow = m_table->getObjectByRow(fromIndex.row());
   GenericDataObject* toRow = m_table->getObjectByRow(toIndex.row());
-  GenericDataObject* originalToRow = toRow->clone();
 
   QString fromColumnName = m_table->getPropertyName(fromIndex.column());
   QString toColumnName = m_table->getPropertyName(toIndex.column());
@@ -734,22 +746,7 @@ void GenericDataCollectionsTableModel::copyCell(const QModelIndex& fromIndex, co
     return;
   }
 
-  toRow->setValueNative(toColumnName, fromValue);
-
-  if (setUpdated) {
-    if (toRow->containsValue("updated") && toRow->isDateTime("updated")) {
-      toRow->setValueNative("updated", QDateTime::currentDateTime());
-    }
-  }
-
-  if (m_isTracking)
-  {
-    m_changeTracker.push(toIndex.row(), toIndex.column(), toColumnName, ChangedObjectBase::Edit, toRow->clone(), originalToRow);
-  } else {
-    delete originalToRow;
-  }
-
-  dataChanged(toIndex, toIndex);
+  setData ( toIndex, fromValue, Qt::EditRole );
 }
 
 QList<int> GenericDataCollectionsTableModel::duplicateRows(const QModelIndexList& list, const bool autoIncrement, const bool setUpdated, const bool appendChar, const char charToAppend)

@@ -30,7 +30,7 @@ class QSqlDatabase;
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2014
+ * \date 2014 - 2021
  ***************************************************************************/
 class GenericDataCollectionsTableModel : public QAbstractTableModel
 {
@@ -156,8 +156,8 @@ public:
   int getIndexOf(const int id) const;
   QModelIndex getIndexByRowCol(int row, int col) const;
 
-  void copyCell(const int fromRow, const int fromCol, const int toRow, const int toCol, const bool setUpdated=true);
-  void copyCell(const QModelIndex& fromIndex, const QModelIndex& toIndex, const bool setUpdated=true);
+  void copyCell(const int fromRow, const int fromCol, const int toRow, const int toCol);
+  void copyCell(const QModelIndex& fromIndex, const QModelIndex& toIndex);
 
   //**************************************************************************
   /*! \brief Add a value to the specified cell. The purpose is really to add one.

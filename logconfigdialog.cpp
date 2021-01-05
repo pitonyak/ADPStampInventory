@@ -190,7 +190,7 @@ QString LogConfigDialog::getLogFilePath() const
 
 bool LogConfigDialog::isRoutingSelected() const
 {
-  return m_tableModel != nullptr && m_routingTableView != nullptr && m_tableModel->size() > 0 && m_routingTableView->currentIndex().row() >= 0;
+  return m_tableModel != nullptr && m_routingTableView != nullptr && m_tableModel->rowCount() > 0 && m_routingTableView->currentIndex().row() >= 0;
 }
 
 int LogConfigDialog::getSelectedRouting() const

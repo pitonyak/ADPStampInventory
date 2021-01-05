@@ -109,6 +109,50 @@ public slots:
   void saveChanges();
   void searchDialog();
 
+  // Copy 1 cell from n above
+  void copyCellFrom1Above();
+  void copyCellFrom2Above();
+  void copyCellFrom3Above();
+  void copyCellFrom4Above();
+  void copyCellFrom5Above();
+  void copyCellFrom6Above();
+  void copyCellFrom7Above();
+  void copyCellFrom8Above();
+  void copyCellFrom9Above();
+
+  // Copy 1 cell from n below
+  void copyCellFrom1Below();
+  void copyCellFrom2Below();
+  void copyCellFrom3Below();
+  void copyCellFrom4Below();
+  void copyCellFrom5Below();
+  void copyCellFrom6Below();
+  void copyCellFrom7Below();
+  void copyCellFrom8Below();
+  void copyCellFrom9Below();
+
+  // Copy n cells from n above
+  void copyCellsFrom1Above();
+  void copyCellsFrom2Above();
+  void copyCellsFrom3Above();
+  void copyCellsFrom4Above();
+  void copyCellsFrom5Above();
+  void copyCellsFrom6Above();
+  void copyCellsFrom7Above();
+  void copyCellsFrom8Above();
+  void copyCellsFrom9Above();
+
+  // Copy n cells from n below
+  void copyCellsFrom1Below();
+  void copyCellsFrom2Below();
+  void copyCellsFrom3Below();
+  void copyCellsFrom4Below();
+  void copyCellsFrom5Below();
+  void copyCellsFrom6Below();
+  void copyCellsFrom7Below();
+  void copyCellsFrom8Below();
+  void copyCellsFrom9Below();
+
   bool genericSearch(const bool findNext, const bool findPrevious, const bool findDialog);
 
 
@@ -128,9 +172,14 @@ private:
 
   /*! \brief Copy cell from the same column to the current row.
    *
+   * Each row copied (one cell) creates one undo operation.
+   * If a book value is updated, the default value source (catalogue) is updated.
+   * If there is a last updated column, that is updated as well.
+   *
    *  \param [in] rowsDown How many rows down (> 0) or up (< 0) from current row to copy.
+   *  \param [in] numCells How many cells to copy.
    */
-  void copyCell(const int rowsDown);
+  void copyCells(const int rowsDown, const int numCells);
 
   /*! \brief Increment current cell
    *
@@ -201,5 +250,158 @@ private:
   /*! \brief Used only if it is relevant because the bookvalue field was updated. So only used for a single table listing what a stamp is worth. */
   int m_defaultSourceId = -1;
 };
+
+
+inline void GenericDataCollectionTableDialog::copyCellFrom1Above()
+{
+  copyCells(-1, 1);
+}
+inline void GenericDataCollectionTableDialog::copyCellFrom2Above()
+{
+  copyCells(-2, 1);
+}
+inline void GenericDataCollectionTableDialog::copyCellFrom3Above()
+{
+  copyCells(-3, 1);
+}
+inline void GenericDataCollectionTableDialog::copyCellFrom4Above()
+{
+  copyCells(-4, 1);
+}
+inline void GenericDataCollectionTableDialog::copyCellFrom5Above()
+{
+  copyCells(-5, 1);
+}
+inline void GenericDataCollectionTableDialog::copyCellFrom6Above()
+{
+  copyCells(-6, 1);
+}
+inline void GenericDataCollectionTableDialog::copyCellFrom7Above()
+{
+  copyCells(-7, 1);
+}
+inline void GenericDataCollectionTableDialog::copyCellFrom8Above()
+{
+  copyCells(-8, 1);
+}
+inline void GenericDataCollectionTableDialog::copyCellFrom9Above()
+{
+  copyCells(-9, 1);
+}
+
+
+inline void GenericDataCollectionTableDialog::copyCellFrom1Below()
+{
+  copyCells(1, 1);
+}
+inline void GenericDataCollectionTableDialog::copyCellFrom2Below()
+{
+  copyCells(2, 1);
+}
+inline void GenericDataCollectionTableDialog::copyCellFrom3Below()
+{
+  copyCells(3, 1);
+}
+inline void GenericDataCollectionTableDialog::copyCellFrom4Below()
+{
+  copyCells(4, 1);
+}
+inline void GenericDataCollectionTableDialog::copyCellFrom5Below()
+{
+  copyCells(5, 1);
+}
+inline void GenericDataCollectionTableDialog::copyCellFrom6Below()
+{
+  copyCells(6, 1);
+}
+inline void GenericDataCollectionTableDialog::copyCellFrom7Below()
+{
+  copyCells(7, 1);
+}
+inline void GenericDataCollectionTableDialog::copyCellFrom8Below()
+{
+  copyCells(8, 1);
+}
+inline void GenericDataCollectionTableDialog::copyCellFrom9Below()
+{
+  copyCells(9, 1);
+}
+
+inline void GenericDataCollectionTableDialog::copyCellsFrom1Above()
+{
+  copyCells(-1, 1);
+}
+inline void GenericDataCollectionTableDialog::copyCellsFrom2Above()
+{
+  copyCells(-2, 2);
+}
+inline void GenericDataCollectionTableDialog::copyCellsFrom3Above()
+{
+  copyCells(-3, 3);
+}
+inline void GenericDataCollectionTableDialog::copyCellsFrom4Above()
+{
+  copyCells(-4, 4);
+}
+inline void GenericDataCollectionTableDialog::copyCellsFrom5Above()
+{
+  copyCells(-5, 5);
+}
+inline void GenericDataCollectionTableDialog::copyCellsFrom6Above()
+{
+  copyCells(-6, 6);
+}
+inline void GenericDataCollectionTableDialog::copyCellsFrom7Above()
+{
+  copyCells(-7, 7);
+}
+inline void GenericDataCollectionTableDialog::copyCellsFrom8Above()
+{
+  copyCells(-8, 8);
+}
+inline void GenericDataCollectionTableDialog::copyCellsFrom9Above()
+{
+  copyCells(-9, 9);
+}
+
+
+inline void GenericDataCollectionTableDialog::copyCellsFrom1Below()
+{
+  copyCells(1, 1);
+}
+inline void GenericDataCollectionTableDialog::copyCellsFrom2Below()
+{
+  copyCells(2, 2);
+}
+inline void GenericDataCollectionTableDialog::copyCellsFrom3Below()
+{
+  copyCells(3, 3);
+}
+inline void GenericDataCollectionTableDialog::copyCellsFrom4Below()
+{
+  copyCells(4, 4);
+}
+inline void GenericDataCollectionTableDialog::copyCellsFrom5Below()
+{
+  copyCells(5, 5);
+}
+inline void GenericDataCollectionTableDialog::copyCellsFrom6Below()
+{
+  copyCells(6, 6);
+}
+inline void GenericDataCollectionTableDialog::copyCellsFrom7Below()
+{
+  copyCells(7, 7);
+}
+inline void GenericDataCollectionTableDialog::copyCellsFrom8Below()
+{
+  copyCells(8, 8);
+}
+inline void GenericDataCollectionTableDialog::copyCellsFrom9Below()
+{
+  copyCells(9, 9);
+}
+
+
 
 #endif // GENERICDATACOLLECTIONTABLEDIALOG_H
