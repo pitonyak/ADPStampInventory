@@ -247,7 +247,9 @@ bool GenericDataObject::isTime(const QString& name) const
 void GenericDataObject::increment(const QString& name, const int incValue, QVariant& variantValue)
 {
   const QVariant v = m_properties.value(name.toLower());
-  if (QMetaType::QDateTime == v.metaType().id()) {
+  if (incValue == 0) {
+    variantValue = v;
+  } else if (QMetaType::QDateTime == v.metaType().id()) {
     variantValue = QVariant(variantValue.toDateTime().addDays(incValue));
   } else if (QMetaType::QDate == v.metaType().id()) {
     variantValue = QVariant(variantValue.toDate().addDays(incValue));
@@ -274,18 +276,6 @@ void GenericDataObject::increment(const QString& name, const int incValue, QVari
 
 const QVariant GenericDataObject::getValue(const QString& name) const
 {
-  /**
-  if (fieldNameMeansDate(name))
-  {
-    const QVariant v = m_properties.value(name.toLower());
-    return (QMetaType::QDate == v.metaType().id()) ? v : v.toDate();
-  }
-  else if (fieldNameMeansDateTime(name))
-  {
-    const QVariant v = m_properties.value(name.toLower());
-    return (QMetaType::QDateTime != v.metaType().id()) ? v.toDateTime() : v;
-  }
-  **/
   return m_properties.value(name.toLower());
 }
 

@@ -289,7 +289,7 @@ void GenericDataCollectionTableDialog::incrementCell(const int incrementValue)
 {
   QModelIndex index = m_tableView->selectionModel()->currentIndex();
   QModelIndex mappedIndex = m_proxyModel->mapToSource(index);
-  m_tableModel->incrementCell(mappedIndex, incrementValue, true);
+  m_tableModel->incrementCell(mappedIndex, incrementValue);
 }
 
 void GenericDataCollectionTableDialog::copyCells(const int rowsDown, const int numCells)
@@ -328,7 +328,7 @@ void GenericDataCollectionTableDialog::privateRowDuplicator(const bool autoIncre
   for (int i=0; i<proxyList.size(); ++i) {
     mappedList.append(m_proxyModel->mapToSource(proxyList.at(i)));
   }
-  QList<int> addedIds = m_tableModel->duplicateRows(mappedList, autoIncrement, true, appendChar, charToAppend);
+  QList<int> addedIds = m_tableModel->duplicateRows(mappedList, autoIncrement, appendChar, charToAppend);
   if (!addedIds.isEmpty())
   {
     int row = m_tableModel->getIndexOf(addedIds.first());

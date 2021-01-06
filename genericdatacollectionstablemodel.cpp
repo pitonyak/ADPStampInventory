@@ -81,11 +81,11 @@ bool GenericDataCollectionsTableModel::setData ( const QModelIndex & index, cons
       }
       bool updateSourceId = (m_defaultSourceId >= 0 && fieldName.compare("bookvalue", Qt::CaseInsensitive) == 0 && m_table->containsProperty("sourceid") && object->getValueNative("sourceid") != m_defaultSourceId);
       if (updateSourceId) {
+        // qDebug() << "Updating the source ID";
         // Cannot just set the value or it will not update the DB, just the display.
         // If I do it the obvious way, it acts as a two "undo" actions. So, just set it
         // and handle it when I push the changes.
         QModelIndex sourceIndex = getIndexByRowCol(index.row(), m_table->getPropertyIndex("sourceid"));
-        //setData(sourceIndex, m_defaultSourceId, role);
         object->setValueNative("sourceid", m_defaultSourceId);
         emit dataChanged(sourceIndex, sourceIndex);
       }
@@ -93,6 +93,7 @@ bool GenericDataCollectionsTableModel::setData ( const QModelIndex & index, cons
       bool updateUpdatedField = fieldName.compare("updated", Qt::CaseInsensitive) != 0 && m_table->containsProperty("updated");
       if (updateUpdatedField)
       {
+        // qDebug() << "Updating the updated column";
         // This sets the data from a visual standpoint, but, this does not cause the data to be
         // updated in the DB because data is pushed when tracked changes are saved.
         object->setValueNative("updated", QDateTime::currentDateTime());
@@ -114,7 +115,7 @@ bool GenericDataCollectionsTableModel::setData ( const QModelIndex & index, cons
             lastChanges->push(new ChangedObject<GenericDataObject>(index.row(), m_table->getPropertyIndex("sourceid"), "sourceid", ChangedObjectBase::Edit, object->clone(), originalObject->clone()) );
           }
           if (updateUpdatedField) {
-            lastChanges->push(new ChangedObject<GenericDataObject>(index.row(), m_table->getPropertyIndex("updated"), "sourceid", ChangedObjectBase::Edit, object->clone(), originalObject->clone()) );
+            lastChanges->push(new ChangedObject<GenericDataObject>(index.row(), m_table->getPropertyIndex("updated"), "updated", ChangedObjectBase::Edit, object->clone(), originalObject->clone()) );
           }
           lastChanges->push(new ChangedObject<GenericDataObject>(index.row(), index.column(), fieldName, ChangedObjectBase::Edit, object->clone(), originalObject) );
           m_changeTracker.push(lastChanges);
@@ -369,9 +370,9 @@ void GenericDataCollectionsTableModel::addRow()
   }
 }
 
-void GenericDataCollectionsTableModel::incCell(const QModelIndex& index, int incrementValue, const bool setUpdated)
+void GenericDataCollectionsTableModel::incCell(const QModelIndex& index, int incrementValue)
 {
-  incrementCell(index, incrementValue, setUpdated);
+  incrementCell(index, incrementValue);
 }
 
 void GenericDataCollectionsTableModel::deleteRows(const QModelIndexList &list)
@@ -387,7 +388,7 @@ void GenericDataCollectionsTableModel::deleteRows(const QModelIndexList &list)
     for (int i=rows.size() - 1; i>=0; --i)
     {
       int row = rows.at(i);
-      if (m_isTracking)
+      if (lastChanges != nullptr)
       {
         GenericDataObject* oldData = m_table->getObjectByRow(row);
         if (oldData != nullptr)
@@ -411,6 +412,7 @@ void GenericDataCollectionsTableModel::deleteRows(const QModelIndexList &list)
 
 bool GenericDataCollectionsTableModel::saveTrackedChanges(const QString& tableName, GenericDataCollection &data, QSqlDatabase &db, const DescribeSqlTables& schema)
 {
+  qDebug() << "Enter GenericDataCollectionsTableModel::saveTrackedChanges";
   bool trackState = isTracking();
   setTracking(false);
   bool errorOccurred = false;
@@ -439,7 +441,8 @@ bool GenericDataCollectionsTableModel::saveTrackedChanges(const QString& tableNa
         {
           if (bottomObject->getChangeType() == ChangedObjectBase::Add)
           {
-            //qDebug("Add record to the DB!");
+            qDebug() << "Add record to the DB!";
+
             GenericDataObject* newData = bottomObject->getNewData();
             if (newData != nullptr)
             {
@@ -482,7 +485,7 @@ bool GenericDataCollectionsTableModel::saveTrackedChanges(const QString& tableNa
             if (oldData != nullptr)
             {
               QSqlQuery query(db);
-              QString s = QString("DELETE FROM %1 WHERE %2=:id").arg(tableName).arg("id");
+              QString s = QString("DELETE FROM %1 WHERE %2=:id").arg(tableName, "id");
               query.prepare(s);
               query.bindValue(":id", oldData->getInt("id"));
               if (!query.exec())
@@ -495,6 +498,7 @@ bool GenericDataCollectionsTableModel::saveTrackedChanges(const QString& tableNa
           {
             // TODO: What if changed a key field referenced by another table.
             QString fieldName = bottomObject->getChangeInfo();
+            qDebug() << "Edit record in the DB! where fieldName = " << fieldName;
 
             // Info contains the modified field name!
             GenericDataObject* oldData = bottomObject->getOldData();
@@ -502,10 +506,16 @@ bool GenericDataCollectionsTableModel::saveTrackedChanges(const QString& tableNa
             if (oldData != nullptr && newData != nullptr)
             {
               QSqlQuery query(db);
-              QString s = setUpdateField ? QString("UPDATE %1 SET %2=:%2, updated=:updated WHERE %3=:id").arg(tableName).arg(fieldName).arg("id") : QString("UPDATE %1 SET %2=:%2 WHERE %3=:id").arg(tableName).arg(fieldName).arg("id");
+              QString sWithUpdated    = QString("UPDATE %1 SET %2=:%2, updated=:updated WHERE %3=:id").arg(tableName, fieldName, "id");
+              QString sWithoutUpdated = QString("UPDATE %1 SET %2=:%2 WHERE %3=:id").arg(tableName, fieldName, "id");
+
+              // Do not force the updated field WHILE setting the updated field.
+              bool useWithoutUpdated = !setUpdateField || fieldName.compare("updated", Qt::CaseInsensitive) == 0;
+
+              QString s = useWithoutUpdated ? sWithoutUpdated : sWithUpdated;
               query.prepare(s);
               query.bindValue(":id", oldData->getInt("id"));
-              if (setUpdateField) {
+              if (!useWithoutUpdated) {
                 QDateTime now = QDateTime::currentDateTime();
                 query.bindValue(":updated", now);
                 GenericDataObject* currentObj = data.getObjectById(newData->getInt("id"));
@@ -516,13 +526,22 @@ bool GenericDataCollectionsTableModel::saveTrackedChanges(const QString& tableNa
               }
               qDebug() << "[" << oldData->getInt("id") << "] where id = " << s;
 
-              if (!newData->containsValue(fieldName))
+              if (newData->containsValue(fieldName))
               {
+                // Assume that it converts to the correct type!
+                // This should be the normal path. Why would the new data NOT contain the field?
+                query.bindValue(QString(":%1").arg(fieldName), newData->getValueNative(fieldName));
+              } else if (m_schema.containsField(fieldName)) {
+                // This still feels wrong, but it should work because at least we know about the field.
+                qDebug() << "Why are we trying to update field named: " << fieldName;
+                qDebug() << "The new data does not contain the field but the schema knows about it.";
+                TypeMapper mapper;
+                query.bindValue(QString(":%1").arg(fieldName), QVariant(QMetaType(data.getPropertyTypeMeta(fieldName))));
+              } else {
+                  qDebug() << "This is probably an error and will probably cause a core dump.";
+                  qDebug() << "Why are we trying to update field named: " << fieldName;
                   TypeMapper mapper;
                   query.bindValue(QString(":%1").arg(fieldName), QVariant(QMetaType(data.getPropertyTypeMeta(fieldName))));
-              } else {
-                  // Assume that it converts to the correct type!
-                  query.bindValue(QString(":%1").arg(fieldName), newData->getValueNative(fieldName));
               }
               if (!query.exec())
               {
@@ -677,38 +696,32 @@ QString GenericDataCollectionsTableModel::incrementScottNumber(const QString& sc
   return scott;
 }
 
-void GenericDataCollectionsTableModel::incrementCell(const int row, const int col, int incrementValue, const bool setUpdated)
+void GenericDataCollectionsTableModel::incrementCell(const int row, const int col, int incrementValue)
 {
-  incrementCell(getIndexByRowCol(row, col), incrementValue, setUpdated);
+  incrementCell(getIndexByRowCol(row, col), incrementValue);
 }
 
-void GenericDataCollectionsTableModel::incrementCell(const QModelIndex& index, int incrementValue, const bool setUpdated)
+void GenericDataCollectionsTableModel::incrementCell(const QModelIndex& index, int incrementValue)
 {
   if (!index.isValid()) {
     qDebug("Invalid index in incrementCell");
     return;
   }
+
   GenericDataObject* rowData = m_table->getObjectByRow(index.row());
   QString columnName = m_table->getPropertyName(index.column());
-  QVariant cellValue = rowData->getValueNative(columnName);
-  GenericDataObject* originalRowData = rowData->clone();
+  QVariant newCellValue;
+  // Get the cell value based on the column name and increment it.
+  // Add 1 day for date
+  // Add 1 second for time
+  // Assume floating point is money and add $0.01 for each incrementValue.
+  rowData->increment(columnName, incrementValue, newCellValue);
 
-  rowData->increment(columnName, incrementValue, cellValue);
-  rowData->setValueNative(columnName, cellValue);
-
-  if (setUpdated) {
-    if (rowData->containsValue("updated") && rowData->isDateTime("updated")) {
-      rowData->setValueNative("updated", QDateTime::currentDateTime());
-    }
-  }
-
-  if (m_isTracking) {
-    m_changeTracker.push(index.row(), index.column(), columnName, ChangedObjectBase::Edit, rowData->clone(), originalRowData);
-  } else {
-    delete originalRowData;
-  }
-
-  emit dataChanged(index, index);
+  // Set a new value if it has changed.
+  // Set the last updated column if it exists
+  // Set undo data
+  // Set the catalog value if appropriate.
+  setData ( index, newCellValue, Qt::EditRole );
 }
 
 
@@ -749,7 +762,7 @@ void GenericDataCollectionsTableModel::copyCell(const QModelIndex& fromIndex, co
   setData ( toIndex, fromValue, Qt::EditRole );
 }
 
-QList<int> GenericDataCollectionsTableModel::duplicateRows(const QModelIndexList& list, const bool autoIncrement, const bool setUpdated, const bool appendChar, const char charToAppend)
+QList<int> GenericDataCollectionsTableModel::duplicateRows(const QModelIndexList& list, const bool autoIncrement, const bool appendChar, const char charToAppend)
 {
   QList<int> addedIds;
   qDebug() << "duplicateRows " << list.size();
@@ -791,10 +804,8 @@ QList<int> GenericDataCollectionsTableModel::duplicateRows(const QModelIndexList
           }
         }
       }
-      if (setUpdated) {
-        if (newData->containsValue("updated") && newData->isDateTime("updated")) {
-          newData->setValueNative("updated", QDateTime::currentDateTime());
-        }
+      if (newData->containsValue("updated") && newData->isDateTime("updated")) {
+        newData->setValueNative("updated", QDateTime::currentDateTime());
       }
       int row = m_table->getObjectCount();
       if (m_isTracking)

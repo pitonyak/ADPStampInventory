@@ -165,10 +165,9 @@ public:
    *  \param [in] row - Row number to increment.
    *  \param [in] col - Column number to increment.
    *  \param [in] incrementValue - Number to add.
-   *  \param [in] setUpdated
    ***************************************************************************/
-  void incrementCell(const int row, const int col, int incrementValue, const bool setUpdated=true);
-  void incrementCell(const QModelIndex& index, int incrementValue, const bool setUpdated=true);
+  void incrementCell(const int row, const int col, int incrementValue);
+  void incrementCell(const QModelIndex& index, int incrementValue);
 
 signals:
 
@@ -176,7 +175,7 @@ public slots:
   void addRow();
   void deleteRows(const QModelIndexList& list);
   void undoChange();
-  void incCell(const QModelIndex& index, int incrementValue, const bool setUpdated=true);
+  void incCell(const QModelIndex& index, int incrementValue);
 
   //**************************************************************************
   /*! \brief Duplicate the specified rows and return a list of the inserted IDs.
@@ -186,13 +185,12 @@ public slots:
    *
    *  \param [in] list Identifies the rows to duplicate.
    *  \param [in] autoIncrement If true, will attempt to increment the Scott number.
-   *  \param [in] setUpdated If true, will attempt to set any date field named "updated"
    *  \param [in] appendChar If true, append a character to the field if possible.
    *  \param [in] charToAppend Character to append if appendChar is true.
    *
    *  \return return a list of the inserted IDs in the order that they were inserted.
    ***************************************************************************/
-  QList<int> duplicateRows(const QModelIndexList& list, const bool autoIncrement, const bool setUpdated, const bool appendChar, const char charToAppend);
+  QList<int> duplicateRows(const QModelIndexList& list, const bool autoIncrement, const bool appendChar, const char charToAppend);
 
 private:
   /*! The DescribeSqlTable object can be configured to list a field as linked to another table.
