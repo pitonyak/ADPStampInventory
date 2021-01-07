@@ -711,17 +711,21 @@ void GenericDataCollectionsTableModel::incrementCell(const QModelIndex& index, i
   GenericDataObject* rowData = m_table->getObjectByRow(index.row());
   QString columnName = m_table->getPropertyName(index.column());
   QVariant newCellValue;
+  qDebug() << "GenericDataCollectionsTableModel::incrementCell for column " << columnName;
   // Get the cell value based on the column name and increment it.
   // Add 1 day for date
   // Add 1 second for time
   // Assume floating point is money and add $0.01 for each incrementValue.
-  rowData->increment(columnName, incrementValue, newCellValue);
 
-  // Set a new value if it has changed.
-  // Set the last updated column if it exists
-  // Set undo data
-  // Set the catalog value if appropriate.
-  setData ( index, newCellValue, Qt::EditRole );
+  if (rowData->increment(columnName, incrementValue, newCellValue))
+  {
+    // Set a new value if it has changed.
+    // Set the last updated column if it exists
+    // Set undo data
+    // Set the catalog value if appropriate.
+    // "Money" values are returned as a string, so those are NOT incremented it seems.
+    setData ( index, newCellValue, Qt::EditRole );
+  }
 }
 
 

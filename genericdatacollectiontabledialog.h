@@ -119,6 +119,7 @@ public slots:
   void copyCellFrom7Above();
   void copyCellFrom8Above();
   void copyCellFrom9Above();
+  void copyCellFrom10Above();
 
   // Copy 1 cell from n below
   void copyCellFrom1Below();
@@ -130,6 +131,7 @@ public slots:
   void copyCellFrom7Below();
   void copyCellFrom8Below();
   void copyCellFrom9Below();
+  void copyCellFrom10Below();
 
   // Copy n cells from n above
   void copyCellsFrom1Above();
@@ -141,6 +143,7 @@ public slots:
   void copyCellsFrom7Above();
   void copyCellsFrom8Above();
   void copyCellsFrom9Above();
+  void copyCellsFrom10Above();
 
   // Copy n cells from n below
   void copyCellsFrom1Below();
@@ -152,6 +155,7 @@ public slots:
   void copyCellsFrom7Below();
   void copyCellsFrom8Below();
   void copyCellsFrom9Below();
+  void copyCellsFrom10Below();
 
   bool genericSearch(const bool findNext, const bool findPrevious, const bool findDialog);
 
@@ -288,6 +292,10 @@ inline void GenericDataCollectionTableDialog::copyCellFrom9Above()
 {
   copyCells(-9, 1);
 }
+inline void GenericDataCollectionTableDialog::copyCellFrom10Above()
+{
+  copyCells(-10, 1);
+}
 
 
 inline void GenericDataCollectionTableDialog::copyCellFrom1Below()
@@ -326,6 +334,10 @@ inline void GenericDataCollectionTableDialog::copyCellFrom9Below()
 {
   copyCells(9, 1);
 }
+inline void GenericDataCollectionTableDialog::copyCellFrom10Below()
+{
+  copyCells(10, 1);
+}
 
 inline void GenericDataCollectionTableDialog::copyCellsFrom1Above()
 {
@@ -362,6 +374,10 @@ inline void GenericDataCollectionTableDialog::copyCellsFrom8Above()
 inline void GenericDataCollectionTableDialog::copyCellsFrom9Above()
 {
   copyCells(-9, 9);
+}
+inline void GenericDataCollectionTableDialog::copyCellsFrom10Above()
+{
+  copyCells(-10, 10);
 }
 
 
@@ -400,6 +416,10 @@ inline void GenericDataCollectionTableDialog::copyCellsFrom8Below()
 inline void GenericDataCollectionTableDialog::copyCellsFrom9Below()
 {
   copyCells(9, 9);
+}
+inline void GenericDataCollectionTableDialog::copyCellsFrom10Below()
+{
+  copyCells(10, 10);
 }
 
 

@@ -244,34 +244,45 @@ bool GenericDataObject::isTime(const QString& name) const
   return (QMetaType::QTime == v.metaType().id());
 }
 
-void GenericDataObject::increment(const QString& name, const int incValue, QVariant& variantValue)
+bool GenericDataObject::increment(const QString& name, const double incValue, QVariant& variantValue)
 {
   const QVariant v = m_properties.value(name.toLower());
-  if (incValue == 0) {
+  //qDebug() << "GenericDataObject::increment name:" << name << " value:" << v << " add " << incValue;
+  if (incValue == 0.0) {
     variantValue = v;
   } else if (QMetaType::QDateTime == v.metaType().id()) {
-    variantValue = QVariant(variantValue.toDateTime().addDays(incValue));
+    variantValue = QVariant(v.toDateTime().addDays(incValue));
   } else if (QMetaType::QDate == v.metaType().id()) {
-    variantValue = QVariant(variantValue.toDate().addDays(incValue));
+    variantValue = QVariant(v.toDate().addDays(incValue));
   } else if (QMetaType::QTime == v.metaType().id()) {
-    variantValue = QVariant(variantValue.toTime().addSecs(incValue));
+    variantValue = QVariant(v.toTime().addSecs(incValue));
   } else if (QMetaType::Int == v.metaType().id() ||
              QMetaType::Short == v.metaType().id()) {
-    variantValue = QVariant(variantValue.toInt() + incValue);
+    variantValue.setValue(v.toInt() + static_cast<int>(incValue));
   } else if (QMetaType::UInt == v.metaType().id() ||
              QMetaType::UShort == v.metaType().id()) {
-    variantValue = QVariant(variantValue.toUInt() + incValue);
+    variantValue = QVariant(v.toUInt() + static_cast<uint>(incValue));
   } else if (QMetaType::Long == v.metaType().id() ||
              QMetaType::LongLong == v.metaType().id()) {
-    variantValue = QVariant(variantValue.toLongLong() + incValue);
+    variantValue = QVariant(v.toLongLong() + static_cast<qlonglong>(incValue));
   } else if (QMetaType::ULong == v.metaType().id() ||
              QMetaType::ULongLong == v.metaType().id()) {
-    variantValue = QVariant(variantValue.toULongLong() + incValue);
+    variantValue = QVariant(v.toULongLong() + static_cast<qulonglong>(incValue));
   } else if (QMetaType::Double == v.metaType().id()) {
-    variantValue = QVariant(variantValue.toDouble() + ((double)incValue) / 100.0);
+    variantValue = QVariant(v.toDouble() + incValue);
   } else if (QMetaType::Float == v.metaType().id()) {
-    variantValue = QVariant(variantValue.toFloat() + ((double)incValue) / 100.0);
+    variantValue = QVariant(v.toFloat() + incValue);
+  } else {
+    qDebug() << "GenericDataObject::increment unsupported type:" << v.metaType().id();
+    return false;
   }
+  //qDebug() << "Before leaving v = " << v << " and variantValue = " << variantValue;
+  return true;
+}
+
+bool GenericDataObject::increment(const QString& name, const int incValue, QVariant& variantValue)
+{
+  return increment(name, static_cast<double>(incValue), variantValue);
 }
 
 const QVariant GenericDataObject::getValue(const QString& name) const

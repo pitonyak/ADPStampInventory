@@ -115,14 +115,15 @@ public:
 
   /*! \brief Get the named value and increment it.
    *
-   * For a floating point number, this is assumed to be "cents" so it adds 0.01 * increment value.
-   * A date adds one day.Time adds seconds.
+   * A date adds one day. Time adds seconds.
    *
    *  \param [in] name Property name of interest.
    *  \param [in] incValue Integer increment amount.
    *  \param [in] variantValue This will contain the incremented value.
+   *  \return True if the value was incremented, false otherwise.
    */
-  void increment(const QString& name, const int incValue, QVariant& variantValue);
+  bool increment(const QString& name, const int incValue, QVariant& variantValue);
+  bool increment(const QString& name, const double incValue, QVariant& variantValue);
 
   /*! \brief Get the proprety as a string.
    *  \param [in] name Property name of interest.
