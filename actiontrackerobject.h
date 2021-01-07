@@ -7,11 +7,14 @@
 //! Tracks actions that can be undone. The tracked object is the template class.
 /*!
  * This represents a single action and it includes a single object on which the action was performed.
- * TODO: Who owns the tracked object?
+ *
+ * Who owns the tracked object?
+ * A pointer is passed in and nothing here deletes the object.
+ * Something else had better delete this thing if it needs to be deleted.
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2019
+ * \date 2019-2021
  ***************************************************************************/
 
 template<class T>

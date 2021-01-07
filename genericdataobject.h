@@ -117,6 +117,8 @@ public:
    *
    * A date adds one day. Time adds seconds.
    *
+   * Columns that contain "money" are "bookvalue" and "paid".
+   *
    *  \param [in] name Property name of interest.
    *  \param [in] incValue Integer increment amount.
    *  \param [in] variantValue This will contain the incremented value.

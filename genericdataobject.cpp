@@ -282,6 +282,7 @@ bool GenericDataObject::increment(const QString& name, const double incValue, QV
 
 bool GenericDataObject::increment(const QString& name, const int incValue, QVariant& variantValue)
 {
+  //"bookvalue" and "paid"
   return increment(name, static_cast<double>(incValue), variantValue);
 }
 

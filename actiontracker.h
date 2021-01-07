@@ -8,10 +8,12 @@
 //**************************************************************************
 //! Array of tracked objects in the order that the objects were added.
 /*!
+ * The object derives from QVector, and is nothing more than a wrapper for nice naming conventions.
+ * Nothing more than a set of constructors that pass through to the base class and a destructor. All are empty.
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2019
+ * \date 2019-2021
  ***************************************************************************/
 template <class T>
 class ActionTracker : QVector< ActionTrackerObject<T> >
