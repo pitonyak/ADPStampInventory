@@ -21,6 +21,65 @@ import time
 # Allow list of destination IP to be specified then destination must be in the list.
 
 #
+# What do we want in our output CSV file? 
+#
+# Each test has a numeric value assocaited with it. 
+# The confidence level (probably 0.005) determines if a test passes or failes. 
+# A value less than (<) the confidence level fails. 
+# A value of -1 means that the test was skipped.
+#
+"""
+Column  Header  Description
+0   Index   zero based index to the packet in the pcap file.
+1   Percent Percent Passed
+2   Num Passed  Number of tests that passed
+3   Num Skipped Number of tests skipped because they were considered not appropriate for the test
+4   Num Failed  Number of tests that failed the randomness test
+5   Confidence Level    Confidence level used for the tests, probably 0.005
+6   Monobit Test    
+7   Block Frequency Test    
+8   Independent Runs Test   
+9   Longest Runs Test   
+10  Matrix Rank Test    
+11  Spectral Test   
+12  Non Overlapping Patterns Test   
+13  Overlapping Patterns Test   
+14  Universal Test  
+15  Linear Complexity Test  
+16  Serial Test (p01)   
+17  Serial Test (p02)   
+18  Approximate Entropy Test    
+19  Cumulative Sums Test (Forward)  
+20  Cumulative Sums Test (Backward) 
+21  Random Excursions Test (p01)    
+22  Random Excursions Test (p02)    
+23  Random Excursions Test (p03)    
+24  Random Excursions Test (p04)    
+25  Random Excursions Test (p05)    
+26  Random Excursions Test (906)    
+27  Random Excursions Test (p07)    
+28  Random Excursions Test (p08)    
+29  Random Excursions Variant Test (p01)    
+30  Random Excursions Variant Test (p02)    
+31  Random Excursions Variant Test (p03)    
+32  Random Excursions Variant Test (p04)    
+33  Random Excursions Variant Test (p05)    
+34  Random Excursions Variant Test (p06)    
+35  Random Excursions Variant Test (p07)    
+36  Random Excursions Variant Test (p08)    
+37  Random Excursions Variant Test (p09)    
+38  Random Excursions Variant Test (p10)    
+39  Random Excursions Variant Test (p11)    
+40  Random Excursions Variant Test (p12)    
+41  Random Excursions Variant Test (p13)    
+42  Random Excursions Variant Test (p14)    
+43  Random Excursions Variant Test (p15)    
+44  Random Excursions Variant Test (p16)    
+45  Random Excursions Variant Test (p17)    
+46  File    PCAP file name
+"""
+
+#
 # Packet types: https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml
 #
 # Encap Security Payload (ESP) Packet is type 50
@@ -164,7 +223,7 @@ def byte_to_bits(b):
 
 
 
-class Colours:
+class Colors:
     """
     Just used to make the standard-out a little bit less ugly
     """
@@ -203,11 +262,11 @@ class RandomnessTester:
         """
         if p_val >= 0:
             if p_val < self.confidence_level:
-                return Colours.Fail + "{0:.5f}".format(p_val) + "\t" + Colours.End
+                return Colors.Fail + "{0:.5f}".format(p_val) + "\t" + Colors.End
             else:
-                return Colours.Pass + "{0:.5f}".format(p_val) + "\t" + Colours.End
+                return Colors.Pass + "{0:.5f}".format(p_val) + "\t" + Colors.End
         else:
-            return "{0:.4f}".format(p_val) + "\t" + Colours.End
+            return "{0:.4f}".format(p_val) + "\t" + Colors.End
 
     def get_aggregate_pval(self, pvals):
         """
@@ -381,6 +440,14 @@ class RandomnessTester:
         return self.test_bit_string(print_results, str_data, block_size, matrix_size)
 
     #
+    # The CSV header as I expect to print it. 
+    #
+    def get_csv_header(self):
+        test_names = self.get_test_names()
+        csv_header = '"Index","Percent","Num Passed","Num Skipped","Num Failed","Confidence Level","' + '","'.join(test_names) + '","File"'
+        return csv_header
+
+    #
     # Run the tests against the byte array
     # Returns       - Percentage of tests passed ignoring tests skipped because the data was not an appropriate size.
     # 
@@ -388,6 +455,10 @@ class RandomnessTester:
     # str_data      - String of bits (ones and zeros) against which to test.
     # block_size    - Block size to use. This is related to bits, not bytes. 
     # matrix_size   - Suggested matrix size. 
+    #
+    # Returns two things:
+    # percentage of tests passed
+    # A string that represents the CSV line that is missing the index for the packet in the PCAP file and the PCAP file name. 
     # 
     def test_bit_string(self, print_results, str_data:str, block_size=128, matrix_size=32):
 
@@ -492,24 +563,29 @@ class RandomnessTester:
 
         tests_passed_this = 0
         tests_skipped_this = 0
+        # 
+        # Build the csv string initially to hold a comma delimted list of the test values. 
+        #
+        csv_string = ""
         for i in range(len(test_names)):
-            pass_string = Colours.Bold + Colours.Fail + "FAIL!\t" + Colours.End
+            pass_string = Colors.Bold + Colors.Fail + "FAIL!\t" + Colors.End
             # NIST documentation recommends 0.96 ... but also more samples
             if aggregate_pass[i] >= 0.90:
-                pass_string = Colours.Bold + Colours.Pass + "PASS!\t" + Colours.End
+                pass_string = Colors.Bold + Colors.Pass + "PASS!\t" + Colors.End
                 tests_passed_this += 1
             if (numpy.array(pvals[i]) == -1.0).sum() > 0:
-                pass_string = Colours.Bold + "SKIP!\t" + Colours.End
+                pass_string = Colors.Bold + "SKIP!\t" + Colors.End
 
-            pval_string = Colours.Bold + Colours.Fail + "p=" + "{0:.5f}".format(
-                aggregate_pvals[i]) + "\t" + Colours.End
+            pval_string = Colors.Bold + Colors.Fail + "p=" + "{0:.5f}".format(
+                aggregate_pvals[i]) + "\t" + Colors.End
             if aggregate_pvals[i] > self.confidence_level:
-                pval_string = Colours.Bold + Colours.Pass + "p=" + "{0:.5f}".format(
-                    aggregate_pvals[i]) + "\t" + Colours.End
+                pval_string = Colors.Bold + Colors.Pass + "p=" + "{0:.5f}".format(
+                    aggregate_pvals[i]) + "\t" + Colors.End
             if (numpy.array(pvals[i]) == -1.0).sum() > 0:
                 pval_string = "p=SKIPPED\t"
                 tests_skipped_this += 1
 
+            csv_string = csv_string + "," + "{0:.5f}".format(pvals[i])
             if print_results:
                 print(test_names[i] + pass_string + pval_string + pval_strings[i])
 
@@ -517,9 +593,11 @@ class RandomnessTester:
         if print_results:
             print("\n\npassed: " + str(tests_passed_this) + " failed: " + str(tests_failed_this) + " skipped: " + str(tests_skipped_this) + " self.confidence_level:" + str(self.confidence_level))
 
-        passed_percentage = 0.0 if (len(test_names) - tests_skipped_this == 0) else tests_passed_this / (len(test_names) -  tests_skipped_this)
+        passed_percentage = 0.0 if (len(test_names) - tests_skipped_this == 0) else tests_passed_this / (len(test_names) - tests_skipped_this)
+        csv_string = str(passed_percentage) + "," + str(tests_passed_this) + "," + str(tests_skipped_this) + "," + str(len(test_names) - tests_skipped_this - tests_passed_this) + "," + str(self.confidence_level) + csv_string
+        #print(csv_string)
 
-        return passed_percentage
+        return passed_percentage, csv_string
 
 
 
@@ -532,7 +610,7 @@ class RandomnessTester:
         tests_passed = []
         # For each data set in self.bin
         for c in self.bin.columns:
-            print(Colours.Bold + "\n\tRunning " + self.bin.method + " based tests on", c + Colours.End, "\n")
+            print(Colors.Bold + "\n\tRunning " + self.bin.method + " based tests on", c + Colors.End, "\n")
             test_names = ["\t01. Monobit Test",
                           "\t02. Block Frequency Test",
                           "\t03. Independent Runs Test",
@@ -673,19 +751,19 @@ class RandomnessTester:
             # Print the results to the console
             self.print_dates(len(binary_strings))
             for i in range(len(test_names)):
-                pass_string = Colours.Bold + Colours.Fail + "FAIL!\t" + Colours.End
+                pass_string = Colors.Bold + Colors.Fail + "FAIL!\t" + Colors.End
                 # NIST documentation recommends 0.96 ... but also more samples
                 if aggregate_pass[i] >= 0.90:
-                    pass_string = Colours.Bold + Colours.Pass + "PASS!\t" + Colours.End
+                    pass_string = Colors.Bold + Colors.Pass + "PASS!\t" + Colors.End
                     tests_passed_this += 1
                 if (numpy.array(pvals[i]) == -1.0).sum() > 0:
-                    pass_string = Colours.Bold + "SKIP!\t" + Colours.End
+                    pass_string = Colors.Bold + "SKIP!\t" + Colors.End
 
-                pval_string = Colours.Bold + Colours.Fail + "p=" + "{0:.5f}".format(
-                    aggregate_pvals[i]) + "\t" + Colours.End
+                pval_string = Colors.Bold + Colors.Fail + "p=" + "{0:.5f}".format(
+                    aggregate_pvals[i]) + "\t" + Colors.End
                 if aggregate_pvals[i] > self.confidence_level:
-                    pval_string = Colours.Bold + Colours.Pass + "p=" + "{0:.5f}".format(
-                        aggregate_pvals[i]) + "\t" + Colours.End
+                    pval_string = Colors.Bold + Colors.Pass + "p=" + "{0:.5f}".format(
+                        aggregate_pvals[i]) + "\t" + Colors.End
                 if (numpy.array(pvals[i]) == -1.0).sum() > 0:
                     pval_string = "p=SKIPPED\t"
 
@@ -721,7 +799,7 @@ class RandomnessTester:
         :param function: a reference to the function being checked
         """
         # Compute the output using the function
-        print("\n\t", Colours.Bold + test_name + Colours.End)
+        print("\n\t", Colors.Bold + test_name + Colors.End)
         if "Complexity" in test_name or "Matrix" in test_name:
             print("\t", "This may take a while please be patient.")
         data_sets = ["pi", "e", "sqrt2", "sqrt3"]
@@ -730,22 +808,22 @@ class RandomnessTester:
                 p_val = function(self.load_test_data(data_sets[i])[:1000000])
                 data_set_label = "".zfill(10 - len(data_sets[i])).replace("0", " ")
                 if abs(p_val - expected[i]) < self.epsilon:
-                    print("\t", Colours.Pass + data_sets[i], data_set_label, "\tp expected = ", expected[i],
-                          "\tp computed =", "{0:.6f}".format(p_val) + Colours.End)
+                    print("\t", Colors.Pass + data_sets[i], data_set_label, "\tp expected = ", expected[i],
+                          "\tp computed =", "{0:.6f}".format(p_val) + Colors.End)
                 else:
-                    print("\t", Colours.Fail + data_sets[i], data_set_label, "\tp expected = ", expected[i],
-                          "\tp computed =", "{0:.6f}".format(p_val) + Colours.End)
+                    print("\t", Colors.Fail + data_sets[i], data_set_label, "\tp expected = ", expected[i],
+                          "\tp computed =", "{0:.6f}".format(p_val) + Colors.End)
         # Output has already been supplied
         else:
             i = 0
             for p_val in actual_out:
                 data_set_label = "".zfill(10 - len(data_sets[i])).replace("0", " ")
                 if abs(p_val - expected[i]) < self.epsilon:
-                    print("\t", Colours.Pass + data_sets[i], data_set_label, "\tp expected = ", expected[i],
-                          "\tp computed =", "{0:.6f}".format(p_val) + Colours.End)
+                    print("\t", Colors.Pass + data_sets[i], data_set_label, "\tp expected = ", expected[i],
+                          "\tp computed =", "{0:.6f}".format(p_val) + Colors.End)
                 else:
-                    print("\t", Colours.Fail + data_sets[i], data_set_label, "\tp expected = ", expected[i],
-                          "\tp computed =", "{0:.6f}".format(p_val) + Colours.End)
+                    print("\t", Colors.Fail + data_sets[i], data_set_label, "\tp expected = ", expected[i],
+                          "\tp computed =", "{0:.6f}".format(p_val) + Colors.End)
                 i += 1
 
     def test_randomness_tester(self):
@@ -782,7 +860,7 @@ class RandomnessTester:
                 zeros += 1
             else:
                 ones += 1
-        print("\t", Colours.Italics + "Count 1 =", ones, "Count 0 =", zeros, Colours.End)
+        print("\t", Colors.Italics + "Count 1 =", ones, "Count 0 =", zeros, Colors.End)
 
     def monobit(self, bin_data: str):
         """
@@ -891,7 +969,7 @@ class RandomnessTester:
                 if bin_data[i] != bin_data[i - 1]:
                     vobs += 1
             # expected_runs = 1 + 2 * (n - 1) * 0.5 * 0.5
-            # print("\t", Colours.Italics + "Observed runs =", vobs, "Expected runs", expected_runs, Colours.End)
+            # print("\t", Colors.Italics + "Observed runs =", vobs, "Expected runs", expected_runs, Colors.End)
             num = abs(vobs - 2.0 * n * p * (1.0 - p))
             den = 2.0 * math.sqrt(2.0 * n) * p * (1.0 - p)
             p_val = spc.erfc(float(num / den))
@@ -1871,18 +1949,26 @@ def get_packet_layers_name(packet, layer_names):
 def main():
 
     rng_tester = RandomnessTester(None)
-    percent_passed = rng_tester.run_test_against_random_bits(True, 128)
+    percent_passed, csv_string = rng_tester.run_test_against_random_bits(True, 128)
     print("Percent passed: " + str(percent_passed))
+    print(csv_string)
+    print(rng_tester.get_csv_header())
 
     parser = ArgumentParser()
     parser.add_argument('-f', '--file', help='Path to input PCAP file', required=True)
     parser.add_argument('-o', '--output', help='File name for output graphml file', default= "output.graphml")
+    parser.add_argument('-s', '--source', help='comma delimted list of valid source IP addresses, source must be one of these')
+    parser.add_argument('-d', '--destination', help='comma delimted list of valid destination IP addresses, destination must be one of these')
     args = parser.parse_args()
+
+    # TODO: parse the source and destination IP addresses and
+    # then ignore all packets that do not match. 
 
     idx=0
     counter = 0
     encrypted_counter = 0
 
+    # Ignore all packets that do not have both an IP layer and an ESP layer. 
     start_time = time.time()
     for packet in PcapNgReader(args.file):
         #filters to ensure we are examining IP and
@@ -1902,8 +1988,8 @@ def main():
 
 
         #
-        # This will have an ESP packet, and I could have also just verified that there is an ESP layer. 
-        # Also, it MIGHT have a Padding layer. 
+        # This has an ESP packet. 
+        # It MIGHT have a Padding layer. 
         #
         encrypted_counter = encrypted_counter + 1
         #for layer in get_packet_layers(packet, 0):
