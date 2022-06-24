@@ -17,6 +17,7 @@ import scipy.special as spc
 import scipy.stats as sst
 import time
 import csv,io
+from os.path import exists
 
 # TODO:
 # Test
@@ -458,16 +459,19 @@ class RandomnessTester:
         outstream = io.StringIO()
         cw = csv.writer(outstream)
         cw.writerow([string])
-        return outstream.getvalue()
-
-
+        s = outstream.getvalue().rstrip()
+        if s.startswith('"'):
+            s = s[1:]
+        if s.endswith('"'):
+            s = s[:-1]
+        return s
 
     #
     # The CSV header as I expect to print it. 
     #
     def get_csv_header(self):
         test_names = self.get_test_names()
-        csv_header = '"Index","Percent","Num Passed","Num Skipped","Num Failed","Confidence Level","' + '","'.join(test_names) + '","File","Source IP","Dest IP","Data Len","Data"'
+        csv_header = '"Index", "Percent", "Num Passed", "Num Skipped", "Num Failed", "Confidence Level", "' + '", "'.join(test_names) + '", "File", "Source IP", "Dest IP", "Data Len", "Data"'
         return csv_header
 
     #
@@ -608,7 +612,7 @@ class RandomnessTester:
                 pval_string = "p=SKIPPED\t"
                 tests_skipped_this += 1
 
-            csv_string = csv_string + "," + "{0:.5f}".format(pvals[i])
+            csv_string = csv_string + ", " + "{0:.5f}".format(pvals[i])
             if print_results:
                 print(test_names[i] + pass_string + pval_string + pval_strings[i])
 
@@ -617,7 +621,8 @@ class RandomnessTester:
             print("\n\npassed: " + str(tests_passed_this) + " failed: " + str(tests_failed_this) + " skipped: " + str(tests_skipped_this) + " self.confidence_level:" + str(self.confidence_level))
 
         passed_percentage = 0.0 if (len(test_names) - tests_skipped_this == 0) else tests_passed_this / (len(test_names) - tests_skipped_this)
-        csv_string = str(passed_percentage) + "," + str(tests_passed_this) + "," + str(tests_skipped_this) + "," + str(len(test_names) - tests_skipped_this - tests_passed_this) + "," + str(self.confidence_level) + csv_string
+
+        csv_string = str(passed_percentage) + ", " + str(tests_passed_this) + ", " + str(tests_skipped_this) + ", " + str(len(test_names) - tests_skipped_this - tests_passed_this) + ", " + str(self.confidence_level) + csv_string
         #print(csv_string)
 
         return passed_percentage, csv_string
@@ -1981,16 +1986,28 @@ def main():
 
     parser = ArgumentParser()
     parser.add_argument('-f', '--file', help='Path to input PCAP file', required=True)
-    parser.add_argument('-o', '--output', help='File name for output graphml file', default= "output.csv")
-    parser.add_argument('-s', '--source', help='comma delimted list of valid source IP addresses, source must be one of these')
-    parser.add_argument('-d', '--destination', help='comma delimted list of valid destination IP addresses, destination must be one of these')
+    parser.add_argument('-o', '--output', help='File name for output graphml file', default= "")
+    parser.add_argument('-s', '--source', help='comma delimted list of valid source IP addresses, source must be one of these', default= "")
+    parser.add_argument('-d', '--destination', help='comma delimted list of valid destination IP addresses, destination must be one of these', default= "")
     args = parser.parse_args()
 
     # TODO: parse the source and destination IP addresses and
     # then ignore all packets that do not match. 
 
-    # TODO: Write the CSV file
-    #
+    output_file = args.output if len(args.output) > 0 else args.file + ".csv"
+
+    if not exists(args.file):
+        print("\n\nInput pcap file does not exist: " + args.file + "\n\n")
+        parser.print_help(sys.stderr)
+        sys.exit(1)
+
+    print("\n\nReading from " + args.file)
+    print("Writing to " + output_file)
+
+    src_ips = args.source.split(',')
+    dst_ips = args.destination.split(',')
+    num_src_ips = len(src_ips)
+    num_dst_ips = len(dst_ips)
 
     idx=0
     counter = 0
@@ -1998,7 +2015,7 @@ def main():
 
     start_time = time.time()
     # Ignore all packets that do not have both an IP layer and an ESP layer. 
-    with open(args.output, 'w') as csv_file:
+    with open(output_file, 'w') as csv_file:
         csv_file.write(rng_tester.get_csv_header() + "\n")
         for packet in PcapNgReader(args.file):
             #filters to ensure we are examining IP and
@@ -2013,9 +2030,28 @@ def main():
             	continue
             #if ip_layer.proto != 50:
             #    continue
-            print("Encrypted packet at index " + str(counter - 1))
+            print("Encrypted packet at index " + str(counter - 1) + " " + ip_layer.src + " ==> " + ip_layer.dst)
 
+            #
+            # Check source IPs
+            #
+            if num_src_ips > 0 and len(ip_layer.src) > 0:
+                found_src = False
+                for src_ip in src_ips:
+                    if ip_layer.src.startswith(src_ip):
+                        found_src = True
+                        break;
+                if not found_src:
+                    continue
 
+            if num_dst_ips > 0 and len(ip_layer.dst) > 0:
+                found_dst = False
+                for dst_ip in dst_ips:
+                    if ip_layer.dst.startswith(dst_ip):
+                        found_dst = True
+                        break;
+                if not found_dst:
+                    continue
 
             #
             # This has an ESP packet. 
@@ -2042,7 +2078,7 @@ def main():
             # Deal with it later. 
             #
             short_data = esp_data if len(esp_data) < 257 else esp_data[:256]
-            csv_file.write(str(counter - 1) + ',' + csv_string + ',"' + rng_tester.csv_safe_string(args.file) + '","' + ip_layer.src + '","' + ip_layer.dst + '",' + str(len(esp_data)) + ',"' + rng_tester.csv_safe_string(str(short_data)) + '"\n')
+            csv_file.write(str(counter - 1) + ', ' + csv_string + ', "' + rng_tester.csv_safe_string(args.file) + '", "' + ip_layer.src + '", "' + ip_layer.dst + '",' + str(len(esp_data)) + ',"' + rng_tester.csv_safe_string(str(short_data)) + '"\n')
 
             if packet.haslayer("Padding"):
             	padding_layer = packet.getlayer("Padding")
