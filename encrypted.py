@@ -16,6 +16,13 @@ import scipy.fftpack as sff
 import scipy.special as spc
 import scipy.stats as sst
 import time
+import csv,io
+
+# TODO:
+# Test
+# reduce printing output
+# allow IP filtering. 
+
 
 # Allow list of source IP to be specified then source must be in the list.
 # Allow list of destination IP to be specified then destination must be in the list.
@@ -77,6 +84,10 @@ Column  Header  Description
 44  Random Excursions Variant Test (p16)    
 45  Random Excursions Variant Test (p17)    
 46  File    PCAP file name
+47  Source IP
+48  Dest IP
+49  Data Len
+50  Data        - First few bytes of the data.
 """
 
 #
@@ -106,6 +117,7 @@ Column  Header  Description
 # pip install seaborn ouilookup scapy PyX networkx
 # cd /andrew0/home/andy/Devsrc/Battelle/GreenHornet/pcap
 #
+# TODO: Remove this comment after testing and posting.
 # Test files containing encrypted packets:
 # 1     wireshark/fuzz-2006-07-05-11195.pcap
 # 2     wireshark/fuzz-2006-07-05-1209.pcap (that data does NOT look random!)
@@ -440,11 +452,22 @@ class RandomnessTester:
         return self.test_bit_string(print_results, str_data, block_size, matrix_size)
 
     #
+    # Probably should have used the CSV writter from the start, but the code was already written. 
+    #
+    def csv_safe_string(self,string):
+        outstream = io.StringIO()
+        cw = csv.writer(outstream)
+        cw.writerow([string])
+        return outstream.getvalue()
+
+
+
+    #
     # The CSV header as I expect to print it. 
     #
     def get_csv_header(self):
         test_names = self.get_test_names()
-        csv_header = '"Index","Percent","Num Passed","Num Skipped","Num Failed","Confidence Level","' + '","'.join(test_names) + '","File"'
+        csv_header = '"Index","Percent","Num Passed","Num Skipped","Num Failed","Confidence Level","' + '","'.join(test_names) + '","File","Source IP","Dest IP","Data Len","Data"'
         return csv_header
 
     #
@@ -1949,14 +1972,16 @@ def get_packet_layers_name(packet, layer_names):
 def main():
 
     rng_tester = RandomnessTester(None)
+    """
     percent_passed, csv_string = rng_tester.run_test_against_random_bits(True, 128)
     print("Percent passed: " + str(percent_passed))
     print(csv_string)
     print(rng_tester.get_csv_header())
+    """
 
     parser = ArgumentParser()
     parser.add_argument('-f', '--file', help='Path to input PCAP file', required=True)
-    parser.add_argument('-o', '--output', help='File name for output graphml file', default= "output.graphml")
+    parser.add_argument('-o', '--output', help='File name for output graphml file', default= "output.csv")
     parser.add_argument('-s', '--source', help='comma delimted list of valid source IP addresses, source must be one of these')
     parser.add_argument('-d', '--destination', help='comma delimted list of valid destination IP addresses, destination must be one of these')
     args = parser.parse_args()
@@ -1964,49 +1989,66 @@ def main():
     # TODO: parse the source and destination IP addresses and
     # then ignore all packets that do not match. 
 
+    # TODO: Write the CSV file
+    #
+
     idx=0
     counter = 0
     encrypted_counter = 0
 
-    # Ignore all packets that do not have both an IP layer and an ESP layer. 
     start_time = time.time()
-    for packet in PcapNgReader(args.file):
-        #filters to ensure we are examining IP and
-        #Encrypted packets (protocol 50) packets
-        counter = counter + 1
-        if not(packet.haslayer("IP")):
-            continue
-        ip_layer = packet.getlayer("IP")
-        # same as using:
-        # if ip_layer.proto != 50:
-        if not(packet.haslayer("ESP")):
-        	continue
-        #if ip_layer.proto != 50:
-        #    continue
-        print("Encrypted packet at index " + str(counter - 1))
+    # Ignore all packets that do not have both an IP layer and an ESP layer. 
+    with open(args.output, 'w') as csv_file:
+        csv_file.write(rng_tester.get_csv_header() + "\n")
+        for packet in PcapNgReader(args.file):
+            #filters to ensure we are examining IP and
+            #Encrypted packets (protocol 50) packets
+            counter = counter + 1
+            if not(packet.haslayer("IP")):
+                continue
+            ip_layer = packet.getlayer("IP")
+            # same as using:
+            # if ip_layer.proto != 50:
+            if not(packet.haslayer("ESP")):
+            	continue
+            #if ip_layer.proto != 50:
+            #    continue
+            print("Encrypted packet at index " + str(counter - 1))
 
 
 
-        #
-        # This has an ESP packet. 
-        # It MIGHT have a Padding layer. 
-        #
-        encrypted_counter = encrypted_counter + 1
-        #for layer in get_packet_layers(packet, 0):
-        #	print("     Layer: " + layer.name)
+            #
+            # This has an ESP packet. 
+            # It MIGHT have a Padding layer. 
+            #
+            encrypted_counter = encrypted_counter + 1
+            #for layer in get_packet_layers(packet, 0):
+            #	print("     Layer: " + layer.name)
 
-        esp_layer = packet.getlayer("ESP")
-        #print("esp_layer.spi: " + str(esp_layer.spi))
-        #print("for esp_layer.seq: " + str(esp_layer.seq))
-        # This is class bytes:
-        esp_data = esp_layer.data
-        print("from esp_layer pay load len = " + str(len(esp_data)))
-        print(esp_data)
-        if packet.haslayer("Padding"):
-        	padding_layer = packet.getlayer("Padding")
-        	# Type is class bytes
-        	padding = padding_layer.load
-        	print("Padding length: " + str(len(padding)) + " ==> " + str(padding))
+            esp_layer = packet.getlayer("ESP")
+            #print("esp_layer.spi: " + str(esp_layer.spi))
+            #print("for esp_layer.seq: " + str(esp_layer.seq))
+            # This is class bytes:
+            esp_data = esp_layer.data
+            print("from esp_layer pay load len = " + str(len(esp_data)))
+            print(esp_data)
+            #
+            # esp_data is of type (class) bytes, which is exactly what I need.
+            # Change False to True to print the full export data. 
+            #
+            percent_passed, csv_string = rng_tester.test_byte_array(False, esp_data)
+            #
+            # Convert the data to a string, then grab the first 256 parts of the string. 
+            # Deal with it later. 
+            #
+            short_data = esp_data if len(esp_data) < 257 else esp_data[:256]
+            csv_file.write(str(counter - 1) + ',' + csv_string + ',"' + rng_tester.csv_safe_string(args.file) + '","' + ip_layer.src + '","' + ip_layer.dst + '",' + str(len(esp_data)) + ',"' + rng_tester.csv_safe_string(str(short_data)) + '"\n')
+
+            if packet.haslayer("Padding"):
+            	padding_layer = packet.getlayer("Padding")
+            	# Type is class bytes
+            	padding = padding_layer.load
+            	print("Padding length: " + str(len(padding)) + " ==> " + str(padding))
         	
     end_time = time.time() - start_time
     print("Total Read time: " + str(end_time) + " for " + str(counter) + " encrypted:" + str(encrypted_counter))
