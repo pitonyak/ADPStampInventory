@@ -2,7 +2,6 @@
 
 from argparse import ArgumentParser
 #from collections import deque   # A fast queue not meant for use with threading
-from OuiLookup import OuiLookup
 from re import L
 from scapy.all import *
 from scapy.contrib import ospf
@@ -115,7 +114,7 @@ Column  Header  Description
 # python3 -m venv /andrew0/home/andy/Documents/Battelle/GreenHornet/Random_src/random
 # source /andrew0/home/andy/Devsrc/Battelle/GreenHornet/Random_src/random/bin/activate
 # pip install numpy scipy pandas quandl bitstring pycrypto
-# pip install seaborn ouilookup scapy PyX networkx
+# pip install seaborn scapy PyX networkx
 # cd /andrew0/home/andy/Devsrc/Battelle/GreenHornet/pcap
 #
 # TODO: Remove this comment after testing and posting.

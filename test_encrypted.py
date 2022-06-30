@@ -8,7 +8,6 @@ import encrypted as gh
 
 from argparse import ArgumentParser
 #from collections import deque   # A fast queue not meant for use with threading
-from OuiLookup import OuiLookup
 from re import L
 from scapy.all import *
 from scapy.contrib import ospf
