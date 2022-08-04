@@ -1,0 +1,285 @@
+#
+# This list is mostly take from the 802.3 standard
+# Empty lines and lines that start with the '#' character are ignored. 
+# Columns are delimited by white space characters, so, spaces and tabs.
+#
+# White space is compressed so it does not matter if there is a single or multiple spaces. 
+#
+# The first column contains a hex value or hex range with a minus sign (-) between
+# two hex values. No spaces are allowed here. 
+#
+# The second column contains a 0 or a 1. A value of 0 means ignore the line. A value of 1 means include the line. 
+#
+# The rest of the text is a comment and it is simply ignored. 
+#
+#Hex	Valid	Comment
+0000-05DC	0	IEEE802.3 Length Field (0.:1500.)
+0101-01FF	0	Experimental
+0200		0	Xerox PUP (conflicts with 802.3 Length Field range) (see 0A00)
+0201		0	Xerox PUP Address Translation (conflicts ...) (see 0A01)
+0400		0	Nixdorf (conflicts with 802.3 Length Field)
+0600		0	Xerox NS IDP
+0601		0	XNS Address Translation (3Mb only)
+0660		0	DLOG
+0661		0	DLOG
+0800		1	DOD Internet Protocol (IPv4) (ETHERTYPE_IP in libpcap)
+0801		0	X.75 Internet
+0802		0	NBS Internet
+0803		0	ECMA Internet
+0804		0	CHAOSnet
+0805		0	X.25 Level 3
+0806		1	Address Resolution Protocol (ARP) (for IP and for CHAOS) (ETHERTYPE_ARP in libpcap)
+0807		0	XNS Compatibility
+0808		0	Frame Relay ARP
+081C		0	Symbolics Private
+0888-088A	0	Xyplex
+0900		0	Ungermann-Bass network debugger
+0A00		0	Xerox IEEE802.3 PUP
+0A01		0	Xerox IEEE802.3 PUP Address Translation
+0BAD		0	Banyan Systems
+0BAE		0	VINES Loopback
+0BAF		0	Banyon VINES Echo
+1000		0	Berkeley Trailer negotiation
+1001-100F	0	Berkeley Trailer encapsulation for IP
+1234		0	DCA - Multicast
+1600		0	VALID system protocol
+1989		0	Artificial Horizons ("Aviator" dogfight simulator [on Sun])
+1995		0	Datapoint Corporation (RCL lan protocol)
+22F3		0	Trill
+22F4		0	L2-IS-IS
+3C00		0	3Com NBP virtual circuit datagram (like XNS SPP) not registered
+3C01		0	3Com NBP System control datagram not registered
+3C02		0	3Com NBP Connect request (virtual cct) not registered
+3C03		0	3Com NBP Connect repsonse not registered
+3C04		0	3Com NBP Connect complete not registered
+3C05		0	3Com NBP Close request (virtual cct) not registered
+3C06		0	3Com NBP Close response not registered
+3C07		0	3Com NBP Datagram (like XNS IDP) not registered
+3C08		0	3Com NBP Datagram broadcast not registered
+3C09		0	3Com NBP Claim NetBIOS name not registered
+3C0A		0	3Com NBP Delete Netbios name not registered
+3C0B		0	3Com NBP Remote adaptor status request not registered
+3C0C		0	3Com NBP Remote adaptor response not registered
+3C0D		0	3Com NBP Reset not registered
+4242		0	PCS Basic Block Protocol
+424C		0	Information Modes Little Big LAN diagnostic
+4321		0	THD - Diddle
+4C42		0	Information Modes Little Big LAN
+5208		0	BBN Simnet Private
+6000		0	DEC unassigned, experimental
+6001		0	DEC Maintenance Operation Protocol (MOP) Dump/Load Assistance
+6002		0	DEC Maintenance Operation Protocol (MOP) Remote Console
+6003		0	DECNET Phase IV, DNA Routing
+6004		0	DEC Local Area Transport (LAT)
+6005		0	DEC diagnostic protocol (at interface initialization?)
+6006		0	DEC customer protocol
+6007		0	DEC Local Area VAX Cluster (LAVC), System Communication Architecture (SCA)
+6008		0	DEC AMBER
+6009		0	DEC MUMPS
+6010-6014	0	3Com Corporation
+6558		0	Trans Ether Bridging
+6559		0	Raw Frame Relay
+7000		0	Ungermann-Bass download
+7001		0	Ungermann-Bass NIUs
+7002		0	Ungermann-Bass diagnostic/loopback
+7003		0	Ungermann-Bass ??? (NMC to/from UB Bridge)
+7005		0	Ungermann-Bass Bridge Spanning Tree
+7007		0	OS/9 Microware
+7009		0	OS/9 Net?
+7020-7029	0	LRT (England) (now Sintrom)
+7030		0	Racal-Interlan
+7031		0	Prime NTS (Network Terminal Service)
+7034		0	Cabletron
+8003		0	Cronus VLN
+8004		0	Cronus Direct
+8005		0	HP Probe protocol
+8006		0	Nestar
+8008		0	AT&T/Stanford Univ.
+8010		0	Excelan
+8013		0	Silicon Graphics diagnostic
+8014		0	Silicon Graphics network games
+8015		0	Silicon Graphics reserved
+8016		0	Silicon Graphics XNS NameServer, bounce server
+8019		0	Apollo DOMAIN
+802E		0	Tymshare
+802F		0	Tigan, Inc.
+8035		0	Reverse Address Resolution Protocol (RARP)
+8036		0	Aeonic Systems
+8037		0	IPX (Novell Netware?)
+8038		0	DEC LanBridge Management
+8039		0	DEC DSM/DDP
+803A		0	DEC Argonaut Console
+803B		0	DEC VAXELN
+803C		0	DEC DNS Naming Service
+803D		0	DEC Ethernet CSMA/CD Encryption Protocol
+803E		0	DEC Distributed Time Service
+803F		0	DEC LAN Traffic Monitor Protocol
+8040		0	DEC PATHWORKS DECnet NETBIOS Emulation
+8041		0	DEC Local Area System Transport
+8042		0	DEC unassigned
+8044		0	Planning Research Corp.
+8046		0	AT&T
+8047		0	AT&T
+8048		0	DEC Availability Manager for Distributed Systems DECamds (but someone at DEC says not)
+8049		0	ExperData
+805B		0	VMTP (Versatile Message Transaction Protocol, RFC-1045) (Stanford) [was Stanford V Kernel, experimental]
+805C		0	Stanford V Kernel, version 6.0
+805D		0	Evans & Sutherland
+8060		0	Little Machines
+8062		0	Counterpoint Computers
+8065		0	University of Mass. at Amherst
+8066		0	University of Mass. at Amherst
+8067		0	Veeco Integrated Automation
+8068		0	General Dynamics
+8069		0	AT&T
+806A		0	Autophon
+806C		0	ComDesign
+806D		0	Compugraphic Corporation
+806E-8077	0	Landmark Graphics Corporation
+807A		0	Matra
+807B		0	Dansk Data Elektronik
+807C		0	Merit Internodal (or Univ of Michigan?)
+807D-807F		0	Vitalink Communications
+8080		0	Vitalink TransLAN III Management
+8081-8083	0	Counterpoint Computers
+8088-808A	0	Xyplex
+809B		0	EtherTalk (AppleTalk over Ethernet)
+809C-809E	0	Datability
+809F		0	Spider Systems Ltd.
+80A3		0	Nixdorf Computers
+80A4-80B3	0	Siemens Gammasonics Inc.
+80C0-80C3	0	DCA (Digital Comm. Assoc.) Data Exchange Cluster
+80C4-80C5	0	Banyan Systems
+80C6		0	Pacer Software
+80C7		0	Applitek Corporation
+80C8-80CC	0	Intergraph Corporation
+80CD-80CE	0	Harris Corporation
+80CF-80D2	0	Taylor Instrument
+80D3-80D4	0	Rosemount Corporation
+80D5		0	IBM SNA Services over Ethernet
+80DD		0	Varian Associates
+80DE-80DF	0	TRFS (Integrated Solutions Transparent Remote File System)
+80E0-80E3	0	Allen-Bradley
+80E4-80F0	0	Datability
+80F2		0	Retix
+80F3		0	AppleTalk Address Resolution Protocol (AARP)
+80F4-80F5	0	Kinetics
+80F7		0	Apollo Computer
+80FF		0	Wellfleet Communications
+8100		0	Customer VLAN Tag Type (C-Tag, formerly called the Q-Tag) (initially Wellfleet)
+8101		0	Wellfleet Communications
+8102		0	Wellfleet; BOFL (Breath OF Life) pkts [every 5-10 secs.]
+8103		0	Wellfleet Communications
+8107-8109	0	Symbolics Private
+812B		0	Talaris
+8130		0	Waterloo Microsystems Inc.
+8131		0	VG Laboratory Systems
+8132-8136	0	Bridge Communications
+8137		0	Novell (old) NetWare IPX (ECONFIG E option)
+8138		0	Novell, Inc.
+8139-813D	0	KTI
+813F		0	M/MUMPS data sharing
+8145		0	Vrije Universiteit (NL)
+8146		0	Vrije Universiteit (NL)
+8147		0	Vrije Universiteit (NL)
+8148		0	Logicraft
+8149		0	Network Computing Devices
+814A		0	Alpha Micro
+814C		0	SNMP over Ethernet (see RFC1089)
+814D-814E	0	BIIN
+814F		0	Technically Elite Concepts Network Professor
+8150		0	Rational Corp
+8151-8153	0	Qualcomm
+815C-815E	0	Computer Protocol Pty Ltd
+8164-8166	0	Charles River Data System
+817D		0	XTP
+817E		0	SGI/Time Warner prop.
+8180		0	HIPPI-FP encapsulation
+8181		0	STP, HIPPI-ST
+8182		0	Reserved for HIPPI-6400
+8183		0	Reserved for HIPPI-6400
+8184-818C	0	Silicon Graphics prop.
+818D		0	Motorola Computer
+8191		0	PowerLAN NetBIOS/NetBEUI (PC)
+819A-81A3	0	Qualcomm
+81A4		0	ARAI Bunkichi
+81A5-81AE	0	RAD Network Devices
+81B7-81B9	0	Xyplex
+81CC-81D5	0	Apricot Computers
+81D6-81DD	0	Artisoft
+81E6-81EF	0	Polygon
+81F0-81F2	0	Comsat Labs
+81F3-81F5	0	SAIC
+81F6-81F8	0	VG Analytical
+8203-8205	0	Quantum Software
+8221-8222	0	Ascom Banking Systems
+823E-8240	0	Advanced Encryption Syste
+827F-8282	0	Athena Programming
+8263-826A	0	Charles River Data System
+829A-829B	0	Inst Ind Info Tech
+829C-82AB	0	Taurus Controls
+82AC-8693	0	Walker Richer & Quinn
+8390		0	Accton Technologies (unregistered)
+852B		0	Talaris multicast
+8582		0	Kalpana
+8694-869D	0	Idea Courier
+869E-86A1	0	Computer Network Tech
+86A3-86AC	0	Gateway Communications
+86DB		0	SECTRA
+86DE		0	Delta Controls
+86DD		1	Internet Protocol version 6 (IPv6) (ETHERTYPE_IPV6 in libpcap)
+86DF		0	ATOMIC
+86E0-86EF	0	Landis & Gyr Powers
+8700-8710	0	Motorola
+8739		0	Control Technology Inc. RDP Without IP
+873A		0	Control Technology Inc. Mcast Industrial Ctrl Proto.
+873B		0	Control Technology Inc. Proprietary
+873C		0	Control Technology Inc. Proprietary
+876B		0	TCP/IP Compression
+876C		0	IP Autonomous Systems
+876D		0	Secure Data
+8808		0	IEEE Std 802.3 - Ethernet Passive Optical Network (EPON)
+8809		0	Slow Protocols (Link Aggregation, OAM, etc.)
+8820		0	Hitachi Cable (Optoelectronic Systems Laboratory)
+8856		0	Axis Communications AB proprietary bootstrap/config
+8888		0	HP LanProbe test?
+880B		0	Point-to-Point Protocol (PPP)
+880C		0	General Switch Management Protocol (GSMP)
+8822		0	Ethernet NIC hardware and software testing
+8847		1	MPLS (ETHERTYPE_MPLS in libpcap)
+8848		0	MPLS with upstream-assigned label
+8861		0	Multicast Channel Allocation Protocol (MCAP)
+8863		0	PPP over Ethernet (PPPoE) Discovery Stage
+8864		0	PPP over Ethernet (PPPoE) Session Stage
+888E		0	IEEE Std 802.1X - Port-based network access control
+88A8		0	IEEE Std 802.1Q - Service VLAN tag identifier (S-Tag)
+8A96-8A97	0	Invisible Software
+88B5		0	IEEE Std 802 - Local Experimental Ethertype
+88B6		0	IEEE Std 802 - Local Experimental Ethertype
+88B7		0	IEEE Std 802 - OUI Extended Ethertype
+88C7		0	IEEE Std 802.11 - Pre-Authentication (802.11i)
+88CC		0	IEEE Std 802.1AB - Link Layer Discovery Protocol (LLDP)
+88E5		0	IEEE Std 802.1AE - Media Access Control Security
+88E7		0	Provider Backbone Bridging Instance tag
+88F5		0	IEEE Std 802.1Q  - Multiple VLAN Registration Protocol (MVRP)
+88F6		0	IEEE Std 802.1Q - Multiple Multicast Registration Protocol (MMRP)
+890D		0	IEEE Std 802.11 - Fast Roaming Remote Request (802.11r)
+8917		0	IEEE Std 802.21 - Media Independent Handover Protocol
+8929		0	IEEE Std 802.1Qbe - Multiple I-SID Registration Protocol
+893B		0	TRILL Fine Grained Labeling (FGL)
+8940		0	IEEE Std 802.1Qbg - ECP Protocol (also used in 802.1BR)
+8946		0	TRILL RBridge Channel
+8947		0	GeoNetworking as defined in ETSI EN 302 636-4-1
+894F		0	NSH (Network Service Header)
+9000		0	Loopback (Configuration Test Protocol)
+9001		0	3Com (Formerly Bridge Communications), XNS Systems Management
+9002		0	3Com (Formerly Bridge Communications), TCP/IP Systems Management
+9003		0	3Com (Formerly Bridge Communications), loopback detection
+9A22		0	Multi-Topology
+A0ED		0	LoWPAN encapsulation
+AAAA		0	DECNET? Used by VAX 6220 DEBNI
+B7EA		0	The Ethertype will be used to identify a "Channel" in which control messages are encapsulated as payload of GRE packets. When a GRE packet tagged with the Ethertype is received, the payload will be handed to the network processor for processing.
+FAF5		0	Sonix Arpeggio
+FF00		0	BBN VITAL-LanBridge cache OR ISC Bunker Ramo
+FF01-FF0F	0	ISC Bunker Ramo
+FFFF		0	Reserved
