@@ -157,6 +157,6 @@
 142	1	0	0	0	Robust Header Compression (ROHC)
 143	1	0	0	0	Ethernet
 #144-252	0	0	0	0	Unassigned
-253	0	1	0	0		Use for experimentation and testing
-254	0	1	0	0		Use for experimentation and testing
+253	0	1	0	0	Use for experimentation and testing
+254	0	1	0	0	Use for experimentation and testing
 255	0	0	0	0	Reserved

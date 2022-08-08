@@ -28,6 +28,7 @@
 
 #include "pcap.h"
 #include "utilities.h"
+#include "iptype.h"
 
 // Evil global variable to hold an ethernet type description
 std::unordered_map<unsigned int, std::string> eth_types_description;
