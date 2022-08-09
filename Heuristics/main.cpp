@@ -695,6 +695,20 @@ int write_ip_and_mac_from_pcap(const char*pcap_fname, const char *out_mac_fname,
 
 int main(int argc, char **argv){
 
+  // TODO: Move this as appropriate. 
+  //
+  // This is how to read the ip_types.txt file, which will 
+  // then be sent to the processor for the pcap file.
+  // Still need to edit ip_types.txt so that it will have 
+  // correct values for types that support repeating IP or MAC addresses.
+  // See the spreadsheet uploaded by Beau.
+  //
+  std::string ip_fname = "ip_types.txt";
+  IPTypes ipts;
+  ipts.read(ip_fname);
+  //std::cout << ipts;
+  //std::cout << std::endl;
+
   /*Given an input PCAP file, discover all unique MAC addresses and IPs and write them to a file (stdout by default
    */
   char *pcap_fname=0;
