@@ -122,10 +122,22 @@ inline bool is_valid_ether_type(const struct ether_header *ether, const std::uno
   return (ether != nullptr && eth_types.find(ntohs(ether->ether_type)) != eth_types.end());
 }
 
-//
-// Read the pcap file and create the anomaly file based on the Heuristic
-//
-int create_heuristic_anomaly_file(const std::unordered_set<unsigned int>& eth_types, const char* pcap_fname, const char* anomaly_fname) {
+//**************************************************************************
+//! Read the pcap file and create the anomaly file based on the Heuristic
+/*!
+ * 
+ * \param [in] ipts List of valid IP protocols (types) and which allow for a repeated IP or MAC in the payload.
+ * 
+ * \param [in] eth_types List of valid Ethernet types
+ * 
+ * \param [in] pcap_fname Full path to the input PCAP file
+ * 
+ * \param [in] anomaly_fname Full path to the generated PCAP file with anomalies.
+ * 
+ * \returns 0 on no error, not very useful at this time.
+ *
+ ***************************************************************************/
+int create_heuristic_anomaly_file(const IPTypes& ipts, const std::unordered_set<unsigned int>& eth_types, const char* pcap_fname, const char* anomaly_fname) {
   pcap_t *pcap_file;
   pcap_dumper_t *dumpfile;
   bool done = false;
@@ -797,7 +809,7 @@ int main(int argc, char **argv){
   if (create_anomaly_list) {
     std::cout << "Ready to go " << std::endl;
     if (eth_type_set != nullptr) {
-      create_heuristic_anomaly_file(*eth_type_set, pcap_fname, anomaly_fname);
+      create_heuristic_anomaly_file(ipts, *eth_type_set, pcap_fname, anomaly_fname);
       //create_anomaly_file(*ips, *macs, *eth_type_set, pcap_fname, anomaly_fname);
     }
   }
