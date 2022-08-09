@@ -7,14 +7,8 @@ LIBS:=-lpcap
 
 .PHONY=clean
 
-heuristics: main.o utilities.o iptype.o 
-	$(CXX) $(CXXFLAGS) main.o utilities.o iptype.o -o heuristics $(LDFLAGS) $(LIBS)
-
-_ip_extractor.so: C_src/ip_extractor.o
-	$(CXX) -o _ip_extractor.so -shared C_src/ip_extractor.o $(LDFLAGS) $(LIBS)
-
-C_src/ip_extractor.o: C_src/ip_extractor.c C_src/ip_extractor.h
-	$(CXX) $(CXXFLAGS) -o C_src/ip_extractor.o -c C_src/ip_extractor.c
+heuristics: main.o utilities.o iptype.o crc32_x.o
+	$(CXX) $(CXXFLAGS) main.o utilities.o iptype.o crc32_x.o -o heuristics $(LDFLAGS) $(LIBS)
 
 main.o: main.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o main.o -c main.cpp
@@ -25,6 +19,8 @@ utilities.o: utilities.cpp
 iptype.o: iptype.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o iptype.o -c iptype.cpp
 
+crc32_x.o: crc32_x.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -o crc32_x.o -c crc32_x.cpp
+
 clean:
-	rm -f _ip_extractor.so C_src/ip_extractor.o
-	rm -f main.o test utilities.o iptype.o
+	rm -f main.o test utilities.o iptype.o crc32_x.o
