@@ -85,10 +85,11 @@ void IPTypes::addType(IPType* ipt, bool ownit)
 
 	std::unordered_map<int, IPType *>::iterator it_secondary = a_type_map->find(ipt->m_port);
 
-	if (it_secondary != a_type_map->end())
+	if (it_secondary != a_type_map->end()) {
 		delete (*a_type_map)[ipt->m_iPType];
+	}
 
-	(*a_type_map)[ipt->m_iPType] = ipt;
+	(*a_type_map)[ipt->m_port] = ipt;
 }
 
 
