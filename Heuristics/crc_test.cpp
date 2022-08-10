@@ -26,10 +26,11 @@ int main(int argc, char **argv) {
 		return 0;
 	}
 
-	for (int i = 1; i<argc; ++i) {
-		size_t length;
-		char * buffer;
+    // Set the buffer to 10MB.
+	size_t max_buffer = 1024 * 1024 * 10;
+	char * buffer = new char[max_buffer];
 
+	for (int i = 1; i<argc; ++i) {
 		std::ifstream is;
 		is.open (argv[i], std::ios::binary );
 		if (!is.is_open() || !is.good()) {
@@ -37,24 +38,17 @@ int main(int argc, char **argv) {
 			continue;
 		}
 
-        // tellg() returns a (long long), but length is an unsigned int.
-        // I could use a static_cast, but there are probably bigger 
-        // problems if the file is long enough for that to be an issue.
-
-		// get length of file:
-		is.seekg (0, std::ios::end);
-		length = is.tellg();
-		is.seekg (0, std::ios::beg);
-		// allocate memory:
-		buffer = new char [length];
 		// read data as a block:
-		is.read (buffer,length);
+		is.read(buffer, max_buffer);
+		uint32_t the_crc = 0;
+		while (is.gcount() > 0) {
+			the_crc = crc32(the_crc, buffer, is.gcount());
+			is.read(buffer, max_buffer);
+		}
 		is.close();
 
-		uint32_t crc_1 = crc32(0, buffer, length);
-		delete[] buffer;
-
-		std::cout << std::hex << crc_1 << "        " << argv[i] << std::endl;
+		std::cout << std::hex << the_crc << "        " << argv[i] << std::endl;
 	}
+	delete[] buffer;
 	return 0;
 }

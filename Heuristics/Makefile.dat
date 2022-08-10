@@ -29,4 +29,4 @@ crc_test: crc_test.o crc32_x.o
 	$(CXX) $(CXXFLAGS) crc_test.o crc32_x.o -o crc_test $(LDFLAGS) $(LIBS)
 
 clean:
-	rm -f main.o heuristics crc_test utilities.o iptype.o crc32_x.o
+	rm -f main.o heuristics crc_test utilities.o iptype.o crc32_x.o crc_test.o a.out
