@@ -3,8 +3,10 @@
  * Simple test program for the CRC.  
  * Calculates the CRC of the heuristics binary.
  * 
- * Compile using: 
+ * Compile using (creates a.out): 
  * gcc crc_test.cpp crc32_x.cpp -lstdc++
+ * 
+ * You can also use "make crc_test" to build crc_test rather than a.out.
  * 
  **/
 
@@ -38,7 +40,7 @@ int main(int argc, char **argv) {
         // tellg() returns a (long long), but length is an unsigned int.
         // I could use a static_cast, but there are probably bigger 
         // problems if the file is long enough for that to be an issue.
-        
+
 		// get length of file:
 		is.seekg (0, std::ios::end);
 		length = is.tellg();
