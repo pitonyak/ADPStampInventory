@@ -13,7 +13,7 @@
 # The rest of the text is a comment and it is simply ignored. 
 #
 #Hex	Valid	Comment
-0000-05DC	0	IEEE802.3 Length Field (0.:1500.)
+0000-05DC	1	IEEE802.3 Length Field (0.:1500.)
 0101-01FF	0	Experimental
 0200		0	Xerox PUP (conflicts with 802.3 Length Field range) (see 0A00)
 0201		0	Xerox PUP Address Translation (conflicts ...) (see 0A01)
