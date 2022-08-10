@@ -4,18 +4,18 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include "iptype.h"
+#include "ethtype.h"
 #include "utilities.h"
 
-IPType::IPType() : 	m_iPType(false), m_valid(false), m_iPv6(false), m_dupIP(false), m_dupMAC(false)
+EthernetType::EthernetType() : 	m_EthernetType(false), m_valid(false), m_iPv6(false), m_dupIP(false), m_dupMAC(false)
 {
 }
 
-IPType::IPType(const IPType& ipt)
+EthernetType::EthernetType(const EthernetType& ipt)
 {
 	if (this != &ipt)
     {
-    	m_iPType = ipt.m_iPType;
+    	m_EthernetType = ipt.m_EthernetType;
 		m_valid = ipt.m_valid;
 		m_iPv6 = ipt.m_iPv6;
 		m_dupIP = ipt.m_dupIP;
@@ -24,13 +24,12 @@ IPType::IPType(const IPType& ipt)
     }
 }
 
-IPType::~IPType() {}
+EthernetType::~EthernetType() {}
 
-const IPType& IPType::operator=(const IPType& ipt)
+const EthernetType& EthernetType::operator=(const EthernetType& ipt)
 {
-	if (this != &ipt)
-    {
-    	m_iPType = ipt.m_iPType;
+	if (this != &ipt) {
+  	m_EthernetType = ipt.m_EthernetType;
 		m_valid = ipt.m_valid;
 		m_iPv6 = ipt.m_iPv6;
 		m_dupIP = ipt.m_dupIP;
@@ -40,33 +39,31 @@ const IPType& IPType::operator=(const IPType& ipt)
     return *this;
 }
 
-std::ostream& IPType::print(std::ostream& x) const
+std::ostream& EthernetType::print(std::ostream& x) const
 {
-	x << std::setw(4) << m_iPType << " " << m_valid << " " << m_iPv6 << "  " << m_dupIP << "  " << m_dupMAC << " " << std::setw(3) << m_port << "   " << m_description;
+	x << std::setw(4) << std::hex << m_EthernetType << " " << m_valid << " " << m_iPv6 << " " << m_dupIP << " " << m_dupMAC << " " << m_description;
 	return x;
 }
 
-IPTypes::IPTypes()
+EthernetTypes::EthernetTypes()
 {
 }
 
-IPTypes::~IPTypes()
+EthernetTypes::~EthernetTypes()
 {
-	for (auto it : m_ipTypes) {
-		for (auto it2 : *(it.second)) {
-			delete it2.second;
-		}
-		delete it.second;
+	for (auto it : m_EthernetTypes) {
+		if (it.second != nullptr)
+			delete it.second;
 	}
-	m_ipTypes.clear();
+	m_EthernetTypes.clear();
 }
 
-void IPTypes::addType(const IPType& ipt)
+void EthernetTypes::addType(const EthernetType& ipt)
 {
-	addType(new IPType(ipt), true);
+	addType(new EthernetType(ipt), true);
 }
 
-void IPTypes::addType(IPType* ipt, bool ownit)
+void EthernetTypes::addType(EthernetType* ipt, bool ownit)
 {
 	if (ipt == nullptr)
 		return;
@@ -74,25 +71,17 @@ void IPTypes::addType(IPType* ipt, bool ownit)
 		addType(*ipt);
 		return;
 	}
-
-	std::unordered_map<int, IPType *>* a_type_map = nullptr;
-	std::unordered_map<int, std::unordered_map<int, IPType *>* >::iterator it_top = m_ipTypes.find(ipt->m_iPType);
-	a_type_map = (it_top == m_ipTypes.end()) ? new std::unordered_map<int, IPType *>() : it_top->second;
-
-	if (it_top == m_ipTypes.end()) {
-		m_ipTypes[ipt->m_iPType] = a_type_map;
+	std::unordered_map<int, EthernetType *>::iterator it = m_EthernetTypes.find(ipt->m_EthernetType);
+	if (it == m_EthernetTypes.end())
+		m_EthernetTypes[ipt->m_EthernetType] = ipt;
+	else {
+		delete m_EthernetTypes[ipt->m_EthernetType];
+		m_EthernetTypes[ipt->m_EthernetType] = ipt;
 	}
-
-	std::unordered_map<int, IPType *>::iterator it_secondary = a_type_map->find(ipt->m_port);
-
-	if (it_secondary != a_type_map->end())
-		delete (*a_type_map)[ipt->m_iPType];
-
-	(*a_type_map)[ipt->m_iPType] = ipt;
 }
 
 
-bool IPTypes::read(const std::string& filename, int base)
+bool EthernetTypes::read(const std::string& filename, int base)
 {
 	 //
   // Probably not safe to assume that C++17 is availble so do not use <filesystem> such as
@@ -143,7 +132,7 @@ bool IPTypes::read(const std::string& filename, int base)
         lineq.push( line.substr( initialPos, pos - initialPos ) );
         initialPos = pos + 1;
         ++num_found;
-        if (num_found == 6) {
+        if (num_found == 5) {
         	// The rest is the description
         	pos = std::string::npos;
         } else {
@@ -153,7 +142,7 @@ bool IPTypes::read(const std::string& filename, int base)
     lineq.push( line.substr( initialPos, std::min( pos, line.size() ) - initialPos + 1 ) );
     ++num_found;
 
-    if (num_found < 6) {
+    if (num_found < 5) {
     	std::cout << "INVALID LINE (" << line_count << ") : " << line << std::endl;
     	continue;
     }
@@ -171,7 +160,7 @@ bool IPTypes::read(const std::string& filename, int base)
 
     int range_start = std::stoi(token_start, nullptr, base);
     int range_end = range_start;
-    //std::cout << token_start << " = " << std::stoi(token_start, nullptr, base);
+    //std::cout << token_start << " = " << std::stoi(token_start, nullptr, 16);
     if (token_end.length() > 0) {
       //std::cout << " - " << token_end;
       range_end = std::stoi(token_end, nullptr, base);
@@ -184,8 +173,8 @@ bool IPTypes::read(const std::string& filename, int base)
       range_end = temp;
     }
 
-    IPType* baseType = new IPType();
-    baseType->m_iPType = range_start;
+    EthernetType* baseType = new EthernetType();
+    baseType->m_EthernetType = range_start;
     baseType->m_valid = std::stoi(lineq.front(), nullptr, 10) != 0;
     lineq.pop();
     baseType->m_iPv6 = std::stoi(lineq.front(), nullptr, 10) != 0;
@@ -193,8 +182,6 @@ bool IPTypes::read(const std::string& filename, int base)
     baseType->m_dupIP = std::stoi(lineq.front(), nullptr, 10) != 0;
     lineq.pop();
     baseType->m_dupMAC = std::stoi(lineq.front(), nullptr, 10) != 0;
-    lineq.pop();
-    baseType->m_port = std::stoi(lineq.front(), nullptr, 10);
     lineq.pop();
     if (!lineq.empty()) {
     	baseType->m_description = lineq.front();
@@ -204,62 +191,77 @@ bool IPTypes::read(const std::string& filename, int base)
 
     while (range_start < range_end) {
     	++range_start;
-    	baseType = new IPType(*baseType);
-    	baseType->m_iPType = range_start;
+    	baseType = new EthernetType(*baseType);
+    	baseType->m_EthernetType = range_start;
     	addType(baseType, true);
     }
   }
   return true;
 }
 
-inline const IPType* IPTypes::getIPType(int iptype, int port) const
+bool EthernetTypes::sameExceptType(const EthernetType& lhs, const EthernetType& rhs) const
 {
-	std::unordered_map<int, std::unordered_map<int, IPType *>* >::const_iterator it_top = m_ipTypes.find(iptype);
-	if (it_top == m_ipTypes.end())
-		return nullptr;
-
-	std::unordered_map<int, IPType *>::const_iterator it_secondary = it_top->second->find(port);
-	if (it_secondary == it_top->second->end()) {
-		if (port == -1)
-			return nullptr;
-		it_secondary = it_top->second->find(-1);
-		if (it_secondary == it_top->second->end())
-			return nullptr;
-	}
-	return it_secondary->second;
+  return lhs.m_dupMAC == rhs.m_dupMAC && lhs.m_dupIP == rhs.m_dupIP && lhs.m_valid == rhs.m_valid && lhs.m_description.compare(rhs.m_description) == 0;
 }
 
-std::ostream& IPTypes::print(std::ostream& x) const
+std::ostream& EthernetTypes::print(std::ostream& x) const
 {
-  x << "  #  V 6 IP MAC Port Description" << std::endl;
-  std::vector<int> type_keys;
+  x << "   Range  V 6 IP MAC Description" << std::endl;
+  std::vector<int> keys;
 
-  type_keys.reserve (m_ipTypes.size());
-  for (auto& it : m_ipTypes) {
-      type_keys.push_back(it.first);
+  keys.reserve (m_EthernetTypes.size());
+  for (auto& it : m_EthernetTypes) {
+      keys.push_back(it.first);
   }
-  std::sort (type_keys.begin(), type_keys.end());
+  std::sort (keys.begin(), keys.end());
 
-  for (auto& it_types : type_keys) {
+  const EthernetType* lhs = nullptr;
+  const EthernetType* last_rhs = nullptr;
+  int last_type = 0;
+  for (auto& it : keys) {
 
-	const std::unordered_map<int, IPType *>* list_of_types = m_ipTypes.at(it_types);
+    if (lhs == nullptr) {
 
-	std::vector<int> ports;
-	ports.reserve (list_of_types->size());
-	for (auto& it : *list_of_types) {
-	  ports.push_back(it.first);
-	}
-	std::sort (ports.begin(), ports.end());
-	for (auto& port : ports) {
-		x << *list_of_types->at(port) << std::endl;
-	}
+      // First time through!
+      lhs = m_EthernetTypes.at(it);
+      last_type = lhs->m_EthernetType;
+
+    } else {
+
+      const EthernetType* rhs = m_EthernetTypes.at(it);
+      if (sameExceptType(*lhs, *rhs) && last_type + 1 == rhs->m_EthernetType) {
+        ++last_type;
+      } else {
+
+        std::stringstream stream;
+        stream << std::hex << lhs->m_EthernetType;
+        if (last_type != lhs->m_EthernetType) {
+          stream << "-" << std::hex << last_type;
+        }
+        std::string result( stream.str() );
+        transform(result.begin(), result.end(), result.begin(), toupper);
+        x << std::setw(9) << result << " " << lhs->m_valid << " " << lhs->m_iPv6 << " " << lhs->m_dupIP << "  " << lhs->m_dupMAC << "   " << lhs->m_description << std::endl;
+
+        lhs = rhs;
+        last_type = lhs->m_EthernetType;
+      }
+    }
   }
 
-	/**
-	for (auto it : m_ipTypes) {
-		for (auto it2 : *(it.second))
-			x << *it2.second << std::endl;
+  std::stringstream stream;
+  stream << std::hex << lhs->m_EthernetType;
+  if (last_type != lhs->m_EthernetType) {
+    stream << "-" << std::hex << last_type;
+  }
+  std::string result( stream.str() );
+  transform(result.begin(), result.end(), result.begin(), toupper);
+  x << std::setw(9) << result << " " << lhs->m_valid << " " << lhs->m_iPv6 << " " << lhs->m_dupIP << "  " << lhs->m_dupMAC << "   " << lhs->m_description << std::endl;
+
+/**
+	for (auto it : m_EthernetTypes) {
+		if (it.second != nullptr)
+			x << *it.second << std::endl;
 	}
-	**/
+  **/
 	return x;
 }

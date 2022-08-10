@@ -1,43 +1,30 @@
-#ifndef IPTYPE_H
-#define IPTYPE_H
+#ifndef ETHTYPE_H
+#define ETHTYPE_H
 
 #include <unordered_map>
 #include <string>
 
-//**************************************************************************
-//! Encapsulate an IP Type
-/*!
- * This is complicated by fact that we may want or need a specific port with the 
- * type to make a determination. So, specific behavior will be defined here. 
- * 
- * For a specific type, if there is a port of -1, then that is used if the port
- * is not found. If there is not port of -1 then the port must match. 
- *
- ***************************************************************************/
-
-
-class IPType {
+class EthernetType {
 public:
 	/*! Constructor */
-	IPType();
+	EthernetType();
 
 	/*! Constructor */
-	IPType(const IPType& ipt);
+	EthernetType(const EthernetType& ipt);
 
 	/*! Assignment operator */
-	const IPType& operator=(const IPType& ipt);
+	const EthernetType& operator=(const EthernetType& ipt);
 
     /*! Desctructor, clears all structures, not virtual because assume not subclassed. */
-    ~IPType();
+    ~EthernetType();
 
     // Normally I would encapulate this with getters and setters, but not sure it is worth it at this point.
     // Perhaps I should just make this a struct.
-	int m_iPType;  // Integer type
+	int m_EthernetType;  // Integer type
 	bool m_valid;  // Do we consider this valid?
 	bool m_iPv6;   // Is this for IPv6?
 	bool m_dupIP;  // Does this allow or expect a duplicate IP in the payload?
 	bool m_dupMAC; // Does this allow or expect a duplicate MAC in the payload?
-	int m_port;    // Port or -1 for port does not matter
 	std::string m_description;
 
     /*! Simply method to print this object as a line with no context. */
@@ -45,13 +32,13 @@ public:
 };
 
 
-class IPTypes {
+class EthernetTypes {
 public:
 	/*! Constructor */
-	IPTypes();
+	EthernetTypes();
 
     /*! Desctructor, clears all structures, not virtual because assume not subclassed. */
-    ~IPTypes();
+    ~EthernetTypes();
 
     //**************************************************************************
     //! Add the IP Type
@@ -59,7 +46,7 @@ public:
      * \param [in] ipt Constant reference to the object. If this type is already there, it is replaced.
      *
      ***************************************************************************/
-  	void addType(const IPType& ipt);
+  	void addType(const EthernetType& ipt);
 
     //**************************************************************************
     //! Add the IP Type
@@ -69,68 +56,67 @@ public:
      * \param [in] ownit If true, the pointer is now owned and deleted by this class. if false, a copy is made.
      *
      ***************************************************************************/
-	void addType(IPType* ipt, bool ownit = true);
+	void addType(EthernetType* ipt, bool ownit = true);
 
     //**************************************************************************
-    //! Get a pointer to the IPType object based on the numeric type.
+    //! Get a pointer to the EthernetType object based on the numeric type.
     /*!
-     * \param [in] iptype Numeric IP type. 
+     * \param [in] iType Numeric IP type. 
      * 
      * \returns Pointer to the contained type or nullptr if it is not contained. 
      *
      ***************************************************************************/
-	const IPType* getIPType(int iptype, int port) const;
+	const EthernetType* getEthernetType(int iType) const;
 
     //**************************************************************************
     //! Is this numeric type known. Does not mean it is considered valid for our purposes.
     /*!
-     * \param [in] iptype Numeric IP type. 
+     * \param [in] iType Numeric IP type. 
      * 
      * \returns True if the type is contained in the object. 
      *
      ***************************************************************************/
-	bool hasType(int iptype, int port) const;
+	bool hasType(int iType) const;
 
     //**************************************************************************
     //! Is this numeric type considered a valid type to process.
     /*!
-     * \param [in] iptype Numeric IP type. 
+     * \param [in] iType Numeric IP type. 
      * 
      * \returns True if the type should not be rejected.
      *
      ***************************************************************************/
-	bool isValid(int iptype, int port) const;
+	bool isValid(int iType) const;
 
     //**************************************************************************
     //! Is this numeric type specific to IPv6.
     /*!
-     * \param [in] iptype Numeric IP type. 
+     * \param [in] iType Numeric IP type. 
      * 
      * \returns True if this numeric type is specific to IPv6
      *
      ***************************************************************************/
-    bool isIPv6(int iptype, int port) const;
+    bool isIPv6(int iType) const;
 
     //**************************************************************************
     //! Does this numeric type allow for the IP to be repeated in the payload?
     /*!
-     * \param [in] iptype Numeric IP type. 
+     * \param [in] iType Numeric IP type. 
      * 
      * \returns True if this this numeric type allows for the IP to be repeated in the payload
      *
      ***************************************************************************/
-	bool isDupIP(int iptype, int port) const;
+	bool isDupIP(int iType) const;
 
     //**************************************************************************
     //! Does this numeric type allow for the MAC to be repeated in the payload?
     /*!
-     * \param [in] iptype Numeric IP type. 
+     * \param [in] iType Numeric IP type. 
      * 
      * \returns True if this this numeric type allows for the MAC to be repeated in the payload
      *
      ***************************************************************************/
-	bool isDupMAC(int iptype, int port) const;
-
+	bool isDupMAC(int iType) const;
 
     //**************************************************************************
     //! Read a list of IP types from a file.
@@ -155,54 +141,61 @@ public:
      * 
      * \param [in] base Numerical base (radix) that determines the valid characters and their interpretation.
      * If this is 0, the base used is determined by the format in the sequence. 
-     * Notice that by default this argument is 10, not 0. ONLY the first column uses this parameter. 
+     * Notice that by default this argument is 16, not 0. ONLY the first column uses this parameter. 
      * All other columns use 10.
      * 
      * \returns True if no errors are encountered. 
      *
      ***************************************************************************/
-    bool read(const std::string& filename, int base = 10);
+    bool read(const std::string& filename, int base = 16);
 
     std::ostream& print(std::ostream& x) const;
 
-private:
-	/*! Copy Constructor and I do not want it to be called, that will be bad bad bad. */
-	IPTypes(const IPTypes&);
+    bool sameExceptType(const EthernetType& lhs, const EthernetType& rhs) const;
 
-	std::unordered_map<int, std::unordered_map<int, IPType *>* > m_ipTypes;
+private:
+    /*! copy Constructor that is NOT implemented so a compile time error if try to call it. */
+    EthernetTypes(const EthernetTypes&);
+
+	std::unordered_map<int, EthernetType *> m_EthernetTypes;
 };
 
-inline bool IPTypes::hasType(int iptype, int port) const {
-	return getIPType(iptype, port) != nullptr;
+inline const EthernetType* EthernetTypes::getEthernetType(int iType) const
+{
+	std::unordered_map<int, EthernetType *>::const_iterator it = m_EthernetTypes.find(iType);
+	return (it == m_EthernetTypes.end()) ? nullptr : it->second;
 }
 
-inline bool IPTypes::isValid(int iptype, int port) const {
-	const IPType* ipt = getIPType(iptype, port);
+inline bool EthernetTypes::hasType(int iType) const {
+	return getEthernetType(iType) != nullptr;
+}
+
+inline bool EthernetTypes::isValid(int iType) const {
+	const EthernetType* ipt = getEthernetType(iType);
 	return (ipt != nullptr) ? ipt->m_valid : false;
 }
 
-inline bool IPTypes::isIPv6(int iptype, int port) const {
-	const IPType* ipt = getIPType(iptype, port);
+inline bool EthernetTypes::isIPv6(int iType) const {
+	const EthernetType* ipt = getEthernetType(iType);
 	return (ipt != nullptr) ? ipt->m_iPv6 : false;
 }
 
-inline bool IPTypes::isDupIP(int iptype, int port) const {
-	const IPType* ipt = getIPType(iptype, port);
+inline bool EthernetTypes::isDupIP(int iType) const {
+	const EthernetType* ipt = getEthernetType(iType);
 	return (ipt != nullptr) ? ipt->m_dupIP : false;
 }
 
-inline bool IPTypes::isDupMAC(int iptype, int port) const {
-	const IPType* ipt = getIPType(iptype, port);
+inline bool EthernetTypes::isDupMAC(int iType) const {
+	const EthernetType* ipt = getEthernetType(iType);
 	return (ipt != nullptr) ? ipt->m_dupMAC : false;
 }
 
-
-inline std::ostream& operator <<(std::ostream& x, const IPType& y) {
+inline std::ostream& operator <<(std::ostream& x, const EthernetType& y) {
 	return y.print(x);
 }
 
-inline std::ostream& operator <<(std::ostream& x, const IPTypes& y) {
+inline std::ostream& operator <<(std::ostream& x, const EthernetTypes& y) {
 	return y.print(x);
 }
 
-#endif // IPTYPE_H
+#endif // ETHTYPE_H

@@ -29,6 +29,7 @@
 #include "pcap.h"
 #include "utilities.h"
 #include "iptype.h"
+#include "ethtype.h"
 #include "crc32_x.h"
 
 // Evil global variable to hold an ethernet type description
@@ -68,12 +69,9 @@ void print_mac(const u_int8_t *mac){
 
 void usage(){
   printf("Usage:\n");
-//??  printf("-p <path to IP output filename, default 'ip_addresses.txt'>: This OPTIONAL file will be populated with the unique, human-readable versions of all IP addresses found in the input PCAP file. If this option is not given, stdout will be used. If '-' is given as the output file, MAC addresses will be printed to stdout.\n");
-//??  printf("-m <path to MAC output filename, default 'mac_addresses.txt'>: This OPTIONAL file will be populated with the unique, human-readable versions of all Ethernet MAC addresses input PCAP file. If this option is not given, stdout will be used. If '-' is given as the output file, MAC addresses will be printed to stdout.\n");
+  printf("-h Print this help.\n");
   printf("-r <path to input pcap file>: This PCAP file will be read for all MAC addresses and IP addresses\n");
-  printf("-e <path to ethernet types>: This file contains the valid ethernet types, default is eth_types.txt.\n");
-//??  printf("-c create the list of contained IP and MAC addresses.\n");
-  printf("-a <path to anomaly list>: Where to write the anomaly list. This triggers the creation of the anomoly list.\n");
+  printf("-a <path to generated anomaly pcap>: Where to write the anomaly list. This triggers the creation of the anomoly list.\n");
   printf("\n");
 }
 
@@ -127,7 +125,9 @@ inline bool is_valid_ether_type(const struct ether_header *ether, const std::uno
 //! Read the pcap file and create the anomaly file based on the Heuristic
 /*!
  * 
- * \param [in] ipts List of valid IP protocols (types) and which allow for a repeated IP or MAC in the payload.
+ * \param [in] ethernet_types List of valid Ethernet (types) and which allow for a repeated IP or MAC in the payload.
+ * 
+ * \param [in] ip_types List of valid IP protocols (types) and which allow for a repeated IP or MAC in the payload.
  * 
  * \param [in] eth_types List of valid Ethernet types
  * 
@@ -138,7 +138,7 @@ inline bool is_valid_ether_type(const struct ether_header *ether, const std::uno
  * \returns 0 on no error, not very useful at this time.
  *
  ***************************************************************************/
-int create_heuristic_anomaly_file(const IPTypes& ipts, const std::unordered_set<unsigned int>& eth_types, const char* pcap_fname, const char* anomaly_fname) {
+int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPTypes& ip_types, const char* pcap_fname, const char* anomaly_fname) {
   pcap_t *pcap_file;
   pcap_dumper_t *dumpfile;
   bool done = false;
@@ -212,7 +212,7 @@ int create_heuristic_anomaly_file(const IPTypes& ipts, const std::unordered_set<
     }
     **/
 
-    if (!is_valid_ether_type(ether, eth_types)) {
+    if (!ethernet_types.isValid(ntohs(ether->ether_type))) {
       it++;
       std::cout << "Found invalid ether type " << ntohs(ether->ether_type) << std::endl;
       // TODO: CHeck for valid FCS
@@ -268,7 +268,10 @@ int create_heuristic_anomaly_file(const IPTypes& ipts, const std::unordered_set<
 //
 // Read the pcap file and create the anomaly file
 //
-int create_anomaly_file(const std::unordered_set<std::string>& ips, const std::unordered_set<std::string>& macs, const std::unordered_set<unsigned int>& eth_types, const char* pcap_fname, const char* anomaly_fname) {
+// TODO:
+// This is NOT used. Remove this. 
+// Only leaving right now so that I can see example code it contains. 
+int create_anomaly_file(const EthernetTypes& ethernet_types, const std::unordered_set<std::string>& ips, const std::unordered_set<std::string>& macs, const char* pcap_fname, const char* anomaly_fname) {
   pcap_t *pcap_file;
   char *pcap_errbuf;
   struct pcap_pkthdr *pkt_header;
@@ -350,7 +353,7 @@ int create_anomaly_file(const std::unordered_set<std::string>& ips, const std::u
       ++eth_types_count[ntohs(ether->ether_type)];
     }
 
-    if (!is_valid_ether_type(ether, eth_types)) {
+    if (!ethernet_types.isValid(ntohs(ether->ether_type))) {
       it++;
       continue;
     }
@@ -420,168 +423,10 @@ int create_anomaly_file(const std::unordered_set<std::string>& ips, const std::u
   std::cout.rdbuf(coutbuf);
 **/
 
-  //
-  // This creates a sorted list of the Ethernet types by:
-  // * copying the Ethernet Types into a vector, 
-  // * sorting the vector
-  // * traversing the list in sorted order
-  //
-  // So this uses C++14, hopefully it is supported. 
-  //
-  auto key_selector = [](auto pair){return pair.first;};
-  // Generate and set the size for the vector
-  std::vector<unsigned int> eth_types_keys(eth_types_count.size());
-  // Add the keys to the vector
-  std::transform(eth_types_count.begin(), eth_types_count.end(), eth_types_keys.begin(), key_selector);
-  // Sort the vector
-  std::sort(eth_types_keys.begin(), eth_types_keys.end());
-
-  std::cout << std::endl << "Type    Count  OK  Description if known." << std::endl;
-  for (unsigned int key : eth_types_keys) {
-    std::cout << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(key);
-    std::cout << " " << std::dec << std::setw(8) << std::setfill(' ') << eth_types_count[key];
-    if (eth_types.find(key) == eth_types.end())
-      std::cout << "   0";
-    else
-      std::cout << "   1";
-    if (eth_types_description.find(key) != eth_types_description.end())
-      std::cout << "  " << eth_types_description[key];
-    std::cout << std::endl;
-  }
   // Restore the cout buffer
   std::cout.rdbuf(coutbuf);
 
   return 0;
-}
-
-//
-// Read the valid / accepted ethernet types that we will accept. 
-//
-std::unordered_set<unsigned int>* read_eth_types_file(const char* fname) {
-  if (fname == nullptr) {
-    printf("Ethernet type file name is null\n\n");
-    usage();
-    return nullptr;
-  }
-
-  //
-  // Probably not safe to assume that C++17 is availble so do not use <filesystem> such as
-  // std::filesystem::path f{"file.txt"};
-  // if (std::filesystem::exists(f)) ...
-  //
-  std::ifstream file(fname);
-  if(!file.is_open()){
-    std::cout << "File not found" << std::endl;
-    return nullptr;
-  }
-  std::unordered_set<unsigned int>* eth_type_set = new std::unordered_set<unsigned int>();
-  std::string line;
-  // Note that reading a file using a FILE* is 4 to 5 times faster.
-  // Processing speed is not an issue since this is not done often and the file is small.
-  while (std::getline(file, line)) {
-    // Make sure that tabs are now spaces, for example. 
-    convert_all_spaces(line);
-    //
-    // Compress multiple spaces into a single space.
-    //
-    std::string::iterator new_end = std::unique(line.begin(), line.end(), BothAreSpaces);
-    line.erase(new_end, line.end()); 
-    //
-    // remove leading and trailing spaces from the string.
-    //
-    trim(line);
-    //
-    // Ignore blank lines and lines begining with the '#' character. 
-    //
-    if (line.length() == 0 || line.front() == '#') {
-      continue;
-    }
-    // 
-    // Split out the hex range and the 0 or 1 that determines if this is a range of interest. 
-    //
-    bool use_range = true;
-    size_t pos = 0;
-    std::string token_start;
-    std::string delimiter = " ";
-    //
-    // At this point we know that the line is NOT empty
-    // so try to find the first delimiter.
-    //
-    if ((pos = line.find(delimiter)) == std::string::npos) {
-      // There is no space so just take this as is and call it good. 
-      token_start = line;
-    } else {
-      token_start = line.substr(0, pos);
-      line.erase(0, pos + delimiter.length());
-      if (line.length() > 0 && line.front() == '0') {
-        use_range = false;
-      }
-    }
-
-    //if (!use_range || token_start.length() == 0)
-    if (token_start.length() == 0)
-      continue;
-
-    // At this point, the line variable contains " 1 <description>" so if i want the description, 
-    // remove the leading " 1 " and take it.
-    if (line.length() > 2) {
-      line.erase(0, 2);
-    } else {
-      line = "";
-    }
-    
-    if (use_range) {
-      std::cout << "Accepted Ethernet Type: " << std::setw(9) << token_start << "  " << line << std::endl;
-    }
-  
-    std::string token_end;
-    delimiter = "-";
-    if ((pos = token_start.find(delimiter)) != std::string::npos) {
-      token_end = token_start;
-      token_start = token_end.substr(0, pos);
-      token_end.erase(0, pos + delimiter.length());
-    }
-
-    //
-    // This method introduced in C++11
-    // If this method does not exist then try something like this: 
-    //
-    // unsigned int x;   
-    // std::stringstream ss;
-    // ss << std::hex << "fffefffe";
-    // ss >> x;
-    //
-    unsigned int range_start = std::stoul(token_start, nullptr, 16);
-    unsigned int range_end = range_start;
-    //std::cout << token_start << " = " << std::stoul(token_start, nullptr, 16);
-    if (token_end.length() > 0) {
-      //std::cout << " - " << token_end;
-      range_end = std::stoul(token_end, nullptr, 16);
-    }
-
-    // paranoid!
-    if (range_end < range_start) {
-      unsigned int temp = range_start;
-      range_start = range_end;
-      range_end = temp;
-    }
-
-    //
-    // avoid overflow.
-    //
-    unsigned int eth_type = range_start;
-    if (use_range && eth_type_set->find(eth_type) == eth_type_set->end())
-      eth_type_set->insert(eth_type);
-    eth_types_description[eth_type] = line;
-    while (eth_type < range_end) {
-      ++eth_type;
-      eth_types_description[eth_type] = line;
-      if (use_range && eth_type_set->find(eth_type) == eth_type_set->end())
-        eth_type_set->insert(eth_type);
-    }
-  }
-  std::cout << std::endl;
-  return eth_type_set;
 }
 
 int write_ip_and_mac_from_pcap(const char*pcap_fname, const char *out_mac_fname, const char *out_ip_fname) {
@@ -716,47 +561,32 @@ int main(int argc, char **argv){
   // correct values for types that support repeating IP or MAC addresses.
   // See the spreadsheet uploaded by Beau.
   //
+
   std::string ip_fname = "ip_types.txt";
-  IPTypes ipts;
-  ipts.read(ip_fname);
-  //std::cout << ipts;
+  IPTypes ip_types;
+  ip_types.read(ip_fname);
+  //std::cout << ip_types;
+  //std::cout << std::endl;
+
+
+  std::string eth_fname = "eth_types.txt";
+  EthernetTypes ethernet_types;
+  ethernet_types.read(eth_fname);
+  //std::cout << ethernet_types;
   //std::cout << std::endl;
 
   /*Given an input PCAP file, discover all unique MAC addresses and IPs and write them to a file (stdout by default
    */
   char *pcap_fname=0;
-  // We need two distinct output files for MACs and IPs for some compatibility with the existing script
-  char _mac_fname[]="mac_addresses.txt";
-  char _ip_fname[]="ip_addresses.txt";
-  char _eth_types_fname[] = "eth_types.txt";
-  char *out_mac_fname=_mac_fname;
-  char *out_ip_fname=_ip_fname;
-  char *in_eth_types_fname=_eth_types_fname;
   int index, arg;
 
   struct stat filestat;
 
-  bool create_ip_and_mac = false;
   bool create_anomaly_list = false;
   const char* anomaly_fname = nullptr;
 
-  while((arg = getopt(argc, argv, "hm:p:r:e:ca:")) != -1){
+  while((arg = getopt(argc, argv, "hr:a:")) != -1){
     switch(arg) {
-    case 'e':
-      if(optarg == "-"){in_eth_types_fname=nullptr;}
-      else {in_eth_types_fname=optarg;}
-      break;
-    case 'p':
-      if(optarg == "-"){out_ip_fname=nullptr;}
-      else {out_ip_fname=optarg;}
-      break;
-    case 'm':
-      if(optarg == "-"){out_mac_fname=nullptr;}
-      else {out_mac_fname=optarg;}
-      break;
-    case 'c':
-      create_ip_and_mac=true;
-      break;
     case 'a':
       create_anomaly_list=true;
       if(optarg == "-"){anomaly_fname=nullptr;}
@@ -794,27 +624,10 @@ int main(int argc, char **argv){
     exit(1);
   }
 
-  std::unordered_set<unsigned int>* eth_type_set = read_eth_types_file(in_eth_types_fname);
-  if (eth_type_set == nullptr) {
-    exit(1);
-  }
-
-  //
-  // Decide if we will allow an empty set of valid ethernet types
-  //
-  if (eth_type_set->empty()) {
-    delete eth_type_set;
-    exit(1);
-  }
-  
   if (create_anomaly_list) {
     std::cout << "Ready to go " << std::endl;
-    if (eth_type_set != nullptr) {
-      create_heuristic_anomaly_file(ipts, *eth_type_set, pcap_fname, anomaly_fname);
-      //create_anomaly_file(*ips, *macs, *eth_type_set, pcap_fname, anomaly_fname);
-    }
+    create_heuristic_anomaly_file(ethernet_types, ip_types, pcap_fname, anomaly_fname);
   }
 
-  delete eth_type_set;
   return 0;
 }
