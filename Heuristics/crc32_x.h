@@ -49,6 +49,35 @@
 #include <stdint.h>
 #include <cstddef>
 
+//**************************************************************************
+//! Generate 32-bit CRC
+/*!
+ * The CRC for a single chunk is found as follows:
+ * @code{.cpp}
+ *   uint32_t the_crc32 = crc32(0, buffer, length);
+ * @endcode
+ * 
+ * Multiple calls can be used, which is needed for large amounts of data
+ * similar to the following example.
+ * 
+ * @code{.cpp}
+ *   uint32_t the_crc32 = 0;
+ *   size_t length = input.read(buffer, max_len);
+ *   while (length > 0) {
+ *     the_crc32 = crc32(the_crc32, buffer, length);
+ *     length = input.read(buffer, max_len);
+ *   }
+ * @endcode
+ * 
+ * \param [in] crc - 0 on first call. When processing chunks, CRC of previous chunk.
+ * 
+ * \param [in] buf - Buffer containing the data to process. Cast to (const uint8_t *).
+ * 
+ * \param [in] size - Number of bytes to process
+ * 
+ * \returns 32-bit CRC
+ *
+ ***************************************************************************/
 uint32_t crc32(uint32_t crc, const void *buf, size_t size);
 
 #endif  // CRC32_H

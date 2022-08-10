@@ -1,7 +1,7 @@
 
 #include "utilities.h"
 
-std::string& convert_all_spaces(std::string& str, const std::string& chars)
+std::string& convert_all_spaces(std::string& str)
 {
   std::replace(str.begin(), str.end(), '\n', ' ');
   std::replace(str.begin(), str.end(), '\t', ' ');
