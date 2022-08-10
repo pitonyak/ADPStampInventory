@@ -7,8 +7,8 @@ LIBS:=-lpcap
 
 .PHONY=clean
 
-heuristics: main.o utilities.o iptype.o crc32_x.o
-	$(CXX) $(CXXFLAGS) main.o utilities.o iptype.o crc32_x.o -o heuristics $(LDFLAGS) $(LIBS)
+heuristics: main.o utilities.o iptype.o crc32_x.o ethtype.o
+	$(CXX) $(CXXFLAGS) main.o utilities.o iptype.o crc32_x.o ethtype.o -o heuristics $(LDFLAGS) $(LIBS)
 
 main.o: main.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o main.o -c main.cpp
@@ -18,6 +18,9 @@ utilities.o: utilities.cpp
 
 iptype.o: iptype.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o iptype.o -c iptype.cpp
+
+ethtype.o: ethtype.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -o ethtype.o -c ethtype.cpp
 
 crc32_x.o: crc32_x.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o crc32_x.o -c crc32_x.cpp
@@ -29,4 +32,4 @@ crc_test: crc_test.o crc32_x.o
 	$(CXX) $(CXXFLAGS) crc_test.o crc32_x.o -o crc_test $(LDFLAGS) $(LIBS)
 
 clean:
-	rm -f main.o heuristics crc_test utilities.o iptype.o crc32_x.o crc_test.o a.out
+	rm -f main.o heuristics crc_test utilities.o iptype.o crc32_x.o crc_test.o a.out ethtype.o
