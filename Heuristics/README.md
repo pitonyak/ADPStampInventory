@@ -19,3 +19,5 @@ Makefile.dat - original Makefile that I rename to Makefile so I can use make to 
 utilities.* - Pulling utility methods, especially string function / methods to a single location rather than duplicating them.
 
 To build, copy Makefile.dat to Makefile then you can use the command make to build the heursitic file. Use "make clean" to clean (delete) things. Use "make crc_test" to build the crc_test executable.
+
+The program uses the libpcap library. You must also include the development version. On Ubuntu this means libpcap-dev and on Fedora libpcap-devel.
