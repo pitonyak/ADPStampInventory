@@ -211,7 +211,7 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
       time_t ttime = pkt_header->ts.tv_sec;
       tm *local_time = localtime(&ttime);
 
-      std::cout << "index " << index << " caplen:" << pkt_header->caplen << " len:" << pkt_header->len << " ts:" << pkt_header->ts.tv_sec << "." << pkt_header->ts.tv_usec;
+      std::cout << "index " << it << " caplen:" << pkt_header->caplen << " len:" << pkt_header->len << " ts:" << pkt_header->ts.tv_sec << "." << pkt_header->ts.tv_usec;
       std::cout << " Time: "<< 1 + local_time->tm_hour << ":";
       std::cout << 1 + local_time->tm_min << ":";
       std::cout << 1 + local_time->tm_sec << "." << pkt_header->ts.tv_usec << " " << 1 + local_time->tm_mon << "/" << local_time->tm_mday << "/" << 1900 + local_time->tm_year << std::endl;
@@ -229,8 +229,6 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
     // Extract the frame MACs and put them into the set for uniqueness discovery
     shost = ether->ether_shost;
     dhost = ether->ether_dhost;
-
-    ether->dstMac;
 
     // ??
     // Do I need to do any of this? 
