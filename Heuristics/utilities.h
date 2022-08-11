@@ -119,4 +119,29 @@ std::string trim_copy(std::string s);
  ***************************************************************************///
 bool BothAreSpaces(char lhs, char rhs);
 
+//**************************************************************************
+//! Determin if num bytes from s are contained in data.
+/*!
+ * This is used to remove multiple runs of spaces as follows. 
+ * @code{.cpp}
+ *   std::line = "sample  text";
+ *   std::string::iterator new_end = std::unique(line.begin(), line.end(), BothAreSpaces);
+ *   line.erase(new_end, line.end()); 
+ * @endcode
+ * 
+ * \param [in] s - Search string to find in data.
+ * 
+ * \param [in] num - Number of bytes to find (length of s).
+ * 
+ * \param [in] data - Data to search while looking for s.
+ *
+ * \param [in] len - Length of data.
+ * 
+ * \returns true if num bytes from s are found in data.
+ *
+ ***************************************************************************///
+bool find_match(const u_int8_t* s, u_int32_t num, const u_int8_t* data, u_int32_t len);
+
+void dump_hex(const u_int8_t* data, u_int32_t len);
+
 #endif // UTILITIES_H

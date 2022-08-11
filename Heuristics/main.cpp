@@ -206,7 +206,6 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
       continue;
     }
 
-
     if (it < 3) {
       time_t ttime = pkt_header->ts.tv_sec;
       tm *local_time = localtime(&ttime);
@@ -229,6 +228,7 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
     // Extract the frame MACs and put them into the set for uniqueness discovery
     shost = ether->ether_shost;
     dhost = ether->ether_dhost;
+    u_short ethType = ntohs(ether->ether_type);
 
     // ??
     // Do I need to do any of this? 
@@ -247,11 +247,20 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
     }
     **/
 
-    if (!ethernet_types.isValid(ntohs(ether->ether_type))) {
+    if (!ethernet_types.isValid(ethType)) {
       it++;
-      std::cout << "Found invalid ether type " << ntohs(ether->ether_type) << std::endl;
-      // TODO: CHeck for valid FCS
-      // I do not like that we cast dumpfile to (uchar *)
+      std::cout << it << " has invalid ether type " << ntohs(ether->ether_type) << std::endl;
+      // TODO: Check for valid FCS as per the flow diagram.
+      pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
+      continue;
+    }
+
+    // Already filtered out Ether Types that we are ignoring. 
+    // Look for a repeated MAC address as follows.
+    // The following code makes sure that the type does NOT expect to have duplicate MAC addresses.
+    if (!ethernet_types.isDupMAC(ethType) && (find_match(shost, 6, (pkt_data + 12), pkt_header->len - 12) || find_match(dhost, 6, (pkt_data + 12), pkt_header->len - 12))) {
+      std::cout << it << " has duplicate MAC address" << std::endl;
+      //dump_hex(pkt_data, pkt_header->len);
       pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
       continue;
     }

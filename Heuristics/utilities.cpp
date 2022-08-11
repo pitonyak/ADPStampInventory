@@ -1,4 +1,7 @@
 
+#include <iostream>
+#include <iomanip>
+
 #include "utilities.h"
 
 std::string& convert_all_spaces(std::string& str)
@@ -57,3 +60,30 @@ std::string trim_copy(std::string s) {
 //
 bool BothAreSpaces(char lhs, char rhs) { return (lhs == rhs) && (lhs == ' '); }
 
+bool find_match(const u_int8_t* s, u_int32_t num, const u_int8_t* data, u_int32_t len)
+{
+  if (s == nullptr || data == nullptr || num == 0 || len < num)
+    return false;
+
+  u_int32_t max_start = len - num;
+  bool found_it = false;
+  for (u_int32_t iStart = 0; !found_it && iStart <= max_start; ++iStart) {
+    found_it = true;
+    for (u_int32_t i = 0; found_it && i<num; ++i) {
+      found_it = s[i] == data[iStart + i];
+    }
+  }
+  return found_it;
+}
+
+void dump_hex(const u_int8_t* data, u_int32_t len)
+{
+  if (data == nullptr || len == 0) 
+    return;
+
+  for (u_int32_t i = 0; i<len; ++i) {
+    int x = data[i];
+    std::cout << std::hex << x << " ";
+  }
+  std::cout << std::dec << std::endl;
+}
