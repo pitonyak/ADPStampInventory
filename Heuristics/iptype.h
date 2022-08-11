@@ -32,7 +32,7 @@ public:
 
     // Normally I would encapulate this with getters and setters, but not sure it is worth it at this point.
     // Perhaps I should just make this a struct.
-	int m_iPType;  // Integer type
+	int m_iPType;  // Integer type or Protocol.
 	bool m_valid;  // Do we consider this valid?
 	bool m_iPv6;   // Is this for IPv6?
 	bool m_dupIP;  // Does this allow or expect a duplicate IP in the payload?
@@ -74,62 +74,62 @@ public:
     //**************************************************************************
     //! Get a pointer to the IPType object based on the numeric type.
     /*!
-     * \param [in] iptype Numeric IP type. 
+     * \param [in] protocol Numeric IP type. 
      * 
      * \returns Pointer to the contained type or nullptr if it is not contained. 
      *
      ***************************************************************************/
-	const IPType* getIPType(int iptype, int port) const;
+	const IPType* getIPType(int protocol, int port) const;
 
     //**************************************************************************
     //! Is this numeric type known. Does not mean it is considered valid for our purposes.
     /*!
-     * \param [in] iptype Numeric IP type. 
+     * \param [in] protocol Numeric IP type. 
      * 
      * \returns True if the type is contained in the object. 
      *
      ***************************************************************************/
-	bool hasType(int iptype, int port) const;
+	bool hasType(int protocol, int port) const;
 
     //**************************************************************************
     //! Is this numeric type considered a valid type to process.
     /*!
-     * \param [in] iptype Numeric IP type. 
+     * \param [in] protocol Numeric IP type. 
      * 
      * \returns True if the type should not be rejected.
      *
      ***************************************************************************/
-	bool isValid(int iptype, int port) const;
+	bool isValid(int protocol, int port) const;
 
     //**************************************************************************
     //! Is this numeric type specific to IPv6.
     /*!
-     * \param [in] iptype Numeric IP type. 
+     * \param [in] protocol Numeric IP type. 
      * 
      * \returns True if this numeric type is specific to IPv6
      *
      ***************************************************************************/
-    bool isIPv6(int iptype, int port) const;
+    bool isIPv6(int protocol, int port) const;
 
     //**************************************************************************
     //! Does this numeric type allow for the IP to be repeated in the payload?
     /*!
-     * \param [in] iptype Numeric IP type. 
+     * \param [in] protocol Numeric IP type. 
      * 
      * \returns True if this this numeric type allows for the IP to be repeated in the payload
      *
      ***************************************************************************/
-	bool isDupIP(int iptype, int port) const;
+	bool isDupIP(int protocol, int port) const;
 
     //**************************************************************************
     //! Does this numeric type allow for the MAC to be repeated in the payload?
     /*!
-     * \param [in] iptype Numeric IP type. 
+     * \param [in] protocol Numeric IP type. 
      * 
      * \returns True if this this numeric type allows for the MAC to be repeated in the payload
      *
      ***************************************************************************/
-	bool isDupMAC(int iptype, int port) const;
+	bool isDupMAC(int protocol, int port) const;
 
 
     //**************************************************************************
@@ -172,27 +172,27 @@ private:
 	std::unordered_map<int, std::unordered_map<int, IPType *>* > m_ipTypes;
 };
 
-inline bool IPTypes::hasType(int iptype, int port) const {
-	return getIPType(iptype, port) != nullptr;
+inline bool IPTypes::hasType(int protocol, int port) const {
+	return getIPType(protocol, port) != nullptr;
 }
 
-inline bool IPTypes::isValid(int iptype, int port) const {
-	const IPType* ipt = getIPType(iptype, port);
+inline bool IPTypes::isValid(int protocol, int port) const {
+	const IPType* ipt = getIPType(protocol, port);
 	return (ipt != nullptr) ? ipt->m_valid : false;
 }
 
-inline bool IPTypes::isIPv6(int iptype, int port) const {
-	const IPType* ipt = getIPType(iptype, port);
+inline bool IPTypes::isIPv6(int protocol, int port) const {
+	const IPType* ipt = getIPType(protocol, port);
 	return (ipt != nullptr) ? ipt->m_iPv6 : false;
 }
 
-inline bool IPTypes::isDupIP(int iptype, int port) const {
-	const IPType* ipt = getIPType(iptype, port);
+inline bool IPTypes::isDupIP(int protocol, int port) const {
+	const IPType* ipt = getIPType(protocol, port);
 	return (ipt != nullptr) ? ipt->m_dupIP : false;
 }
 
-inline bool IPTypes::isDupMAC(int iptype, int port) const {
-	const IPType* ipt = getIPType(iptype, port);
+inline bool IPTypes::isDupMAC(int protocol, int port) const {
+	const IPType* ipt = getIPType(protocol, port);
 	return (ipt != nullptr) ? ipt->m_dupMAC : false;
 }
 

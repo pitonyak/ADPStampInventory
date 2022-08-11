@@ -213,9 +213,9 @@ bool IPTypes::read(const std::string& filename, int base)
   return true;
 }
 
-inline const IPType* IPTypes::getIPType(int iptype, int port) const
+const IPType* IPTypes::getIPType(int protocol, int port) const
 {
-	std::unordered_map<int, std::unordered_map<int, IPType *>* >::const_iterator it_top = m_ipTypes.find(iptype);
+	std::unordered_map<int, std::unordered_map<int, IPType *>* >::const_iterator it_top = m_ipTypes.find(protocol);
 	if (it_top == m_ipTypes.end())
 		return nullptr;
 
