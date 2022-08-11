@@ -25,6 +25,7 @@
 #include <functional> 
 #include <cctype>
 #include <locale>
+#include <ctime>
 
 #include "pcap.h"
 #include "utilities.h"
@@ -117,10 +118,6 @@ std::unordered_set<std::string>* read_text_file(const char* fname) {
   return lines;
 }
 
-inline bool is_valid_ether_type(const struct ether_header *ether, const std::unordered_set<unsigned int>& eth_types) {
-  return (ether != nullptr && eth_types.find(ntohs(ether->ether_type)) != eth_types.end());
-}
-
 //**************************************************************************
 //! Read the pcap file and create the anomaly file based on the Heuristic
 /*!
@@ -143,14 +140,18 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
   pcap_dumper_t *dumpfile;
   bool done = false;
 
-
   char *pcap_errbuf;
+  //
+  // This structure has three fields:
+  // struct timeval ts (time stamp)
+  // u_int32 caplen (length of portion present)
+  // u_int32 len (length of this packet off wire)
   struct pcap_pkthdr *pkt_header;
   const u_char *pkt_data;
 
   const struct ether_header *ether;
   const u_int8_t *shost, *dhost;
-  int res=1, it=0, i=0, index;
+  int res=1, it=0, i=0;
   u_int64_t mac;
   u_int8_t eth_mac[ETH_ALEN];
   char ip_addr_max[INET6_ADDRSTRLEN]={0};
@@ -179,6 +180,21 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
 
 // Iterate over every packet in the file and print the MAC addresses
   while(!done){
+    // pkt_header contains three fields:
+    // struct timeval ts (time stamp) with tv_sec and tv_usec for seconds and micro-seconds I guess.
+    // u_int32 caplen (length of portion present)
+    // u_int32 len (length of this packet off wire)
+    //
+    // The length fields are probably the same (from what I have seen from a very small sample set)
+    // The time is used as follows:
+    // #include <ctime>
+    // time_t ttime = pkt_header->ts.tv_sec;
+    // tm *local_time = localtime(&ttime);
+    // std::cout << " Time: "<< 1 + local_time->tm_hour << ":";
+    // std::cout << 1 + local_time->tm_min << ":";
+    // std::cout << 1 + local_time->tm_sec << "." << pkt_header->ts.tv_usec << " " << 1 + local_time->tm_mon << "/" << local_time->tm_mday << "/" << 1900 + local_time->tm_year << std::endl;
+    //
+    // pkt_data points to the data.
     res=pcap_next_ex(pcap_file, &pkt_header, &pkt_data);
   
     if(res == PCAP_ERROR_BREAK){
@@ -189,17 +205,38 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
       fprintf(stderr, "Error reading packet. Iteration %d\n", it);
       continue;
     }
+
+
+    if (it < 3) {
+      time_t ttime = pkt_header->ts.tv_sec;
+      tm *local_time = localtime(&ttime);
+
+      std::cout << "index " << index << " caplen:" << pkt_header->caplen << " len:" << pkt_header->len << " ts:" << pkt_header->ts.tv_sec << "." << pkt_header->ts.tv_usec;
+      std::cout << " Time: "<< 1 + local_time->tm_hour << ":";
+      std::cout << 1 + local_time->tm_min << ":";
+      std::cout << 1 + local_time->tm_sec << "." << pkt_header->ts.tv_usec << " " << 1 + local_time->tm_mon << "/" << local_time->tm_mday << "/" << 1900 + local_time->tm_year << std::endl;
+    }
+    // The packet data begins with the Ethernet header, so if we cast to that:
+    // uint8_t   ether_dhost [6]  MAC address
+    // uint8_t   ether_shost [6]  MAC address
+    // uint16_t  etherType        Ethernet type
     ether = (const struct ether_header*)pkt_data;
+
+    // IPv4 address is 4 bytes
+    // IPv6 address is 16 bytes
+    // MAC address is 6 bytes
 
     // Extract the frame MACs and put them into the set for uniqueness discovery
     shost = ether->ether_shost;
     dhost = ether->ether_dhost;
 
+    ether->dstMac;
+
     // ??
     // Do I need to do any of this? 
-    mac_to_int(shost, &mac);
+    //mac_to_int(shost, &mac);
     //unique_macs.insert(mac);
-    mac_to_int(dhost, &mac);
+    //mac_to_int(dhost, &mac);
     //unique_macs.insert(mac);
 
 
@@ -602,7 +639,7 @@ int main(int argc, char **argv){
       if (optopt == 'o'){ std::cerr << "Option -" << optopt <<" requires a filename argument for output" << std::endl; }
       else if (optopt == 'r'){ std::cerr << "Option -" << optopt <<" requires a filename argument for output" << std::endl; }
       else {
-	std::cerr << "Unknown option -"<< optopt << std::endl;
+	      std::cerr << "Unknown option -"<< optopt << std::endl;
       } 
     }
   }
