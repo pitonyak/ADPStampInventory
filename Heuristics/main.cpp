@@ -267,6 +267,16 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
       continue;
     }
 
+    // TODO: NO code below here has been tested.
+
+    // TODO: Ethertype IPv4 contains an IPv4 header that contains an entry for Protocol.
+    // I assume that ipv4_header->protocol is the Protocol type that is used to determine
+    // if a packet may contain a duplicate IP as part of the message. 
+
+    // TODO: Ethertype IPv6 contain an IPv6 header. Do I understand correctly that I can use
+    // The Next Header field to determine the protocol? 
+
+
     // Already filtered out Ether Types that we are ignoring. 
     // Look for a repeated MAC address as follows.
     // The following code makes sure that the type does NOT expect to have duplicate MAC addresses.
@@ -323,7 +333,7 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
         if (!ip_types.isDupIP(ipHeader->ip_p, -1))
           pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
         if (verbose) {
-          std::cout << it << " IP address found in payload." << std::endl;
+          std::cout << it << " IPv4 address found in payload." << std::endl;
           dump_hex(pkt_data, pkt_header->len);
         }
         ++it;
@@ -346,15 +356,57 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
       //memset(ip_addr_max, 0, INET6_ADDRSTRLEN);
     }
     else if (ntohs(ether->ether_type) == ETHERTYPE_IPV6) {
-      const struct ip6_hdr* ipHeader;
-      ipHeader = (struct ip6_hdr*)(pkt_data + sizeof(struct ether_header));
-      inet_ntop(AF_INET, &(ipHeader->ip6_src), ip_addr_max, INET6_ADDRSTRLEN);
-      //??unique_ips.insert(std::string(ip_addr_max));
-      memset(ip_addr_max, 0, INET6_ADDRSTRLEN);
+      //
+      // What does an IPv6 header look like? 
+      //   bits  byte
+      //   0-  3  0 version
+      //   4- 11    Traffic class
+      //  12- 31    Flow Label
+      //  32- 47  4 (uint16_t)Payload Length
+      //  48- 55  6 (uint8_t)Next Header
+      //  56- 63  7 (uint8_t) HOP Limit
+      //  64-191  8 (in6_addr / 16 bytes) Source IP
+      // 192-288 24 (in6_addr / 16 bytes) Destination IP
+      //
+      const struct ip6_hdr* ipHeader = (struct ip6_hdr*)(pkt_data + sizeof(struct ether_header));
+      const u_int8_t* ip_src = (const u_int8_t*)&(ipHeader->ip6_src);
+      const u_int8_t* ip_dst = (const u_int8_t*)&(ipHeader->ip6_dst);
 
-      inet_ntop(AF_INET, &(ipHeader->ip6_dst), ip_addr_max, INET6_ADDRSTRLEN);
+      // TODO: Can I use this next header value as the protocol? 
+      // I think I cannot, at least not in all cases. 
+      // Types are shown below in the order that they should be processed:
+      //  0 - Hop-by-Hop options header
+      // 60 - Destination Options Header (first and subsequent destinations)
+      // 43 - Routing Header
+      // 44 - Fragment Header
+      // 51 - Authentication header
+      // 50 - Encapsulating Security Payload header.
+      // 60 - Destination Options Header (final destination)
+      // ?? - Upper-layer header (TODO: what is this? )
+      //      MAC addresses are Layer 2. I assume that we are at Layer 3.
+      //      I assume that upper layers means layer 4 and above. Layer 4 is TCP. 
+      // 59 - There are no headers after this one. 
+      u_int8_t next_header = ipHeader->ip6_ctlun.ip6_un1.ip6_un1_nxt;
+
+      //inet_ntop(AF_INET, &(ipHeader->ip6_src), ip_addr_max, INET6_ADDRSTRLEN);
       //??unique_ips.insert(std::string(ip_addr_max));
-      memset(ip_addr_max, 0, INET6_ADDRSTRLEN);
+      //memset(ip_addr_max, 0, INET6_ADDRSTRLEN);
+
+      //inet_ntop(AF_INET, &(ipHeader->ip6_dst), ip_addr_max, INET6_ADDRSTRLEN);
+      //??unique_ips.insert(std::string(ip_addr_max));
+      //memset(ip_addr_max, 0, INET6_ADDRSTRLEN);
+      int offset_to_data = sizeof(struct ether_header) + sizeof(struct ip6_hdr);
+      if (find_match(ip_src, 16, (pkt_data + offset_to_data), pkt_header->len - offset_to_data) || find_match(ip_dst, 4, (pkt_data + offset_to_data), pkt_header->len - offset_to_data)) {
+        // TODO: ??? Is using next_header correct? 
+        if (!ip_types.isDupIP(next_header, -1))
+          pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
+        if (verbose) {
+          std::cout << it << " IPv6 address found in payload." << std::endl;
+          dump_hex(pkt_data, pkt_header->len);
+        }
+        ++it;
+        continue;
+      }
     }
 
     it++;
