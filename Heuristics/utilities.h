@@ -141,6 +141,7 @@ bool BothAreSpaces(char lhs, char rhs);
  *
  ***************************************************************************///
 bool find_match(const u_int8_t* s, u_int32_t num, const u_int8_t* data, u_int32_t len);
+bool reverse_match(const u_int8_t* s, u_int32_t num, const u_int8_t* data, u_int32_t len);
 
 void dump_hex(const u_int8_t* data, u_int32_t len);
 
