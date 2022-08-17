@@ -76,6 +76,24 @@ bool find_match(const u_int8_t* s, u_int32_t num, const u_int8_t* data, u_int32_
   return found_it;
 }
 
+// SAI- UNTESTED
+bool reverse_match(const u_int8_t* s, u_int32_t num, const u_int8_t* data, u_int32_t len)
+{
+  if (s == nullptr || data == nullptr || num == 0 || len < num)
+    return false;
+
+  u_int32_t max_start = len - num;
+  bool found_it = false;
+  for (u_int32_t iStart = max_start; !found_it && iStart >= 0; --iStart) {
+    found_it = true;
+    for (u_int32_t i = num; found_it && i>0; --i) {
+      found_it = s[i] == data[iStart - i];
+    }
+  }
+  return found_it;
+}
+
+
 void dump_hex(const u_int8_t* data, u_int32_t len)
 {
   if (data == nullptr || len == 0) 
