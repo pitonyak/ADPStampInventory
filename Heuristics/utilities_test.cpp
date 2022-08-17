@@ -11,13 +11,13 @@ int test_search() {
 	//find_match(const u_int8_t* s, u_int32_t num, const u_int8_t* data, u_int32_t len);
 
 	u_int8_t ui1=0, ui2=0;
-	if (find_match((const u_int8_t*)&ui1, (u_int32_t)1, (const u_int8_t*)&ui2, (u_int32_t)1)) {
+	if (find_match(&ui1, 1, &ui2, 1)) {
 		std::cout << "find_match of length 1 passed" << std::endl;
 	} else {
 		std::cout << "find_match of length 1 failed" << std::endl;
 	}
 
-	if (reverse_match((const u_int8_t*)&ui1, (u_int32_t)1, (const u_int8_t*)&ui2, (u_int32_t)1)) {
+	if (reverse_match(&ui1, 1, &ui2, 1)) {
 		std::cout << "reverse_match of length 1 passed" << std::endl;
 	} else {
 		std::cout << "reverse_match of length 1 failed" << std::endl;
