@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <iomanip>
 
@@ -76,7 +75,7 @@ bool find_match(const u_int8_t* s, u_int32_t num, const u_int8_t* data, u_int32_
   return found_it;
 }
 
-// SAI- UNTESTED
+// UNTESTED, in progress
 bool reverse_match(const u_int8_t* s, u_int32_t num, const u_int8_t* data, u_int32_t len)
 {
   if (s == nullptr || data == nullptr || num == 0 || len < num)
