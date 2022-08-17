@@ -16,6 +16,9 @@ main.o: main.cpp
 utilities.o: utilities.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o utilities.o -c utilities.cpp
 
+utilities_test.o: utilities_test.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -o utilities_test.o -c utilities_test.cpp
+
 iptype.o: iptype.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o iptype.o -c iptype.cpp
 
@@ -31,5 +34,8 @@ crc_test.o: crc_test.cpp
 crc_test: crc_test.o crc32_x.o
 	$(CXX) $(CXXFLAGS) crc_test.o crc32_x.o -o crc_test $(LDFLAGS) $(LIBS)
 
+utilities_test: utilities_test.o utilities.o
+	$(CXX) $(CXXFLAGS) utilities_test.o utilities.o -o utilities_test $(LDFLAGS) $(LIBS)
+
 clean:
-	rm -f main.o heuristics crc_test utilities.o iptype.o crc32_x.o crc_test.o a.out ethtype.o
+	rm -f main.o heuristics crc_test utilities.o iptype.o crc32_x.o crc_test.o a.out ethtype.o utilities_test utilities_test.o
