@@ -83,10 +83,13 @@ bool reverse_match(const u_int8_t* s, u_int32_t num, const u_int8_t* data, u_int
 
   u_int32_t max_start = len - num;
   bool found_it = false;
-  for (u_int32_t iStart = max_start; !found_it && iStart >= 0; --iStart) {
+  for (u_int32_t iStart = 0; !found_it && iStart <= max_start; ++iStart) {
     found_it = true;
-    for (u_int32_t i = num; found_it && i>0; --i) {
-      found_it = s[i] == data[iStart - i];
+    int i = num;
+    while (found_it && i!=0)
+    {
+      --i;
+      found_it = s[i] == data[iStart+1];
     }
   }
   return found_it;
