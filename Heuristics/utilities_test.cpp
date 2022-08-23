@@ -27,9 +27,11 @@ int test_search() {
 
    	u_int8_t ui1=0, ui2=0, ui3=1;
 
-   	u_int8_t ui4[2] = {1, 1};
-   	u_int8_t ui5[2] = {0, 1};
-    u_int8_t ui6[2] = {1, 0};
+   	u_int8_t ui4[] = {1, 1};
+   	u_int8_t ui5[] = {0, 1};
+    u_int8_t ui6[] = {1, 0};
+    u_int8_t ui7[] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1};
+    u_int8_t ui8[] = {1, 0, 0, 0, 1};
 
     const std::string search_name[] = {"find_match", "reverse_match"};
     const std::string search_type[] = {"match s len=1, data len=1", "no match s len=1, data len=1", 
@@ -37,18 +39,22 @@ int test_search() {
         "no match s=null, data len=1", "no match s len=1, data=null",
         "match s len=2, data len=2", "match s len=2, data len=2", "no match s len=2, data len=2", "no match s len=2, data len=2", 
         "match s len=1, data len=2", "match s len=1, data len=2", "no match s len=1, data len=2", 
+        "match s len=5, data len=?",
     };
     const u_int8_t* data[] = {&ui1, &ui2, &ui1, &ui3, &ui1, &ui2, &ui1, &ui2, nullptr, &ui2, &ui1, nullptr,
     	ui4, ui4, ui5, ui5, ui5, ui4, ui6, ui4, 
       &ui1, ui5, &ui1, ui6, &ui1, ui4, 
+      ui8, ui7,
     };
     u_int32_t lengths[] = {1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1,
     	2, 2, 2, 2, 2, 2, 2, 2,
       1, 2, 1, 2, 1, 2,
+      sizeof(ui8)/sizeof(ui8[0]), sizeof(ui7)/sizeof(ui7[0])
     };
     bool should_find[] = {true, false, false, false, false, false,
     	true, true, false, false,
       true, true, false,
+      true,
     };
 
     int num_passed = 0;
