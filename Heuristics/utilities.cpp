@@ -75,7 +75,7 @@ bool find_match(const u_int8_t* s, u_int32_t num, const u_int8_t* data, u_int32_
   return found_it;
 }
 
-// UNTESTED, in progress
+// goes through data from left to right, but searches for the match in reverse
 bool reverse_match(const u_int8_t* s, u_int32_t num, const u_int8_t* data, u_int32_t len)
 {
   if (s == nullptr || data == nullptr || num == 0 || len < num)
