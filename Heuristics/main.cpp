@@ -11,6 +11,8 @@
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+// If do not have net/if_arp.h, try linux/if_arp.h
+#include <net/if_arp.h>
 #include <iostream>
 #include <fstream>
 #include <algorithm>
@@ -186,8 +188,10 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
     return -1;
   }
 
+  const int offset_to_data_ipv4 = sizeof(struct ether_header) + sizeof(struct ip);
+  const int offset_to_data_ipv6 = sizeof(struct ether_header) + sizeof(struct ip6_hdr);
 
-// Iterate over every packet in the file and print the MAC addresses
+  // Iterate over every packet in the file and print the MAC addresses
   while(!done){
     // pkt_header contains three fields:
     // struct timeval ts (time stamp) with tv_sec and tv_usec for seconds and micro-seconds I guess.
@@ -205,6 +209,13 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
     //
     // pkt_data points to the data.
     res=pcap_next_ex(pcap_file, &pkt_header, &pkt_data);
+
+    //void * p1 = (void *) pkt_header;
+    //void * p2 = (void *) pkt_data;
+    //std::cout << " p1 = " << p1 << " p2 = " << p2 << std::endl;
+
+    // What is the address of the packet header and data? Do they start at the same place? 
+    // Seems silly if they do. 
   
     if(res == PCAP_ERROR_BREAK){
       fprintf(stderr, "No more packets in savefile. Iteration %d\n", it);
@@ -223,6 +234,16 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
       std::cout << " Time: "<< 1 + local_time->tm_hour << ":";
       std::cout << 1 + local_time->tm_min << ":";
       std::cout << 1 + local_time->tm_sec << "." << pkt_header->ts.tv_usec << " " << 1 + local_time->tm_mon << "/" << local_time->tm_mday << "/" << 1900 + local_time->tm_year << std::endl;
+    }
+
+    // Make sure that the packet data is long enough to have an ethernet header of length 12.
+    if (pkt_header->len < 12) {
+      if (verbose)
+        std::cout << it << " packet length is too small (" << pkt_header->len << ")" << std::endl;
+
+      pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
+      it++;
+      continue;
     }
 
     // The packet data begins with the Ethernet header, so if we cast to that:
@@ -258,7 +279,7 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
 
     if (!ethernet_types.isValid(ethType)) {
       if (verbose)
-        std::cout << it << " has invalid ether type " << std::hex << ntohs(ether->ether_type) << std::dec << std::endl;
+        std::cout << it << " has unexpected ether type " << std::hex << ntohs(ether->ether_type) << std::dec << std::endl;
       // TODO: Check for valid Frame Check Sequence (FCS) as per the flow diagram.
       // We ignore the FCS for now because we do not know if it will be available.
 
@@ -300,6 +321,15 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
     // Check for type IP (0x800)
     // The header follows the ether_header
     if (ethType == ETHERTYPE_IP) {
+      if (pkt_header->len < offset_to_data_ipv4) {
+        if (verbose)
+          std::cout << it << " packet length is too small to contain an IPv4 header (" << pkt_header->len << ")" << std::endl;
+
+        pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
+        it++;
+        continue;
+      }
+
       const struct ip* ipHeader;
       ipHeader = (struct ip*)(pkt_data + sizeof(struct ether_header));
 
@@ -328,8 +358,8 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
 
       // rest of this code is completely untested!
       // I am supposed to have the PORT, but I do not know how to get the port from this. 
-      int offset_to_data = sizeof(struct ether_header) + sizeof(struct ip);
-      if (find_match(ip_src, 4, (pkt_data + offset_to_data), pkt_header->len - offset_to_data) || find_match(ip_dst, 4, (pkt_data + offset_to_data), pkt_header->len - offset_to_data)) {
+      // int offset_to_data_ipv4 = sizeof(struct ether_header) + sizeof(struct ip);
+      if (find_match(ip_src, 4, (pkt_data + offset_to_data_ipv4), pkt_header->len - offset_to_data_ipv4) || find_match(ip_dst, 4, (pkt_data + offset_to_data_ipv4), pkt_header->len - offset_to_data_ipv4)) {
         if (!ip_types.isDupIP(ipHeader->ip_p, -1))
           pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
         if (verbose) {
@@ -339,7 +369,6 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
         ++it;
         continue;
       }      
-
 
       // Turn the raw src and dst IPs in the packet into human-readable
       //   IPs and insert them into the set
@@ -354,8 +383,17 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
       //inet_ntop(AF_INET, &(ipHeader->ip_dst), ip_addr_max, INET_ADDRSTRLEN);
       //unique_ips.insert(std::string(ip_addr_max));
       //memset(ip_addr_max, 0, INET6_ADDRSTRLEN);
-    }
-    else if (ntohs(ether->ether_type) == ETHERTYPE_IPV6) {
+
+    } else if (ntohs(ether->ether_type) == ETHERTYPE_IPV6) {
+
+      if (pkt_header->len < offset_to_data_ipv6) {
+        if (verbose)
+          std::cout << it << " packet length is too small to contain an IPv6 header (" << pkt_header->len << ")" << std::endl;
+
+        pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
+        it++;
+        continue;
+      }
       //
       // What does an IPv6 header look like? 
       //   bits  byte
@@ -395,8 +433,8 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
       //inet_ntop(AF_INET, &(ipHeader->ip6_dst), ip_addr_max, INET6_ADDRSTRLEN);
       //??unique_ips.insert(std::string(ip_addr_max));
       //memset(ip_addr_max, 0, INET6_ADDRSTRLEN);
-      int offset_to_data = sizeof(struct ether_header) + sizeof(struct ip6_hdr);
-      if (find_match(ip_src, 16, (pkt_data + offset_to_data), pkt_header->len - offset_to_data) || find_match(ip_dst, 4, (pkt_data + offset_to_data), pkt_header->len - offset_to_data)) {
+      //int offset_to_data_ipv6 = sizeof(struct ether_header) + sizeof(struct ip6_hdr);
+      if (find_match(ip_src, 16, (pkt_data + offset_to_data_ipv6), pkt_header->len - offset_to_data_ipv6) || find_match(ip_dst, 4, (pkt_data + offset_to_data_ipv6), pkt_header->len - offset_to_data_ipv6)) {
         // TODO: ??? Is using next_header correct? 
         if (!ip_types.isDupIP(next_header, -1))
           pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
@@ -407,10 +445,135 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
         ++it;
         continue;
       }
+
+    } else if (ntohs(ether->ether_type) == ETHERTYPE_LOOPBACK) {
+      // Loopback test is 0x9000
+      //
+      // What does the header look like? 
+      if (pkt_header->len < (sizeof(struct ether_header) + 0)) {
+        if (verbose)
+          std::cout << it << " packet length is too small to contain a loopback header (" << pkt_header->len << ")" << std::endl;
+
+        pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
+        it++;
+        continue;
+      }
+      //
+      // What does an loopback header look like? 
+      //
+      // TODO: ???
+   
+
+    } else if (ntohs(ether->ether_type) == ETHERTYPE_ARP) {
+      // ARP is 806
+      if (pkt_header->len < (sizeof(struct ether_header) + sizeof(struct arphdr))) {
+        if (verbose)
+          std::cout << it << " packet length is too small to contain an ARP header (" << pkt_header->len << ")" << std::endl;
+
+        pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
+        it++;
+        continue;
+      }
+      //
+      // What does an ETHERTYPE_ARP header look like? 
+      // This should be eight bytes long as taken from if_arp.h. 
+      //
+      // unsigned short int ar_hrd;  Format of hardware address. 1 for Ethernet
+      // unsigned short int ar_pro;  protocol type             . See if_arp.h, but, ARP, RARP, etc. 
+      // unsigned char ar_hln;       Length of hardware address. 6 for Ethernet
+      // unsigned char ar_pln;       Length of protocol address. 4 for IPv4
+      // unsigned short int ar_op;   ARP opcode (command). 1:request, 2:response
+      //
+      // Next bits are NOT defined in the header file, but:
+      // sender hardware address (HMAC / hardware of source)
+      // sender IP address       (Layer 3 address of source)
+      // target hardware address (used in RARP request)
+      // target IP address       (Used in ARP when response includes layer 3 addresses)
+      //
+
+      // TODO: ??? is the sender and target always filled in? are the MAC and IP always filled in?
+      // 
+      const struct arphdr* arpHeader = (struct arphdr*)(pkt_data + sizeof(struct ether_header));
+      const int arp_header_size = sizeof(struct arphdr) + 2 * arpHeader->ar_hln + 2 * arpHeader->ar_pln;
+
+      if (pkt_header->len < (sizeof(struct ether_header) + arp_header_size)) {
+        if (verbose)
+          std::cout << it << " packet length is too small to contain an ARP header with addresses (" << pkt_header->len << ")" << std::endl;
+
+        pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
+        it++;
+        continue;
+      }
+
+      const u_int8_t* mac_src = (const u_int8_t*)(arpHeader + sizeof(struct arphdr));
+      const u_int8_t* ip_src  = mac_src + arpHeader->ar_hln;
+      const u_int8_t* mac_dst = ip_src  + arpHeader->ar_pln;
+      const u_int8_t* ip_dst  = mac_dst + arpHeader->ar_hln;
+      const int offset_to_data_arp = sizeof(struct ether_header) + arp_header_size;
+
+      if (find_match(mac_src, arpHeader->ar_hln, (pkt_data + offset_to_data_arp), pkt_header->len - offset_to_data_arp) || find_match(mac_dst, arpHeader->ar_hln, (pkt_data + offset_to_data_arp), pkt_header->len - offset_to_data_arp)) {
+        if (!ethernet_types.isDupMAC(ethType))
+          pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
+        if (verbose) {
+          std::cout << it << " Dupliate MAC address found in ARP." << std::endl;
+          dump_hex(pkt_data, pkt_header->len);
+        }
+        ++it;
+        continue;
+      }      
+      if (find_match(ip_src, arpHeader->ar_pln, (pkt_data + offset_to_data_arp), pkt_header->len - offset_to_data_arp) || find_match(ip_dst, arpHeader->ar_pln, (pkt_data + offset_to_data_arp), pkt_header->len - offset_to_data_arp)) {
+        if (!ethernet_types.isDupIP(ethType))
+          pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
+        if (verbose) {
+          std::cout << it << " Dupliate IP address found in ARP." << std::endl;
+          dump_hex(pkt_data, pkt_header->len);
+        }
+        ++it;
+        continue;
+      }      
+
+    } else if (ntohs(ether->ether_type) == 0x08847) {
+      // MPLS Unicast traffic is 0x08847 ==  34887
+      //
+      // The MPLS header is a 4-byte header, 
+      // located immediately before the IP header. 
+      // Many people simply refer to the MPLS header as the MPLS label, 
+      // but the label is actually a 20-bit field in the MPLS header. 
+      // You may also see this header referenced as an MPLS shim header. 
+      // 
+      // MPLS Header is as follows: 
+      //
+      // BITS   Byte 
+      // 20       0  Label - Identifies the LSP portion of the label switched path
+      // 3           Used for QoS marking. No longer used
+      // 1           Flag when 1 means the label immediately precedes the IP header
+      // 8        3  TTL fields. Same as the IP header's TTL field.
+
+      // TODO: ??? So an MPLS packet contains the MPLS header (4 bytes) followed by an IP header? 
+
+      if (pkt_header->len < (sizeof(struct ether_header) + 4 + sizeof(struct ip))) {
+        if (verbose)
+          std::cout << it << " packet length is too small to contain an MPLS header (" << pkt_header->len << ")" << std::endl;
+
+        pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
+        it++;
+        continue;
+      }
+
+      struct ip* ipHeader = (struct ip*)(pkt_data + sizeof(struct ether_header) + 4);
+
+      // TODO: So now do I dupliate the code for an ip header? 
+  
+    } else {
+      // This type is NOT implemented but is configured as OK in eth_types.txt
+      if (verbose)
+        std::cout << it << " This ethernet type is allowed in eth_types.txt but not supported in code. Type: " << std::hex << ntohs(ether->ether_type) << std::dec << std::endl;
     }
 
     it++;
   }
+
+  
 
   //?? pcap_dump(dumpfile, header, pkt_data);
   pcap_close(pcap_file);
