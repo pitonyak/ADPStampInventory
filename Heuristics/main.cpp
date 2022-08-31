@@ -373,9 +373,8 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
         // uint16_t th_sport;      source port
         // uint16_t th_dport;      destination port
         //
-        // ????????????????
-        //const struct udphdr* udp_header = (const struct udp_header*)(pkt_data + offset_to_data_ipv4);
-        //tcp_destination_port = udp_header->uh_dport;
+        const struct udphdr* udp_header = (const struct udphdr*)(pkt_data + offset_to_data_ipv4);
+        tcp_destination_port = udp_header->uh_dport;
 
       } 
 
