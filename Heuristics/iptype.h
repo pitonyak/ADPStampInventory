@@ -50,7 +50,7 @@ public:
 	/*! Constructor */
 	IPTypes();
 
-    /*! Desctructor, clears all structures, not virtual because assume not subclassed. */
+    /*! Destructor, clears all structures, not virtual because assume not subclassed. */
     ~IPTypes();
 
     //**************************************************************************

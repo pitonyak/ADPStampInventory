@@ -7,25 +7,31 @@ LIBS:=-lpcap
 
 .PHONY=clean
 
-heuristics: main.o utilities.o iptype.o crc32_x.o ethtype.o
-	$(CXX) $(CXXFLAGS) main.o utilities.o iptype.o crc32_x.o ethtype.o -o heuristics $(LDFLAGS) $(LIBS)
+heuristics: main.o utilities.o iptype.o crc32_x.o ethtype.o find_macs_and_ips utilities_test crc_test macaddresses.o ipaddresses.o
+	$(CXX) $(CXXFLAGS) main.o utilities.o iptype.o crc32_x.o ethtype.o macaddresses.o ipaddresses.o -o heuristics $(LDFLAGS) $(LIBS)
 
-main.o: main.cpp
+find_macs_and_ips: find_macs_and_ips.o macaddresses.o ipaddresses.o
+	$(CXX) $(CXXFLAGS) find_macs_and_ips.o macaddresses.o ipaddresses.o -o find_macs_and_ips $(LDFLAGS) $(LIBS)
+
+main.o: main.cpp utilities.o iptype.o ethtype.o crc32_x.o macaddresses.o ipaddresses.o
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o main.o -c main.cpp
 
-utilities.o: utilities.cpp
+find_macs_and_ips.o: find_macs_and_ips.cpp ipaddresses.o macaddresses.o
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -o find_macs_and_ips.o -c find_macs_and_ips.cpp
+
+utilities.o: utilities.cpp utilities.h
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o utilities.o -c utilities.cpp
 
 utilities_test.o: utilities_test.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o utilities_test.o -c utilities_test.cpp
 
-iptype.o: iptype.cpp
+iptype.o: iptype.cpp iptype.h
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o iptype.o -c iptype.cpp
 
-ethtype.o: ethtype.cpp
+ethtype.o: ethtype.cpp ethtype.h
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o ethtype.o -c ethtype.cpp
 
-crc32_x.o: crc32_x.cpp
+crc32_x.o: crc32_x.cpp crc32_x.h
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o crc32_x.o -c crc32_x.cpp
 
 crc_test.o: crc_test.cpp
@@ -34,8 +40,14 @@ crc_test.o: crc_test.cpp
 crc_test: crc_test.o crc32_x.o
 	$(CXX) $(CXXFLAGS) crc_test.o crc32_x.o -o crc_test $(LDFLAGS) $(LIBS)
 
+macaddresses.o: macaddresses.cpp macaddresses.h
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -o macaddresses.o -c macaddresses.cpp
+
+ipaddresses.o: ipaddresses.cpp ipaddresses.h
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -o ipaddresses.o -c ipaddresses.cpp
+
 utilities_test: utilities_test.o utilities.o
 	$(CXX) $(CXXFLAGS) utilities_test.o utilities.o -o utilities_test $(LDFLAGS) $(LIBS)
 
 clean:
-	rm -f main.o heuristics crc_test utilities.o iptype.o crc32_x.o crc_test.o a.out ethtype.o utilities_test utilities_test.o
+	rm -f main.o heuristics crc_test utilities.o iptype.o crc32_x.o crc_test.o a.out ethtype.o utilities_test utilities_test.o find_macs_and_ips.o find_macs_and_ips macaddresses.o ipaddresses.o

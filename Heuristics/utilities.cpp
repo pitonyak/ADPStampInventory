@@ -75,6 +75,22 @@ bool find_match(const u_int8_t* s, u_int32_t num, const u_int8_t* data, u_int32_
   return found_it;
 }
 
+bool hasEnding(std::string const &fullString, std::string const &ending, bool isCaseSensitive) {
+    if (fullString.length() >= ending.length()) {
+      if (isCaseSensitive) {
+        return (0 == fullString.compare (fullString.length() - ending.length(), ending.length(), ending));
+      } else {
+        std::string temp_s(fullString);
+        std::string temp_e(ending);
+        std::transform(temp_s.begin(), temp_s.end(), temp_s.begin(), tolower);
+        std::transform(temp_e.begin(), temp_e.end(), temp_e.begin(), tolower);
+        return (0 == temp_s.compare(temp_s.length() - temp_e.length(), temp_e.length(), temp_e));
+      }
+    } else {
+        return false;
+    }
+}
+
 // goes through data from left to right, but searches for the match in reverse
 bool reverse_match(const u_int8_t* s, u_int32_t num, const u_int8_t* data, u_int32_t len)
 {

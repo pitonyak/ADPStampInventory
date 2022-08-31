@@ -119,6 +119,8 @@ std::string trim_copy(std::string s);
  ***************************************************************************///
 bool BothAreSpaces(char lhs, char rhs);
 
+bool hasEnding(std::string const &fullString, std::string const &ending, bool isCaseSensitive);
+
 //**************************************************************************
 //! Determin if num bytes from s are contained in data.
 /*!
