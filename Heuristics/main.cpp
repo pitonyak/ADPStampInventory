@@ -15,6 +15,7 @@
 #include <netinet/ip.h>
 #include <netinet/ip6.h>
 #include <netinet/tcp.h>
+#include <netinet/udp.h>
 #include <set>
 #include <stdio.h>
 #include <stdlib.h>
@@ -94,6 +95,92 @@ std::unordered_set<std::string>* read_text_file(const char* fname) {
   }
   return lines;
 }
+
+//**************************************************************************
+//! Search for a repeated MAC address. 
+/*!
+ * 
+ * \param [in] search_start_loc where to start searching
+ * 
+ * \param [in] search_len maximum length to search
+ * 
+ * \param [in, out] dumpfile where to dump the packet if something is found
+ * 
+ * \param [in] pkt_header needed to dump the packet
+ * 
+ * \param [in] pkt_data needed to dump the packet
+ * 
+ * \param [in] verbose if True, explanation text is written to the screen.
+ * 
+ * \param [in] it current iteration.
+ * 
+ * \returns True if a duplicate mac is found.
+ *
+ ***************************************************************************/
+bool find_macs(const u_int8_t* search_start_loc, u_int32_t search_len, pcap_dumper_t *dumpfile, struct pcap_pkthdr *pkt_header, const u_char *pkt_data, bool verbose, int it) {
+
+  for (auto const &a_mac: mac_addresses.m_unique_macs) {
+    if (find_match(a_mac, 6, search_start_loc, search_len)) {
+      pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
+      if (verbose) {
+        std::cout << it << " MAC address found in data." << std::endl;
+        dump_hex(pkt_data, pkt_header->len);
+      }
+      return true;
+    }
+  }
+  return false;
+}
+
+//**************************************************************************
+//! Search for a repeated IP address. 
+/*!
+ * 
+ * \param [in] search_start_loc where to start searching
+ * 
+ * \param [in] search_len maximum length to search
+ * 
+ * \param [in, out] dumpfile where to dump the packet if something is found
+ * 
+ * \param [in] pkt_header needed to dump the packet
+ * 
+ * \param [in] pkt_data needed to dump the packet
+ * 
+ * \param [in] verbose if True, explanation text is written to the screen.
+ * 
+ * \param [in] it current iteration.
+ * 
+ * \returns True if a duplicate mac is found.
+ *
+ ***************************************************************************/
+bool find_ips(const u_int8_t* search_start_loc, u_int32_t search_len, pcap_dumper_t *dumpfile, struct pcap_pkthdr *pkt_header, const u_char *pkt_data, bool verbose, int it) {
+
+  for (auto const &an_ip: ip_addresses.m_unique_ipv4) {
+    if (find_match(an_ip, 4, search_start_loc, search_len)) {
+      pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
+      if (verbose) {
+        std::cout << it << " IPv4 address found in data" << std::endl;
+        dump_hex(pkt_data, pkt_header->len);
+      }
+      return true;
+    }
+  }
+
+  for (auto const &an_ip: ip_addresses.m_unique_ipv6) {
+    if (find_match(an_ip, 16, search_start_loc, search_len)) {
+      pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
+      if (verbose) {
+        std::cout << it << " IPv6 address found in data" << std::endl;
+        dump_hex(pkt_data, pkt_header->len);
+      }
+      return true;
+    }
+  }
+
+  return false;
+}
+
+
 
 //**************************************************************************
 //! Read the pcap file and create the anomaly file based on the Heuristic
@@ -235,83 +322,10 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
     dhost = ether->ether_dhost;
     int ether_type_int = ntohs(ether->ether_type);
 
-    // Skip any ethernet type that might have a duplicate IP or MAC
-    if (ethernet_types.isDupIP(ether_type_int) || ethernet_types.isDupMAC(ether_type_int)) {
-      it++;
-      continue;
-    }
-
-    if (!ethernet_types.isValid(ether_type_int)) {
-      if (verbose)
-        std::cout << it << " has unexpected ether type " << std::hex << ntohs(ether->ether_type) << std::dec << std::endl;
-      // TODO: Check for valid Frame Check Sequence (FCS) as per the flow diagram.
-      // We ignore the FCS for now because we do not know if it will be available.
-
-      pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
-      it++;
-      continue;
-    }
-
-    // TODO: Ethertype IPv4 contains an IPv4 header that contains an entry for Protocol.
-    // I assume that ipv4_header->protocol is the Protocol type that is used to determine
-    // if a packet may contain a duplicate IP as part of the message. 
-
-    // TODO: Ethertype IPv6 contain an IPv6 header. Do I understand correctly that I can use
-    // The Next Header field to determine the protocol? 
-
-
-    // Already filtered out Ether Types that we are ignoring. 
-    // Look for a repeated MAC address as follows.
-    // The following code makes sure that the type does NOT expect to have duplicate MAC addresses.
-    // The flow chart says that the following be done: 
-    // If a MAC is dupliated
-    //    If a duplicate mac is allowed or expected based on the type, drop the packet and do not check for duplicate IP.
-    //    otherwise, save to the anomally file. 
-    // This first makes sure that the MAC address is NOT expected to be repeated. 
-
-    // Search to see if a MAC is repeated.
-    u_int32_t search_len = pkt_header->len - 12;
-    const u_int8_t* data_loc = (pkt_data + 12);
-    for (auto const &a_mac: mac_addresses.m_unique_macs) {
-      if (find_match(a_mac, 6, data_loc, search_len)) {
-        pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
-        if (verbose) {
-          std::cout << it << " MAC address found in data." << std::endl;
-          dump_hex(pkt_data, pkt_header->len);
-        }
-        ++it;
-        continue;
-      }
-    }
-
-    // This is tricky. we know that we do NOT have an IPv4 or IPv6 packet because we already dumped those.
-    // So, just go looking for IPs in the data!
-    for (auto const &an_ip: ip_addresses.m_unique_ipv4) {
-      if (find_match(an_ip, 4, data_loc, search_len)) {
-        pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
-        if (verbose) {
-          std::cout << it << " IPv4 address found in data with ether type " << std::hex << ether_type_int << std::dec << std::endl;
-          dump_hex(pkt_data, pkt_header->len);
-        }
-        ++it;
-        continue;
-      }
-    }
-
-    for (auto const &an_ip: ip_addresses.m_unique_ipv6) {
-      if (find_match(an_ip, 16, data_loc, search_len)) {
-        pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
-        if (verbose) {
-          std::cout << it << " IPv6 address found in data with ether type " << std::hex << ether_type_int << std::dec << std::endl;
-          dump_hex(pkt_data, pkt_header->len);
-        }
-        ++it;
-        continue;
-      }
-    }
-
-    //std::cout << "size of struct ip = " << sizeof(struct ip) << std::endl;
     // Check for type IP (0x800)
+    // This type is skipped for some types, but not others.
+    // Set the eth_types.txt file so that it does NOT indicate that
+    // this type has copies of the IP or MAC and rely on this check instead.
     // The header follows the ether_header
     if (ether_type_int == ETHERTYPE_IP) {
       if (pkt_header->len < offset_to_data_ipv4) {
@@ -335,49 +349,115 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
       //  3-bits = Flags                            (byte 6)
       // 13-bits = [lp_off] Fragmentation offset
       //  8-bits = [ip_ttl] Time to live            (byte 8)
-      //  8-bits = [ip_p] Protocol                  (byte 9) (17=UDP, 6=TCP) TODO: ?????? source / destination port.
+      //  8-bits = [ip_p] Protocol                  (byte 9) (17=UDP, 6=TCP) source / destination port.
       // 16-bits = [ip_sum] Header Checksum         (byte 10)
       // 32-bits = [ip_src] Source IP Address       (byte 12)
       // 32-bits = [ip_dst] Destination IP Address  (byte 16)
       // Rest of the Data                           (byte 20)
 
+      int tcp_destination_port = -1;
+      if (ipHeader->ip_p == IPPROTO_TCP) {
 
+        // IPPROTO_TCP = 6
+        // struct tcphdr with source and destination ports
+        // uint16_t th_sport;      source port
+        // uint16_t th_dport;      destination port
+        // 
+        const struct tcphdr* tcp_header = (const struct tcphdr*)(pkt_data + offset_to_data_ipv4);
+        tcp_destination_port = tcp_header->th_dport;
 
-      // IPv4 IP Address is four bytes long.
-      ip_src = (pkt_data + sizeof(struct ether_header) + 12);
-      ip_dst = (pkt_data + sizeof(struct ether_header) + 16);
-      //ip_src = (const u_int8_t*)&(ipHeader->ip_src);
-      //ip_dst = (const u_int8_t*)&(ipHeader->ip_dst);
+      } else if (ipHeader->ip_p == IPPROTO_UDP) {
 
-      // rest of this code is completely untested!
-      // I am supposed to have the PORT, but I do not know how to get the port from this. 
-      // int offset_to_data_ipv4 = sizeof(struct ether_header) + sizeof(struct ip);
-      if (find_match(ip_src, 4, (pkt_data + offset_to_data_ipv4), pkt_header->len - offset_to_data_ipv4) || find_match(ip_dst, 4, (pkt_data + offset_to_data_ipv4), pkt_header->len - offset_to_data_ipv4)) {
-        if (!ip_types.isDupIP(ipHeader->ip_p, -1))
-          pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
-        if (verbose) {
-          std::cout << it << " IPv4 address found in payload." << std::endl;
-          dump_hex(pkt_data, pkt_header->len);
-        }
+        // IPPROTO_UDP = 17
+        // struct udphdr
+        // uint16_t th_sport;      source port
+        // uint16_t th_dport;      destination port
+        //
+        // ????????????????
+        //const struct udphdr* udp_header = (const struct udp_header*)(pkt_data + offset_to_data_ipv4);
+        //tcp_destination_port = udp_header->uh_dport;
+
+      } 
+
+      if (ip_types.isDupIP(ipHeader->ip_p, tcp_destination_port) || ip_types.isDupMAC(ipHeader->ip_p, tcp_destination_port)) {
+        it++;
+        continue;
+      }
+
+      // If we get here then we can search for duplicates.
+      // Look AFTER the IP header for dupliate IP.
+
+      // Search to see if a MAC is repeated.
+      u_int32_t search_len = pkt_header->len - 12;
+      const u_int8_t* data_loc = (pkt_data + 12);
+      if (find_macs(data_loc, search_len, dumpfile, pkt_header, pkt_data, verbose, it)) {
         ++it;
         continue;
-      }      
+      }
 
-      // Turn the raw src and dst IPs in the packet into human-readable
-      //   IPs and insert them into the set
-      // Be sure to clear the char* buffer each time so that the end
-      //   of the IP will always be correctly null-terminated
-      // If we don't do this, we risk keeping junk from the previous IP
-      //   that may have been longer than the current IP.
-      //inet_ntop(AF_INET, &(ipHeader->ip_src), ip_addr_max, INET_ADDRSTRLEN);
-      //unique_ips.insert(std::string(ip_addr_max));
-      //memset(ip_addr_max, 0, INET6_ADDRSTRLEN);
+      search_len = pkt_header->len - offset_to_data_ipv4;
+      data_loc = pkt_data + offset_to_data_ipv4;
+      if (find_ips(data_loc, search_len, dumpfile, pkt_header, pkt_data, verbose, it)) {
+        ++it;
+        continue;
+      }
 
-      //inet_ntop(AF_INET, &(ipHeader->ip_dst), ip_addr_max, INET_ADDRSTRLEN);
-      //unique_ips.insert(std::string(ip_addr_max));
-      //memset(ip_addr_max, 0, INET6_ADDRSTRLEN);
+      // We are done with this packet. No need to search more.
+      // The packet does not contain dupliate data!
+      ++it;
+      continue;
 
-    } else if (ntohs(ether->ether_type) == ETHERTYPE_IPV6) {
+    }
+
+    // TODO: Ethertype IPv6 contain an IPv6 header. Do I understand correctly that I can use
+    // The Next Header field to determine the protocol? 
+
+
+
+    // Skip any ethernet type that might have a duplicate IP or MAC
+    if (ethernet_types.isDupIP(ether_type_int) || ethernet_types.isDupMAC(ether_type_int)) {
+      it++;
+      continue;
+    }
+
+    if (!ethernet_types.isValid(ether_type_int)) {
+      if (verbose)
+        std::cout << it << " has unexpected ether type " << std::hex << ntohs(ether->ether_type) << std::dec << std::endl;
+      // TODO: Check for valid Frame Check Sequence (FCS) as per the flow diagram.
+      // We ignore the FCS for now because we do not know if it will be available.
+
+      pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
+      it++;
+      continue;
+    }
+
+    // Already filtered out Ether Types that we are ignoring. 
+    // Look for a repeated MAC address as follows.
+    // The following code makes sure that the type does NOT expect to have duplicate MAC addresses.
+    // The flow chart says that the following be done: 
+    // If a MAC is dupliated
+    //    If a duplicate mac is allowed or expected based on the type, drop the packet and do not check for duplicate IP.
+    //    otherwise, save to the anomally file. 
+    // This first makes sure that the MAC address is NOT expected to be repeated. 
+
+
+    // Search to see if a MAC is repeated.
+    u_int32_t search_len = pkt_header->len - 12;
+    const u_int8_t* data_loc = (pkt_data + 12);
+    if (find_macs(data_loc, search_len, dumpfile, pkt_header, pkt_data, verbose, it)) {
+      ++it;
+      continue;
+    }
+
+    if (find_ips(data_loc, search_len, dumpfile, pkt_header, pkt_data, verbose, it)) {
+      ++it;
+      continue;
+    }
+
+    // TODO: In case I need to remember how to deal with an IPv6 header.
+    // Remove this.
+    /**
+    if (ntohs(ether->ether_type) == ETHERTYPE_IPV6) {
 
       if (pkt_header->len < offset_to_data_ipv6) {
         if (verbose)
@@ -439,136 +519,11 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
         continue;
       }
 
-    } else if (ntohs(ether->ether_type) == ETHERTYPE_LOOPBACK) {
-      // Loopback test is 0x9000
-      //
-      // What does the header look like? 
-      if (pkt_header->len < (sizeof(struct ether_header) + 0)) {
-        if (verbose)
-          std::cout << it << " packet length is too small to contain a loopback header (" << pkt_header->len << ")" << std::endl;
-
-        pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
-        it++;
-        continue;
-      }
-      //
-      // What does an loopback header look like? 
-      //
-      // TODO: ???
-   
-
-    } else if (ntohs(ether->ether_type) == ETHERTYPE_ARP) {
-      // ARP is 806
-      if (pkt_header->len < (sizeof(struct ether_header) + sizeof(struct arphdr))) {
-        if (verbose)
-          std::cout << it << " packet length is too small to contain an ARP header (" << pkt_header->len << ")" << std::endl;
-
-        pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
-        it++;
-        continue;
-      }
-      //
-      // What does an ETHERTYPE_ARP header look like? 
-      // This should be eight bytes long as taken from if_arp.h. 
-      //
-      // unsigned short int ar_hrd;  Format of hardware address. 1 for Ethernet
-      // unsigned short int ar_pro;  protocol type             . See if_arp.h, but, ARP, RARP, etc. 
-      // unsigned char ar_hln;       Length of hardware address. 6 for Ethernet
-      // unsigned char ar_pln;       Length of protocol address. 4 for IPv4
-      // unsigned short int ar_op;   ARP opcode (command). 1:request, 2:response
-      //
-      // Next bits are NOT defined in the header file, but:
-      // sender hardware address (HMAC / hardware of source)
-      // sender IP address       (Layer 3 address of source)
-      // target hardware address (used in RARP request)
-      // target IP address       (Used in ARP when response includes layer 3 addresses)
-      //
-
-      // TODO: ??? is the sender and target always filled in? are the MAC and IP always filled in?
-      // 
-      const struct arphdr* arpHeader = (struct arphdr*)(pkt_data + sizeof(struct ether_header));
-      const int arp_header_size = sizeof(struct arphdr) + 2 * arpHeader->ar_hln + 2 * arpHeader->ar_pln;
-
-      if (pkt_header->len < (sizeof(struct ether_header) + arp_header_size)) {
-        if (verbose)
-          std::cout << it << " packet length is too small to contain an ARP header with addresses (" << pkt_header->len << ")" << std::endl;
-
-        pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
-        it++;
-        continue;
-      }
-
-      const u_int8_t* mac_src = (const u_int8_t*)(arpHeader + sizeof(struct arphdr));
-      const u_int8_t* ip_src  = mac_src + arpHeader->ar_hln;
-      const u_int8_t* mac_dst = ip_src  + arpHeader->ar_pln;
-      const u_int8_t* ip_dst  = mac_dst + arpHeader->ar_hln;
-      const int offset_to_data_arp = sizeof(struct ether_header) + arp_header_size;
-
-      if (find_match(mac_src, arpHeader->ar_hln, (pkt_data + offset_to_data_arp), pkt_header->len - offset_to_data_arp) || find_match(mac_dst, arpHeader->ar_hln, (pkt_data + offset_to_data_arp), pkt_header->len - offset_to_data_arp)) {
-        if (!ethernet_types.isDupMAC(ether_type_int))
-          pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
-        if (verbose) {
-          std::cout << it << " Dupliate MAC address found in ARP." << std::endl;
-          dump_hex(pkt_data, pkt_header->len);
-        }
-        ++it;
-        continue;
-      }      
-      if (find_match(ip_src, arpHeader->ar_pln, (pkt_data + offset_to_data_arp), pkt_header->len - offset_to_data_arp) || find_match(ip_dst, arpHeader->ar_pln, (pkt_data + offset_to_data_arp), pkt_header->len - offset_to_data_arp)) {
-        if (!ethernet_types.isDupIP(ether_type_int))
-          pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
-        if (verbose) {
-          std::cout << it << " Dupliate IP address found in ARP." << std::endl;
-          dump_hex(pkt_data, pkt_header->len);
-        }
-        ++it;
-        continue;
-      }      
-
-    } else if (ntohs(ether->ether_type) == 0x08847) {
-      // MPLS Unicast traffic is 0x08847 ==  34887
-      //
-      // The MPLS header is a 4-byte header, 
-      // located immediately before the IP header. 
-      // Many people simply refer to the MPLS header as the MPLS label, 
-      // but the label is actually a 20-bit field in the MPLS header. 
-      // You may also see this header referenced as an MPLS shim header. 
-      // 
-      // MPLS Header is as follows: 
-      //
-      // BITS   Byte 
-      // 20       0  Label - Identifies the LSP portion of the label switched path
-      // 3           Used for QoS marking. No longer used
-      // 1           Flag when 1 means the label immediately precedes the IP header
-      // 8        3  TTL fields. Same as the IP header's TTL field.
-
-      // TODO: ??? So an MPLS packet contains the MPLS header (4 bytes) followed by an IP header? 
-
-      if (pkt_header->len < (sizeof(struct ether_header) + 4 + sizeof(struct ip))) {
-        if (verbose)
-          std::cout << it << " packet length is too small to contain an MPLS header (" << pkt_header->len << ")" << std::endl;
-
-        pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
-        it++;
-        continue;
-      }
-
-      struct ip* ipHeader = (struct ip*)(pkt_data + sizeof(struct ether_header) + 4);
-
-      // TODO: So now do I dupliate the code for an ip header? 
-  
-    } else {
-      // This type is NOT implemented but is configured as OK in eth_types.txt
-      if (verbose)
-        std::cout << it << " This ethernet type is allowed in eth_types.txt but not supported in code. Type: " << std::hex << ntohs(ether->ether_type) << std::dec << std::endl;
-    }
+    } **/
 
     it++;
   }
 
-  
-
-  //?? pcap_dump(dumpfile, header, pkt_data);
   pcap_close(pcap_file);
   pcap_dump_close(dumpfile);
   std::cerr << "Examined "<< it <<" packets"<<std::endl;

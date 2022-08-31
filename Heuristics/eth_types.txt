@@ -22,7 +22,7 @@
 0601		1	0	0	0	 XNS Address Translation (3Mb only)
 0660		1	0	0	0	 DLOG
 0661		1	0	0	0	 DLOG
-0800		1	0	1	1	 DOD Internet Protocol (IPv4) (ETHERTYPE_IP in libpcap)
+0800		1	0	1	1	 DOD Internet Protocol (IPv4) (ETHERTYPE_IP) # Check IP type to detect duplicate IP or MAC
 0801		1	0	0	0	 X.75 Internet
 0802		1	0	0	0	 NBS Internet
 0803		1	0	0	0	 ECMA Internet

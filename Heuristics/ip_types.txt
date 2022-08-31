@@ -40,6 +40,7 @@
 17	1	0	1	1	161   SNMP (UDP)
 17	1	0	1	1	514   System Logs
 17	1	0	1	1	53    Domain Name Service (DNS)
+17	1	0	0	0	-1    Domain Name Service (DNS)
 18	1	0	0	0	-1    Multiplexing (MUX)
 19	1	0	0	0	-1    DCN Measurement Subsystems (DCN-MEAS)
 20	1	0	0	0	-1    Host Monitoring (HMP)
