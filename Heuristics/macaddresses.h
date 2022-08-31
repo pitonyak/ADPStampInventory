@@ -117,7 +117,8 @@ public:
     bool is_mac_address_equal(const u_int8_t *left, const u_int8_t *right) const;
 
     void clear();
-private:
+
+    // I should encapsulate this, but I prefer to be fast.
     std::set<u_int8_t *> m_unique_macs;
 };
 

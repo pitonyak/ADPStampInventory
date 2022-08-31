@@ -42,16 +42,6 @@ std::unordered_map<unsigned int, std::string> eth_types_description;
 MacAddresses mac_addresses;
 IpAddresses ip_addresses;
 
-void print_mac(const u_int8_t *mac){
-  // Print an array of 6 8-bit integers to std::cout (which might be a file) formatted as normal MAC addresses
-  std::cout << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(mac[0]) << ":"
-	    << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(mac[1]) << ":"
-	    << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(mac[2]) << ":"
-	    << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(mac[3]) << ":"
-	    << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(mac[4]) << ":"
-	    << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(mac[5]) << std::endl;
-}
-
 void usage(){
   printf("Usage:\n");
   printf("-h Print this help.\n");
@@ -243,18 +233,15 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
     // Extract the frame MACs and put them into the set for uniqueness discovery
     shost = ether->ether_shost;
     dhost = ether->ether_dhost;
-    u_short ethType = ntohs(ether->ether_type);
+    int ether_type_int = ntohs(ether->ether_type);
 
-    //?? Originally filtered based on this, which allows only IPv4 (0x0800) and IPv6 (0x8gdd)
-    /**
-    if (ntohs(ether->ether_type) != ETHERTYPE_IP & ntohs(ether->ether_type) != ETHERTYPE_IPV6){
-      // If the frame doesn't contain IP headers, skip extracting the IPs. Cause they don't exist.
+    // Skip any ethernet type that might have a duplicate IP or MAC
+    if (ethernet_types.isDupIP(ether_type_int) || ethernet_types.isDupMAC(ether_type_int)) {
       it++;
       continue;
     }
-    **/
 
-    if (!ethernet_types.isValid(ethType)) {
+    if (!ethernet_types.isValid(ether_type_int)) {
       if (verbose)
         std::cout << it << " has unexpected ether type " << std::hex << ntohs(ether->ether_type) << std::dec << std::endl;
       // TODO: Check for valid Frame Check Sequence (FCS) as per the flow diagram.
@@ -264,8 +251,6 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
       it++;
       continue;
     }
-
-    // TODO: NO code below here has been tested.
 
     // TODO: Ethertype IPv4 contains an IPv4 header that contains an entry for Protocol.
     // I assume that ipv4_header->protocol is the Protocol type that is used to determine
@@ -283,21 +268,52 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
     //    If a duplicate mac is allowed or expected based on the type, drop the packet and do not check for duplicate IP.
     //    otherwise, save to the anomally file. 
     // This first makes sure that the MAC address is NOT expected to be repeated. 
-    if (find_match(shost, 6, (pkt_data + 12), pkt_header->len - 12) || find_match(dhost, 6, (pkt_data + 12), pkt_header->len - 12)) {
-      if (!ethernet_types.isDupMAC(ethType))
+
+    // Search to see if a MAC is repeated.
+    u_int32_t search_len = pkt_header->len - 12;
+    const u_int8_t* data_loc = (pkt_data + 12);
+    for (auto const &a_mac: mac_addresses.m_unique_macs) {
+      if (find_match(a_mac, 6, data_loc, search_len)) {
         pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
-      if (verbose) {
-        std::cout << it << " MAC address found in data: MAC (6 bytes), MAC (6 bytes), ETH TYPE (2 bytes), rest of the payload." << std::endl;
-        dump_hex(pkt_data, pkt_header->len);
+        if (verbose) {
+          std::cout << it << " MAC address found in data." << std::endl;
+          dump_hex(pkt_data, pkt_header->len);
+        }
+        ++it;
+        continue;
       }
-      ++it;
-      continue;
+    }
+
+    // This is tricky. we know that we do NOT have an IPv4 or IPv6 packet because we already dumped those.
+    // So, just go looking for IPs in the data!
+    for (auto const &an_ip: ip_addresses.m_unique_ipv4) {
+      if (find_match(an_ip, 4, data_loc, search_len)) {
+        pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
+        if (verbose) {
+          std::cout << it << " IPv4 address found in data with ether type " << std::hex << ether_type_int << std::dec << std::endl;
+          dump_hex(pkt_data, pkt_header->len);
+        }
+        ++it;
+        continue;
+      }
+    }
+
+    for (auto const &an_ip: ip_addresses.m_unique_ipv6) {
+      if (find_match(an_ip, 16, data_loc, search_len)) {
+        pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
+        if (verbose) {
+          std::cout << it << " IPv6 address found in data with ether type " << std::hex << ether_type_int << std::dec << std::endl;
+          dump_hex(pkt_data, pkt_header->len);
+        }
+        ++it;
+        continue;
+      }
     }
 
     //std::cout << "size of struct ip = " << sizeof(struct ip) << std::endl;
     // Check for type IP (0x800)
     // The header follows the ether_header
-    if (ethType == ETHERTYPE_IP) {
+    if (ether_type_int == ETHERTYPE_IP) {
       if (pkt_header->len < offset_to_data_ipv4) {
         if (verbose)
           std::cout << it << " packet length is too small to contain an IPv4 header (" << pkt_header->len << ")" << std::endl;
@@ -489,7 +505,7 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
       const int offset_to_data_arp = sizeof(struct ether_header) + arp_header_size;
 
       if (find_match(mac_src, arpHeader->ar_hln, (pkt_data + offset_to_data_arp), pkt_header->len - offset_to_data_arp) || find_match(mac_dst, arpHeader->ar_hln, (pkt_data + offset_to_data_arp), pkt_header->len - offset_to_data_arp)) {
-        if (!ethernet_types.isDupMAC(ethType))
+        if (!ethernet_types.isDupMAC(ether_type_int))
           pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
         if (verbose) {
           std::cout << it << " Dupliate MAC address found in ARP." << std::endl;
@@ -499,7 +515,7 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
         continue;
       }      
       if (find_match(ip_src, arpHeader->ar_pln, (pkt_data + offset_to_data_arp), pkt_header->len - offset_to_data_arp) || find_match(ip_dst, arpHeader->ar_pln, (pkt_data + offset_to_data_arp), pkt_header->len - offset_to_data_arp)) {
-        if (!ethernet_types.isDupIP(ethType))
+        if (!ethernet_types.isDupIP(ether_type_int))
           pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
         if (verbose) {
           std::cout << it << " Dupliate IP address found in ARP." << std::endl;
@@ -576,6 +592,7 @@ int create_anomaly_file(const EthernetTypes& ethernet_types, const std::unordere
 
   const struct ether_header *ether;
   const u_int8_t *shost, *dhost;
+  int ether_type_int;
   u_int done=0;
   int res=1, it=0, i=0, index;
   u_int64_t mac;
@@ -590,9 +607,6 @@ int create_anomaly_file(const EthernetTypes& ethernet_types, const std::unordere
   // std::tr1::unordered_map
   std::unordered_map<unsigned int, unsigned int> eth_types_count;
 
-  // xyzzy
-  // Save the coutbuf in case we later direct to a file
-  std::streambuf *coutbuf = std::cout.rdbuf();
   std::ofstream anomaly_out;
   if(anomaly_fname != nullptr){
     anomaly_out.open(anomaly_fname);
@@ -626,23 +640,15 @@ int create_anomaly_file(const EthernetTypes& ethernet_types, const std::unordere
     // Extract the frame MACs and put them into the set for uniqueness discovery
     shost = ether->ether_shost;
     dhost = ether->ether_dhost;
+    ether_type_int = ntohs(ether->ether_type);
 
-    //?? Originally filtered based on this, which allows only IPv4 (0x0800) and IPv6 (0x8gdd)
-    /**
-    if (ntohs(ether->ether_type) != ETHERTYPE_IP & ntohs(ether->ether_type) != ETHERTYPE_IPV6){
-      // If the frame doesn't contain IP headers, skip extracting the IPs. Cause they don't exist.
-      it++;
-      continue;
-    }
-    **/
-
-    if (eth_types_count.find(ntohs(ether->ether_type)) == eth_types_count.end()) {
-      eth_types_count[ntohs(ether->ether_type)] = 1;
+    if (eth_types_count.find(ether_type_int) == eth_types_count.end()) {
+      eth_types_count[ether_type_int] = 1;
     } else {
-      ++eth_types_count[ntohs(ether->ether_type)];
+      ++eth_types_count[ether_type_int];
     }
 
-    if (!ethernet_types.isValid(ntohs(ether->ether_type))) {
+    if (!ethernet_types.isValid(ether_type_int)) {
       it++;
       continue;
     }
@@ -650,7 +656,7 @@ int create_anomaly_file(const EthernetTypes& ethernet_types, const std::unordere
 
 
     // If we make it here, there should be IPs in the frame.
-    if (ntohs(ether->ether_type) == ETHERTYPE_IP) {
+    if (ether_type_int == ETHERTYPE_IP) {
       const struct ip* ipHeader;
       ipHeader = (struct ip*)(pkt_data + sizeof(struct ether_header));
       // Turn the raw src and dst IPs in the packet into human-readable
@@ -667,7 +673,7 @@ int create_anomaly_file(const EthernetTypes& ethernet_types, const std::unordere
       //unique_ips.insert(std::string(ip_addr_max));
       memset(ip_addr_max, 0, INET6_ADDRSTRLEN);
     }
-    else if (ntohs(ether->ether_type) == ETHERTYPE_IPV6) {
+    else if (ether_type_int == ETHERTYPE_IPV6) {
       const struct ip6_hdr* ipHeader;
       ipHeader = (struct ip6_hdr*)(pkt_data + sizeof(struct ether_header));
       inet_ntop(AF_INET, &(ipHeader->ip6_src), ip_addr_max, INET6_ADDRSTRLEN);
@@ -684,36 +690,6 @@ int create_anomaly_file(const EthernetTypes& ethernet_types, const std::unordere
 
   pcap_close(pcap_file);
   std::cerr << "Examined "<< it <<" packets"<<std::endl;
-
-//?? remove this section
-  /**
-  // Write the unique MACs to the output file (stdout by default), and then reset std::cout to the default stdout
-  if(out_mac_fname != nullptr){
-    // If the user gave us an output 
-    mac_out.open(out_mac_fname);
-    std::cout.rdbuf(mac_out.rdbuf());
-  }
-  std::for_each(unique_macs.begin(), unique_macs.end(), [&eth_mac, &mac_out](u_int64_t m){
-      int_to_mac(m, eth_mac);
-      print_mac(eth_mac);
-    });
-  std::cout.rdbuf(coutbuf);
-
-
-  // Write the unique IPs to the output file (stdout by default), and then reset std::cout to the default stdout
-  if(out_ip_fname != nullptr){
-    // If the user gave us an output 
-    ip_out.open(out_ip_fname);
-    std::cout.rdbuf(ip_out.rdbuf());
-  }
-  std::for_each(unique_ips.begin(), unique_ips.end(), [&ip_out](std::string ip){
-      std::cout << ip << std::endl;
-    });
-  std::cout.rdbuf(coutbuf);
-**/
-
-  // Restore the cout buffer
-  std::cout.rdbuf(coutbuf);
 
   return 0;
 }

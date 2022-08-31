@@ -104,7 +104,7 @@ public:
     bool is_ip_equal(const u_int8_t *left, const u_int8_t *right, bool isIPv4) const;
 
     void clear();
-private:
+
     std::set<u_int8_t *> m_unique_ipv4;
     std::set<u_int8_t *> m_unique_ipv6;
 };
