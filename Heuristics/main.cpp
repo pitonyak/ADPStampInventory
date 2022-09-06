@@ -36,6 +36,11 @@
 #include "macaddresses.h"
 #include "ipaddresses.h"
 
+//
+// TODO: Implement search using the Aho Corasick algorithm rather than
+// performing one search for each unique IP and MAC.
+//
+
 // Evil global variable to hold an ethernet type description
 std::unordered_map<unsigned int, std::string> eth_types_description;
 
