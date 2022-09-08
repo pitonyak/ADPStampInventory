@@ -1,10 +1,11 @@
 #ifndef MAC_ADDRESSES_H
 #define MAC_ADDRESSES_H
 
-#include <unordered_map>
-#include <string>
 #include <iostream>
 #include <set>
+#include <cstdint>
+#include <string>
+#include <unordered_map>
 
 
 //**************************************************************************
@@ -34,7 +35,7 @@ public:
      * \returns True if the MAC is added.
      *
      ***************************************************************************/
-    bool addMacAddress(const u_int8_t *mac);
+    bool addMacAddress(const uint8_t *mac);
 
     //**************************************************************************
     //! Determine if this MAC address is already stored.
@@ -44,7 +45,7 @@ public:
      * \returns True if this MAC is already stored.
      *
      ***************************************************************************/
-    bool hasMacAddress(const u_int8_t *mac) const;
+    bool hasMacAddress(const uint8_t *mac) const;
 
     //**************************************************************************
     //! Make a copy of the MAC (using new).
@@ -54,7 +55,7 @@ public:
      * \returns Newly allocated MAC.
      *
      ***************************************************************************/
-    u_int8_t* dupMacAddress(const u_int8_t *mac) const;
+    uint8_t* dupMacAddress(const uint8_t *mac) const;
 
     //**************************************************************************
     //! Stream the entire set of MACs sorted. 
@@ -74,7 +75,7 @@ public:
      * \param [out] out
      *
      ***************************************************************************/
-    static void mac_to_int(const u_int8_t *mac, u_int64_t *out);
+    static void mac_to_int(const uint8_t *mac, u_int64_t *out);
 
     //**************************************************************************
     //! Convert an unsigned 64-bit int to a 6 byte MAC.
@@ -84,7 +85,7 @@ public:
      * \param [out] out
      *
      ***************************************************************************/
-    static void int_to_mac(u_int64_t mac, u_int8_t *out);
+    static void int_to_mac(u_int64_t mac, uint8_t *out);
 
     //**************************************************************************
     //! Print an array of 6 8-bit integers to std::cout (which might be a file) formatted as normal MAC addresses
@@ -92,7 +93,7 @@ public:
      * \param [in] mac  mac address to print.
      *
      ***************************************************************************/
-    static std::string mac_to_str(const u_int8_t *mac);
+    static std::string mac_to_str(const uint8_t *mac);
 
     //**************************************************************************
     //! Read a file of MAC addresses such as 00:0e:29:25:73:00 with very limited error checking. One line per MAC.
@@ -114,12 +115,12 @@ public:
      ***************************************************************************/
     bool write_file(const std::string& filename);
 
-    bool is_mac_address_equal(const u_int8_t *left, const u_int8_t *right) const;
+    bool is_mac_address_equal(const uint8_t *left, const uint8_t *right) const;
 
     void clear();
 
     // I should encapsulate this, but I prefer to be fast.
-    std::set<u_int8_t *> m_unique_macs;
+    std::set<uint8_t *> m_unique_macs;
 };
 
 #endif // IPTYPE_H

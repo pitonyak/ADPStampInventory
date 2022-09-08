@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <arpa/inet.h>
+#include <cstdint>
 #include <cstring>
 #include <ctime>
 #include <ctype.h>
@@ -122,7 +123,7 @@ std::unordered_set<std::string>* read_text_file(const char* fname) {
  * \returns True if a duplicate mac is found.
  *
  ***************************************************************************/
-bool find_macs(const u_int8_t* search_start_loc, u_int32_t search_len, pcap_dumper_t *dumpfile, struct pcap_pkthdr *pkt_header, const u_char *pkt_data, bool verbose, int it) {
+bool find_macs(const uint8_t* search_start_loc, uint32_t search_len, pcap_dumper_t *dumpfile, struct pcap_pkthdr *pkt_header, const u_char *pkt_data, bool verbose, int it) {
 
   for (auto const &a_mac: mac_addresses.m_unique_macs) {
     if (find_match(a_mac, 6, search_start_loc, search_len)) {
@@ -158,7 +159,7 @@ bool find_macs(const u_int8_t* search_start_loc, u_int32_t search_len, pcap_dump
  * \returns True if a duplicate mac is found.
  *
  ***************************************************************************/
-bool find_ips(const u_int8_t* search_start_loc, u_int32_t search_len, pcap_dumper_t *dumpfile, struct pcap_pkthdr *pkt_header, const u_char *pkt_data, bool verbose, int it) {
+bool find_ips(const uint8_t* search_start_loc, uint32_t search_len, pcap_dumper_t *dumpfile, struct pcap_pkthdr *pkt_header, const u_char *pkt_data, bool verbose, int it) {
 
   for (auto const &an_ip: ip_addresses.m_unique_ipv4) {
     if (find_match(an_ip, 4, search_start_loc, search_len)) {
@@ -215,22 +216,22 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
   //
   // This structure has three fields:
   // struct timeval ts (time stamp)
-  // u_int32 caplen (length of portion present)
-  // u_int32 len (length of this packet off wire)
+  // uint32_t caplen (length of portion present)
+  // uint32_t len (length of this packet off wire)
   struct pcap_pkthdr *pkt_header;
   const u_char *pkt_data;
 
   const struct ether_header *ether;
 
   // 6 byte MAC Address
-  const u_int8_t *shost, *dhost;
+  const uint8_t *shost, *dhost;
 
   // 4 byte (IPv4) or 16 byte (IPv6) IP Address.
-  const u_int8_t *ip_src, *ip_dst;
+  const uint8_t *ip_src, *ip_dst;
 
   int res=1, it=0, i=0;
   u_int64_t mac;
-  u_int8_t eth_mac[ETH_ALEN];
+  uint8_t eth_mac[ETH_ALEN];
   char ip_addr_max[INET6_ADDRSTRLEN]={0};
 
 
@@ -261,8 +262,8 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
   while(!done){
     // pkt_header contains three fields:
     // struct timeval ts (time stamp) with tv_sec and tv_usec for seconds and micro-seconds I guess.
-    // u_int32 caplen (length of portion present)
-    // u_int32 len (length of this packet off wire)
+    // uint32_t caplen (length of portion present)
+    // uint32_t len (length of this packet off wire)
     //
     // The length fields are probably the same (from what I have seen from a very small sample set)
     // The time is used as follows:
@@ -392,8 +393,8 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
       // Look AFTER the IP header for dupliate IP.
 
       // Search to see if a MAC is repeated.
-      u_int32_t search_len = pkt_header->len - 12;
-      const u_int8_t* data_loc = (pkt_data + 12);
+      uint32_t search_len = pkt_header->len - 12;
+      const uint8_t* data_loc = (pkt_data + 12);
       if (find_macs(data_loc, search_len, dumpfile, pkt_header, pkt_data, verbose, it)) {
         ++it;
         continue;
@@ -446,8 +447,8 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
 
 
     // Search to see if a MAC is repeated.
-    u_int32_t search_len = pkt_header->len - 12;
-    const u_int8_t* data_loc = (pkt_data + 12);
+    uint32_t search_len = pkt_header->len - 12;
+    const uint8_t* data_loc = (pkt_data + 12);
     if (find_macs(data_loc, search_len, dumpfile, pkt_header, pkt_data, verbose, it)) {
       ++it;
       continue;
@@ -484,8 +485,8 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
       // 192-288 24 (in6_addr / 16 bytes) Destination IP
       //
       const struct ip6_hdr* ipHeader = (struct ip6_hdr*)(pkt_data + sizeof(struct ether_header));
-      const u_int8_t* ip_src = (const u_int8_t*)&(ipHeader->ip6_src);
-      const u_int8_t* ip_dst = (const u_int8_t*)&(ipHeader->ip6_dst);
+      const uint8_t* ip_src = (const uint8_t*)&(ipHeader->ip6_src);
+      const uint8_t* ip_dst = (const uint8_t*)&(ipHeader->ip6_dst);
 
       // TODO: Can I use this next header value as the protocol? 
       // I think I cannot, at least not in all cases. 
@@ -501,7 +502,7 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
       //      MAC addresses are Layer 2. I assume that we are at Layer 3.
       //      I assume that upper layers means layer 4 and above. Layer 4 is TCP. 
       // 59 - There are no headers after this one. 
-      u_int8_t next_header = ipHeader->ip6_ctlun.ip6_un1.ip6_un1_nxt;
+      uint8_t next_header = ipHeader->ip6_ctlun.ip6_un1.ip6_un1_nxt;
 
       //inet_ntop(AF_INET, &(ipHeader->ip6_src), ip_addr_max, INET6_ADDRSTRLEN);
       //??unique_ips.insert(std::string(ip_addr_max));
@@ -550,12 +551,12 @@ int create_anomaly_file(const EthernetTypes& ethernet_types, const std::unordere
   const u_char *pkt_data;
 
   const struct ether_header *ether;
-  const u_int8_t *shost, *dhost;
+  const uint8_t *shost, *dhost;
   int ether_type_int;
   u_int done=0;
   int res=1, it=0, i=0, index;
   u_int64_t mac;
-  u_int8_t eth_mac[ETH_ALEN];
+  uint8_t eth_mac[ETH_ALEN];
   char ip_addr_max[INET6_ADDRSTRLEN]={0};
 
 
@@ -707,16 +708,16 @@ int write_ip_and_mac_from_pcap(const std::string& pcap_fname, const std::string&
       //   of the IP will always be correctly null-terminated
       // If we don't do this, we risk keeping junk from the previous IP
       //   that may have been longer than the current IP.
-      //const u_int8_t* ip_src = (pkt_data + sizeof(struct ether_header) + 12);
-      //const u_int8_t* ip_dst = (pkt_data + sizeof(struct ether_header) + 16);
-      ip_addresses.addIpAddress((const u_int8_t*)&(ipHeader->ip_src), true);
-      ip_addresses.addIpAddress((const u_int8_t*)&(ipHeader->ip_dst), true);
+      //const uint8_t* ip_src = (pkt_data + sizeof(struct ether_header) + 12);
+      //const uint8_t* ip_dst = (pkt_data + sizeof(struct ether_header) + 16);
+      ip_addresses.addIpAddress((const uint8_t*)&(ipHeader->ip_src), true);
+      ip_addresses.addIpAddress((const uint8_t*)&(ipHeader->ip_dst), true);
     }
     else if (ntohs(ether->ether_type) == ETHERTYPE_IPV6) {
       const struct ip6_hdr* ipHeader;
       ipHeader = (struct ip6_hdr*)(pkt_data + sizeof(struct ether_header));
-      ip_addresses.addIpAddress((const u_int8_t*)&(ipHeader->ip6_src), false);
-      ip_addresses.addIpAddress((const u_int8_t*)&(ipHeader->ip6_dst), false);
+      ip_addresses.addIpAddress((const uint8_t*)&(ipHeader->ip6_src), false);
+      ip_addresses.addIpAddress((const uint8_t*)&(ipHeader->ip6_dst), false);
     }
 
     it++;

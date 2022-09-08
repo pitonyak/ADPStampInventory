@@ -9,7 +9,7 @@
 
 
 
-void MacAddresses::mac_to_int(const u_int8_t *mac, u_int64_t *out){
+void MacAddresses::mac_to_int(const uint8_t *mac, u_int64_t *out){
   /*Pack a MAC address (array of 6 unsigned chars) into an integer for easy inclusion in a set*/
   *out = (u_int64_t)(mac[0])<<40;
   *out += (u_int64_t)(mac[1])<<32; 
@@ -19,7 +19,7 @@ void MacAddresses::mac_to_int(const u_int8_t *mac, u_int64_t *out){
   *out += (u_int64_t)(mac)[5];
 }
 
-void MacAddresses::int_to_mac(u_int64_t mac, u_int8_t *out){
+void MacAddresses::int_to_mac(u_int64_t mac, uint8_t *out){
   //Populate an array of 6 8-bit integergs from a 48-bit integer that has been packed in a 64-bit integer
   //This is intended to turn an integer into a more human-usable MAC address array
   //   of the kind used by Ethernet structs from PCAP data
@@ -31,7 +31,7 @@ void MacAddresses::int_to_mac(u_int64_t mac, u_int8_t *out){
   out[5] = mac & 0xff;
 }
 
-std::string MacAddresses::mac_to_str(const u_int8_t *mac) {
+std::string MacAddresses::mac_to_str(const uint8_t *mac) {
       // Print an array of 6 8-bit integers to std::cout (which might be a file) formatted as normal MAC addresses
       std::stringstream ss;
       ss << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(mac[0]) << ":"
@@ -64,20 +64,20 @@ const MacAddresses& MacAddresses::operator=(const MacAddresses& x){
 }
 
 void MacAddresses::clear() {
-    std::for_each(m_unique_macs.begin(), m_unique_macs.end(), [](u_int8_t* mac_ptr){
+    std::for_each(m_unique_macs.begin(), m_unique_macs.end(), [](uint8_t* mac_ptr){
       delete[] mac_ptr;
     });
     m_unique_macs.clear();
 }
 
 MacAddresses::~MacAddresses() {
-    std::for_each(m_unique_macs.begin(), m_unique_macs.end(), [](u_int8_t* mac_ptr){
+    std::for_each(m_unique_macs.begin(), m_unique_macs.end(), [](uint8_t* mac_ptr){
       delete[] mac_ptr;
     });
     m_unique_macs.clear();
 }
 
-bool MacAddresses::is_mac_address_equal(const u_int8_t *left, const u_int8_t *right) const {
+bool MacAddresses::is_mac_address_equal(const uint8_t *left, const uint8_t *right) const {
     if (left == right) {
         return true;
     }
@@ -92,7 +92,7 @@ bool MacAddresses::is_mac_address_equal(const u_int8_t *left, const u_int8_t *ri
            left[5] == right[5];
 }
 
-bool MacAddresses::addMacAddress(const u_int8_t *mac) {
+bool MacAddresses::addMacAddress(const uint8_t *mac) {
     if (mac == nullptr || hasMacAddress(mac)) {
         return false;
     }
@@ -100,7 +100,7 @@ bool MacAddresses::addMacAddress(const u_int8_t *mac) {
     return true;
 }
 
-bool MacAddresses::hasMacAddress(const u_int8_t *mac) const {
+bool MacAddresses::hasMacAddress(const uint8_t *mac) const {
     for (auto const &x: m_unique_macs) {
         if (is_mac_address_equal(mac, x))
             return true;
@@ -108,11 +108,11 @@ bool MacAddresses::hasMacAddress(const u_int8_t *mac) const {
     return false;
 }
 
-u_int8_t* MacAddresses::dupMacAddress(const u_int8_t *mac) const {
+uint8_t* MacAddresses::dupMacAddress(const uint8_t *mac) const {
     if (mac == nullptr) {
         return nullptr;
     }
-    u_int8_t *x = new u_int8_t[6];
+    uint8_t *x = new uint8_t[6];
     x[0] = mac[0];
     x[1] = mac[1];
     x[2] = mac[2];
@@ -177,7 +177,7 @@ bool MacAddresses::read_file(const std::string& filename) {
     size_t initialPos = 0;
     int idx = 0;
     std::string s;
-    u_int8_t mac[6];
+    uint8_t mac[6];
     while( pos != std::string::npos ) {
         s = line.substr( initialPos, pos - initialPos );
         mac[idx] = std::stoul(s, nullptr, 16);

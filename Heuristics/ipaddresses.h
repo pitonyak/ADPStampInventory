@@ -1,11 +1,11 @@
 #ifndef IP_ADDRESSES_H
 #define IP_ADDRESSES_H
 
-#include <unordered_map>
-#include <string>
 #include <iostream>
 #include <set>
-
+#include <cstdint>
+#include <string>
+#include <unordered_map>
 
 //**************************************************************************
 //! Encapsulate a collection of IP addresses.
@@ -36,7 +36,7 @@ public:
      * \returns True if added.
      *
      ***************************************************************************/
-    bool addIpAddress(const u_int8_t *ip, bool isIPv4);
+    bool addIpAddress(const uint8_t *ip, bool isIPv4);
 
     //**************************************************************************
     //! Determine if this IP address is already stored.
@@ -48,7 +48,7 @@ public:
      * \returns True if exists.
      *
      ***************************************************************************/
-    bool hasIpAddress(const u_int8_t *ip, bool isIPv4) const;
+    bool hasIpAddress(const uint8_t *ip, bool isIPv4) const;
 
     //**************************************************************************
     //! Make a copy of the IP (using new).
@@ -60,7 +60,7 @@ public:
      * \returns Newly allocated MAC.
      *
      ***************************************************************************/
-    static u_int8_t* dupIpAddress(const u_int8_t *ip, bool isIPv4);
+    static uint8_t* dupIpAddress(const uint8_t *ip, bool isIPv4);
 
     /*! Simply method to print this object as a line with no context. */
     std::ostream& print(std::ostream& x) const;
@@ -75,10 +75,10 @@ public:
      * \returns A string version of the IP.
      *
      ***************************************************************************/
-    static std::string ip_to_str(const u_int8_t *ip, bool isIPv4);
+    static std::string ip_to_str(const uint8_t *ip, bool isIPv4);
 
-    static u_int8_t * str_to_ip(const std::string& ip);
-    static u_int8_t * str_to_ip(const std::string& ip, bool isIPv4);
+    static uint8_t * str_to_ip(const std::string& ip);
+    static uint8_t * str_to_ip(const std::string& ip, bool isIPv4);
     static bool isIPv4Str(const std::string& ip);
 
     //**************************************************************************
@@ -101,12 +101,12 @@ public:
      ***************************************************************************/
     bool write_file(const std::string& filename);
 
-    bool is_ip_equal(const u_int8_t *left, const u_int8_t *right, bool isIPv4) const;
+    bool is_ip_equal(const uint8_t *left, const uint8_t *right, bool isIPv4) const;
 
     void clear();
 
-    std::set<u_int8_t *> m_unique_ipv4;
-    std::set<u_int8_t *> m_unique_ipv6;
+    std::set<uint8_t *> m_unique_ipv4;
+    std::set<uint8_t *> m_unique_ipv6;
 };
 
 #endif // IPTYPE_H

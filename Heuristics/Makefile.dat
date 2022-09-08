@@ -46,8 +46,11 @@ macaddresses.o: macaddresses.cpp macaddresses.h
 ipaddresses.o: ipaddresses.cpp ipaddresses.h
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o ipaddresses.o -c ipaddresses.cpp
 
-utilities_test: utilities_test.o utilities.o
-	$(CXX) $(CXXFLAGS) utilities_test.o utilities.o -o utilities_test $(LDFLAGS) $(LIBS)
+utilities_test: utilities_test.o utilities.o ahocorasickbinary.o
+	$(CXX) $(CXXFLAGS) utilities_test.o utilities.o ahocorasickbinary.o -o utilities_test $(LDFLAGS) $(LIBS)
+
+ahocorasickbinary.o: ahocorasickbinary.cpp ahocorasickbinary.h
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -o ahocorasickbinary.o -c ahocorasickbinary.cpp
 
 clean:
-	rm -f main.o heuristics crc_test utilities.o iptype.o crc32_x.o crc_test.o a.out ethtype.o utilities_test utilities_test.o find_macs_and_ips.o find_macs_and_ips macaddresses.o ipaddresses.o
+	rm -f main.o heuristics crc_test utilities.o iptype.o crc32_x.o crc_test.o a.out ethtype.o utilities_test utilities_test.o find_macs_and_ips.o find_macs_and_ips macaddresses.o ipaddresses.o ahocorasickbinary.o

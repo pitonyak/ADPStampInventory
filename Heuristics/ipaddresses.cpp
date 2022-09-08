@@ -1,17 +1,16 @@
 
 #include <algorithm>
+#include <arpa/inet.h>
+#include <cstring>
 #include <fstream>
 #include <iomanip>
-#include <vector>
-#include <cstring>
 #include <netinet/in.h>
-#include <arpa/inet.h>
-
+#include <vector>
 
 #include "ipaddresses.h"
 
 
-std::string IpAddresses::ip_to_str(const u_int8_t *ip, bool isIPv4) {
+std::string IpAddresses::ip_to_str(const uint8_t *ip, bool isIPv4) {
     if (ip == nullptr) {
         return std::string();
     }
@@ -28,13 +27,13 @@ bool IpAddresses::isIPv4Str(const std::string& ip) {
     return (ip.find(':') == std::string::npos);
 }
 
-u_int8_t* IpAddresses::str_to_ip(const std::string& ip) {
+uint8_t* IpAddresses::str_to_ip(const std::string& ip) {
     bool isIPv4 = isIPv4Str(ip);
     return str_to_ip(ip, isIPv4);
 }
 
-u_int8_t * IpAddresses::str_to_ip(const std::string& ip, bool isIPv4) {
-    u_int8_t ip_addr_max[INET6_ADDRSTRLEN]={0};
+uint8_t * IpAddresses::str_to_ip(const std::string& ip, bool isIPv4) {
+    uint8_t ip_addr_max[INET6_ADDRSTRLEN]={0};
     if (isIPv4) {
         if (inet_pton(AF_INET, ip.c_str(), ip_addr_max) != 1)
             return nullptr;
@@ -71,30 +70,30 @@ const IpAddresses& IpAddresses::operator=(const IpAddresses& x){
 }
 
 void IpAddresses::clear() {
-    std::for_each(m_unique_ipv4.begin(), m_unique_ipv4.end(), [](u_int8_t* ptr){
+    std::for_each(m_unique_ipv4.begin(), m_unique_ipv4.end(), [](uint8_t* ptr){
       delete[] ptr;
     });
     m_unique_ipv4.clear();
 
-    std::for_each(m_unique_ipv6.begin(), m_unique_ipv6.end(), [](u_int8_t* ptr){
+    std::for_each(m_unique_ipv6.begin(), m_unique_ipv6.end(), [](uint8_t* ptr){
       delete[] ptr;
     });
     m_unique_ipv6.clear();
 }
 
 IpAddresses::~IpAddresses() {
-    std::for_each(m_unique_ipv4.begin(), m_unique_ipv4.end(), [](u_int8_t* ptr){
+    std::for_each(m_unique_ipv4.begin(), m_unique_ipv4.end(), [](uint8_t* ptr){
       delete[] ptr;
     });
     m_unique_ipv4.clear();
 
-    std::for_each(m_unique_ipv6.begin(), m_unique_ipv6.end(), [](u_int8_t* ptr){
+    std::for_each(m_unique_ipv6.begin(), m_unique_ipv6.end(), [](uint8_t* ptr){
       delete[] ptr;
     });
     m_unique_ipv6.clear();
 }
 
-bool IpAddresses::is_ip_equal(const u_int8_t *left, const u_int8_t *right, bool isIPv4) const {
+bool IpAddresses::is_ip_equal(const uint8_t *left, const uint8_t *right, bool isIPv4) const {
 
     if (left == right) {
         return true;
@@ -116,7 +115,7 @@ bool IpAddresses::is_ip_equal(const u_int8_t *left, const u_int8_t *right, bool 
     return true;
 }
 
-bool IpAddresses::addIpAddress(const u_int8_t *ip, bool isIPv4) {
+bool IpAddresses::addIpAddress(const uint8_t *ip, bool isIPv4) {
     if (ip == nullptr || hasIpAddress(ip, isIPv4)) {
         return false;
     }
@@ -128,7 +127,7 @@ bool IpAddresses::addIpAddress(const u_int8_t *ip, bool isIPv4) {
     return true;
 }
 
-bool IpAddresses::hasIpAddress(const u_int8_t *ip, bool isIPv4) const {
+bool IpAddresses::hasIpAddress(const uint8_t *ip, bool isIPv4) const {
     if (isIPv4) {
         for (auto const &x: m_unique_ipv4) {
             if (is_ip_equal(ip, x, isIPv4))
@@ -143,12 +142,12 @@ bool IpAddresses::hasIpAddress(const u_int8_t *ip, bool isIPv4) const {
     return false;
 }
 
-u_int8_t* IpAddresses::dupIpAddress(const u_int8_t *ip, bool isIPv4) {
+uint8_t* IpAddresses::dupIpAddress(const uint8_t *ip, bool isIPv4) {
     if (ip == nullptr) {
         return nullptr;
     }
     int n = isIPv4 ? 4 : 16;
-    u_int8_t *x = new u_int8_t[n];
+    uint8_t *x = new uint8_t[n];
     for (int i=0; i<n; ++i) {
         x[i] = ip[i];
     }
@@ -215,7 +214,7 @@ bool IpAddresses::read_file(const std::string& filename) {
         continue;
     }
     bool isIPv4 = isIPv4Str(line);
-    u_int8_t * ip = str_to_ip(line, isIPv4);
+    uint8_t * ip = str_to_ip(line, isIPv4);
     if (ip != nullptr) {
         addIpAddress(ip, isIPv4);
     } else {

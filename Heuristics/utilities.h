@@ -1,6 +1,7 @@
 #ifndef UTILITIES_H
 #define UTILITIES_H
 
+#include <cstdint>
 #include <string>
 #include <algorithm> 
 
@@ -142,9 +143,10 @@ bool hasEnding(std::string const &fullString, std::string const &ending, bool is
  * \returns true if num bytes from s are found in data.
  *
  ***************************************************************************///
-bool find_match(const u_int8_t* s, u_int32_t num, const u_int8_t* data, u_int32_t len);
-bool reverse_match(const u_int8_t* s, u_int32_t num, const u_int8_t* data, u_int32_t len);
+bool find_match(const uint8_t* s, uint32_t num, const uint8_t* data, uint32_t len);
 
-void dump_hex(const u_int8_t* data, u_int32_t len);
+bool reverse_match(const uint8_t* s, uint32_t num, const uint8_t* data, uint32_t len);
+
+void dump_hex(const uint8_t* data, uint32_t len);
 
 #endif // UTILITIES_H

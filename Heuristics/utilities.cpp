@@ -59,16 +59,16 @@ std::string trim_copy(std::string s) {
 //
 bool BothAreSpaces(char lhs, char rhs) { return (lhs == rhs) && (lhs == ' '); }
 
-bool find_match(const u_int8_t* s, u_int32_t num, const u_int8_t* data, u_int32_t len)
+bool find_match(const uint8_t* s, uint32_t num, const uint8_t* data, uint32_t len)
 {
   if (s == nullptr || data == nullptr || num == 0 || len < num)
     return false;
 
-  u_int32_t max_start = len - num;
+  uint32_t max_start = len - num;
   bool found_it = false;
-  for (u_int32_t iStart = 0; !found_it && iStart <= max_start; ++iStart) {
+  for (uint32_t iStart = 0; !found_it && iStart <= max_start; ++iStart) {
     found_it = true;
-    for (u_int32_t i = 0; found_it && i<num; ++i) {
+    for (uint32_t i = 0; found_it && i<num; ++i) {
       found_it = s[i] == data[iStart + i];
     }
   }
@@ -92,14 +92,14 @@ bool hasEnding(std::string const &fullString, std::string const &ending, bool is
 }
 
 // goes through data from left to right, but searches for the match in reverse
-bool reverse_match(const u_int8_t* s, u_int32_t num, const u_int8_t* data, u_int32_t len)
+bool reverse_match(const uint8_t* s, uint32_t num, const uint8_t* data, uint32_t len)
 {
   if (s == nullptr || data == nullptr || num == 0 || len < num)
     return false;
 
-  u_int32_t max_start = len - num;
+  uint32_t max_start = len - num;
   bool found_it = false;
-  for (u_int32_t iStart = 0; !found_it && iStart <= max_start; ++iStart) {
+  for (uint32_t iStart = 0; !found_it && iStart <= max_start; ++iStart) {
     found_it = true;
     int i = num;
     while (found_it && i!=0)
@@ -112,12 +112,12 @@ bool reverse_match(const u_int8_t* s, u_int32_t num, const u_int8_t* data, u_int
 }
 
 
-void dump_hex(const u_int8_t* data, u_int32_t len)
+void dump_hex(const uint8_t* data, uint32_t len)
 {
   if (data == nullptr || len == 0) 
     return;
 
-  for (u_int32_t i = 0; i<len; ++i) {
+  for (uint32_t i = 0; i<len; ++i) {
     int x = data[i];
     std::cout << std::hex << x << " ";
   }
