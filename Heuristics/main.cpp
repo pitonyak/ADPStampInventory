@@ -671,7 +671,7 @@ int write_ip_and_mac_from_pcap(const std::string& pcap_fname, const std::string&
 
   // Ensure that the pcap file only has Ethernet packets
   if(pcap_datalink(pcap_file) != DLT_EN10MB){
-    fprintf(stderr, "PCAP file %s is not an Ethernet capture\n", pcap_fname);
+    std::cerr << "PCAP file " << pcap_fname << "is not an Ethernet capture\n" << std::endl;
   }
 
   // Iterate over every packet in the file and print the MAC addresses
