@@ -1,7 +1,6 @@
 #ifndef AHO_CORASICK_BINARY_H
 #define AHO_CORASICK_BINARY_H
 
-#include <bitset>
 #include <cstdint>
 #include <map>
 #include <set>
@@ -66,7 +65,7 @@ public:
      * \returns Number of states that the machine has. This is 255 because there are 0 - 255 possible values (searching bytes.)
      *
      ***************************************************************************/
-    int buildMatchingMachine(const std::vector<const uint8_t *> &words, const std::vector<int> &word_lengths);
+    int buildMatchingMachine(const std::vector<uint8_t *> &words, const std::vector<int> &word_lengths);
 
     //**************************************************************************
     //! Find the first match (no order). Use to see if there is at least one match.
@@ -96,6 +95,11 @@ public:
     int getAlphabetSize() const { return m_alphabet_size; }
     int getMaxStates() const { return m_max_states; }
 
+    void orEquals(std::vector<bool>& lhs, const std::vector<bool>& rhs) const;
+    bool noBits(const std::vector<bool>& v) const;
+    bool allBits(const std::vector<bool>& v) const;
+    bool anyBits(const std::vector<bool>& v) const;
+
 private:
     //**************************************************************************
     //! Find the next state for a transition.
@@ -121,7 +125,7 @@ private:
 	int m_max_states;
 
 	/*! Array of size m_max_states. Output for each state as a mask if the keyword with index i appears when the machine enters this state. */
-	std::bitset<ALPHABET_SIZE>* m_out_state;
+	std::vector<bool>* m_out_state;
 
 	/*! Array of size m_max_states. This is the failure function used internally. */
 	int* m_failure;

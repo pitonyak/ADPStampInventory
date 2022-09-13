@@ -36,6 +36,7 @@
 
 #include "macaddresses.h"
 #include "ipaddresses.h"
+#include "ahocorasickbinary.h"
 
 //
 // TODO: Implement search using the Aho Corasick algorithm rather than
@@ -49,6 +50,8 @@ std::unordered_map<unsigned int, std::string> eth_types_description;
 MacAddresses mac_addresses;
 IpAddresses ip_addresses;
 
+enum SearchTypeEnum { forward_search, backward_search, aho_corasick_binary };
+
 void usage(){
   printf("Usage:\n");
   printf("-h Print this help.\n");
@@ -58,6 +61,32 @@ void usage(){
   printf("-p <path to IP output filename, default '???ip_addresses.txt'>: This OPTIONAL file will be populated with the unique, human-readable versions of all IP addresses found in the input PCAP file. If this option is not given, stdout will be used. If '-' is given as the output file, MAC addresses will be printed to stdout.\n");
   printf("-m <path to MAC output filename, default '???mac_addresses.txt'>: This OPTIONAL file will be populated with the unique, human-readable versions of all Ethernet MAC addresses input PCAP file. If this option is not given, stdout will be used. If '-' is given as the output file, MAC addresses will be printed to stdout.\n");
   printf("\n");
+}
+
+//**************************************************************************
+//! Generate a vector from a set.
+/*!
+ * \param [in] x Set of pointers to copy.
+ * 
+ * \returns a vector with the same values. The vector does NOT own the pointers and they are simply assumed to exist.
+ *
+ ***************************************************************************/
+std::vector<uint8_t *>* toVector(const std::set<uint8_t *>& x) {
+  std::vector<uint8_t *>* v = new std::vector<uint8_t *>();
+  v->reserve(x.size());
+  for (auto const &ptr: x) {
+    v->push_back(ptr);
+  }
+  return v;
+}
+
+std::vector<int>* getConstWordLengthVector(const int wordLength, const int n) {
+  std::vector<int>* v = new std::vector<int>();
+  v->reserve(n);
+  for (int i=0; i< n; ++i) {
+    v->push_back(wordLength);
+  }
+  return v;
 }
 
 //
@@ -103,6 +132,48 @@ std::unordered_set<std::string>* read_text_file(const char* fname) {
 }
 
 //**************************************************************************
+//! Dump the packet and print verbose message if appropriate.
+/*!
+ * 
+ * \param [in, out] dumpfile where to dump the packet if something is found
+ * 
+ * \param [in] pkt_header needed to dump the packet
+ * 
+ * \param [in] pkt_data needed to dump the packet
+ * 
+ * \param [in] verbose if True, explanation text is written to the screen.
+ * 
+ * \param [in] it current iteration.
+ * 
+ * \returns True if a duplicate mac is found.
+ *
+ ***************************************************************************/
+void local_pcap_dump(pcap_dumper_t *dumpfile, struct pcap_pkthdr *pkt_header, const u_char *pkt_data, bool verbose, int it, const char* message) {
+
+  pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
+  if (verbose) {
+    std::cout << it;
+    if (message != nullptr) {
+      std::cout << " " << message;
+    }
+    std::cout << std::endl;
+    dump_hex(pkt_data, pkt_header->len);
+  }
+
+}
+
+bool aho_search(const AhoCorasickBinary& a, const uint8_t* search_start_loc, uint32_t search_len, pcap_dumper_t *dumpfile, struct pcap_pkthdr *pkt_header, const u_char *pkt_data, bool verbose, int it, const char* message) {
+
+  if (a.findFirstMatch(search_start_loc, search_len) >= 0) {
+
+    local_pcap_dump(dumpfile, pkt_header, pkt_data, verbose, it, message);
+    return true;
+
+  }
+  return false;
+}
+
+//**************************************************************************
 //! Search for a repeated MAC address. 
 /*!
  * 
@@ -123,20 +194,22 @@ std::unordered_set<std::string>* read_text_file(const char* fname) {
  * \returns True if a duplicate mac is found.
  *
  ***************************************************************************/
-bool find_macs(const uint8_t* search_start_loc, uint32_t search_len, pcap_dumper_t *dumpfile, struct pcap_pkthdr *pkt_header, const u_char *pkt_data, bool verbose, int it) {
+bool find_macs(const uint8_t* search_start_loc, uint32_t search_len, pcap_dumper_t *dumpfile, struct pcap_pkthdr *pkt_header, const u_char *pkt_data, bool verbose, int it, SearchTypeEnum search_type, const AhoCorasickBinary& a) {
 
-  for (auto const &a_mac: mac_addresses.m_unique_macs) {
-    if (find_match(a_mac, 6, search_start_loc, search_len)) {
-      pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
-      if (verbose) {
-        std::cout << it << " MAC address found in data." << std::endl;
-        dump_hex(pkt_data, pkt_header->len);
+  if (search_type == aho_corasick_binary) {
+    return aho_search(a, search_start_loc, search_len, dumpfile, pkt_header, pkt_data, verbose, it, "MAC address found in data");
+  } else {
+    for (auto const &a_mac: mac_addresses.m_unique_macs) {
+      if ((search_type == forward_search  && find_match(a_mac, 6, search_start_loc, search_len)) || 
+          (search_type == backward_search && reverse_match(a_mac, 6, search_start_loc, search_len))) {
+        local_pcap_dump(dumpfile, pkt_header, pkt_data, verbose, it, "MAC address found in data");
+        return true;
       }
-      return true;
     }
   }
   return false;
 }
+
 
 //**************************************************************************
 //! Search for a repeated IP address. 
@@ -159,34 +232,35 @@ bool find_macs(const uint8_t* search_start_loc, uint32_t search_len, pcap_dumper
  * \returns True if a duplicate mac is found.
  *
  ***************************************************************************/
-bool find_ips(const uint8_t* search_start_loc, uint32_t search_len, pcap_dumper_t *dumpfile, struct pcap_pkthdr *pkt_header, const u_char *pkt_data, bool verbose, int it) {
+bool find_ips(const uint8_t* search_start_loc, uint32_t search_len, pcap_dumper_t *dumpfile, struct pcap_pkthdr *pkt_header, const u_char *pkt_data, bool verbose, int it, SearchTypeEnum search_type, const AhoCorasickBinary& ipv4, const AhoCorasickBinary& ipv6) {
 
-  for (auto const &an_ip: ip_addresses.m_unique_ipv4) {
-    if (find_match(an_ip, 4, search_start_loc, search_len)) {
-      pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
-      if (verbose) {
-        std::cout << it << " IPv4 address found in data" << std::endl;
-        dump_hex(pkt_data, pkt_header->len);
+  if (search_type == aho_corasick_binary) {
+
+    return aho_search(ipv4, search_start_loc, search_len, dumpfile, pkt_header, pkt_data, verbose, it, "IPv4 address found in data") || 
+           aho_search(ipv6, search_start_loc, search_len, dumpfile, pkt_header, pkt_data, verbose, it, "IPv6 address found in data");
+
+  } else {
+    for (auto const &an_ip: ip_addresses.m_unique_ipv4) {
+      if ((search_type == forward_search && find_match(an_ip, 4, search_start_loc, search_len)) || 
+          (search_type == backward_search && reverse_match(an_ip, 4, search_start_loc, search_len))) {
+
+        local_pcap_dump(dumpfile, pkt_header, pkt_data, verbose, it, "IPv4 address found in data");
+        return true;
       }
-      return true;
     }
-  }
 
-  for (auto const &an_ip: ip_addresses.m_unique_ipv6) {
-    if (find_match(an_ip, 16, search_start_loc, search_len)) {
-      pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
-      if (verbose) {
-        std::cout << it << " IPv6 address found in data" << std::endl;
-        dump_hex(pkt_data, pkt_header->len);
+    for (auto const &an_ip: ip_addresses.m_unique_ipv6) {
+      if ((search_type == forward_search && find_match(an_ip, 16, search_start_loc, search_len)) || 
+          (search_type == backward_search && reverse_match(an_ip, 16, search_start_loc, search_len))) {
+
+        local_pcap_dump(dumpfile, pkt_header, pkt_data, verbose, it, "IPv6 address found in data");
+        return true;
       }
-      return true;
     }
   }
 
   return false;
 }
-
-
 
 //**************************************************************************
 //! Read the pcap file and create the anomaly file based on the Heuristic
@@ -211,6 +285,31 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
   pcap_t *pcap_file;
   pcap_dumper_t *dumpfile;
   bool done = false;
+
+  // TODO: I believe that aho corasick is about three times faster, but give some time to test. 
+  SearchTypeEnum search_type = aho_corasick_binary;
+  //search_type = backward_search;
+  search_type = forward_search;
+
+  AhoCorasickBinary search_ipv4;
+  AhoCorasickBinary search_ipv6;
+  AhoCorasickBinary search_macs;
+
+  if (search_type == aho_corasick_binary) {
+    std::vector<uint8_t *>* words_ipv4 = toVector(ip_addresses.m_unique_ipv4);
+    std::vector<uint8_t *>* words_ipv6 = toVector(ip_addresses.m_unique_ipv6);
+    std::vector<uint8_t *>* words_macs = toVector(mac_addresses.m_unique_macs);
+    std::vector<int>* lengths_ipv4 = getConstWordLengthVector( 4, ip_addresses.m_unique_ipv4.size());
+    std::vector<int>* lengths_ipv6 = getConstWordLengthVector(16, ip_addresses.m_unique_ipv6.size());
+    std::vector<int>* lengths_macs = getConstWordLengthVector( 6, mac_addresses.m_unique_macs.size());
+    std::cout << "Initializing ipv4 search" << std::endl;
+
+    search_ipv4.buildMatchingMachine(*words_ipv4, *lengths_ipv4);
+    std::cout << "Initializing ipv6 search" << std::endl;
+    search_ipv6.buildMatchingMachine(*words_ipv6, *lengths_ipv6);
+    std::cout << "Initializing macs search" << std::endl;
+    search_macs.buildMatchingMachine(*words_macs, *lengths_macs);
+  }
 
   char *pcap_errbuf;
   //
@@ -328,6 +427,7 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
     dhost = ether->ether_dhost;
     int ether_type_int = ntohs(ether->ether_type);
 
+
     // Check for type IP (0x800)
     // This type is skipped for some types, but not others.
     // Set the eth_types.txt file so that it does NOT indicate that
@@ -384,30 +484,28 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
 
       } 
 
-      if (ip_types.isDupIP(ipHeader->ip_p, tcp_destination_port) || ip_types.isDupMAC(ipHeader->ip_p, tcp_destination_port)) {
-        it++;
-        continue;
-      }
-
       // If we get here then we can search for duplicates.
       // Look AFTER the IP header for dupliate IP.
 
       // Search to see if a MAC is repeated.
-      uint32_t search_len = pkt_header->len - 12;
-      const uint8_t* data_loc = (pkt_data + 12);
-      if (find_macs(data_loc, search_len, dumpfile, pkt_header, pkt_data, verbose, it)) {
-        ++it;
-        continue;
+      if (!ip_types.isDupMAC(ipHeader->ip_p, tcp_destination_port)) {
+        uint32_t search_len = pkt_header->len - 12;
+        const uint8_t* data_loc = (pkt_data + 12);
+        if (find_macs(data_loc, search_len, dumpfile, pkt_header, pkt_data, verbose, it, search_type, search_macs)) {
+          ++it;
+          continue;
+        }
+      }
+      if (!ip_types.isDupIP(ipHeader->ip_p, tcp_destination_port)) {
+        uint32_t search_len = pkt_header->len - offset_to_data_ipv4;
+        const uint8_t* data_loc = pkt_data + offset_to_data_ipv4;
+        if (find_ips(data_loc, search_len, dumpfile, pkt_header, pkt_data, verbose, it, search_type, search_ipv4, search_ipv6)) {
+          ++it;
+          continue;
+        }
       }
 
-      search_len = pkt_header->len - offset_to_data_ipv4;
-      data_loc = pkt_data + offset_to_data_ipv4;
-      if (find_ips(data_loc, search_len, dumpfile, pkt_header, pkt_data, verbose, it)) {
-        ++it;
-        continue;
-      }
-
-      // We are done with this packet. No need to search more.
+      // We are done with this ipv4 packet. No need to search more.
       // The packet does not contain dupliate data!
       ++it;
       continue;
@@ -416,14 +514,6 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
 
     // TODO: Ethertype IPv6 contain an IPv6 header. Do I understand correctly that I can use
     // The Next Header field to determine the protocol? 
-
-
-
-    // Skip any ethernet type that might have a duplicate IP or MAC
-    if (ethernet_types.isDupIP(ether_type_int) || ethernet_types.isDupMAC(ether_type_int)) {
-      it++;
-      continue;
-    }
 
     if (!ethernet_types.isValid(ether_type_int)) {
       if (verbose)
@@ -445,18 +535,21 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
     //    otherwise, save to the anomally file. 
     // This first makes sure that the MAC address is NOT expected to be repeated. 
 
-
     // Search to see if a MAC is repeated.
     uint32_t search_len = pkt_header->len - 12;
     const uint8_t* data_loc = (pkt_data + 12);
-    if (find_macs(data_loc, search_len, dumpfile, pkt_header, pkt_data, verbose, it)) {
-      ++it;
-      continue;
+    if (!ethernet_types.isDupMAC(ether_type_int)) {
+      if (find_macs(data_loc, search_len, dumpfile, pkt_header, pkt_data, verbose, it, search_type, search_macs)) {
+        ++it;
+        continue;
+      }
     }
 
-    if (find_ips(data_loc, search_len, dumpfile, pkt_header, pkt_data, verbose, it)) {
-      ++it;
-      continue;
+    if (!ethernet_types.isDupIP(ether_type_int)) {
+      if (find_ips(data_loc, search_len, dumpfile, pkt_header, pkt_data, verbose, it, search_type, search_ipv4, search_ipv6)) {
+        ++it;
+        continue;
+      }
     }
 
     // TODO: In case I need to remember how to deal with an IPv6 header.
@@ -545,6 +638,7 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
 // This is NOT used. Remove this. 
 // Only leaving right now so that I can see example code it contains. 
 int create_anomaly_file(const EthernetTypes& ethernet_types, const std::unordered_set<std::string>& ips, const std::unordered_set<std::string>& macs, const char* pcap_fname, const char* anomaly_fname) {
+
   pcap_t *pcap_file;
   char *pcap_errbuf;
   struct pcap_pkthdr *pkt_header;
@@ -657,6 +751,10 @@ int create_anomaly_file(const EthernetTypes& ethernet_types, const std::unordere
 int write_ip_and_mac_from_pcap(const std::string& pcap_fname, const std::string& out_mac_fname, const std::string& out_ip_fname) {
   mac_addresses.clear();
   ip_addresses.clear();
+
+//??AhoCorasickBinary aho_corasick_ipv4;
+//??AhoCorasickBinary aho_corasick_ipv6;
+//??AhoCorasickBinary aho_corasick_mac;
 
   pcap_t *pcap_file;
   char *pcap_errbuf;

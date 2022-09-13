@@ -8,12 +8,12 @@ LIBS:=-lpcap
 .PHONY=clean
 
 heuristics: main.o utilities.o iptype.o crc32_x.o ethtype.o find_macs_and_ips utilities_test crc_test macaddresses.o ipaddresses.o
-	$(CXX) $(CXXFLAGS) main.o utilities.o iptype.o crc32_x.o ethtype.o macaddresses.o ipaddresses.o -o heuristics $(LDFLAGS) $(LIBS)
+	$(CXX) $(CXXFLAGS) main.o utilities.o iptype.o crc32_x.o ethtype.o macaddresses.o ipaddresses.o ahocorasickbinary.o -o heuristics $(LDFLAGS) $(LIBS)
 
 find_macs_and_ips: find_macs_and_ips.o macaddresses.o ipaddresses.o
 	$(CXX) $(CXXFLAGS) find_macs_and_ips.o macaddresses.o ipaddresses.o -o find_macs_and_ips $(LDFLAGS) $(LIBS)
 
-main.o: main.cpp utilities.o iptype.o ethtype.o crc32_x.o macaddresses.o ipaddresses.o
+main.o: main.cpp utilities.o iptype.o ethtype.o crc32_x.o macaddresses.o ipaddresses.o ahocorasickbinary.o
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o main.o -c main.cpp
 
 find_macs_and_ips.o: find_macs_and_ips.cpp ipaddresses.o macaddresses.o

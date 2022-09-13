@@ -22,7 +22,7 @@
 0601		1	0	0	0	 XNS Address Translation (3Mb only)
 0660		1	0	0	0	 DLOG
 0661		1	0	0	0	 DLOG
-0800		1	0	1	1	 DOD Internet Protocol (IPv4) (ETHERTYPE_IP) # Check IP type to detect duplicate IP or MAC
+0800		1	0	0	0	 DOD Internet Protocol (IPv4) (ETHERTYPE_IP) # Check IP type to detect duplicate IP or MAC
 0801		1	0	0	0	 X.75 Internet
 0802		1	0	0	0	 NBS Internet
 0803		1	0	0	0	 ECMA Internet
@@ -33,7 +33,7 @@
 0808		1	0	0	0	 Frame Relay ARP
 081C		1	0	0	0	 Symbolics Private
 0888-088A	1	0	0	0	 Xyplex
-0900		1	0	0	0	 Ungermann-Bass network debugger
+0900		1	0	1	1	 Ungermann-Bass network debugger
 0A00		1	0	0	0	 Xerox IEEE802.3 PUP
 0A01		1	0	0	0	 Xerox IEEE802.3 PUP Address Translation
 0BAD		1	0	0	0	 Banyan Systems
@@ -68,7 +68,7 @@
 5208		1	0	0	0	 BBN Simnet Private
 6000		1	0	0	0	 DEC unassigned, experimental
 6001		1	0	0	0	 DEC Maintenance Operation Protocol (MOP) Dump/Load Assistance
-6002		1	0	0	0	 DEC Maintenance Operation Protocol (MOP) Remote Console
+6002		1	0	1	1	 DEC Maintenance Operation Protocol (MOP) Remote Console
 6003		1	0	0	0	 DECNET Phase IV, DNA Routing
 6004		1	0	0	0	 DEC Local Area Transport (LAT)
 6005		1	0	0	0	 DEC diagnostic protocol (at interface initialization?)

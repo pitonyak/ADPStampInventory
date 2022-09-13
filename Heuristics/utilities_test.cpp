@@ -85,7 +85,7 @@ int test_search() {
     }
 
     AhoCorasickBinary acb;
-    std::vector<const uint8_t *> words;
+    std::vector<uint8_t *> words;
     std::vector<int> word_lengths;
 
     uint8_t word_0[] = {65};         // A

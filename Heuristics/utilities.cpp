@@ -59,22 +59,6 @@ std::string trim_copy(std::string s) {
 //
 bool BothAreSpaces(char lhs, char rhs) { return (lhs == rhs) && (lhs == ' '); }
 
-bool find_match(const uint8_t* s, uint32_t num, const uint8_t* data, uint32_t len)
-{
-  if (s == nullptr || data == nullptr || num == 0 || len < num)
-    return false;
-
-  uint32_t max_start = len - num;
-  bool found_it = false;
-  for (uint32_t iStart = 0; !found_it && iStart <= max_start; ++iStart) {
-    found_it = true;
-    for (uint32_t i = 0; found_it && i<num; ++i) {
-      found_it = s[i] == data[iStart + i];
-    }
-  }
-  return found_it;
-}
-
 bool hasEnding(std::string const &fullString, std::string const &ending, bool isCaseSensitive) {
     if (fullString.length() >= ending.length()) {
       if (isCaseSensitive) {
@@ -91,6 +75,19 @@ bool hasEnding(std::string const &fullString, std::string const &ending, bool is
     }
 }
 
+void dump_hex(const uint8_t* data, uint32_t len)
+{
+  if (data == nullptr || len == 0) 
+    return;
+
+  for (uint32_t i = 0; i<len; ++i) {
+    int x = data[i];
+    std::cout << std::hex << x << " ";
+  }
+  std::cout << std::dec << std::endl;
+}
+
+
 // goes through data from left to right, but searches for the match in reverse
 bool reverse_match(const uint8_t* s, uint32_t num, const uint8_t* data, uint32_t len)
 {
@@ -105,21 +102,26 @@ bool reverse_match(const uint8_t* s, uint32_t num, const uint8_t* data, uint32_t
     while (found_it && i!=0)
     {
       --i;
-      found_it = s[i] == data[iStart+1];
+      found_it = s[i] == data[iStart+i];
     }
   }
   return found_it;
 }
 
-
-void dump_hex(const uint8_t* data, uint32_t len)
+// goes through data from left ro right and searches forwards.
+bool find_match(const uint8_t* s, uint32_t num, const uint8_t* data, uint32_t len)
 {
-  if (data == nullptr || len == 0) 
-    return;
+  if (s == nullptr || data == nullptr || num == 0 || len < num)
+    return false;
 
-  for (uint32_t i = 0; i<len; ++i) {
-    int x = data[i];
-    std::cout << std::hex << x << " ";
+  uint32_t max_start = len - num;
+  bool found_it = false;
+  for (uint32_t iStart = 0; !found_it && iStart <= max_start; ++iStart) {
+    found_it = true;
+    for (uint32_t i = 0; found_it && i<num; ++i) {
+      found_it = s[i] == data[iStart + i];
+    }
   }
-  std::cout << std::dec << std::endl;
+  return found_it;
 }
+
