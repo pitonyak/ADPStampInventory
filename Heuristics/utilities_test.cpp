@@ -146,7 +146,7 @@ int test_search() {
 
     if (matches.size() != 4) {
       test_passed = false;
-      std::cout << "Expected to find 4 of the strings." << std::endl;
+      std::cout << "Expected to find 4 of the strings not " << matches.size() << "." << std::endl;
     } else if (matches.find(0) == matches.end() || matches.find(1) == matches.end() || matches.find(3) == matches.end() || matches.find(5) == matches.end()) {
       it = matches.find(0);
       if (it == matches.end()) {
@@ -239,7 +239,7 @@ void test_bits() {
   BitsetDynamic b1;
   int num_failed = 0;
   int num_passed = 0;
-  for (int i=0; i<127; ++i) {
+  for (int i=63; i<65; ++i) {
     b1.resetSize(i);
     if (b1.any()) {
       std::cout << "Error, any() failed with all 0 for bitset with size " << i << std::endl;
@@ -264,22 +264,28 @@ void test_bits() {
         std::cout << "Error, clearAllBits() failed with no bits set for bitset with size " << i << std::endl;
         ++num_failed;
       }
+      b1.setAllBits();
       for (int j=0; j<i; ++j) {
-        b1.setBit(j, true);
-        if (b1.count() != 1) {
+        b1.setBit(j, false);
+        for (int k=0; k<i; ++k) {
+          if (!(b1.at(k) || j == k)) {
+            std::cout << "at function failed" << std::endl;
+            ++num_failed;
+          } 
+        }
+        if (b1.count() != i-1) {
           std::cout << "Error, count() failed with 1 bit set at " << j << " for bitset with size " << i << std::endl;
           ++num_failed;
         }
-        b1.setBit(j, false);
-        if (b1.count() != 0) {
+        b1.setBit(j, true);
+        if (b1.count() != i) {
           std::cout << "Error, count() failed with no bits set for bitset with size " << i << std::endl;
           ++num_failed;
         }
       }
     }
-      //std::string s = b1.toString();
-    //std::cout << "size: " << i << " : " << s << std::endl;
   }
+  std::cout << std::endl << "passed:" << num_passed << " failed:" << num_failed << std::endl;
 }
 
 

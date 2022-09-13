@@ -96,7 +96,7 @@ bool BitsetDynamic::at(std::size_t pos) const {
 	if (pos < m_numBits) {
 		int bit = pos % BITS_PER_UNIT;
 		int byte = pos / BITS_PER_UNIT;
-		return (m_bits[byte] |= ~(UINT64_C(1) << bit)) != 0;
+		return ((m_bits[byte] & (UINT64_C(1) << bit)) != 0);
 	} else {
 		std::cerr << "cannot access bit at(" << pos << ") it is out of range." << std::endl;
 	}
@@ -178,10 +178,11 @@ void BitsetDynamic::setBit(std::size_t pos, bool flag) {
 	if (pos < m_numBits) {
 		int bit = pos % BITS_PER_UNIT;
 		int byte = pos / BITS_PER_UNIT;
-		if (flag)
+		if (flag) {
 			m_bits[byte] |= (UINT64_C(1) << bit);
-		else
+		} else {
 			m_bits[byte] &= ~(UINT64_C(1) << bit);
+		}
 	} else {
 		std::cerr << "cannot set bit " << pos << " it is out of range." << std::endl;
 	}
@@ -215,8 +216,7 @@ std::string BitsetDynamic::toString() const {
 		--i;
 		int bit = i % BITS_PER_UNIT;
 		int byte = i / BITS_PER_UNIT;
-		//std::cout << "Bit " << i << " is at location " << byte << " / " << bit << " byte = " << m_bits[byte] << " mask = " << ~(UINT64_C(1) << bit) << std::endl;
-		if ((m_bits[byte] &= ~(UINT64_C(1) << bit)) != 0) {
+		if ((m_bits[byte] & (UINT64_C(1) << bit)) != 0) {
 			stream << "1";
 		} else {
 			stream << "0";

@@ -34,9 +34,9 @@
 #include "ethtype.h"
 #include "crc32_x.h"
 
-#include "macaddresses.h"
-#include "ipaddresses.h"
 #include "ahocorasickbinary.h"
+#include "ipaddresses.h"
+#include "macaddresses.h"
 
 //
 // TODO: Implement search using the Aho Corasick algorithm rather than
@@ -289,7 +289,7 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
   // TODO: I believe that aho corasick is about three times faster, but give some time to test. 
   SearchTypeEnum search_type = aho_corasick_binary;
   //search_type = backward_search;
-  search_type = forward_search;
+  //search_type = forward_search;
 
   AhoCorasickBinary search_ipv4;
   AhoCorasickBinary search_ipv6;

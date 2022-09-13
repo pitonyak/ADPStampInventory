@@ -6,6 +6,7 @@
 #include <set>
 #include <vector>
 
+#include "bitsetdynamic.h"
 
 /**
 
@@ -132,6 +133,8 @@ private:
 
 	/*! Array of size [m_max_states][m_alphabet_size]. This is the "Goto" function or -1 if fail. */
 	int* m_goto;
+
+    BitsetDynamic* m_bits_out_state;
 };
 
 inline int AhoCorasickBinary::getGotoIndex(const int state_idx, const int value_idx) const {
