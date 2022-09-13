@@ -9,6 +9,7 @@
 #include <vector>
 #include "utilities.h"
 #include "ahocorasickbinary.h"
+#include "bitsetdynamic.h"
 
 typedef bool (*SearchFunc)(const uint8_t*, uint32_t, const uint8_t*, uint32_t);
 
@@ -234,9 +235,57 @@ int test_search() {
 }
 
 
+void test_bits() {
+  BitsetDynamic b1;
+  int num_failed = 0;
+  int num_passed = 0;
+  for (int i=0; i<127; ++i) {
+    b1.resetSize(i);
+    if (b1.any()) {
+      std::cout << "Error, any() failed with all 0 for bitset with size " << i << std::endl;
+      ++num_failed;
+    }
+    if (b1.all() && (i != 0)) {
+      std::cout << "Error, all() failed with all 0 for bitset with size " << i << std::endl;
+      ++num_failed;
+    }
+    if (!b1.none()) {
+      std::cout << "Error, none() failed with all 0 for bitset with size " << i << std::endl;
+      ++num_failed;
+    }
+    if (i > 0) {
+      b1.setAllBits();
+      if (b1.count() != i) {
+        std::cout << "Error, setAllBits() failed with all bits set for bitset with size " << i << std::endl;
+        ++num_failed;
+      }
+      b1.clearAllBits();
+      if (b1.count() != 0) {
+        std::cout << "Error, clearAllBits() failed with no bits set for bitset with size " << i << std::endl;
+        ++num_failed;
+      }
+      for (int j=0; j<i; ++j) {
+        b1.setBit(j, true);
+        if (b1.count() != 1) {
+          std::cout << "Error, count() failed with 1 bit set at " << j << " for bitset with size " << i << std::endl;
+          ++num_failed;
+        }
+        b1.setBit(j, false);
+        if (b1.count() != 0) {
+          std::cout << "Error, count() failed with no bits set for bitset with size " << i << std::endl;
+          ++num_failed;
+        }
+      }
+    }
+      //std::string s = b1.toString();
+    //std::cout << "size: " << i << " : " << s << std::endl;
+  }
+}
+
 
 int main(int argc, char **argv) {
 
   test_search();
+  test_bits();
   return 0;
 }

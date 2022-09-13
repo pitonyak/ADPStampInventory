@@ -22,7 +22,7 @@ find_macs_and_ips.o: find_macs_and_ips.cpp ipaddresses.o macaddresses.o
 utilities.o: utilities.cpp utilities.h
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o utilities.o -c utilities.cpp
 
-utilities_test.o: utilities_test.cpp
+utilities_test.o: utilities_test.cpp 
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o utilities_test.o -c utilities_test.cpp
 
 iptype.o: iptype.cpp iptype.h
@@ -46,11 +46,14 @@ macaddresses.o: macaddresses.cpp macaddresses.h
 ipaddresses.o: ipaddresses.cpp ipaddresses.h
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o ipaddresses.o -c ipaddresses.cpp
 
-utilities_test: utilities_test.o utilities.o ahocorasickbinary.o
-	$(CXX) $(CXXFLAGS) utilities_test.o utilities.o ahocorasickbinary.o -o utilities_test $(LDFLAGS) $(LIBS)
+utilities_test: utilities_test.o utilities.o ahocorasickbinary.o bitsetdynamic.o
+	$(CXX) $(CXXFLAGS) utilities_test.o utilities.o ahocorasickbinary.o bitsetdynamic.o -o utilities_test $(LDFLAGS) $(LIBS)
 
 ahocorasickbinary.o: ahocorasickbinary.cpp ahocorasickbinary.h
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o ahocorasickbinary.o -c ahocorasickbinary.cpp
+
+bitsetdynamic.o: bitsetdynamic.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -o bitsetdynamic.o -c bitsetdynamic.cpp
 
 clean:
 	rm -f main.o heuristics crc_test utilities.o iptype.o crc32_x.o crc_test.o a.out ethtype.o utilities_test utilities_test.o find_macs_and_ips.o find_macs_and_ips macaddresses.o ipaddresses.o ahocorasickbinary.o
