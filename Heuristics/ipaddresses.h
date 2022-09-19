@@ -33,10 +33,12 @@ public:
      * 
      * \param [in] isIPv4 True if IPv4, otherwise IPv6
      * 
+     * \param [in] ownIt, if true, you own this pointer and delete it. 
+     * 
      * \returns True if added.
      *
      ***************************************************************************/
-    bool addIpAddress(const uint8_t *ip, bool isIPv4);
+    bool addIpAddress(uint8_t *ip, bool isIPv4, bool ownIt);
 
     //**************************************************************************
     //! Determine if this IP address is already stored.

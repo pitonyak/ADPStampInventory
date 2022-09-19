@@ -114,15 +114,17 @@ bool IpAddresses::is_ip_equal(const uint8_t *left, const uint8_t *right, bool is
                 return false;
     return true;
 }
-//???
-bool IpAddresses::addIpAddress(const uint8_t *ip, bool isIPv4) {
+
+bool IpAddresses::addIpAddress(uint8_t *ip, bool isIPv4, bool ownIt) {
     if (ip == nullptr || hasIpAddress(ip, isIPv4)) {
         return false;
     }
+    uint8_t *ip_copy = ownIt ? ip : dupIpAddress(ip, isIPv4);
+
     if (isIPv4) {
-        m_unique_ipv4.insert(dupIpAddress(ip, isIPv4));
+        m_unique_ipv4.insert(ip_copy);
     } else {
-        m_unique_ipv6.insert(dupIpAddress(ip, isIPv4));
+        m_unique_ipv6.insert(ip_copy);
     }
     return true;
 }
@@ -214,9 +216,11 @@ bool IpAddresses::read_file(const std::string& filename) {
         continue;
     }
     bool isIPv4 = isIPv4Str(line);
-    uint8_t * ip = str_to_ip(line, isIPv4);
+    uint8_t* ip = str_to_ip(line, isIPv4);
     if (ip != nullptr) {
-        addIpAddress(ip, isIPv4);
+        if (!addIpAddress(ip, isIPv4, true)) {
+            delete[] ip;
+        }
     } else {
         std::cerr << "Invalid IP address at line " << line_count << " " << line << std::endl;
     }
