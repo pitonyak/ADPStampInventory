@@ -216,7 +216,6 @@ std::ostream& EthernetTypes::print(std::ostream& x) const
   std::sort (keys.begin(), keys.end());
 
   const EthernetType* lhs = nullptr;
-  const EthernetType* last_rhs = nullptr;
   int last_type = 0;
   for (auto& it : keys) {
 

@@ -37,25 +37,13 @@ AhoCorasickBinary::~AhoCorasickBinary() {
 }
 
 AhoCorasickBinary::AhoCorasickBinary(const AhoCorasickBinary& x) {
+	m_out_state = nullptr;
+	m_failure = nullptr;
+	m_goto = nullptr;
+	m_bits_out_state = nullptr;
 	m_num_words = x.m_num_words;
 	m_alphabet_size = x.m_alphabet_size;
 	m_max_states = x.m_max_states;
-	if (m_out_state != nullptr) {
-		delete[] m_out_state;
-		m_out_state = nullptr;
-	}
-	if (m_failure != nullptr) {
-		delete[] m_failure;
-		m_failure = nullptr;
-	}
-	if (m_goto != nullptr) {
-		delete[] m_goto;
-		m_goto = nullptr;
-	}
-	if (m_bits_out_state != nullptr) {
-		delete[] m_bits_out_state;
-		m_bits_out_state = nullptr;
-	}
 	if (x.m_out_state != nullptr) {
 		m_out_state = new std::vector<bool>[m_max_states];
 		m_failure = new int[m_max_states];
@@ -182,7 +170,7 @@ int AhoCorasickBinary::buildMatchingMachine(const std::vector<uint8_t*> &words, 
 
 	int states = 1; // Initially, we just have the 0 state
 
-	for (int idx_words = 0; idx_words < words.size(); ++idx_words) {
+	for (size_t idx_words = 0; idx_words < words.size(); ++idx_words) {
 		const uint8_t* keyword = words[idx_words];
         int a_word_size = word_lengths[idx_words];
 
@@ -270,7 +258,7 @@ int AhoCorasickBinary::findFirstMatch(const uint8_t *data, uint32_t len) const {
 	}
 
 	int currentState = 0;
-    for (int i = 0; i < len; ++i) {
+    for (uint32_t i = 0; i < len; ++i) {
         currentState = findNextState(currentState, data[i]);
 
         if (m_bits_out_state[currentState].none()) continue; // Nothing new, let's move on to the next character.
@@ -307,7 +295,7 @@ std::map<int, std::set<int> > AhoCorasickBinary::findAllMatches(const uint8_t *d
 		return matches;
 	}
 	int currentState = 0;
-    for (int i = 0; i < len; ++i) {
+    for (uint32_t i = 0; i < len; ++i) {
         currentState = findNextState(currentState, data[i]);
         if (m_bits_out_state[currentState].none()) continue; // Nothing new, let's move on to the next character.
         //??if (noBits(m_out_state[currentState])) continue; // Nothing new, let's move on to the next character.
@@ -344,7 +332,7 @@ std::map<int, std::set<int> > AhoCorasickBinary::findAllMatches(const uint8_t *d
 
 
 void AhoCorasickBinary::orEquals(std::vector<bool>& lhs, const std::vector<bool>& rhs) const {
-	for (int i=0; i<lhs.size(); ++i) {
+	for (size_t i=0; i<lhs.size(); ++i) {
 		if (rhs.at(i))
 			lhs.at(i) = true;
 	}

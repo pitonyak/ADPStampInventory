@@ -75,7 +75,15 @@ void IPTypes::addType(IPType* ipt, bool ownit)
 		return;
 	}
 
+
+  // The first int is the protocol type. 
+  // The second int is the port.
+  // unordered_map<int, unordered_map<int, IPType *>* > m_ipTypes;
+  // This object is a map of ports to types. 
 	std::unordered_map<int, IPType *>* a_type_map = nullptr;
+
+  // First check to see if we know about the protocol type.
+  // a_type_map will piont to either the existing one or a new one is created if needed. 
 	std::unordered_map<int, std::unordered_map<int, IPType *>* >::iterator it_top = m_ipTypes.find(ipt->m_iPType);
 	a_type_map = (it_top == m_ipTypes.end()) ? new std::unordered_map<int, IPType *>() : it_top->second;
 
@@ -83,13 +91,16 @@ void IPTypes::addType(IPType* ipt, bool ownit)
 		m_ipTypes[ipt->m_iPType] = a_type_map;
 	}
 
+  // Now check to see if we know about the port. 
 	std::unordered_map<int, IPType *>::iterator it_secondary = a_type_map->find(ipt->m_port);
 
 	if (it_secondary != a_type_map->end()) {
-		delete (*a_type_map)[ipt->m_iPType];
-	}
-
-	(*a_type_map)[ipt->m_port] = ipt;
+    // The protocol type and port already exists, so simply over-write what we have already
+    (*(*a_type_map)[ipt->m_port]) = *ipt;
+    delete ipt;
+	} else {
+    (*a_type_map)[ipt->m_port] = ipt;
+  }
 }
 
 
@@ -210,6 +221,7 @@ bool IPTypes::read(const std::string& filename, int base)
     	addType(baseType, true);
     }
   }
+  file.close();
   return true;
 }
 
@@ -228,6 +240,18 @@ const IPType* IPTypes::getIPType(int protocol, int port) const
 			return nullptr;
 	}
 	return it_secondary->second;
+}
+
+bool IPTypes::hasType(int protocol, int port) const {
+  std::unordered_map<int, std::unordered_map<int, IPType *>* >::const_iterator it_top = m_ipTypes.find(protocol);
+  if (it_top == m_ipTypes.end())
+    return false;
+
+  std::unordered_map<int, IPType *>::const_iterator it_secondary = it_top->second->find(port);
+  if (it_secondary == it_top->second->end()) {
+    return false;
+  }
+  return true;
 }
 
 std::ostream& IPTypes::print(std::ostream& x) const

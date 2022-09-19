@@ -1,15 +1,20 @@
 
 // gcc utilities.cpp utilities_test.cpp -lstdc++
 
-#include <iostream>
-#include <iomanip>
 #include <cstdint>
 #include <cstring>
+#include <iomanip>
+#include <iostream>
 #include <string>
+#include <sys/stat.h>
 #include <vector>
-#include "utilities.h"
+
 #include "ahocorasickbinary.h"
 #include "bitsetdynamic.h"
+#include "ethtype.h"
+#include "iptype.h"
+#include "utilities.h"
+
 
 typedef bool (*SearchFunc)(const uint8_t*, uint32_t, const uint8_t*, uint32_t);
 
@@ -229,7 +234,7 @@ int test_search() {
       ++num_failed;
     }
 
-    std::cout << std::endl << "passed:" << num_passed << " failed:" << num_failed << std::endl;
+    std::cout << std::endl << "passed:" << num_passed << " failed:" << num_failed << " for search" << std::endl;
 
 	return 0;
 }
@@ -239,59 +244,197 @@ void test_bits() {
   BitsetDynamic b1;
   int num_failed = 0;
   int num_passed = 0;
-  for (int i=63; i<65; ++i) {
+  for (std::size_t i=63; i<65; ++i) {
     b1.resetSize(i);
     if (b1.any()) {
       std::cout << "Error, any() failed with all 0 for bitset with size " << i << std::endl;
       ++num_failed;
+    } else {
+      ++num_passed;
     }
     if (b1.all() && (i != 0)) {
       std::cout << "Error, all() failed with all 0 for bitset with size " << i << std::endl;
       ++num_failed;
+    } else {
+      ++num_passed;
     }
     if (!b1.none()) {
       std::cout << "Error, none() failed with all 0 for bitset with size " << i << std::endl;
       ++num_failed;
+    } else {
+      ++num_passed;
     }
     if (i > 0) {
       b1.setAllBits();
       if (b1.count() != i) {
         std::cout << "Error, setAllBits() failed with all bits set for bitset with size " << i << std::endl;
         ++num_failed;
+      } else {
+        ++num_passed;
       }
+
       b1.clearAllBits();
       if (b1.count() != 0) {
         std::cout << "Error, clearAllBits() failed with no bits set for bitset with size " << i << std::endl;
         ++num_failed;
+      } else {
+        ++num_passed;
       }
       b1.setAllBits();
-      for (int j=0; j<i; ++j) {
+      for (std::size_t j=0; j<i; ++j) {
         b1.setBit(j, false);
-        for (int k=0; k<i; ++k) {
+        for (std::size_t k=0; k<i; ++k) {
           if (!(b1.at(k) || j == k)) {
             std::cout << "at function failed" << std::endl;
             ++num_failed;
+          } else {
+            ++num_passed;
           } 
         }
         if (b1.count() != i-1) {
           std::cout << "Error, count() failed with 1 bit set at " << j << " for bitset with size " << i << std::endl;
           ++num_failed;
+        } else {
+          ++num_passed;
         }
         b1.setBit(j, true);
         if (b1.count() != i) {
           std::cout << "Error, count() failed with no bits set for bitset with size " << i << std::endl;
           ++num_failed;
+        } else {
+          ++num_passed;
         }
       }
     }
   }
-  std::cout << std::endl << "passed:" << num_passed << " failed:" << num_failed << std::endl;
+  std::cout << std::endl << "passed:" << num_passed << " failed:" << num_failed << " for bitset testing" <<  std::endl;
 }
 
+void test_ip_mac() {
+  int num_failed = 0;
+  int num_passed = 0;
 
-int main(int argc, char **argv) {
+  std::string ip_fname = "ip_types.txt";
+  std::string eth_fname = "eth_types.txt";
+
+  struct stat filestat;
+  if(stat(ip_fname.c_str(), &filestat) == 0){
+    IPTypes ip_types;
+    ip_types.read(ip_fname);
+
+    // This assumes a few things that may not be true because the idea is that the file is read!
+    if (!ip_types.hasType(6, 161)) {
+      ++num_failed;
+      std::cerr << "Incorrectly states does not have IP type 6 port 161" << std::endl;
+    } else {
+      ++num_passed;
+    }
+    if (ip_types.hasType(6, 1)) {
+      ++num_failed;
+      std::cerr << "Incorrectly states has IP type 6 port 1" << std::endl;
+    } else {
+      ++num_passed;
+    }
+    if (!ip_types.hasType(6, -1)) {
+      ++num_failed;
+      std::cerr << "Incorrectly states does not have IP type 6 port -1" << std::endl;
+    } else {
+      ++num_passed;
+    }
+    if (ip_types.isDupIP(6, -1)) {
+      ++num_failed;
+      std::cerr << "Incorrectly states IP type 6 port -1 expects duplicate IPs" << std::endl;
+    } else {
+      ++num_passed;
+    }
+    if (!ip_types.isDupIP(6, 161)) {
+      ++num_failed;
+      std::cerr << "Incorrectly states IP type 6 port 161 does not expect duplicate IPs" << std::endl;
+    } else {
+      ++num_passed;
+    }
+    if (ip_types.isDupIP(6, 2)) {
+      ++num_failed;
+      std::cerr << "Incorrectly states IP type 6 port 2 expects duplicate IPs" << std::endl;
+    } else {
+      ++num_passed;
+    }
+    if (ip_types.isDupMAC(6, -1)) {
+      ++num_failed;
+      std::cerr << "Incorrectly states IP type 6 port -1 expects duplicate MACs" << std::endl;
+    } else {
+      ++num_passed;
+    }
+    if (!ip_types.isDupMAC(6, 161)) {
+      ++num_failed;
+      std::cerr << "Incorrectly states IP type 6 port 161 does not expect duplicate MACs" << std::endl;
+    } else {
+      ++num_passed;
+    }
+    if (ip_types.isDupMAC(6, 2)) {
+      ++num_failed;
+      std::cerr << "Incorrectly states IP type 6 port 2 expects duplicate MACs" << std::endl;
+    } else {
+      ++num_passed;
+    }
+  } else {
+    ++num_failed;
+    std::cout << "IP types file does not exist: " << ip_fname << std::endl;
+  }
+
+  if(stat(eth_fname.c_str(), &filestat) == 0) {
+
+    EthernetTypes ethernet_types;
+    ethernet_types.read(eth_fname);
+    if (!ethernet_types.hasType(0x0806)) {
+      ++num_failed;
+      std::cerr << "Incorrectly states does not have Ethernet Type 0x0806" << std::endl;
+    } else {
+      ++num_passed;
+    }
+    if (ethernet_types.hasType(0x0FFFFF)) {
+      ++num_failed;
+      std::cerr << "Incorrectly states has Ethernet Type 0x0FFFFF" << std::endl;
+    } else {
+      ++num_passed;
+    }
+    if (ethernet_types.isDupIP(0x0805)) {
+      ++num_failed;
+      std::cerr << "Incorrectly states Ethernet Type 0x0805 expects duplicate IPs" << std::endl;
+    } else {
+      ++num_passed;
+    }
+    if (!ethernet_types.isDupIP(0x0806)) {
+      ++num_failed;
+      std::cerr << "Incorrectly states Ethernet Type 0x0806 does not expect duplicate IPs" << std::endl;
+    } else {
+      ++num_passed;
+    }
+    if (ethernet_types.isDupMAC(0x0805)) {
+      ++num_failed;
+      std::cerr << "Incorrectly states Ethernet Type 0x0805 expects duplicate MACs" << std::endl;
+    } else {
+      ++num_passed;
+    }
+    if (!ethernet_types.isDupMAC(0x0806)) {
+      ++num_failed;
+      std::cerr << "Incorrectly states Ethernet Type 0x0806 does not expect duplicate MACs" << std::endl;
+    } else {
+      ++num_passed;
+    }
+  } else {
+    ++num_failed;
+    std::cout << "Ethernet type file does not exist: " << eth_fname << std::endl;
+  }
+  std::cout << std::endl << "passed:" << num_passed << " failed:" << num_failed << " for Ethernet and IP types" << std::endl;
+}
+
+int main(int , char **) {
 
   test_search();
   test_bits();
+  test_ip_mac();
+
+  std::cout << std::endl;
   return 0;
 }

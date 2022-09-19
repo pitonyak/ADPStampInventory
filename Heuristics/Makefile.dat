@@ -46,8 +46,8 @@ macaddresses.o: macaddresses.cpp macaddresses.h
 ipaddresses.o: ipaddresses.cpp ipaddresses.h
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o ipaddresses.o -c ipaddresses.cpp
 
-utilities_test: utilities_test.o utilities.o ahocorasickbinary.o bitsetdynamic.o
-	$(CXX) $(CXXFLAGS) utilities_test.o utilities.o ahocorasickbinary.o bitsetdynamic.o -o utilities_test $(LDFLAGS) $(LIBS)
+utilities_test: utilities_test.o utilities.o ahocorasickbinary.o bitsetdynamic.o ethtype.o iptype.o
+	$(CXX) $(CXXFLAGS) utilities_test.o utilities.o ahocorasickbinary.o bitsetdynamic.o ethtype.o iptype.o -o utilities_test $(LDFLAGS) $(LIBS)
 
 ahocorasickbinary.o: ahocorasickbinary.cpp ahocorasickbinary.h bitsetdynamic.o #include bitsetdynamic.o
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o ahocorasickbinary.o -c ahocorasickbinary.cpp

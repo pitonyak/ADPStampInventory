@@ -172,10 +172,6 @@ private:
 	std::unordered_map<int, std::unordered_map<int, IPType *>* > m_ipTypes;
 };
 
-inline bool IPTypes::hasType(int protocol, int port) const {
-	return getIPType(protocol, port) != nullptr;
-}
-
 inline bool IPTypes::isValid(int protocol, int port) const {
 	const IPType* ipt = getIPType(protocol, port);
 	return (ipt != nullptr) ? ipt->m_valid : false;
