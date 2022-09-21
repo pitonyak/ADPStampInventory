@@ -5,6 +5,7 @@
 #include <cstring>
 #include <iomanip>
 #include <iostream>
+#include <netinet/in.h>
 #include <string>
 #include <sys/stat.h>
 #include <vector>
@@ -434,7 +435,26 @@ int main(int , char **) {
   test_search();
   test_bits();
   test_ip_mac();
+  
+  uint8_t six = 6;
+  std::cout << std::endl;
+  if (six == IPPROTO_TCP) {
+    std::cout << "PASS: Set uint8_t to 6 and compare to IPPROTO_TCP" << std::endl;
+  } else {
+    std::cout << "FAIL: Set uint8_t to 6 and compare to IPPROTO_TCP" << std::endl;
+  }
 
+/**
+  std::string s = "../wireshark/fuzz-2010-06-29-8087.pcap";
+  std::string ss = "/";
+
+  std::cout << "File:" << s << " dir:" << getDirectoryFromFilename(s) << std::endl;
+
+  std::cout << "exists, isFile, notisDirectory, canRead, canWrite " << isPathExist(s, true, false, true, true) << std::endl;
+  std::cout << "exists, notisFile, isDirectory, canRead, canWrite " << isPathExist(s, false, true, true, true) << std::endl;
+  std::cout << "exists, notisFile, isDirectory, canRead, canWrite " << isPathExist(getDirectoryFromFilename(s), false, true, true, true) << std::endl;
+  std::cout << "exists, notisFile, isDirectory, canRead, canWrite " << isPathExist(ss, false, true, true, true) << std::endl;
+**/
   std::cout << std::endl;
   return 0;
 }

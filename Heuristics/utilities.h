@@ -123,15 +123,8 @@ bool BothAreSpaces(char lhs, char rhs);
 bool hasEnding(std::string const &fullString, std::string const &ending, bool isCaseSensitive);
 
 //**************************************************************************
-//! Determin if num bytes from s are contained in data.
+//! Determine if num bytes from s are contained in data. Searches s and data left to right.
 /*!
- * This is used to remove multiple runs of spaces as follows. 
- * @code{.cpp}
- *   std::line = "sample  text";
- *   std::string::iterator new_end = std::unique(line.begin(), line.end(), BothAreSpaces);
- *   line.erase(new_end, line.end()); 
- * @endcode
- * 
  * \param [in] s - Search string to find in data.
  * 
  * \param [in] num - Number of bytes to find (length of s).
@@ -145,8 +138,62 @@ bool hasEnding(std::string const &fullString, std::string const &ending, bool is
  ***************************************************************************///
 bool find_match(const uint8_t* s, uint32_t num, const uint8_t* data, uint32_t len);
 
+//**************************************************************************
+//! Determine if num bytes from s are contained in data. Searches s right to left and data left to right.
+/*!
+ * 
+ * \param [in] s - Search string to find in data.
+ * 
+ * \param [in] num - Number of bytes to find (length of s).
+ * 
+ * \param [in] data - Data to search while looking for s.
+ *
+ * \param [in] len - Length of data.
+ * 
+ * \returns true if num bytes from s are found in data.
+ *
+ ***************************************************************************///
 bool reverse_match(const uint8_t* s, uint32_t num, const uint8_t* data, uint32_t len);
 
+//**************************************************************************
+//! Print a hex dump. 
+/*!
+ * 
+ * \param [in] data - Data to search while looking for s.
+ *
+ * \param [in] len - Length of data.
+ *
+ ***************************************************************************///
 void dump_hex(const uint8_t* data, uint32_t len);
+
+//**************************************************************************
+//! Assumes that sPath references a file or directory. If the path does NOT exist, false is returned.
+/*!
+ * 
+ * \param [in] sPath - Path of interest
+ * 
+ * \param [in] isFile - If true, the path is checked to see if it references a File
+ * 
+ * \param [in] isDirectory - If true, the path is checked to see if it references a Directory
+ * 
+ * \param [in] canRead - If true, the path is checked to see if the user has read access
+ * 
+ * \param [in] canWrite - If true, the path is checked to see if the user has write access
+ * 
+ * \returns Directory path.
+ *
+ ***************************************************************************///
+bool isPathExist(const std::string& sPath, bool isFile, bool isDirectory, bool canRead, bool canWrite);
+
+//**************************************************************************
+//! Assumes that sPath references a file.
+/*!
+ * 
+ * \param [in] sPath - Path of interest
+ * 
+ * \returns Directory path.
+ *
+ ***************************************************************************///
+std::string getDirectoryFromFilename(const std::string& sPath);
 
 #endif // UTILITIES_H

@@ -56,7 +56,7 @@ void usage(){
   printf("-h Print this help.\n");
   printf("-v Print verbose output while processing the file.\n");
   printf("-r <path to input pcap file>: This PCAP file will be read for all MAC addresses and IP addresses\n");
-  printf("-a <path to generated anomaly pcap>: Where to write the anomaly list. This triggers the creation of the anomoly list.\n");
+  printf("-a <path to generated anomaly pcap>: Where to write the anomaly list. This triggers the creation of the anomaly list.\n");
   printf("-p <path to IP output filename, default '???ip_addresses.txt'>: This OPTIONAL file will be populated with the unique, human-readable versions of all IP addresses found in the input PCAP file. If this option is not given, stdout will be used. If '-' is given as the output file, MAC addresses will be printed to stdout.\n");
   printf("-m <path to MAC output filename, default '???mac_addresses.txt'>: This OPTIONAL file will be populated with the unique, human-readable versions of all Ethernet MAC addresses input PCAP file. If this option is not given, stdout will be used. If '-' is given as the output file, MAC addresses will be printed to stdout.\n");
   printf("\n");
@@ -161,6 +161,31 @@ void local_pcap_dump(pcap_dumper_t *dumpfile, struct pcap_pkthdr *pkt_header, co
 
 }
 
+//**************************************************************************
+//! Search for a repeated IP address. If a duplicate is found, the packet is saved.
+/*!
+ * 
+ * \param [in] a Initialized object ready to search.
+ * 
+ * \param [in] search_start_loc where to start searching
+ * 
+ * \param [in] search_len maximum length to search
+ * 
+ * \param [in, out] dumpfile where to dump the packet if something is found
+ * 
+ * \param [in] pkt_header needed to dump the packet
+ * 
+ * \param [in] pkt_data needed to dump the packet
+ * 
+ * \param [in] verbose if True, explanation text is written to the screen.
+ * 
+ * \param [in] it current iteration.
+ * 
+ * \param [in] message. Send to the dump routine so a message can be logged if in verbose mode.
+ * 
+ * \returns True if a duplicate IP is found.
+ *
+ ***************************************************************************/
 bool aho_search(const AhoCorasickBinary& a, const uint8_t* search_start_loc, uint32_t search_len, pcap_dumper_t *dumpfile, struct pcap_pkthdr *pkt_header, const u_char *pkt_data, bool verbose, int it, const char* message) {
 
   if (a.findFirstMatch(search_start_loc, search_len) >= 0) {
@@ -173,7 +198,7 @@ bool aho_search(const AhoCorasickBinary& a, const uint8_t* search_start_loc, uin
 }
 
 //**************************************************************************
-//! Search for a repeated MAC address. 
+//! Search for a repeated MAC address. If a duplicate is found, the packet is saved.
 /*!
  * 
  * \param [in] search_start_loc where to start searching
@@ -196,6 +221,7 @@ bool aho_search(const AhoCorasickBinary& a, const uint8_t* search_start_loc, uin
 bool find_macs(const uint8_t* search_start_loc, uint32_t search_len, pcap_dumper_t *dumpfile, struct pcap_pkthdr *pkt_header, const u_char *pkt_data, bool verbose, int it, SearchTypeEnum search_type, const AhoCorasickBinary& a) {
 
   if (search_type == aho_corasick_binary) {
+    // aho search dumps the file if a match is found.
     return aho_search(a, search_start_loc, search_len, dumpfile, pkt_header, pkt_data, verbose, it, "MAC address found in data");
   } else {
     for (auto const &a_mac: mac_addresses.m_unique_macs) {
@@ -209,9 +235,8 @@ bool find_macs(const uint8_t* search_start_loc, uint32_t search_len, pcap_dumper
   return false;
 }
 
-
 //**************************************************************************
-//! Search for a repeated IP address. 
+//! Search for a repeated IP address. If a duplicate is found, the packet is saved.
 /*!
  * 
  * \param [in] search_start_loc where to start searching
@@ -228,13 +253,13 @@ bool find_macs(const uint8_t* search_start_loc, uint32_t search_len, pcap_dumper
  * 
  * \param [in] it current iteration.
  * 
- * \returns True if a duplicate mac is found.
+ * \returns True if a duplicate IP is found.
  *
  ***************************************************************************/
 bool find_ips(const uint8_t* search_start_loc, uint32_t search_len, pcap_dumper_t *dumpfile, struct pcap_pkthdr *pkt_header, const u_char *pkt_data, bool verbose, int it, SearchTypeEnum search_type, const AhoCorasickBinary& ipv4, const AhoCorasickBinary& ipv6) {
 
   if (search_type == aho_corasick_binary) {
-
+    // aho search dumps the file if a match is found.
     return aho_search(ipv4, search_start_loc, search_len, dumpfile, pkt_header, pkt_data, verbose, it, "IPv4 address found in data") || 
            aho_search(ipv6, search_start_loc, search_len, dumpfile, pkt_header, pkt_data, verbose, it, "IPv6 address found in data");
 
@@ -466,7 +491,8 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
 
       int tcp_destination_port = -1;
       int tcp_source_port = -1;
-      if (ipHeader->ip_p == IPPROTO_TCP) {
+      std::string proto = "Unknown";
+      if (static_cast<int>(ipHeader->ip_p) == static_cast<int>(IPPROTO_TCP)) {
 
         // IPPROTO_TCP = 6
         // struct tcphdr with source and destination ports
@@ -478,8 +504,9 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
         const struct tcphdr* tcp_header = (const struct tcphdr*)(pkt_data + offset_to_data_ipv4);
         tcp_destination_port = tcp_header->th_dport;
         tcp_source_port = tcp_header->th_sport;
+        proto = "TCP";
 
-      } else if (ipHeader->ip_p == IPPROTO_UDP) {
+      } else if (static_cast<int>(ipHeader->ip_p) == static_cast<int>(IPPROTO_UDP)) {
 
         // IPPROTO_UDP = 17
         // struct udphdr
@@ -489,13 +516,14 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
         const struct udphdr* udp_header = (const struct udphdr*)(pkt_data + offset_to_data_ipv4);
         tcp_destination_port = udp_header->uh_dport;
         tcp_source_port = udp_header->uh_sport;
-      } 
+        proto = "UDP";
+      }
 
       // If we get here then we can search for duplicates.
       // Look AFTER the IP header for dupliate IP.
 
       // Search to see if a MAC is repeated.
-      bool may_have_dup = ip_types.isDupMAC(ipHeader->ip_p, tcp_destination_port) || ip_types.isDupMAC(ipHeader->ip_p, tcp_source_port);
+      bool may_have_dup = ip_types.isDupMAC(ipHeader->ip_p, tcp_destination_port) || (tcp_destination_port != tcp_source_port && ip_types.isDupMAC(ipHeader->ip_p, tcp_source_port));
 
       if (!may_have_dup) {
         uint32_t search_len = pkt_header->len - 12;
@@ -505,7 +533,8 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
           continue;
         }
       }
-      may_have_dup = ip_types.isDupIP(ipHeader->ip_p, tcp_destination_port) || ip_types.isDupIP(ipHeader->ip_p, tcp_source_port);
+
+      may_have_dup = ip_types.isDupIP(ipHeader->ip_p, tcp_destination_port) || (tcp_destination_port != tcp_source_port && ip_types.isDupIP(ipHeader->ip_p, tcp_source_port));
       if (!may_have_dup) {
         uint32_t search_len = pkt_header->len - offset_to_data_ipv4;
         const uint8_t* data_loc = pkt_data + offset_to_data_ipv4;
@@ -536,7 +565,7 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
       continue;
     }
 
-    // Already filtered out Ether Types that we are ignoring. 
+    // Already filtered out (saved) Ether Types that are not considered valid.
     // Look for a repeated MAC address as follows.
     // The following code makes sure that the type does NOT expect to have duplicate MAC addresses.
     // The flow chart says that the following be done: 
@@ -836,31 +865,58 @@ int main(int argc, char **argv){
     if (ip_fname.size() == 0)
       ip_fname = "ip_addresses.txt";
   }
-
-  std::cout << "mac_fname = " << mac_fname << std::endl;
-  std::cout << "ip_fname = " << ip_fname << std::endl;
-
-  bool create_mac_ip_files = false;
-  if(stat(mac_fname.c_str(), &filestat) != 0){
-    create_mac_ip_files = true;
+  
+  if (!isPathExist(pcap_fname_s, true, false, false, false)) {
+    std::cout << "PCAP file does not exist: " << pcap_fname_s << std::endl;
+    return -1;
+  }
+  if (!isPathExist(pcap_fname_s, true, false, true, false)) {
+    std::cout << "Do not have read permission on PCAP file: " << pcap_fname_s << std::endl;
+    return -1;
   }
 
-  if(stat(ip_fname.c_str(), &filestat) != 0){
-    create_mac_ip_files = true;
-  }
+  bool create_mac_ip_files = !isPathExist(mac_fname, true, false, false, false) || !isPathExist(ip_fname, true, false, false, false);
 
   if (create_mac_ip_files) {
+    std::string path = getDirectoryFromFilename(mac_fname);
+    if (!isPathExist(path, false, true, true, true)) {
+      std::cout << "Cannot read/write to directory where the MAC file will be created: " << path << std::endl;
+      return -1;
+    }
+    path = getDirectoryFromFilename(ip_fname);
+    if (!isPathExist(path, false, true, true, true)) {
+      std::cout << "Cannot read/write to directory where the IP file will be created: " << ip_fname << std::endl;
+      return -1;
+    }
+
     std::cout << " creating files " << mac_fname << " and " << ip_fname << std::endl;
     write_ip_and_mac_from_pcap(pcap_fname_s, mac_fname, ip_fname);
   } else {
+    if (!isPathExist(mac_fname, true, false, true, false) || !isPathExist(ip_fname, true, false, true, false)) {
+      std::cout << "ERROR: Cannot read " << mac_fname << " or " << ip_fname << std::endl;
+      return -1;
+    }
     std::cout << " reading files " << mac_fname << " and " << ip_fname << std::endl;
     mac_addresses.read_file(mac_fname);
     ip_addresses.read_file(ip_fname);
   }
 
-
   if (create_anomaly_list) {
-    std::cout << "Creating Anomoly File Now" << std::endl;
+    if (anomaly_fname == nullptr) {
+      std::cout << "Anomaly filename cannot be NULL" << std::endl;
+      return -1;
+    }
+    if (isPathExist(anomaly_fname, true, false, false, false)) {
+      std::cout << "Anomaly file will be over-written: " << anomaly_fname << std::endl;
+      return -1;
+    }
+    std::string path = getDirectoryFromFilename(anomaly_fname);
+    if (isPathExist(path, false, true, true, true)) {
+      std::cout << "Cannot read/write to directory where the anomaly file will be created: " << anomaly_fname << std::endl;
+      return -1;
+    }
+
+    std::cout << "Creating Anomaly File" << std::endl;
     create_heuristic_anomaly_file(ethernet_types, ip_types, pcap_fname, anomaly_fname, verbose_output);
   }
 

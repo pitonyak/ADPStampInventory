@@ -1,5 +1,7 @@
+#include <filesystem> // C++ 17
 #include <iostream>
 #include <iomanip>
+#include <sys/stat.h>
 
 #include "utilities.h"
 
@@ -125,3 +127,78 @@ bool find_match(const uint8_t* s, uint32_t num, const uint8_t* data, uint32_t le
   return found_it;
 }
 
+void demo_perms(std::filesystem::perms p)
+{
+    std::cout << ((p & std::filesystem::perms::owner_read) != std::filesystem::perms::none ? "r" : "-")
+              << ((p & std::filesystem::perms::owner_write) != std::filesystem::perms::none ? "w" : "-")
+              << ((p & std::filesystem::perms::owner_exec) != std::filesystem::perms::none ? "x" : "-")
+              << ((p & std::filesystem::perms::group_read) != std::filesystem::perms::none ? "r" : "-")
+              << ((p & std::filesystem::perms::group_write) != std::filesystem::perms::none ? "w" : "-")
+              << ((p & std::filesystem::perms::group_exec) != std::filesystem::perms::none ? "x" : "-")
+              << ((p & std::filesystem::perms::others_read) != std::filesystem::perms::none ? "r" : "-")
+              << ((p & std::filesystem::perms::others_write) != std::filesystem::perms::none ? "w" : "-")
+              << ((p & std::filesystem::perms::others_exec) != std::filesystem::perms::none ? "x" : "-")
+              << std::endl;
+}
+
+bool isPathExist(const std::string& sPath, bool isFile, bool isDirectory, bool canRead, bool canWrite ) {
+  bool rc = true;
+
+  // C++17
+  std::filesystem::path path(sPath);
+  // Need the error code to avoid throwing an exception.
+  std::error_code ec;
+  rc = std::filesystem::exists(sPath);
+  if (rc) {
+    //std::cout << " it exists" << std::endl;
+    if (isDirectory) {
+      rc = std::filesystem::is_directory(path, ec);
+      //std::cout << "is dir: " << rc << std::endl;
+    } else if (isFile) {
+      rc = std::filesystem::is_regular_file(path, ec);
+      //std::cout << "is file: " << rc << std::endl;
+    }
+  }
+  if (rc && (canRead || canWrite)) {
+    auto perms = std::filesystem::status(path, ec).permissions();
+    //demo_perms(perms);
+    if (canRead) {
+      rc = (perms & std::filesystem::perms::owner_read)  != std::filesystem::perms::none ||
+           (perms & std::filesystem::perms::group_read)  != std::filesystem::perms::none ||
+           (perms & std::filesystem::perms::others_read) != std::filesystem::perms::none;
+    }
+    if (canWrite) {
+      rc = (perms & std::filesystem::perms::owner_write)  != std::filesystem::perms::none ||
+           (perms & std::filesystem::perms::group_write)  != std::filesystem::perms::none ||
+           (perms & std::filesystem::perms::others_write) != std::filesystem::perms::none ;
+    }
+  }
+
+  // C++11
+  //std::ifstream file(sPath);
+  //return file.is_open(sPath);
+
+  // Old School!
+  /**
+  struct stat buf;
+  if (stat(sPath.c_str(), &buf) != 0) {
+    rc = false;
+  } else if (isDirectory) {
+      rc = s.st_mode & S_IFDIR;
+    } else if (isFile) {
+      rc = s.st_mode & S_IFREG;
+    }
+  }
+  **/
+  return rc;
+}
+
+std::string getDirectoryFromFilename(const std::string& sPath) {
+  std::filesystem::path path(sPath);
+  path.remove_filename();
+  std::string s = path.string();
+  if (s.length() == 0) {
+    s = "./";
+  }
+  return path.string();
+}
