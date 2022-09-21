@@ -524,7 +524,7 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
 
       // Search to see if a MAC is repeated.
       bool may_have_dup = ip_types.isDupMAC(ipHeader->ip_p, tcp_destination_port) || (tcp_destination_port != tcp_source_port && ip_types.isDupMAC(ipHeader->ip_p, tcp_source_port));
-
+      //std::cout << "May MAC Dup: " << may_have_dup << " proto:" << (int) ipHeader->ip_p << " source:" << tcp_source_port << " dest:" << tcp_destination_port << std::endl;
       if (!may_have_dup) {
         uint32_t search_len = pkt_header->len - 12;
         const uint8_t* data_loc = (pkt_data + 12);
@@ -535,6 +535,7 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
       }
 
       may_have_dup = ip_types.isDupIP(ipHeader->ip_p, tcp_destination_port) || (tcp_destination_port != tcp_source_port && ip_types.isDupIP(ipHeader->ip_p, tcp_source_port));
+      //std::cout << "May  IP Dup: " << may_have_dup << " proto:" << (int) ipHeader->ip_p << " source:" << tcp_source_port << " dest:" << tcp_destination_port << std::endl;
       if (!may_have_dup) {
         uint32_t search_len = pkt_header->len - offset_to_data_ipv4;
         const uint8_t* data_loc = pkt_data + offset_to_data_ipv4;
@@ -908,11 +909,10 @@ int main(int argc, char **argv){
     }
     if (isPathExist(anomaly_fname, true, false, false, false)) {
       std::cout << "Anomaly file will be over-written: " << anomaly_fname << std::endl;
-      return -1;
     }
     std::string path = getDirectoryFromFilename(anomaly_fname);
-    if (isPathExist(path, false, true, true, true)) {
-      std::cout << "Cannot read/write to directory where the anomaly file will be created: " << anomaly_fname << std::endl;
+    if (!isPathExist(path, false, true, true, true)) {
+      std::cout << "Cannot read/write to directory where the anomaly file will be created: " << path << std::endl;
       return -1;
     }
 
