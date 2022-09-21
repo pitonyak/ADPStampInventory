@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <iostream>
 #include <netinet/in.h>
+#include <netinet/ip.h>
 #include <string>
 #include <sys/stat.h>
 #include <vector>
@@ -436,12 +437,13 @@ int main(int , char **) {
   test_bits();
   test_ip_mac();
   
-  uint8_t six = 6;
+  struct ip ipHeader;
+  ipHeader.ip_p = 6;
   std::cout << std::endl;
-  if (six == IPPROTO_TCP) {
-    std::cout << "PASS: Set uint8_t to 6 and compare to IPPROTO_TCP" << std::endl;
+  if (ipHeader.ip_p == IPPROTO_TCP) {
+    std::cout << "PASS: Set ipHeader.ip_p to 6 and compare to IPPROTO_TCP" << std::endl;
   } else {
-    std::cout << "FAIL: Set uint8_t to 6 and compare to IPPROTO_TCP" << std::endl;
+    std::cout << "FAIL: Set ipHeader.ip_p to 6 and compare to IPPROTO_TCP" << std::endl;
   }
 
 /**
