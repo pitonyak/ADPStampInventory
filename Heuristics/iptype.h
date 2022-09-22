@@ -32,12 +32,11 @@ public:
 
     // Normally I would encapulate this with getters and setters, but not sure it is worth it at this point.
     // Perhaps I should just make this a struct.
-	int m_iPType;  // Integer type or Protocol.
+	int  m_iPType; // Integer type or Protocol.
 	bool m_valid;  // Do we consider this valid?
-	bool m_iPv6;   // Is this for IPv6?
 	bool m_dupIP;  // Does this allow or expect a duplicate IP in the payload?
 	bool m_dupMAC; // Does this allow or expect a duplicate MAC in the payload?
-	int m_port;    // Port or -1 for port does not matter
+	int  m_port;   // Port or -1 for port does not matter
 	std::string m_description;
 
     /*! Simply method to print this object as a line with no context. */
@@ -102,16 +101,6 @@ public:
 	bool isValid(int protocol, int port) const;
 
     //**************************************************************************
-    //! Is this numeric type specific to IPv6.
-    /*!
-     * \param [in] protocol Numeric IP type. 
-     * 
-     * \returns True if this numeric type is specific to IPv6
-     *
-     ***************************************************************************/
-    bool isIPv6(int protocol, int port) const;
-
-    //**************************************************************************
     //! Does this numeric type allow for the IP to be repeated in the payload?
     /*!
      * \param [in] protocol Numeric IP type. 
@@ -163,6 +152,9 @@ public:
      ***************************************************************************/
     bool read(const std::string& filename, int base = 10);
 
+    bool readProtocols(const std::string& filename, bool hasPort, int base = 10);
+    bool readProtocolPorts(const std::string& filename);
+
     std::ostream& print(std::ostream& x) const;
 
 private:
@@ -175,11 +167,6 @@ private:
 inline bool IPTypes::isValid(int protocol, int port) const {
 	const IPType* ipt = getIPType(protocol, port);
 	return (ipt != nullptr) ? ipt->m_valid : false;
-}
-
-inline bool IPTypes::isIPv6(int protocol, int port) const {
-	const IPType* ipt = getIPType(protocol, port);
-	return (ipt != nullptr) ? ipt->m_iPv6 : false;
 }
 
 inline bool IPTypes::isDupIP(int protocol, int port) const {

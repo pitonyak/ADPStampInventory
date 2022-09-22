@@ -57,8 +57,8 @@ void usage(){
   printf("-v Print verbose output while processing the file.\n");
   printf("-r <path to input pcap file>: This PCAP file will be read for all MAC addresses and IP addresses\n");
   printf("-a <path to generated anomaly pcap>: Where to write the anomaly list. This triggers the creation of the anomaly list.\n");
-  printf("-p <path to IP output filename, default '???ip_addresses.txt'>: This OPTIONAL file will be populated with the unique, human-readable versions of all IP addresses found in the input PCAP file. If this option is not given, stdout will be used. If '-' is given as the output file, MAC addresses will be printed to stdout.\n");
-  printf("-m <path to MAC output filename, default '???mac_addresses.txt'>: This OPTIONAL file will be populated with the unique, human-readable versions of all Ethernet MAC addresses input PCAP file. If this option is not given, stdout will be used. If '-' is given as the output file, MAC addresses will be printed to stdout.\n");
+  printf("-p <path to IP output filename, default 'ip_addresses.txt'>: This OPTIONAL file will be populated with the unique, human-readable versions of all IP addresses found in the input PCAP file. If this option is not given, stdout will be used. If '-' is given as the output file, MAC addresses will be printed to stdout.\n");
+  printf("-m <path to MAC output filename, default 'mac_addresses.txt'>: This OPTIONAL file will be populated with the unique, human-readable versions of all Ethernet MAC addresses input PCAP file. If this option is not given, stdout will be used. If '-' is given as the output file, MAC addresses will be printed to stdout.\n");
   printf("\n");
 }
 
@@ -764,9 +764,14 @@ int main(int argc, char **argv){
   // See the spreadsheet uploaded by Beau.
   //
 
-  std::string ip_fname = "ip_types.txt";
+  //std::string ip_fname = "ip_types.txt";
+  std::string new_ip_fname = "ip_protocols.txt";
+  std::string new_ip_ports_fname = "ip_protocol_ports.txt";
+
   IPTypes ip_types;
-  ip_types.read(ip_fname);
+  //ip_types.readProtocols(ip_fname, true, 10);
+  ip_types.readProtocols(new_ip_fname, false, 10);
+  ip_types.readProtocolPorts(new_ip_ports_fname);
   //std::cout << ip_types;
   //std::cout << std::endl;
 

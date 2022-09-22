@@ -78,7 +78,7 @@ int test_search() {
     for (int i_func = 0; i_func < num_funcs; ++i_func) {
     	for (int i_test = 0; i_test < num_tests; ++i_test) {
     		if ((*searches[i_func])(data[2*i_test], lengths[2*i_test], data[2*i_test+1], lengths[2*i_test+1]) == should_find[i_test]) {
-    			std::cout << pass << search_name[i_func] << " " << search_type[i_test] << std::endl;
+    			//std::cout << pass << search_name[i_func] << " " << search_type[i_test] << std::endl;
     			++num_passed;
     		} else {
     			std::cout << fail << search_name[i_func] << " " << search_type[i_test] << std::endl;
@@ -113,7 +113,7 @@ int test_search() {
       std::cout << "AhoCorasickBinary object did not initialize correctly on creation." << std::endl;
       ++num_failed;
     } else {
-      std::cout << "AhoCorasickBinary object initialized correctly." << std::endl;
+      //std::cout << "AhoCorasickBinary object initialized correctly." << std::endl;
     }
 
     acb.buildMatchingMachine(words, word_lengths);
@@ -121,7 +121,7 @@ int test_search() {
       std::cout << "AhoCorasickBinary machine built incorrectly when sent an empty vetor." << std::endl;
       ++num_failed;
     } else {
-      std::cout << "AhoCorasickBinary machine initialized correctly with empty vector." << std::endl;
+      //std::cout << "AhoCorasickBinary machine initialized correctly with empty vector." << std::endl;
     }
 
     words.push_back(word_0);
@@ -143,7 +143,7 @@ int test_search() {
       std::cout << "AhoCorasickBinary machine built incorrectly." << std::endl;
       ++num_failed;
     } else {
-      std::cout << "AhoCorasickBinary machine initialized correctly with non-empty vector." << std::endl;
+      //std::cout << "AhoCorasickBinary machine initialized correctly with non-empty vector." << std::endl;
     }
 
     std::map<int, std::set<int> > matches = acb.findAllMatches(search_1, 6);
@@ -189,7 +189,7 @@ int test_search() {
       }
     }
     if (test_passed) {
-      std::cout << "AhoCorasickBinary::findAllMatches passed." << std::endl;
+      //std::cout << "AhoCorasickBinary::findAllMatches passed." << std::endl;
       ++num_passed;
     } else {
       std::cout << "AhoCorasickBinary::findAllMatches failed." << std::endl;
@@ -197,7 +197,7 @@ int test_search() {
     }
     
     if (acb.findFirstMatch(search_2, 0) == -1) {
-      std::cout << "AhoCorasickBinary::findFirstMatch passed with empty data." << std::endl;
+      //std::cout << "AhoCorasickBinary::findFirstMatch passed with empty data." << std::endl;
       ++num_passed;
     } else {
       std::cout << "AhoCorasickBinary::findFirstMatch failed with empty data." << std::endl;
@@ -205,7 +205,7 @@ int test_search() {
     }
 
     if (acb.findFirstMatch(nullptr, 0) == -1) {
-      std::cout << "AhoCorasickBinary::findFirstMatch passed with null data." << std::endl;
+      //std::cout << "AhoCorasickBinary::findFirstMatch passed with null data." << std::endl;
       ++num_passed;
     } else {
       std::cout << "AhoCorasickBinary::findFirstMatch failed with null data." << std::endl;
@@ -213,7 +213,7 @@ int test_search() {
     }
 
     if (acb.findFirstMatch(search_3, 1) == -1) {
-      std::cout << "AhoCorasickBinary::findFirstMatch passed with no match and data len 1." << std::endl;
+      //std::cout << "AhoCorasickBinary::findFirstMatch passed with no match and data len 1." << std::endl;
       ++num_passed;
     } else {
       std::cout << "AhoCorasickBinary::findFirstMatch failed with with no match and data len 1." << std::endl;
@@ -221,7 +221,7 @@ int test_search() {
     }
 
     if (acb.findFirstMatch(search_4, 7) == -1) {
-      std::cout << "AhoCorasickBinary::findFirstMatch passed with no match and data len 7." << std::endl;
+      //std::cout << "AhoCorasickBinary::findFirstMatch passed with no match and data len 7." << std::endl;
       ++num_passed;
     } else {
       std::cout << "AhoCorasickBinary::findFirstMatch failed with with no match and data len 7." << std::endl;
@@ -229,7 +229,7 @@ int test_search() {
     }
 
     if (acb.findFirstMatch(search_1, 6) != -1) {
-      std::cout << "AhoCorasickBinary::findFirstMatch passed with a match and data len 6." << std::endl;
+      //std::cout << "AhoCorasickBinary::findFirstMatch passed with a match and data len 6." << std::endl;
       ++num_passed;
     } else {
       std::cout << "AhoCorasickBinary::findFirstMatch failed with with a match and data len 6." << std::endl;
@@ -318,11 +318,15 @@ void test_ip_mac() {
 
   std::string ip_fname = "ip_types.txt";
   std::string eth_fname = "eth_types.txt";
+  std::string new_ip_fname = "ip_protocols.txt";
+  std::string new_ip_ports_fname = "ip_protocol_ports.txt";
 
   struct stat filestat;
   if(stat(ip_fname.c_str(), &filestat) == 0){
     IPTypes ip_types;
-    ip_types.read(ip_fname);
+    //ip_types.readProtocols(ip_fname, true, 10);
+    ip_types.readProtocols(new_ip_fname, false, 10);
+    ip_types.readProtocolPorts(new_ip_ports_fname);
 
     // This assumes a few things that may not be true because the idea is that the file is read!
     if (!ip_types.hasType(6, 161)) {

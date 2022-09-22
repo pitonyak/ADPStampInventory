@@ -1,9 +1,10 @@
 #ifndef UTILITIES_H
 #define UTILITIES_H
 
-#include <cstdint>
-#include <string>
 #include <algorithm> 
+#include <cstdint>
+#include <queue>
+#include <string>
 
 
 //**************************************************************************
@@ -66,9 +67,7 @@ std::string& trim(std::string& str, const std::string& chars = "\t\n\v\f\r ");
 //! Return a copy of the string with white space removed from the front (start) of a string. The original is not modified.
 /*!
  * 
- * \param [in] str - Original string. A copy is made and the copy is modified. The original is left unchanged.
- * 
- * \param [in] chars - White space characters to trim. Defaults to "\t\n\v\f\r ".
+ * \param [in] s - Original string. A copy is made and the copy is modified. The original is left unchanged.
  * 
  * \returns a copy of the modified string.
  *
@@ -79,9 +78,7 @@ std::string ltrim_copy(std::string s);
 //! Return a copy of the string with white space removed from the back (end) of a string. The original is not modified.
 /*!
  * 
- * \param [in] str - Original string. A copy is made and the copy is modified. The original is left unchanged.
- * 
- * \param [in] chars - White space characters to trim. Defaults to "\t\n\v\f\r ".
+ * \param [in] s - Original string. A copy is made and the copy is modified. The original is left unchanged.
  * 
  * \returns a copy of the modified string.
  *
@@ -92,14 +89,27 @@ std::string rtrim_copy(std::string s);
 //! Return a copy of the string with white space removed from the front and back of a string. The original is not modified.
 /*!
  * 
- * \param [in] str - Original string. A copy is made and the copy is modified. The original is left unchanged.
- * 
- * \param [in] chars - White space characters to trim. Defaults to "\t\n\v\f\r ".
+ * \param [in] s - Original string. A copy is made and the copy is modified. The original is left unchanged.
  * 
  * \returns a copy of the modified string.
  *
  ***************************************************************************///
 std::string trim_copy(std::string s);
+
+//**************************************************************************
+//! Convert all white space to a space, reduce runs of spaces, trim white space, and remove comments.
+/*!
+ * 
+ * \param [in, out] line - String that is modified.
+ * 
+ * \returns True if the string is empty after reduction.
+ *
+ ***************************************************************************///
+bool reduce_input_string(std::string& line);
+
+bool parse_reduce_line(std::string& line, std::queue<std::string>& lineq, int num_int_cols);
+
+void parse_range(const std::string& token, int& range_start, int range_end, int base);
 
 //**************************************************************************
 //! Determine if two characters are both spaces.

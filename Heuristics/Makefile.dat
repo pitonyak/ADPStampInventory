@@ -1,7 +1,26 @@
 CC:=gcc
 CXX:=g++
 CFLAGS:=-O3 -fPIC
-CXXFLAGS:=-O3 -fPIC
+#
+# Do NOT sanitize alignment or there will be lots of errors while accessing pcap data that is
+# is not aligned. 
+# If you use the sanitizer, then you must install the sanitizer module and the code will
+# run slower. Good for debugging, bad for large runtimes. 
+# see https://gcc.gnu.org/onlinedocs/gcc/Instrumentation-Options.html
+#
+# -O3		More optimizations than -O2
+# -fPIC 	emit position-independent code.
+# -Werror 	Make all warnings errors
+# -Wall 	Turn on all warnings (well almost all)
+# -Wextra	Turn on a few more not covered with -Wall (see https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html)
+#
+# -fsanitize=address 	Enable the AddressSanitizer (fast memory error detector)
+# -fsanitize=undefined	UndefinedBehaviorSanitizer
+# -fno-sanitize=alignment	Of there is a complaint while accessing types at improper boundaries. Only a problem because -fsantize prior.
+#
+#CXXFLAGS:=-O3 -fPIC
+#CXXFLAGS:=-O3 -fPIC -Werror -Wall -Wextra -fsanitize=undefined,address -fno-sanitize=alignment
+CXXFLAGS:=-O3 -fPIC -Werror -Wall -Wextra 
 INCLUDE:=-I/work1/home/emeneker/local_build/install/libpcap/1.9.1/include
 LIBS:=-lpcap
 

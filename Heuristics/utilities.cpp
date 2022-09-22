@@ -61,6 +61,88 @@ std::string trim_copy(std::string s) {
 //
 bool BothAreSpaces(char lhs, char rhs) { return (lhs == rhs) && (lhs == ' '); }
 
+bool reduce_input_string(std::string& line) {
+  // Convert all white space to spaces.
+  convert_all_spaces(line);
+  //
+  // Compress multiple spaces into a single space.
+  //
+  std::string::iterator new_end = std::unique(line.begin(), line.end(), BothAreSpaces);
+  line.erase(new_end, line.end()); 
+  //
+  // remove leading and trailing spaces from the string.
+  //
+  trim(line);
+  //
+  // Ignore blank lines and lines begining with the '#' character. 
+  //
+  if (line.front() == '#') {
+    line.clear();
+  }
+  return line.empty();
+}
+
+bool parse_reduce_line(std::string& line, std::queue<std::string>& lineq, int num_int_cols) {
+  // std::queue does not have an easy way to clear it.
+  // Assigning to an empty list is faster than using std::swap against an empty queue.
+  lineq = {};
+  if (reduce_input_string(line)) {
+    return true;
+  }
+  if (num_int_cols < 0) {
+    return true;
+  }
+  // Now parse the columns.
+  const std::string one_space = " ";
+  size_t pos = line.find(one_space);
+  size_t initialPos = 0;
+  int num_found = 0;
+
+  while( pos != std::string::npos ) {
+      lineq.push( line.substr( initialPos, pos - initialPos ) );
+      initialPos = pos + 1;
+      ++num_found;
+      if (num_found == num_int_cols) {
+        // The rest is the description
+        pos = std::string::npos;
+      } else {
+        pos = line.find( one_space, initialPos );
+      }
+  }
+  lineq.push( line.substr( initialPos, std::min( pos, line.size() ) - initialPos + 1 ) );
+  ++num_found;
+
+  if (num_found < num_int_cols) {
+    std::cout << "INVALID LINE: " << line << std::endl;
+    return true;
+  }
+  return false;
+}
+
+void parse_range(const std::string& token, int& range_start, int range_end, int base) {
+  std::string token_start = token;
+  std::string token_end;
+  size_t pos;
+  const std::string minus_sign = "-";
+  if ((pos = token_start.find(minus_sign)) != std::string::npos) {
+    token_end = token_start;
+    token_start = token_end.substr(0, pos);
+    token_end.erase(0, pos + minus_sign.length());
+  }
+
+  range_start = std::stoi(token_start, nullptr, base);
+  range_end = range_start;
+  //std::cout << token_start << " = " << std::stoi(token_start, nullptr, base);
+  if (token_end.length() > 0) {
+    //std::cout << " - " << token_end;
+    range_end = std::stoi(token_end, nullptr, base);
+  }
+
+  if (range_end < range_start) {
+    std::swap(range_end, range_start);
+  }
+}
+
 bool hasEnding(std::string const &fullString, std::string const &ending, bool isCaseSensitive) {
     if (fullString.length() >= ending.length()) {
       if (isCaseSensitive) {

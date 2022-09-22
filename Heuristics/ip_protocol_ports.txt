@@ -1,0 +1,28 @@
+#
+# Valid IP types found here: 
+# https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml
+#
+# This files contains the port numbers for specific protocols.
+# The only protocols with ports are TCP and UDP.
+#
+# Columns
+# Port
+# Valid 0/1
+# Duplicate IP possible or expected 0/1
+# Dupliate MAC possible or expected 0/1
+# Comment
+#
+# Protocol TCP = 6
+PROTOCOL=6
+#PORT	OK	IPs	MACs	Description
+161		1	1	1		SNMP (UDP)
+514		1	1	1		System Logs
+53		1	1	1		Domain Name Service (DNS)
+
+
+# Protocol UDP = 17
+PROTOCOL=17
+#PORT	OK	IPs	MACs	Description
+161		1	1	1		SNMP (UDP)
+514		1	1	1		System Logs
+53		1	1	1		Domain Name Service (DNS)

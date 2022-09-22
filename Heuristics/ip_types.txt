@@ -2,7 +2,7 @@
 # Valid IP types found here: 
 # https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml
 #
-# This files contains both an IP Type and a Port Number. 
+# This files contains both an IP Protocol / Type and a Port Number. 
 # A port of -1 is a catch-all and is like saying "I do not care what the port is".
 # In the code, you ask for both the Type and the Port.
 # If the Type / Port combination does not exist, then Port -1 (if it exists)
@@ -11,164 +11,163 @@
 # Columns
 # Protocol (IP Type)
 # Valid 0/1
-# IPv6 0/1
 # Duplicate IP possible or expected 0/1
 # Dupliate MAC possible or expected 0/1
 # Comment
 #
-#  OK IPv6 IPs MACs Port  Description
-0	1	1	0	0	-1    IPv6 Hop-by-Hop Option (HOPOPT)
-1	1	0	1	0	-1    Internet Control Mess (ICMP)
-2	1	0	0	0	-1    Internet Group Management (IGMP)
-3	1	0	0	0	-1    Gateway-to-Gateway (GGP)
-4	1	0	0	0	-1    IPv4 encapsulation
-5	1	0	0	0	-1    Stream (ST)
-6	1	0	1	1	161   SNMP (UDP)
-6	1	0	1	1	514   System Logs
-6	1	0	1	1	53    Domain Name Service (DNS)
-6	1	0	0	0	-1    Transmission Control (TCP)
-7	1	0	0	0	-1    CBT
-8	1	0	0	0	-1    Exterior Gateway Protocol (EGP)
-9	1	0	0	0	-1    any private interior gateway (used by Cisco for their IGRP)
-10	1	0	0	0	-1    BBN RCC Monitoring (BBN-RCC-MON)
-11	1	0	0	0	-1    Network Voice Protocol (NVP-II)
-12	1	0	0	0	-1    PUP
-13	1	0	0	0	-1    ARGUS (deprecated)
-14	1	0	0	0	-1    EMCON
-15	1	0	0	0	-1    Cross Net Debugger (XNET)
-16	1	0	1	1	-1    CHAOS
-17	1	0	1	1	161   SNMP (UDP)
-17	1	0	1	1	514   System Logs
-17	1	0	1	1	53    Domain Name Service (DNS)
-17	1	0	0	0	-1    Domain Name Service (DNS)
-18	1	0	0	0	-1    Multiplexing (MUX)
-19	1	0	0	0	-1    DCN Measurement Subsystems (DCN-MEAS)
-20	1	0	0	0	-1    Host Monitoring (HMP)
-21	1	0	0	0	-1    Packet Radio Measurement (PRM)
-22	1	0	0	0	-1    XEROX NS IDP
-23	1	0	0	0	-1    TRUNK-1
-24	1	0	0	0	-1    TRUNK-2
-25	1	0	0	0	-1    LEAF-1
-26	1	0	0	0	-1    LEAF-2
-27	1	0	0	0	-1    Reliable Data Protocol (RDP)
-28	1	0	0	0	-1    Internet Reliable Transaction (IRTP)
-29	1	0	0	0	-1    ISO Transport Protocol Class 4 (ISO-TP4)
-30	1	0	0	0	-1    Bulk Data Transfer Protocol (NETBLT)
-31	1	0	0	0	-1    MFE Network Services Protocol (MFE-NSP)
-32	1	0	0	0	-1    MERIT Internodal Protocol (MERIT-INP)
-33	1	0	0	0	-1    Datagram Congestion Control Protocol (DCCP)
-34	1	0	0	0	-1    Third Party Connect Protocol (3PC)
-35	1	0	0	0	-1    Inter-Domain Policy Routing Protocol (IDPR)
-36	1	0	0	0	-1    XTP
-37	1	0	0	0	-1    Datagram Delivery Protocol (DDP)
-38	1	0	0	0	-1    IDPR Control Message Transport Proto (IDPR-CMTP)
-39	1	0	0	0	-1    Transport Protocol (TP++)
-40	1	0	0	0	-1    Transport Protocol (IL)
-41	1	0	0	0	-1    encapsulation (IPv6)
-42	1	0	0	0	-1    Source Demand Routing Protocol (SDRP)
-43	1	1	0	0	-1    Routing Header for IPv6 (IPv6-Route)
-44	1	1	0	0	-1    Fragment Header for IPv6 (IPv6-Frag)
-45	1	0	0	0	-1    Inter-Domain Routing Protocol (IDRP)
-46	1	0	0	0	-1    Reservation Protocol (RSVP)
-47	1	0	1	0	-1    Generic Routing Encapsulation (GRE)
-48	1	0	0	0	-1    Dynamic Source Routing Protocol (DSR)
-49	1	0	0	0	-1    BNA
-50	1	1	0	0	-1    Encap Security Payload (ESP)
-51	1	1	0	0	-1    Authentication Header (AH)
-52	1	0	0	0	-1    Integrated Net Layer Security TUBA (I-NLSP)
-53	1	0	0	0	-1    (deprecated)	IP with Encryption (SWIPE)
-54	1	0	0	0	-1    NBMA Address Resolution Protocol (NARP)
-55	1	0	0	0	-1    IP Mobility (MOBILE)
-56	1	0	0	0	-1    Transport Layer Security Protocol using Kryptonet key management (TLSP)
-57	1	0	0	0	-1    SKIP
-58	1	0	0	0	-1    IPv6-ICMP
-59	1	0	0	0	-1    No Next Header for IPv6 (IPv6-NoNxt)
-60	1	1	0	0	-1    Destination Options for IPv6 (IPv6-Opts)
-61	1	0	0	0	-1    any host internal protocol
-62	1	0	0	0	-1    CFTP
-63	1	0	0	0	-1    any local network
-64	1	0	0	0	-1    SATNET and Backroom EXPAK (SAT-EXPAK)
-65	1	0	0	0	-1    KRYPTOLAN
-66	1	0	0	0	-1    MIT Remote Virtual Disk Protocol (RVD)
-67	1	0	0	0	-1    Internet Pluribus Packet Core (IPPC)
-68	1	0	0	0	-1    any distributed file system
-69	1	0	0	0	-1    SATNET Monitoring (SAT-MON)
-70	1	0	0	0	-1    Protocol (VISA)
-71	1	0	0	0	-1    Internet Packet Core Utility (IPCV)
-72	1	0	0	0	-1    Computer Protocol Network Executive (CPNX)
-73	1	0	0	0	-1    Computer Protocol Heart Beat (CPHB)
-74	1	0	0	0	-1    Wang Span Network (WSN)
-75	1	0	0	0	-1    Packet Video Protocol (PVP)
-76	1	0	0	0	-1    Backroom SATNET Monitoring (BR-SAT-MON)
-77	1	0	0	0	-1    SUN ND PROTOCOL-Temporary (SUN-ND)
-78	1	0	0	0	-1    WIDEBAND Monitoring (WB-MON)
-79	1	0	0	0	-1    WIDEBAND EXPAK (WB-EXPAK)
-80	1	0	0	0	-1    ISO Internet Protocol (ISO-IP)
-81	1	0	0	0	-1    VMTP
-82	1	0	0	0	-1    SECURE-VMTP
-83	1	0	0	0	-1    VINES
-84	1	0	0	0	-1    Transaction Transport Protocol (TTP)
-84	1	0	0	0	-1    Internet Protocol Traffic Manager (IPTM)
-85	1	0	0	0	-1    NSFNET-IGP
-86	1	0	0	0	-1    Dissimilar Gateway Protocol (DGP)
-87	1	0	0	0	-1    TCF
-88	1	0	1	0	-1    EIGRP Enhanced Interior Gateway Routing Protocol
-89	1	0	1	0	-1    OSPFIGP Open Shortest Path First
-90	1	0	0	0	-1    Sprite RPC ProtocolJune 1986
-91	1	0	0	0	-1    Locus Address Resolution Protocol (LARP)
-92	1	0	0	0	-1    Multicast Transport Protocol (MTP)
-93	1	0	0	0	-1    AX.25 Frames
-94	1	0	0	0	-1    IP-within-IP Encapsulation Protocol (IPIP)
-95	1	0	0	0	-1    (deprecated)	Mobile Internetworking Control Pro. (MICP)
-96	1	0	0	0	-1    Semaphore Communications Sec. Pro. (SCC-SP)
-97	1	0	0	0	-1    Ethernet-within-IP Encapsulation (ETHERIP)
-98	1	0	0	0	-1    Encapsulation Header (ENCAP)
-99	1	0	0	0	-1    any private encryption scheme
-100	1	0	0	0	-1    GMTP
-101	1	0	0	0	-1    Ipsilon Flow Management Protocol (IFMP)
-102	1	0	0	0	-1    PNNI over IP
-103	1	0	0	0	-1    Protocol Independent Multicast (PIM)
-104	1	0	0	0	-1    ARIS
-105	1	0	0	0	-1    SCPS
-106	1	0	0	0	-1    QNX
-107	1	0	0	0	-1    Active Networks (A/N)
-108	1	0	0	0	-1    IP Payload Compression Protocol (IPComp)
-109	1	0	0	0	-1    Sitara Networks Protocol (SNP)
-110	1	0	0	0	-1    Compaq-Peer Protocol
-111	1	0	0	0	-1    IPX-in-IP
-112	1	0	0	0	-1    Virtual Router Redundancy Protocol (VRRP)
-113	1	0	0	0	-1    PGM Reliable Transport Protocol
-114	1	0	0	0	-1    any 0-hop protocol
-115	1	0	0	0	-1    Layer Two Tunneling Protocol (L2TP)
-116	1	0	0	0	-1    Data Exchange (DDX) (D-II)
-117	1	0	0	0	-1    Interactive Agent Transfer Protocol (IATP)
-118	1	0	0	0	-1    Schedule Transfer Protocol (STP)
-119	1	0	0	0	-1    SpectraLink Radio Protocol (SRP)
-120	1	0	0	0	-1    UTI
-121	1	0	0	0	-1    Simple Message Protocol (SMP)
-122	1	0	0	0	-1    (deprecated) Simple Multicast Protocol (SM)
-123	1	0	0	0	-1    Performance Transparency Protocol (PTP)
-124	1	0	0	0	-1    ISIS over IPv4
-125	1	0	0	0	-1    FIRE
-126	1	0	0	0	-1    Combat Radio Transport Protocol (CRTP)
-127	1	0	0	0	-1    Combat Radio User Datagram (CRUDP)
-128	1	0	0	0	-1    SSCOPMCE
-129	1	0	0	0	-1    IPLT
-130	1	0	0	0	-1    Secure Packet Shield (SPS)
-131	1	0	0	0	-1    Private IP Encapsulation within IP (PIPE)
-132	1	0	0	0	-1    Stream Control Transmission Protocol (SCTP)
-133	1	0	0	0	-1    Fibre Channel (FC)
-134	1	0	0	0	-1    RSVP-E2E-IGNORE
-135	1	1	0	0	-1    Mobility Header
-136	1	0	0	0	-1    UDPLite
-137	1	0	0	0	-1    MPLS-in-IP
-138	1	0	0	0	-1    MANET Protocols
-139	1	1	0	0	-1    Host Identity Protocol (HIP)
-140	1	1	0	0	-1    Shim6 Protocol
-141	1	0	0	0	-1    Wrapped Encapsulating Security Payload (WESP)
-142	1	0	0	0	-1    Robust Header Compression (ROHC)
-143	1	0	0	0	-1    Ethernet
-#144-252	0	0	0	0	-1    Unassigned
-253	0	1	0	0	-1    Use for experimentation and testing
-254	0	1	0	0	-1    Use for experimentation and testing
-255	0	0	0	0	-1    Reserved
+#  OK IPs MACs Port  Description
+0	1	0	0	-1    IPv6 Hop-by-Hop Option (HOPOPT)
+1	1	1	0	-1    Internet Control Mess (ICMP)
+2	1	0	0	-1    Internet Group Management (IGMP)
+3	1	0	0	-1    Gateway-to-Gateway (GGP)
+4	1	0	0	-1    IPv4 encapsulation
+5	1	0	0	-1    Stream (ST)
+6	1	1	1	161   SNMP (UDP)
+6	1	1	1	514   System Logs
+6	1	1	1	53    Domain Name Service (DNS)
+6	1	0	0	-1    Transmission Control (TCP)
+7	1	0	0	-1    CBT
+8	1	0	0	-1    Exterior Gateway Protocol (EGP)
+9	1	0	0	-1    any private interior gateway (used by Cisco for their IGRP)
+10	1	0	0	-1    BBN RCC Monitoring (BBN-RCC-MON)
+11	1	0	0	-1    Network Voice Protocol (NVP-II)
+12	1	0	0	-1    PUP
+13	1	0	0	-1    ARGUS (deprecated)
+14	1	0	0	-1    EMCON
+15	1	0	0	-1    Cross Net Debugger (XNET)
+16	1	1	1	-1    CHAOS
+17	1	1	1	161   SNMP (UDP)
+17	1	1	1	514   System Logs
+17	1	1	1	53    Domain Name Service (DNS)
+17	1	0	0	-1    Domain Name Service (DNS)
+18	1	0	0	-1    Multiplexing (MUX)
+19	1	0	0	-1    DCN Measurement Subsystems (DCN-MEAS)
+20	1	0	0	-1    Host Monitoring (HMP)
+21	1	0	0	-1    Packet Radio Measurement (PRM)
+22	1	0	0	-1    XEROX NS IDP
+23	1	0	0	-1    TRUNK-1
+24	1	0	0	-1    TRUNK-2
+25	1	0	0	-1    LEAF-1
+26	1	0	0	-1    LEAF-2
+27	1	0	0	-1    Reliable Data Protocol (RDP)
+28	1	0	0	-1    Internet Reliable Transaction (IRTP)
+29	1	0	0	-1    ISO Transport Protocol Class 4 (ISO-TP4)
+30	1	0	0	-1    Bulk Data Transfer Protocol (NETBLT)
+31	1	0	0	-1    MFE Network Services Protocol (MFE-NSP)
+32	1	0	0	-1    MERIT Internodal Protocol (MERIT-INP)
+33	1	0	0	-1    Datagram Congestion Control Protocol (DCCP)
+34	1	0	0	-1    Third Party Connect Protocol (3PC)
+35	1	0	0	-1    Inter-Domain Policy Routing Protocol (IDPR)
+36	1	0	0	-1    XTP
+37	1	0	0	-1    Datagram Delivery Protocol (DDP)
+38	1	0	0	-1    IDPR Control Message Transport Proto (IDPR-CMTP)
+39	1	0	0	-1    Transport Protocol (TP++)
+40	1	0	0	-1    Transport Protocol (IL)
+41	1	0	0	-1    encapsulation (IPv6)
+42	1	0	0	-1    Source Demand Routing Protocol (SDRP)
+43	1	0	0	-1    Routing Header for IPv6 (IPv6-Route)
+44	1	0	0	-1    Fragment Header for IPv6 (IPv6-Frag)
+45	1	0	0	-1    Inter-Domain Routing Protocol (IDRP)
+46	1	0	0	-1    Reservation Protocol (RSVP)
+47	1	1	0	-1    Generic Routing Encapsulation (GRE)
+48	1	0	0	-1    Dynamic Source Routing Protocol (DSR)
+49	1	0	0	-1    BNA
+50	1	0	0	-1    Encap Security Payload (ESP)
+51	1	0	0	-1    Authentication Header (AH)
+52	1	0	0	-1    Integrated Net Layer Security TUBA (I-NLSP)
+53	1	0	0	-1    (deprecated)	IP with Encryption (SWIPE)
+54	1	0	0	-1    NBMA Address Resolution Protocol (NARP)
+55	1	0	0	-1    IP Mobility (MOBILE)
+56	1	0	0	-1    Transport Layer Security Protocol using Kryptonet key management (TLSP)
+57	1	0	0	-1    SKIP
+58	1	0	0	-1    IPv6-ICMP
+59	1	0	0	-1    No Next Header for IPv6 (IPv6-NoNxt)
+60	1	0	0	-1    Destination Options for IPv6 (IPv6-Opts)
+61	1	0	0	-1    any host internal protocol
+62	1	0	0	-1    CFTP
+63	1	0	0	-1    any local network
+64	1	0	0	-1    SATNET and Backroom EXPAK (SAT-EXPAK)
+65	1	0	0	-1    KRYPTOLAN
+66	1	0	0	-1    MIT Remote Virtual Disk Protocol (RVD)
+67	1	0	0	-1    Internet Pluribus Packet Core (IPPC)
+68	1	0	0	-1    any distributed file system
+69	1	0	0	-1    SATNET Monitoring (SAT-MON)
+70	1	0	0	-1    Protocol (VISA)
+71	1	0	0	-1    Internet Packet Core Utility (IPCV)
+72	1	0	0	-1    Computer Protocol Network Executive (CPNX)
+73	1	0	0	-1    Computer Protocol Heart Beat (CPHB)
+74	1	0	0	-1    Wang Span Network (WSN)
+75	1	0	0	-1    Packet Video Protocol (PVP)
+76	1	0	0	-1    Backroom SATNET Monitoring (BR-SAT-MON)
+77	1	0	0	-1    SUN ND PROTOCOL-Temporary (SUN-ND)
+78	1	0	0	-1    WIDEBAND Monitoring (WB-MON)
+79	1	0	0	-1    WIDEBAND EXPAK (WB-EXPAK)
+80	1	0	0	-1    ISO Internet Protocol (ISO-IP)
+81	1	0	0	-1    VMTP
+82	1	0	0	-1    SECURE-VMTP
+83	1	0	0	-1    VINES
+84	1	0	0	-1    Transaction Transport Protocol (TTP)
+84	1	0	0	-1    Internet Protocol Traffic Manager (IPTM)
+85	1	0	0	-1    NSFNET-IGP
+86	1	0	0	-1    Dissimilar Gateway Protocol (DGP)
+87	1	0	0	-1    TCF
+88	1	1	0	-1    EIGRP Enhanced Interior Gateway Routing Protocol
+89	1	1	0	-1    OSPFIGP Open Shortest Path First
+90	1	0	0	-1    Sprite RPC ProtocolJune 1986
+91	1	0	0	-1    Locus Address Resolution Protocol (LARP)
+92	1	0	0	-1    Multicast Transport Protocol (MTP)
+93	1	0	0	-1    AX.25 Frames
+94	1	0	0	-1    IP-within-IP Encapsulation Protocol (IPIP)
+95	1	0	0	-1    (deprecated)	Mobile Internetworking Control Pro. (MICP)
+96	1	0	0	-1    Semaphore Communications Sec. Pro. (SCC-SP)
+97	1	0	0	-1    Ethernet-within-IP Encapsulation (ETHERIP)
+98	1	0	0	-1    Encapsulation Header (ENCAP)
+99	1	0	0	-1    any private encryption scheme
+100	1	0	0	-1    GMTP
+101	1	0	0	-1    Ipsilon Flow Management Protocol (IFMP)
+102	1	0	0	-1    PNNI over IP
+103	1	0	0	-1    Protocol Independent Multicast (PIM)
+104	1	0	0	-1    ARIS
+105	1	0	0	-1    SCPS
+106	1	0	0	-1    QNX
+107	1	0	0	-1    Active Networks (A/N)
+108	1	0	0	-1    IP Payload Compression Protocol (IPComp)
+109	1	0	0	-1    Sitara Networks Protocol (SNP)
+110	1	0	0	-1    Compaq-Peer Protocol
+111	1	0	0	-1    IPX-in-IP
+112	1	0	0	-1    Virtual Router Redundancy Protocol (VRRP)
+113	1	0	0	-1    PGM Reliable Transport Protocol
+114	1	0	0	-1    any 0-hop protocol
+115	1	0	0	-1    Layer Two Tunneling Protocol (L2TP)
+116	1	0	0	-1    Data Exchange (DDX) (D-II)
+117	1	0	0	-1    Interactive Agent Transfer Protocol (IATP)
+118	1	0	0	-1    Schedule Transfer Protocol (STP)
+119	1	0	0	-1    SpectraLink Radio Protocol (SRP)
+120	1	0	0	-1    UTI
+121	1	0	0	-1    Simple Message Protocol (SMP)
+122	1	0	0	-1    (deprecated) Simple Multicast Protocol (SM)
+123	1	0	0	-1    Performance Transparency Protocol (PTP)
+124	1	0	0	-1    ISIS over IPv4
+125	1	0	0	-1    FIRE
+126	1	0	0	-1    Combat Radio Transport Protocol (CRTP)
+127	1	0	0	-1    Combat Radio User Datagram (CRUDP)
+128	1	0	0	-1    SSCOPMCE
+129	1	0	0	-1    IPLT
+130	1	0	0	-1    Secure Packet Shield (SPS)
+131	1	0	0	-1    Private IP Encapsulation within IP (PIPE)
+132	1	0	0	-1    Stream Control Transmission Protocol (SCTP)
+133	1	0	0	-1    Fibre Channel (FC)
+134	1	0	0	-1    RSVP-E2E-IGNORE
+135	1	0	0	-1    Mobility Header
+136	1	0	0	-1    UDPLite
+137	1	0	0	-1    MPLS-in-IP
+138	1	0	0	-1    MANET Protocols
+139	1	0	0	-1    Host Identity Protocol (HIP)
+140	1	0	0	-1    Shim6 Protocol
+141	1	0	0	-1    Wrapped Encapsulating Security Payload (WESP)
+142	1	0	0	-1    Robust Header Compression (ROHC)
+143	1	0	0	-1    Ethernet
+#144-252	0	0	0	-1    Unassigned
+253	0	0	0	-1    Use for experimentation and testing
+254	0	0	0	-1    Use for experimentation and testing
+255	0	0	0	-1    Reserved
