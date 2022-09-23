@@ -787,7 +787,7 @@ int main(int argc, char **argv){
   char *pcap_fname=0;
   int index, arg;
 
-  ip_fname = "";
+  std::string ip_fname;
   std::string mac_fname;
 
   struct stat filestat;
