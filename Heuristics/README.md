@@ -20,30 +20,20 @@ Configuration files are expected to be in the same directory as the executable. 
 
 ### Source Code Files
 
-- ahocorasickbinary.* - Aho Corasick search. Efficiently searches binary data for multiple MAC or IP (in binary).
-
-- bitsetdynamic.* - Used by Aho Corasick. Holds a dynamically sized bitset with various operations.
-
-- crc32_x.* - Opensource code to calculate the 32-bit CRC.
-
-- crc_test.cpp - Generate the 32-bit CRC for a list of files. This reads files in 10MB chunks so it can handle large files and it demonstrates how 
-to calculate a CRC in chunks.
-
-- ethtype.* - Meta data while searching ethernet types such as is a duplicate MAC expected in the payload. Defines the type and the container for a list.
-
-- find_macs_and_ips.cpp - Independent program to generate a list of MAC and IPs contained in a PCAP file. This functionality is implemented independently in the main heuristic program.
-
-- ipaddresses.cpp - Maintains two lists of IP addresses (in binary). One is IPv4 and one is IPv6. Data is stored in a set so search is based on std::set.
-
-- iptype.* - This will hold a single IP Type entry with the values from the ip_types.txt file. This has no even almost been flushed out. I need to add a routine to read the entire file. 
-
-- macaddresses.cpp - Maintains a list of MAC addresses (in binary). Data is stored in a set so search is based on std::set.
-
-- main.cpp - Main executable. The Makefile creates the executable named "heuristic" by default.
-
-- utilities.* - Pulling utility methods, especially string function / methods to a single location rather than duplicating them.
-
-- utilities_test.cpp
+| Source File(s)         | Description |
+|------------------------|-------------|
+| ahocorasickbinary.*    | Aho Corasick search. Efficiently searches binary data for multiple MAC or IP (in binary). |
+| bitsetdynamic.*        | Used by Aho Corasick. Holds a dynamically sized bitset with various operations. |
+| crc32_x.*              | Opensource code to calculate the 32-bit CRC. |
+| crc_test.cpp           | Generate the 32|bit CRC for a list of files. This reads files in 10MB chunks so it can handle large files and it demonstrates how to calculate a CRC in chunks. |
+| ethtype.*              | Meta data while searching ethernet types such as is a duplicate MAC expected in the payload. Defines the type and the container for a list. |
+| find_macs_and_ips.cpp  | Independent program to generate a list of MAC and IPs contained in a PCAP file. This functionality is implemented independently in the main heuristic program. |
+| ipaddresses.cpp        | Maintains two lists of IP addresses (in binary). One is IPv4 and one is IPv6. Data is stored in a set so search is based on std::set. |
+| iptype.*               | This will hold a single IP Type entry with the values from the ip_types.txt file. This has no even almost been flushed out. I need to add a routine to read the entire file.  |
+| macaddresses.cpp       | Maintains a list of MAC addresses (in binary). Data is stored in a set so search is based on std::set. |
+| main.cpp               | Main executable. The Makefile creates the executable named "heuristic" by default. |
+| utilities.*            | Pulling utility methods, especially string function / methods to a single location rather than duplicating them. |
+| utilities_test.cpp     | Test program for code in the utilities. |
 
 ## Build
 
