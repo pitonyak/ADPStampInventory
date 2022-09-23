@@ -1,13 +1,19 @@
 
-Configuration Files
+# Heuristics Program
 
-eth_types.txt - A list of the valid / expected Ethernet types. Indicates if protocol is valid, MAC or IP is an expected part of the payload.
+The primary purpose of the heuristics is to identify anomalys in a PCAP file. 
 
-ip_protocol_ports.txt - For each protocol, lists of suported ports. Indicates if protocol is valid, MAC or IP is an expected part of the payload. This file is not finalized, especially in that I have not set the columns for entires that may support the IP or MAC to be part of the payload. If no entry found here, value in ip_protocols.txt is used instead.
+## Configuration Files
 
-ip_protocols.txt - List of supported IP protocols. Indicates if protocol is valid, MAC or IP is an expected part of the payload. This file is not finalized, especially in that I have not set the columns for entires that may support the IP or MAC to be part of the payload.
+Configuration files are expected to be in the same directory as the executable. The files are referenced without a path.
 
-ip_types.txt - [Deprecated] List of the valid / expected IP protocols. One entry per IP/Port. See ip_protocols.txt and ip_protocol_ports.txt.
+- eth_types.txt - A list of the valid / expected Ethernet types. Indicates if protocol is valid, MAC or IP is an expected part of the payload.
+
+- ip_protocol_ports.txt - For each protocol, lists of suported ports. Indicates if protocol is valid, MAC or IP is an expected part of the payload. This file is not finalized, especially in that I have not set the columns for entires that may support the IP or MAC to be part of the payload. If no entry found here, value in ip_protocols.txt is used instead.
+
+- ip_protocols.txt - List of supported IP protocols. Indicates if protocol is valid, MAC or IP is an expected part of the payload. This file is not finalized, especially in that I have not set the columns for entires that may support the IP or MAC to be part of the payload.
+
+- ip_types.txt - **[Deprecated]** List of the valid / expected IP protocols. One entry per IP/Port. See ip_protocols.txt and ip_protocol_ports.txt.
 
 
 
