@@ -92,30 +92,29 @@ The utitilities test perform the following tests:
 - A test is also performed to make sure that comparisons between the binary data and an interger works. 
 
 {
-[Heuristics]$ ./utilities_test
+	[Heuristics]$ ./utilities_test
 
+	passed:34 failed:0 for search
 
-passed:34 failed:0 for search
+	passed:8329 failed:0 for bitset testing
+	Processing IP protocol 6 for known ports in configuration file.
+	Processing IP protocol 17 for known ports in configuration file.
 
-passed:8329 failed:0 for bitset testing
-Processing IP protocol 6 for known ports in configuration file.
-Processing IP protocol 17 for known ports in configuration file.
+	passed:15 failed:0 for Ethernet and IP types
 
-passed:15 failed:0 for Ethernet and IP types
-
-PASS: Set ipHeader.ip_p to 6 and compare to IPPROTO_TCP
+	PASS: Set ipHeader.ip_p to 6 and compare to IPPROTO_TCP
 }
 
 ### crc_test
 
-
-[andy@DESKTOP-6U3CUIF Heuristics]$ ./crc_test  crc_test utilities_test
-ec601980        crc_test
-7ab0ca83        utilities_test
-[andy@DESKTOP-6U3CUIF Heuristics]$ crc32 crc_test utilities_test
-ec601980	crc_test
-7ab0ca83	utilities_test
-
+{
+	[Heuristics]$ ./crc_test  crc_test utilities_test
+	ec601980        crc_test
+	7ab0ca83        utilities_test
+	[Heuristics]$ crc32 crc_test utilities_test
+	ec601980	crc_test
+	7ab0ca83	utilities_test
+}
 
 
 ### find_macs_and_ips
