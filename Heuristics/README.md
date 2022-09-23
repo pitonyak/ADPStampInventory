@@ -78,6 +78,52 @@ Only use this in development because they affect runtime, sometimes by a signifi
 | fsanitize=undefined    | UndefinedBehaviorSanitizer. |
 | fno-sanitize=alignment | Prevents complaints while accessing types at improper boundaries; as we do while pulling things such as headers from the compacted binary in a pcket. Only a problem because of the *-fsantize* flag. |
 
+As a simple test, the crc_test program run against a 3.6G took about 16 seconds using sanitize and 7.5 seconds without.
+
+## Running
+
+### utilities_test
+
+The utitilities test perform the following tests:
+
+- Tests for search tests the forwards, backwards, and Aho Corasick tests. 
+- Tests for the bitset tests the dynamic bitset class. 
+- For IP tests, the latest files are read, and this demonstrates that the configuration files are where they should be. 
+- A test is also performed to make sure that comparisons between the binary data and an interger works. 
+
+{
+[Heuristics]$ ./utilities_test
+
+
+passed:34 failed:0 for search
+
+passed:8329 failed:0 for bitset testing
+Processing IP protocol 6 for known ports in configuration file.
+Processing IP protocol 17 for known ports in configuration file.
+
+passed:15 failed:0 for Ethernet and IP types
+
+PASS: Set ipHeader.ip_p to 6 and compare to IPPROTO_TCP
+}
+
+### crc_test
+
+
+[andy@DESKTOP-6U3CUIF Heuristics]$ ./crc_test  crc_test utilities_test
+ec601980        crc_test
+7ab0ca83        utilities_test
+[andy@DESKTOP-6U3CUIF Heuristics]$ crc32 crc_test utilities_test
+ec601980	crc_test
+7ab0ca83	utilities_test
+
+
+
+### find_macs_and_ips
+
+
+
+## Running The Heuristic
+
 
 
 

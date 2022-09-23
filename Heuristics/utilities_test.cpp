@@ -316,13 +316,13 @@ void test_ip_mac() {
   int num_failed = 0;
   int num_passed = 0;
 
-  std::string ip_fname = "ip_types.txt";
+  //std::string ip_fname = "ip_types.txt";
   std::string eth_fname = "eth_types.txt";
   std::string new_ip_fname = "ip_protocols.txt";
   std::string new_ip_ports_fname = "ip_protocol_ports.txt";
 
   struct stat filestat;
-  if(stat(ip_fname.c_str(), &filestat) == 0){
+  if(stat(new_ip_fname.c_str(), &filestat) == 0){
     IPTypes ip_types;
     //ip_types.readProtocols(ip_fname, true, 10);
     ip_types.readProtocols(new_ip_fname, false, 10);
@@ -385,7 +385,7 @@ void test_ip_mac() {
     }
   } else {
     ++num_failed;
-    std::cout << "IP types file does not exist: " << ip_fname << std::endl;
+    std::cout << "IP types file does not exist: " << new_ip_fname << std::endl;
   }
 
   if(stat(eth_fname.c_str(), &filestat) == 0) {
