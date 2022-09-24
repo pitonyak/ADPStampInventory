@@ -92,6 +92,7 @@ The utitilities test perform the following tests:
 - A test is also performed to make sure that comparisons between the binary data and an interger works. 
 
 {
+	
 	$ ./utilities_test
 
 	passed:34 failed:0 for search
@@ -110,6 +111,7 @@ The utitilities test perform the following tests:
 The CRC-32 was added to allow for testing some apsepcts of the data. The crc_test program acts the same as the crc32 program on linux. Below, both programs are run against two files and the same 32-bit CRC is generated. 
 
 {
+
 	$ ./crc_test  crc_test utilities_test
 	ec601980        crc_test
 	7ab0ca83        utilities_test
