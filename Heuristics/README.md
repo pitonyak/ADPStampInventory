@@ -92,9 +92,9 @@ An excerpt from the ip_protocol_port.txt file is shown below.
 ~~~~
 PROTOCOL=6
 #PORT	OK	IPs	MACs	Description
-161	1	1	1		SNMP (UDP)
-514	1	1	1		System Logs
-53	1	1	1		Domain Name Service (DNS)
+161	1	1	1	SNMP (UDP)
+514	1	1	1	System Logs
+53	1	1	1	Domain Name Service (DNS)
 
 # Protocol UDP = 17
 PROTOCOL=17
@@ -221,6 +221,40 @@ This functionality also exists in the Heuristic program automatically so is not 
 
 ## Running The Heuristic
 
+The heuristics program analyzes PCAP files looking for anomalies. Running the program with no arguments prints help text.
 
+~~~~
+$ ./heuristics
+Usage:
+-h Print this help.
+-v Print verbose output while processing the file.
+-r <path to input pcap file>: This PCAP file will be read for all MAC addresses and IP addresses
+-a <path to generated anomaly pcap>: Where to write the anomaly list. This triggers the creation of the anomaly list.
+-p <path to IP output filename, default 'ip_addresses.txt'>: This OPTIONAL file will be populated with the unique, human-readable versions of all IP addresses found in the input PCAP file. If this option is not given, stdout will be used. If '-' is given as the output file, MAC addresses will be printed to stdout.
+-m <path to MAC output filename, default 'mac_addresses.txt'>: This OPTIONAL file will be populated with the unique, human-readable versions of all Ethernet MAC addresses input PCAP file. If this option is not given, stdout will be used. If '-' is given as the output file, MAC addresses will be printed to stdout.
+~~~~
 
+On startup, the base configuration files ip_protocols.txt, ip_protocol_ports.txt, and eth_types.txt are read.
+
+If a PCAP file with the file extension ".pcap" is entered (using -r) and the the IP filename has not been set (using -p), then the IP filename is the same as the PCAP filename but with a ".ip.txt" file extention. For example, if the PCAP filename is "test.pcap", the IP filename is "test.ip.txt". Analogously, the MAC filename (set using -m), if not set, is "test.mac.txt". If the PCAP filename does not end with the ".pcap" file extension, then the defaults ip_addresses.txt and mac_addresses.txt are used instead.
+
+if the IP filename and the MAC filename both exist, they are read and used. if either file is missing, both files are regenerated. If the PCAP file has changed, delete the existing IP and MAC files so that they are regenerated rather than using the older outdated files.
+
+The anomaly file is not generated if the -a option is not used to specify the output PCAP file that will contain the anomalies. In the example below, the IP file does not exist so both the IP and MAC files are created. A summary of the number of packets, number of MAC and IP addresses is printed.
+
+~~~~
+$ ./heuristics -r ../wireshark/fuzz-2010-06-29-8087.pcap -a ../wireshark/fuzz-2010-06-29-8087.out.pcap
+ creating files ../wireshark/fuzz-2010-06-29-8087.mac.txt and ../wireshark/fuzz-2010-06-29-8087.ip.txt
+No more packets in savefile. Iteration 86401
+Examined 86401 packets
+Wrote 3592 MAC addresses.
+wrote 2130 IPv4 addresses and 0 IPv6 sddresses.
+Anomaly file will be over-written: ../wireshark/fuzz-2010-06-29-8087.out.pcap
+Creating Anomaly File
+Initializing ipv4 search
+Initializing ipv6 search
+Initializing macs search
+No more packets in savefile. Iteration 86401
+Examined 86401 packets
+~~~~
 
