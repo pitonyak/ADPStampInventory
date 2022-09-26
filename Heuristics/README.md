@@ -38,16 +38,16 @@ The columns in order are:
 An excerpt from the eth_types.txt file is shown below:
 
 ~~~~
-  #Hex	Valid  IPv6 IPs MACs Description
-  0000-05DC	1	0	0	0	 IEEE802.3 Length Field (0.:1500.)
-  0101-01FF	1	0	0	0	 Experimental
-  0200		1	0	0	0	 Xerox PUP (conflicts with 802.3 Length Field range) (see 0A00)
-  0201		1	0	0	0	 Xerox PUP Address Translation (conflicts ...) (see 0A01)
-  0400		1	0	0	0	 Nixdorf (conflicts with 802.3 Length Field)
-  0600		1	0	0	0	 Xerox NS IDP
-  0601		1	0	0	0	 XNS Address Translation (3Mb only)
-  0660		1	0	0	0	 DLOG
-  0661		1	0	0	0	 DLOG
+#Hex	Valid  IPv6 IPs MACs Description
+0000-05DC	1	0	0	0	 IEEE802.3 Length Field (0.:1500.)
+0101-01FF	1	0	0	0	 Experimental
+0200		1	0	0	0	 Xerox PUP (conflicts with 802.3 Length Field range) (see 0A00)
+0201		1	0	0	0	 Xerox PUP Address Translation (conflicts ...) (see 0A01)
+0400		1	0	0	0	 Nixdorf (conflicts with 802.3 Length Field)
+0600		1	0	0	0	 Xerox NS IDP
+0601		1	0	0	0	 XNS Address Translation (3Mb only)
+0660		1	0	0	0	 DLOG
+0661		1	0	0	0	 DLOG
 ~~~~
 
 #### ip_protocols.txt
@@ -65,12 +65,12 @@ The columns in order are:
 An excerpt from the ip_protocols.txt file is shown below.
 
 ~~~~
- #  OK IPs MACs  Description
- 0	1	0	0    IPv6 Hop-by-Hop Option (HOPOPT)
- 1	1	1	0    Internet Control Mess (ICMP)
- 2	1	0	0    Internet Group Management (IGMP)
- 3	1	0	0    Gateway-to-Gateway (GGP)
- 4	1	0	0    IPv4 encapsulation
+#	OK	IPs	MACs	Description
+0	1	0	0	IPv6 Hop-by-Hop Option (HOPOPT)
+1	1	1	0	Internet Control Mess (ICMP)
+2	1	0	0	Internet Group Management (IGMP)
+3	1	0	0	Gateway-to-Gateway (GGP)
+4	1	0	0	IPv4 encapsulation
 ~~~~
 
 #### ip_protocol_ports.txt
@@ -178,46 +178,43 @@ The utitilities test perform the following tests:
 - A test is also performed to make sure that comparisons between the binary data and an interger works. 
 
 ~~~~
-	$ ./utilities_test
+$ ./utilities_test
 
-	passed:34 failed:0 for search
+passed:34 failed:0 for search
 
-	passed:8329 failed:0 for bitset testing
-	Processing IP protocol 6 for known ports in configuration file.
-	Processing IP protocol 17 for known ports in configuration file.
+passed:8329 failed:0 for bitset testing
+Processing IP protocol 6 for known ports in configuration file.
+Processing IP protocol 17 for known ports in configuration file.
 
-	passed:15 failed:0 for Ethernet and IP types
+passed:15 failed:0 for Ethernet and IP types
 
-	PASS: Set ipHeader.ip_p to 6 and compare to IPPROTO_TCP
+PASS: Set ipHeader.ip_p to 6 and compare to IPPROTO_TCP
 ~~~~
 
 ### crc_test
 
 The CRC-32 was added to allow for testing some apsepcts of the data. The crc_test program acts the same as the crc32 program on linux. Below, both programs are run against two files and the same 32-bit CRC is generated. 
 
-{
+~~~~
+$ ./crc_test  crc_test utilities_test
+ec601980        crc_test
+7ab0ca83        utilities_test
 
-	$ ./crc_test  crc_test utilities_test
-	ec601980        crc_test
-	7ab0ca83        utilities_test
-
-	$ crc32 crc_test utilities_test
-	ec601980	crc_test
-	7ab0ca83	utilities_test
-
-}
-
+$ crc32 crc_test utilities_test
+ec601980	crc_test
+7ab0ca83	utilities_test
+~~~~
 
 ### find_macs_and_ips
 
 This program generates a lsit of IP addresses and MAC addresses used in a PCAP file. Running with no parameters generates help. 
 
 ~~~~
-	$ ./find_macs_and_ips 
-	Usage:
-	-p <path to IP output filename, default 'ip_addresses.txt'>: This OPTIONAL file will be populated with the unique, human-readable versions of all IP addresses found in the input PCAP file. If this option is not given, stdout will be used. If '-' is given as the output file, MAC addresses will be printed to stdout.
-	-m <path to MAC output filename, default 'mac_addresses.txt'>: This OPTIONAL file will be populated with the unique, human-readable versions of all Ethernet MAC addresses input PCAP file. If this option is not given, stdout will be used. If '-' is given as the output file, MAC addresses will be printed to stdout.
-	-r <path to input pcap file>: This PCAP file will be read for all MAC addresses and IP addresses
+$ ./find_macs_and_ips 
+Usage:
+-p <path to IP output filename, default 'ip_addresses.txt'>: This OPTIONAL file will be populated with the unique, human-readable versions of all IP addresses found in the input PCAP file. If this option is not given, stdout will be used. If '-' is given as the output file, MAC addresses will be printed to stdout.
+-m <path to MAC output filename, default 'mac_addresses.txt'>: This OPTIONAL file will be populated with the unique, human-readable versions of all Ethernet MAC addresses input PCAP file. If this option is not given, stdout will be used. If '-' is given as the output file, MAC addresses will be printed to stdout.
+-r <path to input pcap file>: This PCAP file will be read for all MAC addresses and IP addresses
 ~~~~
 
 This functionality also exists in the Heuristic program automatically so is not usually needed.
