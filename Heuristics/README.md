@@ -38,16 +38,16 @@ The columns in order are:
 An excerpt from the eth_types.txt file is shown below:
 
 ~~~~
-#Hex	Valid  IPv6 IPs MACs Description
-0000-05DC	1	0	0	0	 IEEE802.3 Length Field (0.:1500.)
-0101-01FF	1	0	0	0	 Experimental
-0200		1	0	0	0	 Xerox PUP (conflicts with 802.3 Length Field range) (see 0A00)
-0201		1	0	0	0	 Xerox PUP Address Translation (conflicts ...) (see 0A01)
-0400		1	0	0	0	 Nixdorf (conflicts with 802.3 Length Field)
-0600		1	0	0	0	 Xerox NS IDP
-0601		1	0	0	0	 XNS Address Translation (3Mb only)
-0660		1	0	0	0	 DLOG
-0661		1	0	0	0	 DLOG
+#Hex		Valid  IPv6	IPs	MACs	Description
+0000-05DC	1	0	0	0	IEEE802.3 Length Field (0.:1500.)
+0101-01FF	1	0	0	0	Experimental
+0200		1	0	0	0	Xerox PUP (conflicts with 802.3 Length Field range) (see 0A00)
+0201		1	0	0	0	Xerox PUP Address Translation (conflicts ...) (see 0A01)
+0400		1	0	0	0	Nixdorf (conflicts with 802.3 Length Field)
+0600		1	0	0	0	Xerox NS IDP
+0601		1	0	0	0	XNS Address Translation (3Mb only)
+0660		1	0	0	0	DLOG
+0661		1	0	0	0	DLOG
 ~~~~
 
 #### ip_protocols.txt
@@ -90,18 +90,18 @@ Each port for that protocol has a line with the following columns:
 An excerpt from the ip_protocol_port.txt file is shown below.
 
 ~~~~
- PROTOCOL=6
- #PORT	OK	IPs	MACs	Description
- 161		1	1	1		SNMP (UDP)
- 514		1	1	1		System Logs
- 53		1	1	1		Domain Name Service (DNS)
+PROTOCOL=6
+#PORT	OK	IPs	MACs	Description
+161	1	1	1		SNMP (UDP)
+514	1	1	1		System Logs
+53	1	1	1		Domain Name Service (DNS)
 
- # Protocol UDP = 17
- PROTOCOL=17
- #PORT	OK	IPs	MACs	Description
- 161		1	1	1		SNMP (UDP)
- 514		1	1	1		System Logs
- 53		1	1	1		Domain Name Service (DNS)
+# Protocol UDP = 17
+PROTOCOL=17
+#PORT	OK	IPs	MACs	Description
+161	1	1	1	SNMP (UDP)
+514	1	1	1	System Logs
+53	1	1	1	Domain Name Service (DNS)
 ~~~~
 
 ### Source Code
