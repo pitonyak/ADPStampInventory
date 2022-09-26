@@ -16,7 +16,93 @@ Configuration files are expected to be in the same directory as the executable. 
 | ip_protocols.txt       | List of supported IP protocols. Indicates if protocol is valid, MAC or IP is an expected part of the payload. This file is not finalized, especially in that I have not set the columns for entires that may support the IP or MAC to be part of the payload. |
 | ip_types.txt           | **[Deprecated]** List of the valid / expected IP protocols. One entry per IP/Port. See ip_protocols.txt and ip_protocol_ports.txt. |
 
-The configuration files can be edited in place and the program re-run. 
+The configuration files can be edited in place and the program re-run.
+
+- All configuration files start a line based comment using the '**#**' character.
+- Leading and trailing white space is ignored / removed.
+- Comments and empty lines are ignored.
+- All white space in a line is converted to a single space character.
+- Multiple spaces are always converted to a single space.
+
+#### eth_types.txt
+
+The columns in order are: 
+
+1. Ethernet type expressed in HEX. A range may be used by separating the values with a minus sign. No space is allowed in the ethernet type.
+2. Valid (1) or invalid (0). Invalid types are added to the anomaly list when seen.
+3. IPv6 is unused, but indicates if the type is expected for IPv6. This may be removed in the future.
+4. If 1, the payload may contain the source or destination IP as part of the payload so do not look for an IP in the payload.
+5. If 1, the payload may contain the source or destination MAC as part of the payload so do not look for a MAC in the payload.
+6. The rest of the line is considered a comment to remind the person editing the file the purpose of the ethernet type.
+
+An excerpt from the eth_types.txt file is shown below:
+
+~~~~
+  #Hex	Valid  IPv6 IPs MACs Description
+  0000-05DC	1	0	0	0	 IEEE802.3 Length Field (0.:1500.)
+  0101-01FF	1	0	0	0	 Experimental
+  0200		1	0	0	0	 Xerox PUP (conflicts with 802.3 Length Field range) (see 0A00)
+  0201		1	0	0	0	 Xerox PUP Address Translation (conflicts ...) (see 0A01)
+  0400		1	0	0	0	 Nixdorf (conflicts with 802.3 Length Field)
+  0600		1	0	0	0	 Xerox NS IDP
+  0601		1	0	0	0	 XNS Address Translation (3Mb only)
+  0660		1	0	0	0	 DLOG
+  0661		1	0	0	0	 DLOG
+~~~~
+
+#### ip_protocols.txt
+
+This file outlines specific supported IP protocols, which means that the Ethernet type ETHERTYPE_IP (0x0800). IPv6 is not yet supported. This file has a list of Internet Protocol Types and an indicator if the payload having a duplicate IP address or MAC address is considered normal. This is used in conjunction with the ip_protocol_ports.txt file. 
+
+The columns in order are: 
+
+1. Internet Protocol Type in decimal. A range may be used by separating the values with a minus sign. No space is allowed.
+2. Valid (1) or invalid (0). Invalid types are added to the anomaly list when seen.
+3. If 1, the payload may contain the source or destination IP as part of the payload so do not look for an IP in the payload.
+4. If 1, the payload may contain the source or destination MAC as part of the payload so do not look for a MAC in the payload.
+5. The rest of the line is considered a comment to remind the person editing the file the purpose of the ethernet type.
+
+An excerpt from the ip_protocols.txt file is shown below.
+
+~~~~
+ #  OK IPs MACs  Description
+ 0	1	0	0    IPv6 Hop-by-Hop Option (HOPOPT)
+ 1	1	1	0    Internet Control Mess (ICMP)
+ 2	1	0	0    Internet Group Management (IGMP)
+ 3	1	0	0    Gateway-to-Gateway (GGP)
+ 4	1	0	0    IPv4 encapsulation
+~~~~
+
+#### ip_protocol_ports.txt
+
+This file allows for a list of ports along with whether or not the MAC or IP is expected to have the IP Address or MAC address included in the payload. If a specific port is not included in this file, the value in the ip_protocols.txt file is used instead. So, if you check to see if port 1 expects a repeated IP Address and port 1 is not listed for a specific protocol, the *default* value for that protocol is used from the ip_protocols.txt file. Only two protocols are currently supported in the code to pull the ports, TCP and UDP. The file may list ports for other protocols, but this is not supported in the code. Also, IPv6 is not supported to check ports. 
+
+The Internet Protocol Type is listed on a line by itself such as "PROTOCOL=6", where the protocol is a decimal number.
+
+Each port for that protocol has a line with the following columns:
+
+1. Port number in decimal. A range is not supported.
+2. Valid (1) or invalid (0). Invalid ports are added to the anomaly list when seen.
+3. If 1, the payload may contain the source or destination IP as part of the payload so do not look for an IP in the payload.
+4. If 1, the payload may contain the source or destination MAC as part of the payload so do not look for a MAC in the payload.
+5. The rest of the line is considered a comment to remind the person editing the file the purpose of the ethernet type.
+
+An excerpt from the ip_protocol_port.txt file is shown below.
+
+~~~~
+ PROTOCOL=6
+ #PORT	OK	IPs	MACs	Description
+ 161		1	1	1		SNMP (UDP)
+ 514		1	1	1		System Logs
+ 53		1	1	1		Domain Name Service (DNS)
+
+ # Protocol UDP = 17
+ PROTOCOL=17
+ #PORT	OK	IPs	MACs	Description
+ 161		1	1	1		SNMP (UDP)
+ 514		1	1	1		System Logs
+ 53		1	1	1		Domain Name Service (DNS)
+~~~~
 
 ### Source Code
 
@@ -91,8 +177,7 @@ The utitilities test perform the following tests:
 - For IP tests, the latest files are read, and this demonstrates that the configuration files are where they should be. 
 - A test is also performed to make sure that comparisons between the binary data and an interger works. 
 
-{
-	
+~~~~
 	$ ./utilities_test
 
 	passed:34 failed:0 for search
@@ -104,7 +189,7 @@ The utitilities test perform the following tests:
 	passed:15 failed:0 for Ethernet and IP types
 
 	PASS: Set ipHeader.ip_p to 6 and compare to IPPROTO_TCP
-}
+~~~~
 
 ### crc_test
 
@@ -119,13 +204,23 @@ The CRC-32 was added to allow for testing some apsepcts of the data. The crc_tes
 	$ crc32 crc_test utilities_test
 	ec601980	crc_test
 	7ab0ca83	utilities_test
+
 }
 
 
 ### find_macs_and_ips
 
+This program generates a lsit of IP addresses and MAC addresses used in a PCAP file. Running with no parameters generates help. 
 
+~~~~
+	$ ./find_macs_and_ips 
+	Usage:
+	-p <path to IP output filename, default 'ip_addresses.txt'>: This OPTIONAL file will be populated with the unique, human-readable versions of all IP addresses found in the input PCAP file. If this option is not given, stdout will be used. If '-' is given as the output file, MAC addresses will be printed to stdout.
+	-m <path to MAC output filename, default 'mac_addresses.txt'>: This OPTIONAL file will be populated with the unique, human-readable versions of all Ethernet MAC addresses input PCAP file. If this option is not given, stdout will be used. If '-' is given as the output file, MAC addresses will be printed to stdout.
+	-r <path to input pcap file>: This PCAP file will be read for all MAC addresses and IP addresses
+~~~~
 
+This functionality also exists in the Heuristic program automatically so is not usually needed.
 
 ## Running The Heuristic
 
