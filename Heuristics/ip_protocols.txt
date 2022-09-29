@@ -66,8 +66,8 @@
 47	1	1	0    Generic Routing Encapsulation (GRE)
 48	1	0	0    Dynamic Source Routing Protocol (DSR)
 49	1	0	0    BNA
-50	1	0	0    Encap Security Payload (ESP)
-51	1	0	0    Authentication Header (AH)
+50	1	0	0    Encap Security Payload (ESP) for IPv6
+51	1	0	0    Authentication Header (AH) for IPv6
 52	1	0	0    Integrated Net Layer Security TUBA (I-NLSP)
 53	1	0	0    (deprecated)	IP with Encryption (SWIPE)
 54	1	0	0    NBMA Address Resolution Protocol (NARP)
@@ -152,7 +152,7 @@
 132	1	0	0    Stream Control Transmission Protocol (SCTP)
 133	1	0	0    Fibre Channel (FC)
 134	1	0	0    RSVP-E2E-IGNORE
-135	1	0	0    Mobility Header
+135	1	0	0    Mobility Header (IPv6)
 136	1	0	0    UDPLite
 137	1	0	0    MPLS-in-IP
 138	1	0	0    MANET Protocols
