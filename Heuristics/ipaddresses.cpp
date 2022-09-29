@@ -93,30 +93,12 @@ IpAddresses::~IpAddresses() {
     m_unique_ipv6.clear();
 }
 
-bool IpAddresses::is_ip_equal(const uint8_t *left, const uint8_t *right, bool isIPv4) const {
-
-    if (left == right) {
-        return true;
-    }
-
-    if (left == nullptr || right == nullptr) {
-        return false;
-    }
-    if (left[0] != right[0] ||
-        left[1] != right[1] ||
-        left[2] != right[2] ||
-        left[3] != right[3])
-        return false;
-
-    if (!isIPv4)
-        for (int i = 4; i<16; ++i)
-            if (left[i] != right[i])
-                return false;
-    return true;
+bool IpAddresses::is_address_equal(const uint8_t *left, const uint8_t *right, bool isIPv4) const {
+    return isIPv4 ? is_bin4_equal(left, right) : is_bin16_equal(left, right);
 }
 
 bool IpAddresses::addIpAddress(uint8_t *ip, bool isIPv4, bool ownIt) {
-    if (ip == nullptr || hasIpAddress(ip, isIPv4)) {
+    if (ip == nullptr || hasAddress(ip, isIPv4)) {
         return false;
     }
     uint8_t *ip_copy = ownIt ? ip : dupIpAddress(ip, isIPv4);
@@ -129,19 +111,24 @@ bool IpAddresses::addIpAddress(uint8_t *ip, bool isIPv4, bool ownIt) {
     return true;
 }
 
-bool IpAddresses::hasIpAddress(const uint8_t *ip, bool isIPv4) const {
+bool IpAddresses::hasAddress(const uint8_t *ip, bool isIPv4) const {
+    return isIPv4 ? 
+        m_unique_ipv4.find((uint8_t*)ip) != m_unique_ipv4.end() : 
+        m_unique_ipv6.find((uint8_t*)ip) != m_unique_ipv6.end();
+        /**
     if (isIPv4) {
-        for (auto const &x: m_unique_ipv4) {
-            if (is_ip_equal(ip, x, isIPv4))
-                return true;
-        }
+        // TODO: New method
+        return m_unique_ipv4.find((uint8_t*)ip) != m_unique_ipv4.end();
+        // Old method!
+        //for (auto const &x: m_unique_ipv4) {
+        //    if (is_address_equal(ip, x, isIPv4))
+        //        return true;
+       }
     } else {
-        for (auto const &x: m_unique_ipv6) {
-            if (is_ip_equal(ip, x, isIPv4))
-                return true;
-        }
+        return m_unique_ipv6.find((uint8_t*)ip) != m_unique_ipv6.end();
     }
     return false;
+    **/
 }
 
 uint8_t* IpAddresses::dupIpAddress(const uint8_t *ip, bool isIPv4) {
@@ -229,4 +216,20 @@ bool IpAddresses::read_file(const std::string& filename) {
   }
   std::cout << "Read " << line_count << " lines from the IP file." << std::endl;
   return true;
+}
+
+std::vector<uint8_t *>* IpAddresses::toVector(bool isIPv4) const {
+    std::vector<uint8_t *>* v = new std::vector<uint8_t *>();
+    if (isIPv4) {
+        v->reserve(m_unique_ipv4.size());
+            for (auto const &ptr: m_unique_ipv4) {
+            v->push_back(ptr);
+        }
+    } else {
+        v->reserve(m_unique_ipv6.size());
+        for (auto const &ptr: m_unique_ipv6) {
+            v->push_back(ptr);
+        }
+    }
+    return v;
 }

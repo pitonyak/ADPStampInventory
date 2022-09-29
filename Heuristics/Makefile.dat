@@ -24,55 +24,55 @@ CXXFLAGS:=-O3 -fPIC -Werror -Wall -Wextra
 INCLUDE:=-I/work1/home/emeneker/local_build/install/libpcap/1.9.1/include
 LIBS:=-lpcap
 
+# So clean is always considered out of date.
 .PHONY=clean
 
-heuristics: main.o utilities.o iptype.o crc32_x.o ethtype.o find_macs_and_ips utilities_test crc_test macaddresses.o ipaddresses.o bitsetdynamic.o
-	$(CXX) $(CXXFLAGS) main.o utilities.o iptype.o crc32_x.o ethtype.o macaddresses.o ipaddresses.o ahocorasickbinary.o bitsetdynamic.o -o heuristics $(LDFLAGS) $(LIBS)
+# Add .d to Make's recognized suffixes.
+SUFFIXES += .d
 
-find_macs_and_ips: find_macs_and_ips.o macaddresses.o ipaddresses.o
-	$(CXX) $(CXXFLAGS) find_macs_and_ips.o macaddresses.o ipaddresses.o -o find_macs_and_ips $(LDFLAGS) $(LIBS)
+#We don't need to clean up when we're making these targets
+NODEPS:=clean
 
-main.o: main.cpp utilities.o iptype.o ethtype.o crc32_x.o macaddresses.o ipaddresses.o ahocorasickbinary.o bitsetdynamic.o
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -o main.o -c main.cpp
+#Find all the C++ files in the ./ directory
+SOURCES:=$(shell find ./ -name "*.cpp")
+#These are the dependency files, which make will clean up after it creates them
+DEPFILES:=$(patsubst %.cpp,%.d,$(SOURCES))
+OBJFILES:=$(patsubst %.cpp,%.o,$(SOURCES))
+EXEFILES:=heuristics find_macs_and_ips crc_test utilities_test
 
-find_macs_and_ips.o: find_macs_and_ips.cpp ipaddresses.o macaddresses.o
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -o find_macs_and_ips.o -c find_macs_and_ips.cpp
+# I can avoid this by listing the DEPFILES as part of all.
+#Don't create dependencies when we're cleaning, for instance
+#ifeq (0, $(words $(findstring $(MAKECMDGOALS), $(NODEPS))))
+    #Chances are, these files don't exist.  GMake will create them and
+    #clean up automatically afterwards
+#    -include $(DEPFILES)
+#endif
 
-utilities.o: utilities.cpp utilities.h
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -o utilities.o -c utilities.cpp
+$(info DEPFILES: $(DEPFILES))
+$(info OBJFILES: $(OBJFILES))
+$(info EXEFILES: $(EXEFILES))
 
-utilities_test.o: utilities_test.cpp 
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -o utilities_test.o -c utilities_test.cpp
+#This is the rule for creating the dependency files
+%.d: %.cpp
+	$(CXX) $(CXXFLAGS) -MM -MT '$(patsubst %.cpp,%.o,$<)' $< -MF $@
 
-iptype.o: iptype.cpp iptype.h
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -o iptype.o -c iptype.cpp
+#This rule does the compilation
+%.o: %.cpp %.d %.h
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
-ethtype.o: ethtype.cpp ethtype.h
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -o ethtype.o -c ethtype.cpp
+all: $(DEPFILES) $(OBJFILES) $(EXEFILES) 
 
-crc32_x.o: crc32_x.cpp crc32_x.h
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -o crc32_x.o -c crc32_x.cpp
+heuristics: main.o utilities.o iptype.o crc32_x.o ethtype.o macaddresses.o ipaddresses.o bitsetdynamic.o MurmurHash3.o
+	$(CXX) $(CXXFLAGS) main.o utilities.o iptype.o crc32_x.o ethtype.o macaddresses.o ipaddresses.o ahocorasickbinary.o bitsetdynamic.o MurmurHash3.o -o heuristics $(LDFLAGS) $(LIBS)
 
-crc_test.o: crc_test.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -o crc_test.o -c crc_test.cpp
+find_macs_and_ips: find_macs_and_ips.o macaddresses.o ipaddresses.o utilities.o
+	$(CXX) $(CXXFLAGS) find_macs_and_ips.o macaddresses.o ipaddresses.o utilities.o MurmurHash3.o -o find_macs_and_ips $(LDFLAGS) $(LIBS)
+
+utilities_test: utilities_test.o utilities.o ahocorasickbinary.o bitsetdynamic.o ethtype.o iptype.o ipaddresses.o macaddresses.o MurmurHash3.o
+	$(CXX) $(CXXFLAGS) utilities_test.o utilities.o ahocorasickbinary.o bitsetdynamic.o ethtype.o iptype.o ipaddresses.o macaddresses.o MurmurHash3.o -o utilities_test $(LDFLAGS) $(LIBS)
 
 crc_test: crc_test.o crc32_x.o
 	$(CXX) $(CXXFLAGS) crc_test.o crc32_x.o -o crc_test $(LDFLAGS) $(LIBS)
 
-macaddresses.o: macaddresses.cpp macaddresses.h
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -o macaddresses.o -c macaddresses.cpp
-
-ipaddresses.o: ipaddresses.cpp ipaddresses.h
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -o ipaddresses.o -c ipaddresses.cpp
-
-utilities_test: utilities_test.o utilities.o ahocorasickbinary.o bitsetdynamic.o ethtype.o iptype.o
-	$(CXX) $(CXXFLAGS) utilities_test.o utilities.o ahocorasickbinary.o bitsetdynamic.o ethtype.o iptype.o -o utilities_test $(LDFLAGS) $(LIBS)
-
-ahocorasickbinary.o: ahocorasickbinary.cpp ahocorasickbinary.h bitsetdynamic.o #include bitsetdynamic.o
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -o ahocorasickbinary.o -c ahocorasickbinary.cpp
-
-bitsetdynamic.o: bitsetdynamic.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -o bitsetdynamic.o -c bitsetdynamic.cpp
-
 clean:
-	rm -f main.o heuristics crc_test utilities.o iptype.o crc32_x.o crc_test.o a.out ethtype.o utilities_test utilities_test.o find_macs_and_ips.o find_macs_and_ips macaddresses.o ipaddresses.o ahocorasickbinary.o
+	rm -f $(DEPFILES) $(OBJFILES) $(EXEFILES)

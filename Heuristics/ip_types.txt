@@ -2,7 +2,7 @@
 # Valid IP types found here: 
 # https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml
 #
-# This files contains both an IP Protocol / Type and a Port Number. 
+# This files contains both an IP Protocol / Type and a Port Number.
 # A port of -1 is a catch-all and is like saying "I do not care what the port is".
 # In the code, you ask for both the Type and the Port.
 # If the Type / Port combination does not exist, then Port -1 (if it exists)

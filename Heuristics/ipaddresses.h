@@ -5,7 +5,9 @@
 #include <set>
 #include <cstdint>
 #include <string>
-#include <unordered_map>
+#include <unordered_set>
+
+#include "utilities.h"
 
 //**************************************************************************
 //! Encapsulate a collection of IP addresses.
@@ -50,7 +52,7 @@ public:
      * \returns True if exists.
      *
      ***************************************************************************/
-    bool hasIpAddress(const uint8_t *ip, bool isIPv4) const;
+    bool hasAddress(const uint8_t *ip, bool isIPv4) const;
 
     //**************************************************************************
     //! Make a copy of the IP (using new).
@@ -103,12 +105,19 @@ public:
      ***************************************************************************/
     bool write_file(const std::string& filename);
 
-    bool is_ip_equal(const uint8_t *left, const uint8_t *right, bool isIPv4) const;
+    bool is_address_equal(const uint8_t *left, const uint8_t *right, bool isIPv4) const;
 
     void clear();
 
-    std::set<uint8_t *> m_unique_ipv4;
-    std::set<uint8_t *> m_unique_ipv6;
+    std::vector<uint8_t *>* toVector(bool isIPv4) const;
+
+    // Store the binary addresses. 
+    // The custom compare method provides more than a 100x speed improvement
+    // for the hasAddress method when searching a few thousand addresses.
+    //std::set<uint8_t*, CustomLessthan_bin4> m_unique_ipv4;
+    //std::set<uint8_t*, CustomLessthan_bin16> m_unique_ipv6;
+    std::unordered_set<uint8_t*, CustomHash_bin4, CustomEqual_bin4> m_unique_ipv4;
+    std::unordered_set<uint8_t*, CustomHash_bin16, CustomEqual_bin16> m_unique_ipv6;
 };
 
 #endif // IPTYPE_H

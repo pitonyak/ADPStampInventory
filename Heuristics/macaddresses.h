@@ -5,7 +5,9 @@
 #include <set>
 #include <cstdint>
 #include <string>
-#include <unordered_map>
+#include <unordered_set>
+
+#include "utilities.h"
 
 
 //**************************************************************************
@@ -45,7 +47,7 @@ public:
      * \returns True if this MAC is already stored.
      *
      ***************************************************************************/
-    bool hasMacAddress(const uint8_t *mac) const;
+    bool hasAddress(const uint8_t *mac) const;
 
     //**************************************************************************
     //! Make a copy of the MAC (using new).
@@ -115,12 +117,21 @@ public:
      ***************************************************************************/
     bool write_file(const std::string& filename);
 
-    bool is_mac_address_equal(const uint8_t *left, const uint8_t *right) const;
+    static bool is_address_equal(const uint8_t *left, const uint8_t *right);
 
     void clear();
 
-    // I should encapsulate this, but I prefer to be fast.
-    std::set<uint8_t *> m_unique_macs;
+    std::vector<uint8_t *>* toVector() const;
+
+    // Store the binary addresses. 
+    // The custom compare method provides more than a 100x speed improvement
+    // for the hasAddress method when searching a few thousand addresses.
+    //std::set<uint8_t*, CustomLessthan_bin6> m_unique_macs;
+
+    //MacAddresses::<lambda(const DATA_POINTER&)> hash6 = [](const DATA_POINTER& dp){ uint32_t hash_value = 0; if (dp != nullptr) MurmurHash3_x86_32(dp, 6, &hash_value); return hash_value; };
+    //bool equal6 = [](const DATA_POINTER& dp lhs, const DATA_POINTER& rhs){ return is_bin6_equal(lhs, rhs); };
+    //std::unordered_set<uint8_t*, CustomHash_bin6, CustomEqual_bin6> m_unique_macs(8, CustomHash_bin6, CustomEqual_bin6);
+    std::unordered_set<uint8_t*, CustomHash_bin6, CustomEqual_bin6> m_unique_macs;
 };
 
 #endif // IPTYPE_H

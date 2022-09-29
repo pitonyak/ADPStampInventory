@@ -140,7 +140,7 @@ bool IPTypes::readProtocolPorts(const std::string& filename) {
       if (line_copy.compare(protocolString) == 0) {
         line_copy = line.substr(9);
         current_protocol = std::stoi(line_copy, nullptr, 10);
-        std::cout << "Processing IP protocol " << current_protocol << " for known ports in configuration file." << std::endl;
+        //std::cout << "Processing IP protocol " << current_protocol << " for known ports in configuration file." << std::endl;
         continue;
       }
     }

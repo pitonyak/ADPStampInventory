@@ -258,3 +258,22 @@ No more packets in savefile. Iteration 86401
 Examined 86401 packets
 ~~~~
 
+
+# Speed improvements
+
+The PCAP files will be large so some actions will be done repeatedly. Improvements have been done in many areas.
+
+Because the packet data is binary, operations are done as much as possible in binary without converting to a more convenient form such as a string. C++ does not provide automated methods to store the data in this format complete with searching (and similar).
+
+## The Aho Corasick Algorithm
+
+The heuristic searches blocks of data to see if it contains a MAC or IP address as part of the data. There may be thousands of IP and MAC addresses to check. The Aho Corasick algorithm matches all instances simultaneously. The search list is preprocessed to create a finite-state machine for MAC, IPv4, and IPv6 addresses. The algorithm is able to return all matches with a single search with a time complexity that is linear  with respect to the length of the length of the search strings, linear with respect to the length of the data searched, and linear  with respect to the total number of matches. Although the total number of matches may be high (quadratic), the heuristic stops when the first match is found.
+
+The Aho-Corasick algorithm is more efficient if a variable size Bitset class is available. A custom class was written because one is not included in the standard library. This improved the speed of the algorithm significantly over the already significantly improved times offered by the algorithm itself.
+
+## Storing IP and MAC addresses
+
+IP and MAC addresses are stored and searched as bytes (uint8_t), which usually reduces to an unsigned char. Internally, C++ stores strings as an array of characters that are teminated by a null (0) character, so the standard string methods are expected to fail with the packet data containing null bytes. Storing the data in arrays or vectors is not efficient for storing storage or searching. Also, the standard containers do know how to search this type of data so custom methods must be written to allow the standard algorithms to work. Creation of these methods and classes along with judicious use of storage containers provides significant improvements with respect to search times to determine if an address is stored in a container.
+
+Using std::set with a custom comparitor decreased runtime by a factor of 160; a two orders of magnitude improvement. Note that std::set implements a binary tree and stores the data in sorted order so searches are roughly log(n). The std::unordered_set requires a custom hash and a custom comparitor and the average search time is usually constant (with appropriate loading and a well behaved hash for the data). After implementing both, search improvements against a few thousand addresses was improved by another factor of about 5 for a total improvement of 680.
+

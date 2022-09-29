@@ -284,3 +284,138 @@ std::string getDirectoryFromFilename(const std::string& sPath) {
   }
   return path.string();
 }
+
+bool is_bin_less(const uint8_t *left, const uint8_t *right, size_t len) {
+  if (left == right || len == 0) {
+    return false;
+  }
+  if (left == nullptr) {
+    // They are not both null because they are not equal.
+    return true;
+  } else if (right == nullptr) {
+    return false;
+  }
+  
+  do {
+    --len;
+    if (left[len] < right[len]) {
+      return true;
+    } else if (left[len] > right[len]) {
+      return false;
+    }
+  } while (len > 0);
+  return false;
+}
+
+bool is_bin_equal(const uint8_t *left, const uint8_t *right, size_t len) {
+  if (left == right || len == 0) {
+    return true;
+  }
+  if (left == nullptr || right == nullptr) {
+    return false;
+  }
+  do {
+    --len;
+    if (left[len] != right[len]) {
+      return false;
+    }
+  } while (len > 0);
+  return true;
+}
+
+bool is_bin4_less(const uint8_t *left, const uint8_t *right) {
+  if (left == right) {
+    return false;
+  }
+  if (left == nullptr) {
+    // They are not both null because they are not equal.
+    return true;
+  } else if (right == nullptr) {
+    return false;
+  }
+  const uint32_t* left_1 = (const uint32_t*)left;
+  const uint32_t* right_1 = (const uint32_t*)right;
+
+  return (*left_1 < *right_1);
+}
+
+bool is_bin4_equal(const uint8_t *left, const uint8_t *right) {
+  if (left == right) {
+    return true;
+  }
+  if (left == nullptr || right == nullptr) {
+    return false;
+  }
+  const uint32_t* left_1 = (const uint32_t*)left;
+  const uint32_t* right_1 = (const uint32_t*)right;
+
+  return (*left_1 == *right_1);
+}
+
+
+bool is_bin6_less(const uint8_t *left, const uint8_t *right) {
+  if (left == right) {
+    return false;
+  }
+  if (left == nullptr) {
+    // They are not both null because they are not equal.
+    return true;
+  } else if (right == nullptr) {
+    return false;
+  }
+  const uint32_t* left_1 = (const uint32_t*)left;
+  const uint32_t* right_1 = (const uint32_t*)right;
+  const uint16_t* left_2 = (const uint16_t*)(left + 4);
+  const uint16_t* right_2 = (const uint16_t*)(right + 4);
+
+  return (*left_1 < *right_1) || (*left_1 == *right_1 && *left_2 < *right_2);
+}
+
+bool is_bin6_equal(const uint8_t *left, const uint8_t *right) {
+  if (left == right) {
+    return true;
+  }
+  if (left == nullptr || right == nullptr) {
+    return false;
+  }
+  const uint32_t* left_1 = (const uint32_t*)left;
+  const uint32_t* right_1 = (const uint32_t*)right;
+  const uint16_t* left_2 = (const uint16_t*)(left + 4);
+  const uint16_t* right_2 = (const uint16_t*)(right + 4);
+
+  return (*left_1 == *right_1) && (*left_2 == *right_2);
+}
+
+bool is_bin16_less(const uint8_t *left, const uint8_t *right) {
+  if (left == right) {
+    return false;
+  }
+  if (left == nullptr) {
+    // They are not both null because they are not equal.
+    return true;
+  } else if (right == nullptr) {
+    return false;
+  }
+  const uint64_t* left_1 = (const uint64_t*)left;
+  const uint64_t* right_1 = (const uint64_t*)right;
+  const uint64_t* left_2 = (const uint64_t*)(left + 8);
+  const uint64_t* right_2 = (const uint64_t*)(right + 8);
+
+  return (*left_1 < *right_1) || (*left_1 == *right_1 && *left_2 < *right_2);
+}
+
+bool is_bin16_equal(const uint8_t *left, const uint8_t *right) {
+  if (left == right) {
+    return true;
+  }
+  if (left == nullptr || right == nullptr) {
+    return false;
+  }
+  const uint64_t* left_1 = (const uint64_t*)left;
+  const uint64_t* right_1 = (const uint64_t*)right;
+  const uint64_t* left_2 = (const uint64_t*)(left + 8);
+  const uint64_t* right_2 = (const uint64_t*)(right + 8);
+  //std::cout << "(" << *left_1 << ", " << *right_1 << ")(" << *left_2 << ", " << *right_2 << ")" << std::endl;
+
+  return (*left_1 == *right_1) && (*left_2 == *right_2);
+}

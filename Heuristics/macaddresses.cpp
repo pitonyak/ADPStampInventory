@@ -47,7 +47,7 @@ std::string MacAddresses::mac_to_str(const uint8_t *mac) {
 MacAddresses::MacAddresses() {
 }
 
-MacAddresses::MacAddresses(const MacAddresses& x) {
+MacAddresses::MacAddresses(const MacAddresses& x) : MacAddresses() {
     for (auto const &mac_ptr: x.m_unique_macs) {
         m_unique_macs.insert(dupMacAddress(mac_ptr));
     }
@@ -77,35 +77,29 @@ MacAddresses::~MacAddresses() {
     m_unique_macs.clear();
 }
 
-bool MacAddresses::is_mac_address_equal(const uint8_t *left, const uint8_t *right) const {
-    if (left == right) {
-        return true;
-    }
-    if (left == nullptr || right == nullptr) {
-        return false;
-    }
-    return left[0] == right[0] && 
-           left[1] == right[1] &&
-           left[2] == right[2] &&
-           left[3] == right[3] &&
-           left[4] == right[4] &&
-           left[5] == right[5];
+bool MacAddresses::is_address_equal(const uint8_t *left, const uint8_t *right) {
+    return is_bin6_equal(left, right);
 }
 
 bool MacAddresses::addMacAddress(const uint8_t *mac) {
-    if (mac == nullptr || hasMacAddress(mac)) {
+    if (mac == nullptr || hasAddress(mac)) {
         return false;
     }
     m_unique_macs.insert(dupMacAddress(mac));
     return true;
 }
 
-bool MacAddresses::hasMacAddress(const uint8_t *mac) const {
-    for (auto const &x: m_unique_macs) {
-        if (is_mac_address_equal(mac, x))
-            return true;
-    }
-    return false;
+bool MacAddresses::hasAddress(const uint8_t *mac) const {
+    return m_unique_macs.find((uint8_t*)mac) != m_unique_macs.end();
+}
+
+std::vector<uint8_t *>* MacAddresses::toVector() const {
+  std::vector<uint8_t *>* v = new std::vector<uint8_t *>();
+  v->reserve(m_unique_macs.size());
+  for (auto const &ptr: m_unique_macs) {
+    v->push_back(ptr);
+  }
+  return v;
 }
 
 uint8_t* MacAddresses::dupMacAddress(const uint8_t *mac) const {

@@ -6,6 +6,8 @@
 #include <queue>
 #include <string>
 
+#include "MurmurHash3.h"
+
 
 //**************************************************************************
 //! Convert all contained white space "\t\n\v\f\r" to a single space character.
@@ -205,5 +207,168 @@ bool isPathExist(const std::string& sPath, bool isFile, bool isDirectory, bool c
  *
  ***************************************************************************///
 std::string getDirectoryFromFilename(const std::string& sPath);
+
+//**************************************************************************
+//! Generic binary compare for less than. This is half the speed of the specific methods that know the size.
+/*!
+ * 
+ * \param [in] left  - Pointer to one set of data to compare.
+ * 
+ * \param [in] right - Pointer to one set of data to compare.
+ * 
+ * \param [in] len   - Number of bytes to compare.
+ * 
+ * \returns True if the left data compares to less than the right.
+ *
+ ***************************************************************************///
+
+bool is_bin_less(const uint8_t *left, const uint8_t *right, size_t len);
+
+//**************************************************************************
+//! Generic binary compare for equal. This is half the speed of the specific methods that know the size.
+/*!
+ * 
+ * \param [in] left  - Pointer to one set of data to compare.
+ * 
+ * \param [in] right - Pointer to one set of data to compare.
+ * 
+ * \param [in] len   - Number of bytes to compare.
+ * 
+ * \returns True if the left data is the same as the right.
+ *
+ ***************************************************************************///
+bool is_bin_equal(const uint8_t *left, const uint8_t *right, size_t len);
+
+//**************************************************************************
+//! Binary compare for less than assuming the data is four bytes (32-bits) long.
+/*!
+ * 
+ * \param [in] left  - Pointer to one set of data to compare.
+ * 
+ * \param [in] right - Pointer to one set of data to compare.
+ * 
+ * \param [in] len   - Number of bytes to compare.
+ * 
+ * \returns True if the left data compares to less than the right.
+ *
+ ***************************************************************************///
+bool is_bin4_less(const uint8_t* left, const uint8_t* right);
+
+//**************************************************************************
+//! Binary compare for equal assuming the data is four bytes (32-bits) long.
+/*!
+ * 
+ * \param [in] left  - Pointer to one set of data to compare.
+ * 
+ * \param [in] right - Pointer to one set of data to compare.
+ * 
+ * \param [in] len   - Number of bytes to compare.
+ * 
+ * \returns True if the left data is the same as the right.
+ *
+ ***************************************************************************///
+bool is_bin4_equal(const uint8_t *left, const uint8_t *right);
+bool is_bin6_less(const uint8_t *left, const uint8_t *right);
+bool is_bin6_equal(const uint8_t *left, const uint8_t *right);
+bool is_bin16_less(const uint8_t *left, const uint8_t *right);
+bool is_bin16_equal(const uint8_t *left, const uint8_t *right);
+
+typedef uint8_t* DATA_POINTER;
+
+//**************************************************************************
+//! Custom compare for 4 bytes (32-bits) for use with std::set, which requires less than. This is used for IPv4.
+/*!
+ *
+\code{.cpp}
+std::set<uint8_t*, CustomLessthan_bin4> m_unique_ipv4;
+\endcode
+ *
+ ***************************************************************************///
+struct CustomLessthan_bin4 {
+    bool operator()(const DATA_POINTER& left, const DATA_POINTER& right) const {
+        return is_bin4_less(left, right);
+    }
+};
+
+struct CustomEqual_bin4 {
+    bool operator()(const DATA_POINTER& left, const DATA_POINTER& right) const {
+        return is_bin4_equal(left, right);
+    }
+};
+
+//**************************************************************************
+//! Custom compare for 6 bytes for use with std::set, which requires less than. This is used for MAC addresses.
+/*!
+ *
+\code{.cpp}
+std::set<uint8_t*, CustomLessthan_bin6> m_unique_macs;
+\endcode
+ *
+ ***************************************************************************///
+struct CustomLessthan_bin6 {
+    bool operator()(const DATA_POINTER& left, const DATA_POINTER& right) const {
+        return is_bin6_less(left, right);
+    }
+};
+
+struct CustomEqual_bin6 {
+    bool operator()(const DATA_POINTER& left, const DATA_POINTER& right) const {
+        return is_bin6_equal(left, right);
+    }
+};
+
+
+//**************************************************************************
+//! Custom compare for 16 bytes for use with std::set, which requires less than. This is used for IPv6.
+/*!
+ *
+\code{.cpp}
+std::set<uint8_t*, CustomLessthan_bin16> m_unique_ipv4;
+\endcode
+ *
+ ***************************************************************************///
+struct CustomLessthan_bin16 {
+    bool operator()(const DATA_POINTER& left, const DATA_POINTER& right) const {
+        return is_bin16_less(left, right);
+    }
+};
+
+struct CustomEqual_bin16 {
+    bool operator()(const DATA_POINTER& left, const DATA_POINTER& right) const {
+        return is_bin16_equal(left, right);
+    }
+};
+
+
+struct CustomHash_bin4
+{
+    std::size_t operator()(const uint8_t* x) const
+    {
+        uint32_t hash_value = 0;
+        if (x != nullptr) MurmurHash3_x86_32(x, 4, &hash_value);
+        return hash_value;
+    }
+};
+
+struct CustomHash_bin6
+{
+    std::size_t operator()(const uint8_t* x) const
+    {
+        uint32_t hash_value = 0;
+        if (x != nullptr) MurmurHash3_x86_32(x, 6, &hash_value);
+        return hash_value;
+    }
+};
+
+struct CustomHash_bin16
+{
+    std::size_t operator()(const uint8_t* x) const
+    {
+        uint32_t hash_value = 0;
+        if (x != nullptr) MurmurHash3_x86_32(x, 16, &hash_value);
+        return hash_value;
+    }
+};
+
 
 #endif // UTILITIES_H

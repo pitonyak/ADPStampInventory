@@ -37,14 +37,6 @@
 #include "pcap.h"
 #include "utilities.h"
 
-//
-// TODO: Implement search using the Aho Corasick algorithm rather than
-// performing one search for each unique IP and MAC.
-//
-
-// Evil global variable to hold an ethernet type description
-std::unordered_map<unsigned int, std::string> eth_types_description;
-
 // The MAC and IP addresses in this file.
 MacAddresses mac_addresses;
 IpAddresses ip_addresses;
@@ -320,9 +312,9 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
   AhoCorasickBinary search_macs;
 
   if (search_type == aho_corasick_binary) {
-    std::vector<uint8_t *>* words_ipv4 = toVector(ip_addresses.m_unique_ipv4);
-    std::vector<uint8_t *>* words_ipv6 = toVector(ip_addresses.m_unique_ipv6);
-    std::vector<uint8_t *>* words_macs = toVector(mac_addresses.m_unique_macs);
+    std::vector<uint8_t *>* words_ipv4 = ip_addresses.toVector(true);
+    std::vector<uint8_t *>* words_ipv6 = ip_addresses.toVector(false);
+    std::vector<uint8_t *>* words_macs = mac_addresses.toVector();
     std::vector<int>* lengths_ipv4 = getConstWordLengthVector( 4, ip_addresses.m_unique_ipv4.size());
     std::vector<int>* lengths_ipv6 = getConstWordLengthVector(16, ip_addresses.m_unique_ipv6.size());
     std::vector<int>* lengths_macs = getConstWordLengthVector( 6, mac_addresses.m_unique_macs.size());
