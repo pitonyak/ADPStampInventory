@@ -93,10 +93,6 @@ IpAddresses::~IpAddresses() {
     m_unique_ipv6.clear();
 }
 
-bool IpAddresses::is_address_equal(const uint8_t *left, const uint8_t *right, bool isIPv4) const {
-    return isIPv4 ? is_bin4_equal(left, right) : is_bin16_equal(left, right);
-}
-
 bool IpAddresses::addIpAddress(uint8_t *ip, bool isIPv4, bool ownIt) {
     if (ip == nullptr || hasAddress(ip, isIPv4)) {
         return false;
@@ -115,20 +111,6 @@ bool IpAddresses::hasAddress(const uint8_t *ip, bool isIPv4) const {
     return isIPv4 ? 
         m_unique_ipv4.find((uint8_t*)ip) != m_unique_ipv4.end() : 
         m_unique_ipv6.find((uint8_t*)ip) != m_unique_ipv6.end();
-        /**
-    if (isIPv4) {
-        // TODO: New method
-        return m_unique_ipv4.find((uint8_t*)ip) != m_unique_ipv4.end();
-        // Old method!
-        //for (auto const &x: m_unique_ipv4) {
-        //    if (is_address_equal(ip, x, isIPv4))
-        //        return true;
-       }
-    } else {
-        return m_unique_ipv6.find((uint8_t*)ip) != m_unique_ipv6.end();
-    }
-    return false;
-    **/
 }
 
 uint8_t* IpAddresses::dupIpAddress(const uint8_t *ip, bool isIPv4) {
@@ -218,8 +200,8 @@ bool IpAddresses::read_file(const std::string& filename) {
   return true;
 }
 
-std::vector<uint8_t *>* IpAddresses::toVector(bool isIPv4) const {
-    std::vector<uint8_t *>* v = new std::vector<uint8_t *>();
+std::unique_ptr<std::vector<uint8_t *>> IpAddresses::toVector(bool isIPv4) const {
+    std::unique_ptr<std::vector<uint8_t *>> v(new std::vector<uint8_t *>());
     if (isIPv4) {
         v->reserve(m_unique_ipv4.size());
             for (auto const &ptr: m_unique_ipv4) {

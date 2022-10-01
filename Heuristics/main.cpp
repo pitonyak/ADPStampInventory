@@ -71,8 +71,8 @@ std::vector<uint8_t *>* toVector(const std::set<uint8_t *>& x) {
   return v;
 }
 
-std::vector<int>* getConstWordLengthVector(const int wordLength, const int n) {
-  std::vector<int>* v = new std::vector<int>();
+std::unique_ptr<std::vector<int>> getConstWordLengthVector(const int wordLength, const int n) {
+  std::unique_ptr<std::vector<int>> v(new std::vector<int>());
   v->reserve(n);
   for (int i=0; i< n; ++i) {
     v->push_back(wordLength);
@@ -312,27 +312,23 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
   AhoCorasickBinary search_macs;
 
   if (search_type == aho_corasick_binary) {
-    std::vector<uint8_t *>* words_ipv4 = ip_addresses.toVector(true);
-    std::vector<uint8_t *>* words_ipv6 = ip_addresses.toVector(false);
-    std::vector<uint8_t *>* words_macs = mac_addresses.toVector();
-    std::vector<int>* lengths_ipv4 = getConstWordLengthVector( 4, ip_addresses.m_unique_ipv4.size());
-    std::vector<int>* lengths_ipv6 = getConstWordLengthVector(16, ip_addresses.m_unique_ipv6.size());
-    std::vector<int>* lengths_macs = getConstWordLengthVector( 6, mac_addresses.m_unique_macs.size());
+    std::unique_ptr<std::vector<uint8_t *>> words_ipv4 = ip_addresses.toVector(true);
+    std::unique_ptr<std::vector<uint8_t *>> words_ipv6 = ip_addresses.toVector(false);
+    std::unique_ptr<std::vector<uint8_t *>> words_macs = mac_addresses.toVector();
+    std::unique_ptr<std::vector<int>> lengths_ipv4 = getConstWordLengthVector( 4, ip_addresses.m_unique_ipv4.size());
+    std::unique_ptr<std::vector<int>> lengths_ipv6 = getConstWordLengthVector(16, ip_addresses.m_unique_ipv6.size());
+    std::unique_ptr<std::vector<int>> lengths_macs = getConstWordLengthVector( 6, mac_addresses.m_unique_macs.size());
     std::cout << "Initializing ipv4 search" << std::endl;
 
-    search_ipv4.buildMatchingMachine(*words_ipv4, *lengths_ipv4);
+    search_ipv4.buildMatchingMachine(*words_ipv4.get(), *lengths_ipv4.get());
     std::cout << "Initializing ipv6 search" << std::endl;
-    search_ipv6.buildMatchingMachine(*words_ipv6, *lengths_ipv6);
+    search_ipv6.buildMatchingMachine(*words_ipv6.get(), *lengths_ipv6.get());
     std::cout << "Initializing macs search" << std::endl;
-    search_macs.buildMatchingMachine(*words_macs, *lengths_macs);
+    search_macs.buildMatchingMachine(*words_macs.get(), *lengths_macs.get());
 
-    // Now do some cleanup since we do not need to keep or remember the words!
-    delete words_ipv4;
-    delete words_ipv6;
-    delete words_macs;
-    delete lengths_ipv4;
-    delete lengths_ipv6;
-    delete lengths_macs;
+    // We do not need to keep or remember the words because we do not track what was found.
+    // If we wanted to remember that, then we would need to keep the words vectors.
+    // In other words, move the words out of the loop.
   }
 
   char *pcap_errbuf = nullptr;

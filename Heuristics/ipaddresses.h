@@ -4,6 +4,7 @@
 #include <iostream>
 #include <set>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <unordered_set>
 
@@ -109,7 +110,7 @@ public:
 
     void clear();
 
-    std::vector<uint8_t *>* toVector(bool isIPv4) const;
+    std::unique_ptr<std::vector<uint8_t *>> toVector(bool isIPv4) const;
 
     // Store the binary addresses. 
     // The custom compare method provides more than a 100x speed improvement
@@ -119,5 +120,11 @@ public:
     std::unordered_set<uint8_t*, CustomHash_bin4, CustomEqual_bin4> m_unique_ipv4;
     std::unordered_set<uint8_t*, CustomHash_bin16, CustomEqual_bin16> m_unique_ipv6;
 };
+
+inline bool IpAddresses::is_address_equal(const uint8_t *left, const uint8_t *right, bool isIPv4) const {
+    return isIPv4 ? is_bin4_equal(left, right) : is_bin16_equal(left, right);
+}
+
+
 
 #endif // IPTYPE_H

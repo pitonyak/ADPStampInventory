@@ -4,6 +4,7 @@
 #include <iostream>
 #include <set>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <unordered_set>
 
@@ -121,7 +122,14 @@ public:
 
     void clear();
 
-    std::vector<uint8_t *>* toVector() const;
+    //**************************************************************************
+    //! Get a copy of all mac pointers. You do NOT own the contained pointers, do not delete them.
+    /*!
+     * 
+     * \returns A vector containing a the MAC addresses, which are stored as arrays of uint8_t.
+     *
+     ***************************************************************************/
+    std::unique_ptr<std::vector<uint8_t *>> toVector() const;
 
     // Store the binary addresses. 
     // The custom compare method provides more than a 100x speed improvement
@@ -133,5 +141,9 @@ public:
     //std::unordered_set<uint8_t*, CustomHash_bin6, CustomEqual_bin6> m_unique_macs(8, CustomHash_bin6, CustomEqual_bin6);
     std::unordered_set<uint8_t*, CustomHash_bin6, CustomEqual_bin6> m_unique_macs;
 };
+
+inline bool MacAddresses::is_address_equal(const uint8_t *left, const uint8_t *right) {
+    return is_bin6_equal(left, right);
+}
 
 #endif // IPTYPE_H

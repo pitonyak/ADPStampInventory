@@ -520,7 +520,9 @@ int test_bin_compare_specific() {
   print_results(num_passed, num_failed, "for comparing bin data with specific length.");
   return num_failed;
 }
+
 int test_bin_compare_generic() {
+
   int num_passed = 0;
   int num_failed = 0;
 

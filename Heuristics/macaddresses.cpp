@@ -77,10 +77,6 @@ MacAddresses::~MacAddresses() {
     m_unique_macs.clear();
 }
 
-bool MacAddresses::is_address_equal(const uint8_t *left, const uint8_t *right) {
-    return is_bin6_equal(left, right);
-}
-
 bool MacAddresses::addMacAddress(const uint8_t *mac) {
     if (mac == nullptr || hasAddress(mac)) {
         return false;
@@ -93,8 +89,9 @@ bool MacAddresses::hasAddress(const uint8_t *mac) const {
     return m_unique_macs.find((uint8_t*)mac) != m_unique_macs.end();
 }
 
-std::vector<uint8_t *>* MacAddresses::toVector() const {
-  std::vector<uint8_t *>* v = new std::vector<uint8_t *>();
+std::unique_ptr<std::vector<uint8_t *>> MacAddresses::toVector() const {
+  //std::vector<uint8_t *>* v = new std::vector<uint8_t *>();
+  std::unique_ptr<std::vector<uint8_t *>> v(new std::vector<uint8_t *>());
   v->reserve(m_unique_macs.size());
   for (auto const &ptr: m_unique_macs) {
     v->push_back(ptr);
