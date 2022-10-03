@@ -209,6 +209,28 @@ bool isPathExist(const std::string& sPath, bool isFile, bool isDirectory, bool c
 std::string getDirectoryFromFilename(const std::string& sPath);
 
 //**************************************************************************
+//! Assumes that sPath references a file. Mimic std::filesystem::path::extension() in C++17 but works with C++11.
+/*!
+ * 
+ * \param [in] sPath - Path to a file, which is assumed to contain the character "/".
+ * 
+ * \returns The filename (characters after "/").
+ *
+ ***************************************************************************///
+std::string getFileExtension(const std::string& sPath);
+
+//**************************************************************************
+//! Assumes that sPath references a file. Mimic std::filesystem::path::filename() in C++17 but works with C++11.
+/*!
+ * 
+ * \param [in] sPath - Path to a file, which is assumed to contain the character "/".
+ * 
+ * \returns The filename (characters after "/").
+ *
+ ***************************************************************************///
+std::string getFilename(const std::string& sPath);
+
+//**************************************************************************
 //! Generic binary compare for less than. This is half the speed of the specific methods that know the size.
 /*!
  * 
@@ -290,6 +312,15 @@ struct CustomLessthan_bin4 {
     }
 };
 
+//**************************************************************************
+//! Custom compare for 4 bytes (32-bits) for use with std::unordered_set.
+/*!
+ *
+\code{.cpp}
+std::unordered_set<uint8_t*, CustomHash_bin4, CustomEqual_bin4> m_unique_ipv4;
+\endcode
+ *
+ ***************************************************************************///
 struct CustomEqual_bin4 {
     bool operator()(const DATA_POINTER& left, const DATA_POINTER& right) const {
         return is_bin4_equal(left, right);
@@ -311,12 +342,20 @@ struct CustomLessthan_bin6 {
     }
 };
 
+//**************************************************************************
+//! Custom compare for 6 bytes for use with std::unordered_set.
+/*!
+ *
+\code{.cpp}
+std::unordered_set<uint8_t*, CustomHash_bin6, CustomEqual_bin6> m_unique_macs;
+\endcode
+ *
+ ***************************************************************************///
 struct CustomEqual_bin6 {
     bool operator()(const DATA_POINTER& left, const DATA_POINTER& right) const {
         return is_bin6_equal(left, right);
     }
 };
-
 
 //**************************************************************************
 //! Custom compare for 16 bytes for use with std::set, which requires less than. This is used for IPv6.
@@ -333,13 +372,30 @@ struct CustomLessthan_bin16 {
     }
 };
 
+//**************************************************************************
+//! Custom compare for 16 bytes for use with std::unordered_set.
+/*!
+ *
+\code{.cpp}
+std::unordered_set<uint8_t*, CustomHash_bin16, CustomEqual_bin16> m_unique_ipv6;
+\endcode
+ *
+ ***************************************************************************///
 struct CustomEqual_bin16 {
     bool operator()(const DATA_POINTER& left, const DATA_POINTER& right) const {
         return is_bin16_equal(left, right);
     }
 };
 
-
+//**************************************************************************
+//! Wrapper for a hash of 4 bytes (32-bits) for use with std::unordered_set.
+/*!
+ *
+\code{.cpp}
+std::unordered_set<uint8_t*, CustomHash_bin4, CustomEqual_bin4> m_unique_ipv4;
+\endcode
+ *
+ ***************************************************************************///
 struct CustomHash_bin4
 {
     std::size_t operator()(const uint8_t* x) const
@@ -350,6 +406,15 @@ struct CustomHash_bin4
     }
 };
 
+//**************************************************************************
+//! Wrapper for a hash of 6 bytes for use with std::unordered_set.
+/*!
+ *
+\code{.cpp}
+std::unordered_set<uint8_t*, CustomHash_bin6, CustomEqual_bin6> m_unique_macs;
+\endcode
+ *
+ ***************************************************************************///
 struct CustomHash_bin6
 {
     std::size_t operator()(const uint8_t* x) const
@@ -360,6 +425,15 @@ struct CustomHash_bin6
     }
 };
 
+//**************************************************************************
+//! Wrapper for a hash of 16 bytes for use with std::unordered_set.
+/*!
+ *
+\code{.cpp}
+std::unordered_set<uint8_t*, CustomHash_bin16, CustomEqual_bin16> m_unique_ipv6;
+\endcode
+ *
+ ***************************************************************************///
 struct CustomHash_bin16
 {
     std::size_t operator()(const uint8_t* x) const

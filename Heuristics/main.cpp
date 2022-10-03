@@ -887,14 +887,14 @@ int main(int argc, char **argv){
 
   std::string pcap_fname_s(pcap_fname);
   std::string pcap_fname_temp(pcap_fname);
-  std::string ending(".pcap");
-  if (hasEnding(pcap_fname_temp, ending, false)) {
+  std::string pcap_extension = getFileExtension(pcap_fname_temp);
+  if (pcap_extension.compare(".pcap") == 0 || pcap_extension.compare(".cap") == 0 ) {
     if (mac_fname.size() == 0) {
-      mac_fname = pcap_fname_s.substr(0, pcap_fname_s.size() - 4);
+      mac_fname = pcap_fname_s.substr(0, pcap_fname_s.size() - pcap_extension.length() + 1);
       mac_fname.append("mac.txt");
     }
     if (ip_fname.size() == 0) {
-      ip_fname = pcap_fname_s.substr(0, pcap_fname_s.size() - 4);
+      ip_fname = pcap_fname_s.substr(0, pcap_fname_s.size() - pcap_extension.length() + 1);
       ip_fname.append("ip.txt");
     }
   } else {

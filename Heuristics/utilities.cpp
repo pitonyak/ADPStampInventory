@@ -245,7 +245,8 @@ bool isPathExist(const std::string& sPath, bool isFile, bool isDirectory, bool c
     if (isDirectory) {
       rc = std::filesystem::is_directory(path, ec);
       //std::cout << "is dir: " << rc << std::endl;
-    } else if (isFile) {
+    } 
+    if (rc && isFile) {
       rc = std::filesystem::is_regular_file(path, ec);
       //std::cout << "is file: " << rc << std::endl;
     }
@@ -272,12 +273,14 @@ bool isPathExist(const std::string& sPath, bool isFile, bool isDirectory, bool c
   // Old School!
   
   struct stat buf;
-  if (stat(sPath.c_str(), &buf) != 0) {
-    rc = false;
-  } else if (isDirectory) {
-    rc = buf.st_mode & S_IFDIR;
-  } else if (isFile) {
-    rc = buf.st_mode & S_IFREG;
+  rc = stat(sPath.c_str(), &buf) == 0;
+  if (rc) {
+    if (isDirectory) {
+      rc = buf.st_mode & S_IFDIR;
+    } 
+    if (rc && isFile) {
+      rc = buf.st_mode & S_IFREG;
+    }
   }
   if (rc && (canRead || canWrite)) {
     if (canRead) {
@@ -291,6 +294,17 @@ bool isPathExist(const std::string& sPath, bool isFile, bool isDirectory, bool c
   return rc;
 }
 
+std::string getFilename(const std::string& sPath) {
+#ifdef CAN_USE_FILESYSTEM
+  std::filesystem::path path(sPath);
+  return path.filename();
+#else
+  size_t pos = sPath.find_last_of("\\/");
+  if (std::string::npos != pos) ++pos;
+  return (std::string::npos == pos) ? sPath : sPath.substr(pos);
+#endif
+}
+
 std::string getDirectoryFromFilename(const std::string& sPath) {
 #ifdef CAN_USE_FILESYSTEM
   std::filesystem::path path(sPath);
@@ -301,16 +315,24 @@ std::string getDirectoryFromFilename(const std::string& sPath) {
   }
   return path.string();
 #else
-  std::string s = sPath;
-  if (s.length() == 0) {
-    s = "./";
-  } else {
-    size_t pos = sPath.find_last_of("\\/");
-    return (std::string::npos == pos)
-         ? ""
-         : sPath.substr(0, pos);
+  size_t pos = sPath.find_last_of("\\/");
+  return (std::string::npos == pos) ? "" : sPath.substr(0, pos);
+#endif
+}
+
+std::string getFileExtension(const std::string& sPath) {
+#ifdef CAN_USE_FILESYSTEM
+  std::filesystem::path path(sPath);
+  return path.extension();
+#else
+  size_t pos = sPath.find_last_of(".");
+  if (std::string::npos == pos || hasEnding(sPath, ".hidden", true) || 
+    sPath.compare(".") == 0 || sPath.compare("..") == 0 || 
+    hasEnding(sPath, "/.", true) || hasEnding(sPath, "/..", true)) {
+    return "";
   }
-  return s;
+  std::string s = sPath.substr(pos);
+  return s.find_last_of("\\/") == std::string::npos ? s : "";
 #endif
 }
 
