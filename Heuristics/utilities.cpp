@@ -1,4 +1,10 @@
+
+#define CAN_USE_FILESYSTEM 1
+
+#ifdef CAN_USE_FILESYSTEM
 #include <filesystem> // C++ 17
+#endif
+
 #include <iostream>
 #include <iomanip>
 #include <sys/stat.h>
@@ -209,6 +215,7 @@ bool find_match(const uint8_t* s, uint32_t num, const uint8_t* data, uint32_t le
   return found_it;
 }
 
+#ifdef CAN_USE_FILESYSTEM
 void demo_perms(std::filesystem::perms p)
 {
     std::cout << ((p & std::filesystem::perms::owner_read) != std::filesystem::perms::none ? "r" : "-")
@@ -222,10 +229,12 @@ void demo_perms(std::filesystem::perms p)
               << ((p & std::filesystem::perms::others_exec) != std::filesystem::perms::none ? "x" : "-")
               << std::endl;
 }
+#endif
 
 bool isPathExist(const std::string& sPath, bool isFile, bool isDirectory, bool canRead, bool canWrite ) {
   bool rc = true;
 
+#ifdef CAN_USE_FILESYSTEM
   // C++17
   std::filesystem::path path(sPath);
   // Need the error code to avoid throwing an exception.
@@ -249,33 +258,41 @@ bool isPathExist(const std::string& sPath, bool isFile, bool isDirectory, bool c
            (perms & std::filesystem::perms::group_read)  != std::filesystem::perms::none ||
            (perms & std::filesystem::perms::others_read) != std::filesystem::perms::none;
     }
-    if (canWrite) {
+    if (rc && canWrite) {
       rc = (perms & std::filesystem::perms::owner_write)  != std::filesystem::perms::none ||
            (perms & std::filesystem::perms::group_write)  != std::filesystem::perms::none ||
            (perms & std::filesystem::perms::others_write) != std::filesystem::perms::none ;
     }
   }
-
+#else
   // C++11
   //std::ifstream file(sPath);
   //return file.is_open(sPath);
 
   // Old School!
-  /**
+  
   struct stat buf;
   if (stat(sPath.c_str(), &buf) != 0) {
     rc = false;
   } else if (isDirectory) {
-      rc = s.st_mode & S_IFDIR;
-    } else if (isFile) {
-      rc = s.st_mode & S_IFREG;
+    rc = buf.st_mode & S_IFDIR;
+  } else if (isFile) {
+    rc = buf.st_mode & S_IFREG;
+  }
+  if (rc && (canRead || canWrite)) {
+    if (canRead) {
+      rc = (buf.st_mode & (S_IRUSR | S_IRGRP | S_IROTH))  != 0;
+    }
+    if (rc && canWrite) {
+      rc = (buf.st_mode & (S_IWUSR | S_IWGRP | S_IWOTH))  != 0;
     }
   }
-  **/
+#endif
   return rc;
 }
 
 std::string getDirectoryFromFilename(const std::string& sPath) {
+#ifdef CAN_USE_FILESYSTEM
   std::filesystem::path path(sPath);
   path.remove_filename();
   std::string s = path.string();
@@ -283,6 +300,18 @@ std::string getDirectoryFromFilename(const std::string& sPath) {
     s = "./";
   }
   return path.string();
+#else
+  std::string s = sPath;
+  if (s.length() == 0) {
+    s = "./";
+  } else {
+    size_t pos = sPath.find_last_of("\\/");
+    return (std::string::npos == pos)
+         ? ""
+         : sPath.substr(0, pos);
+  }
+  return s;
+#endif
 }
 
 bool is_bin_less(const uint8_t *left, const uint8_t *right, size_t len) {
