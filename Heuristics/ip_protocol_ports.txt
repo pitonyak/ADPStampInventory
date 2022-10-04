@@ -18,6 +18,7 @@ PROTOCOL=6
 161		1	1	1		SNMP (UDP)
 514		1	1	1		System Logs
 53		1	1	1		Domain Name Service (DNS)
+8305    1   1   0       IP Cameras
 
 
 # Protocol UDP = 17
@@ -26,3 +27,5 @@ PROTOCOL=17
 161		1	1	1		SNMP (UDP)
 514		1	1	1		System Logs
 53		1	1	1		Domain Name Service (DNS)
+123     1   1   0       Network Time Protocol (NTP)
+2055    1   1   1       CFLOW
