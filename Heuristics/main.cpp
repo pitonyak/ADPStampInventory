@@ -910,7 +910,8 @@ int main(int argc, char **argv){
   }
   if (!isPathExist(pcap_fname_s, true, false, true, false)) {
     std::cout << "Do not have read permission on PCAP file: " << pcap_fname_s << std::endl;
-    return -1;
+    std::cout << "This may fail to read the PCAP file" << std::endl;
+    //return -1;
   }
 
   bool create_mac_ip_files = !isPathExist(mac_fname, true, false, false, false) || !isPathExist(ip_fname, true, false, false, false);
@@ -919,12 +920,14 @@ int main(int argc, char **argv){
     std::string path = getDirectoryFromFilename(mac_fname);
     if (!isPathExist(path, false, true, true, true)) {
       std::cout << "Cannot read/write to directory where the MAC file will be created: " << path << std::endl;
-      return -1;
+      std::cout << "This may fail to create the MAC file" << std::endl;
+      //return -1;
     }
     path = getDirectoryFromFilename(ip_fname);
     if (!isPathExist(path, false, true, true, true)) {
       std::cout << "Cannot read/write to directory where the IP file will be created: " << ip_fname << std::endl;
-      return -1;
+      std::cout << "This may fail to create the IP file" << std::endl;
+      //return -1;
     }
 
     std::cout << " creating files " << mac_fname << " and " << ip_fname << std::endl;
@@ -932,7 +935,8 @@ int main(int argc, char **argv){
   } else {
     if (!isPathExist(mac_fname, true, false, true, false) || !isPathExist(ip_fname, true, false, true, false)) {
       std::cout << "ERROR: Cannot read " << mac_fname << " or " << ip_fname << std::endl;
-      return -1;
+      std::cout << "This may fail to create the MAC and IP files" << std::endl;
+      //return -1;
     }
     std::cout << " reading files " << mac_fname << " and " << ip_fname << std::endl;
     mac_addresses.read_file(mac_fname);
@@ -950,7 +954,8 @@ int main(int argc, char **argv){
     std::string path = getDirectoryFromFilename(anomaly_fname);
     if (!isPathExist(path, false, true, true, true)) {
       std::cout << "Cannot read/write to directory where the anomaly file will be created: " << path << std::endl;
-      return -1;
+      std::cout << "This may error out" << std::endl;
+      //return -1;
     }
 
     std::cout << "Creating Anomaly File" << std::endl;
