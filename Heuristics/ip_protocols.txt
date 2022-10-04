@@ -18,7 +18,7 @@
 #  OK IPs MACs  Description
 0	1	0	0    IPv6 Hop-by-Hop Option (HOPOPT)
 1	1	1	0    Internet Control Mess (ICMP)
-2	1	0	0    Internet Group Management (IGMP)
+2	1	1	0    Internet Group Management (IGMP)
 3	1	0	0    Gateway-to-Gateway (GGP)
 4	1	0	0    IPv4 encapsulation
 5	1	0	0    Stream (ST)
@@ -114,13 +114,13 @@
 94	1	0	0    IP-within-IP Encapsulation Protocol (IPIP)
 95	1	0	0    (deprecated)	Mobile Internetworking Control Pro. (MICP)
 96	1	0	0    Semaphore Communications Sec. Pro. (SCC-SP)
-97	1	0	0    Ethernet-within-IP Encapsulation (ETHERIP)
+97	1	1	1    Ethernet-within-IP Encapsulation (ETHERIP)
 98	1	0	0    Encapsulation Header (ENCAP)
 99	1	0	0    any private encryption scheme
 100	1	0	0    GMTP
 101	1	0	0    Ipsilon Flow Management Protocol (IFMP)
 102	1	0	0    PNNI over IP
-103	1	0	0    Protocol Independent Multicast (PIM)
+103	1	1	0    Protocol Independent Multicast (PIM)
 104	1	0	0    ARIS
 105	1	0	0    SCPS
 106	1	0	0    QNX
@@ -132,7 +132,7 @@
 112	1	0	0    Virtual Router Redundancy Protocol (VRRP)
 113	1	0	0    PGM Reliable Transport Protocol
 114	1	0	0    any 0-hop protocol
-115	1	0	0    Layer Two Tunneling Protocol (L2TP)
+115	1	1	1    Layer Two Tunneling Protocol (L2TP)
 116	1	0	0    Data Exchange (DDX) (D-II)
 117	1	0	0    Interactive Agent Transfer Protocol (IATP)
 118	1	0	0    Schedule Transfer Protocol (STP)
