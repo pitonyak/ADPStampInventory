@@ -648,6 +648,7 @@ int test_file_dir_exists() {
   // These things fail when you specify your home directory as
   // ~/ so don't do that. 
   std::string home="/andrew0/home/andy/";
+  home = "/home/andy/";
   std::string bashrc = home + ".bashrc";
   std::string ssh = home + ".ssh";
 
