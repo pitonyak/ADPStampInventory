@@ -12,16 +12,12 @@
 
 
 AhoCorasickBinary::AhoCorasickBinary() : m_num_words(0), m_alphabet_size(ALPHABET_SIZE), m_max_states(0), 
-										 m_out_state(nullptr), m_failure(nullptr), m_goto(nullptr), m_bits_out_state(nullptr) {
+										 m_failure(nullptr), m_goto(nullptr), m_bits_out_state(nullptr) {
 }
 
 AhoCorasickBinary::~AhoCorasickBinary() {
 	// Wasted cycltes setting the pointers back to null, 
 	// but sometimes, it helps when there are other bugs. 
-	if (m_out_state != nullptr) {
-		delete[] m_out_state;
-		m_out_state = nullptr;
-	}
 	if (m_failure != nullptr) {
 		delete[] m_failure;
 		m_failure = nullptr;
@@ -36,33 +32,21 @@ AhoCorasickBinary::~AhoCorasickBinary() {
 	}
 }
 
-AhoCorasickBinary::AhoCorasickBinary(const AhoCorasickBinary& x) {
-	m_out_state = nullptr;
-	m_failure = nullptr;
-	m_goto = nullptr;
-	m_bits_out_state = nullptr;
+AhoCorasickBinary::AhoCorasickBinary(const AhoCorasickBinary& x) : AhoCorasickBinary() {
 	m_num_words = x.m_num_words;
 	m_alphabet_size = x.m_alphabet_size;
 	m_max_states = x.m_max_states;
-	if (x.m_out_state != nullptr) {
-		m_out_state = new std::vector<bool>[m_max_states];
-		m_failure = new int[m_max_states];
+	if (x.m_bits_out_state != nullptr) {
 		m_goto = new int[m_alphabet_size * m_max_states];
-
 		for (int i = 0; i<m_alphabet_size * m_max_states; ++i) {
 			m_goto[i] = x.m_goto[i];
 		}
 
+		m_failure = new int[m_max_states];
 		for (int i=0; i<m_max_states; ++i) {
 			m_failure[i] = x.m_failure[i];
 		}
 
-		for (int i=0; i<m_max_states; ++i) {
-			m_out_state[i].reserve(m_num_words);
-			for (auto const & bits: x.m_out_state[i]) {
-				m_out_state[i].push_back(bits);
-			}
-		}
 		m_bits_out_state = new BitsetDynamic[m_max_states];
 		for (int i=0; i<m_max_states; ++i) {
 			m_bits_out_state[i] = x.m_bits_out_state[i];
@@ -76,10 +60,6 @@ const AhoCorasickBinary& AhoCorasickBinary::operator=(const AhoCorasickBinary& x
 		m_alphabet_size = x.m_alphabet_size;
 		m_max_states = x.m_max_states;
 
-		if (m_out_state != nullptr) {
-			delete[] m_out_state;
-			m_out_state = nullptr;
-		}
 		if (m_failure != nullptr) {
 			delete[] m_failure;
 			m_failure = nullptr;
@@ -92,25 +72,18 @@ const AhoCorasickBinary& AhoCorasickBinary::operator=(const AhoCorasickBinary& x
 			delete[] m_bits_out_state;
 			m_bits_out_state = nullptr;
 		}
-		if (x.m_out_state != nullptr) {
-			m_out_state = new std::vector<bool>[m_max_states];
-			m_failure = new int[m_max_states];
-			m_goto = new int[m_alphabet_size * m_max_states];
+		if (x.m_bits_out_state != nullptr) {
 
+			m_goto = new int[m_alphabet_size * m_max_states];
 			for (int i = 0; i<m_alphabet_size * m_max_states; ++i) {
 				m_goto[i] = x.m_goto[i];
 			}
 
+			m_failure = new int[m_max_states];
 			for (int i=0; i<m_max_states; ++i) {
 				m_failure[i] = x.m_failure[i];
 			}
 
-			for (int i=0; i<m_max_states; ++i) {
-				m_out_state[i].reserve(m_num_words);
-				for (auto const & bits: x.m_out_state[i]) {
-					m_out_state[i].push_back(bits);
-				}
-			}
 			m_bits_out_state = new BitsetDynamic[m_max_states];
 			for (int i=0; i<m_max_states; ++i) {
 				m_bits_out_state[i] = x.m_bits_out_state[i];
@@ -121,10 +94,7 @@ const AhoCorasickBinary& AhoCorasickBinary::operator=(const AhoCorasickBinary& x
 }
 
 int AhoCorasickBinary::buildMatchingMachine(const std::vector<uint8_t*> &words, const std::vector<int> &word_lengths) {
-	if (m_out_state != nullptr) {
-		delete[] m_out_state;
-		m_out_state = nullptr;
-	}
+
 	if (m_failure != nullptr) {
 		delete[] m_failure;
 		m_failure = nullptr;
@@ -146,12 +116,11 @@ int AhoCorasickBinary::buildMatchingMachine(const std::vector<uint8_t*> &words, 
 		return m_max_states;
 	}
 
-	m_out_state = new std::vector<bool>[m_max_states];
 	m_bits_out_state = new BitsetDynamic[m_max_states];
 	m_failure = new int[m_max_states];
-	int goto_size = m_alphabet_size * m_max_states;
 
 	// m_goto[m_max_states][m_alphabet_size]
+	int goto_size = m_alphabet_size * m_max_states;
 	m_goto = new int[goto_size];
 	for (int i = 0; i<goto_size; ++i) {
 		m_goto[i] = -1;
@@ -159,12 +128,7 @@ int AhoCorasickBinary::buildMatchingMachine(const std::vector<uint8_t*> &words, 
 
 	for (int i=0; i<m_max_states; ++i) {
 		m_failure[i] = -1;
-
-		m_out_state[i].reserve(m_num_words);
-		for (int j=0; j<m_num_words; ++j) {
-			m_out_state[i].push_back(false);
-		}
-
+		// Clears everything and sets all bits to zero.
 		m_bits_out_state[i].resetSize(m_num_words);
 	}
 
@@ -177,17 +141,24 @@ int AhoCorasickBinary::buildMatchingMachine(const std::vector<uint8_t*> &words, 
         // Think of current state as how deep into the tree.
         int currentState = 0;
         for (int letter_idx = 0; letter_idx < a_word_size; ++letter_idx) {
-            // If there was a "lower bound", it would be keyword[letter_idx] - lower_bound;
+        	// Each keyword is a series of bytes.
+        	// Normally it would be a string perhaps of lower case characters.
+        	// To save space, we normally map the lowest expected letter (such as 'a')
+        	// to be zero. Because we are searching binary data we do not do that. 
+        	// c = letter - lowestChar.
+        	// Instead we just use keyword[letter_idx] and take the entire byte.
             int idx = getGotoIndex(currentState, keyword[letter_idx]);
-            //std::cout << "Word: " << idx_words << " Letter:" << letter_idx << " is " << keyword[letter_idx] << " currentState = " << currentState << " idx = " << idx << std::endl;
+            //std::cout << "Word: " << idx_words << " Letter:" << letter_idx << " is " << (int) keyword[letter_idx] << " currentState = " << currentState << " idx = " << idx << std::endl;
+            // m_goto is initialized to -1 for every entry.
             if (m_goto[idx] == -1) { // Allocate a new node
                 m_goto[idx] = states++;
                 //std::cout << " allocated node at level " << currentState << " char " << (int) keyword[letter_idx] << " idx:" << idx << std::endl;
             }
             currentState = m_goto[idx];
         }
-        m_bits_out_state[currentState].setBit(idx_words, true); // There's a match of keywords[idx_words] at node currentState.
-        //m_out_state[currentState].at(idx_words) = true; // There's a match of keywords[idx_words] at node currentState.
+
+        // There's a match of keywords[idx_words] at node currentState.
+        m_bits_out_state[currentState].setBit(idx_words, true); 
     }
 
     // State 0 should have an outgoing edge for all characters.
@@ -224,8 +195,6 @@ int AhoCorasickBinary::buildMatchingMachine(const std::vector<uint8_t*> &words, 
                 m_failure[m_goto[idx]] = failure;
 
                 // Merge out values
-                // m_out_state[m_goto[idx]] |= m_out_state[failure]; 
-                orEquals(m_out_state[m_goto[idx]], m_out_state[failure]);
                 m_bits_out_state[m_goto[idx]] |= m_bits_out_state[failure];
                 q.push(m_goto[idx]);
             }
@@ -247,10 +216,6 @@ int AhoCorasickBinary::findFirstMatch(const uint8_t *data, uint32_t len) const {
 	if (data == nullptr || m_num_words == 0) {
 		return -1;
 	}
-	if (m_out_state == nullptr) {
-		std::cerr << "Aho Corasick algorithm has not been initialized." << std::endl;
-		return -1;
-	}
 
 	if (m_bits_out_state == nullptr) {
 		std::cerr << "Aho Corasick algorithm has not been initialized." << std::endl;
@@ -262,15 +227,10 @@ int AhoCorasickBinary::findFirstMatch(const uint8_t *data, uint32_t len) const {
         currentState = findNextState(currentState, data[i]);
 
         if (m_bits_out_state[currentState].none()) continue; // Nothing new, let's move on to the next character.
-        //??if (noBits(m_out_state[currentState])) continue; // Nothing new, let's move on to the next character.
         for (int idx_words = 0; idx_words < m_num_words; ++idx_words) {
         	if (m_bits_out_state[currentState].at(idx_words)) {
         		return idx_words;
         	}
-
-           	//??if (m_out_state[currentState].at(idx_words)) {
-           	//??	return idx_words;
-            //??}
        }
    	}
 
@@ -285,20 +245,16 @@ std::map<int, std::set<int> > AhoCorasickBinary::findAllMatches(const uint8_t *d
 	if (data == nullptr) {
 		return matches;
 	}
-	if (m_out_state == nullptr) {
-		std::cerr << "Aho Corasick algorithm has not been initialized." << std::endl;
-		return matches;
-	}
 
 	if (m_bits_out_state == nullptr) {
 		std::cerr << "Aho Corasick algorithm has not been initialized." << std::endl;
 		return matches;
 	}
+
 	int currentState = 0;
     for (uint32_t i = 0; i < len; ++i) {
         currentState = findNextState(currentState, data[i]);
         if (m_bits_out_state[currentState].none()) continue; // Nothing new, let's move on to the next character.
-        //??if (noBits(m_out_state[currentState])) continue; // Nothing new, let's move on to the next character.
         for (int idx_words = 0; idx_words < m_num_words; ++idx_words) {
         	if (m_bits_out_state[currentState].at(idx_words)) {
            		// Match from: i - keywords[idx_words].size() + 1 to i
@@ -312,7 +268,7 @@ std::map<int, std::set<int> > AhoCorasickBinary::findAllMatches(const uint8_t *d
 	           		it->second.insert(i);
 	            }
         	}
-//           	if (m_out_state[currentState].at(idx_words)) {
+//           	if (m_bits_out_state[currentState].at(idx_words)) {
 //           		// Match from: i - keywords[idx_words].size() + 1 to i
 //	            //std::cout << "Keyword " << idx_words << " ends at location " << i << std::endl;
 //	            it = matches.find(idx_words);
@@ -328,42 +284,4 @@ std::map<int, std::set<int> > AhoCorasickBinary::findAllMatches(const uint8_t *d
    	}
 
 	return matches;
-}
-
-
-void AhoCorasickBinary::orEquals(std::vector<bool>& lhs, const std::vector<bool>& rhs) const {
-	for (size_t i=0; i<lhs.size(); ++i) {
-		if (rhs.at(i))
-			lhs.at(i) = true;
-	}
-}
-
-bool AhoCorasickBinary::noBits(const std::vector<bool>& v) const {
-
-	for (const bool& x : v) {
-		if (x) {
-			return false;
-		}
-	}
-	return true;
-}
-
-bool AhoCorasickBinary::allBits(const std::vector<bool>& v) const {
-
-	for (const bool& x : v) {
-		if (!x) {
-			return false;
-		}
-	}
-	return true;
-}
-
-bool AhoCorasickBinary::anyBits(const std::vector<bool>& v) const {
-
-	for (const bool& x : v) {
-		if (x) {
-			return true;
-		}
-	}
-	return false;
 }

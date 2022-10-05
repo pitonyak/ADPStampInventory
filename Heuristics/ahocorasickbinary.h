@@ -40,6 +40,9 @@ https://gist.github.com/ashpriom/b8231c806edeef50afe1
 
 **/
 
+// Normally the alphabet size is calcluated assuming you are using simple strings
+// such as a..z so the alphabet size would be 26. This searches entire bytes
+// so each character can have 256 distinct values (0-255).
 #define ALPHABET_SIZE 256
 
 class AhoCorasickBinary {
@@ -97,9 +100,6 @@ public:
     int getMaxStates() const { return m_max_states; }
 
     void orEquals(std::vector<bool>& lhs, const std::vector<bool>& rhs) const;
-    bool noBits(const std::vector<bool>& v) const;
-    bool allBits(const std::vector<bool>& v) const;
-    bool anyBits(const std::vector<bool>& v) const;
 
 private:
     //**************************************************************************
@@ -114,6 +114,21 @@ private:
      ***************************************************************************/
     int findNextState(int currentState, uint8_t nextInput) const;
 
+    //**************************************************************************
+    //! The goto array is a flat array but we treat it like a two dimensional array. This is a short-cut to get the index inline.
+    /*!
+     * We want to treat the m_goto as a 2-dimension array 
+     * m_goto[m_max_states][m_alphabet_size]
+     * 
+     * This method provides the index assuming there really is a two dimensional array. 
+     * 
+     * \param [in]  state_idx - The current state of the machine. Must be between 0 and the number of states - 1.
+     * 
+     * \param [in]  value_idx - The next character that enters into the machine. 
+     * 
+     * \returns state_idx * m_alphabet_size + value_idx;
+     *
+     ***************************************************************************/
 	int getGotoIndex(const int state_idx, const int value_idx) const;
 
 	/*! Number of words. */
@@ -125,15 +140,13 @@ private:
     /*! Maximum number of states. This consists of the sum of the length of all "words" that will be searched. In other words, maximum number of nodes. */
 	int m_max_states;
 
-	/*! Array of size m_max_states. Output for each state as a mask if the keyword with index i appears when the machine enters this state. */
-	std::vector<bool>* m_out_state;
-
 	/*! Array of size m_max_states. This is the failure function used internally. */
 	int* m_failure;
 
 	/*! Array of size [m_max_states][m_alphabet_size]. This is the "Goto" function or -1 if fail. */
 	int* m_goto;
 
+    /*! Array of size m_max_states. Output for each state as a mask if the keyword with index i appears when the machine enters this state. */
     BitsetDynamic* m_bits_out_state;
 };
 

@@ -20,6 +20,7 @@ public:
 
     BitsetDynamic(std::size_t n);
 
+    /*! Resets the size which clears everything and sets all bits to 0 (false). */
     void resetSize(std::size_t n);
 
     /*! Destructor, clears all structures, not virtual because assume not subclassed. */

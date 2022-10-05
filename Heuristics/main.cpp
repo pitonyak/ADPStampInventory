@@ -920,13 +920,13 @@ int main(int argc, char **argv){
     std::string path = getDirectoryFromFilename(mac_fname);
     if (!isPathExist(path, false, true, true, true)) {
       std::cout << "Cannot read/write to directory where the MAC file will be created: " << path << std::endl;
-      std::cout << "This may fail to create the MAC file" << std::endl;
+      std::cout << "This may fail to create the MAC file " << mac_fname << std::endl;
       //return -1;
     }
     path = getDirectoryFromFilename(ip_fname);
     if (!isPathExist(path, false, true, true, true)) {
-      std::cout << "Cannot read/write to directory where the IP file will be created: " << ip_fname << std::endl;
-      std::cout << "This may fail to create the IP file" << std::endl;
+      std::cout << "Cannot read/write to directory where the IP file will be created: " << path << std::endl;
+      std::cout << "This may fail to create the IP file "  << ip_fname << std::endl;
       //return -1;
     }
 
