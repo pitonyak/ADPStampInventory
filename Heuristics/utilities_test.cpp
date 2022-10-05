@@ -645,77 +645,83 @@ int test_file_dir_exists() {
 
   ++i;
 
-  if (!isPathExist("/andrew0/home/andy/.bashrc", false, false, false, false)) {
+  // These things fail when you specify your home directory as
+  // ~/ so don't do that. 
+  std::string home="/andrew0/home/andy/";
+  std::string bashrc = home + ".bashrc";
+  std::string ssh = home + ".ssh";
+
+  if (!isPathExist(bashrc, false, false, false, false)) {
     ++num_failed;
     std::cout << "Failed to identify a file that exists." << std::endl;
   }
   ++i;
-  if (!isPathExist("/andrew0/home/andy/.bashrc", false, false, true, false)) {
+  if (!isPathExist(bashrc, false, false, true, false)) {
     ++num_failed;
     std::cout << "Failed to identify a readable file that exists." << std::endl;
   }
   ++i;
-  if (!isPathExist("/andrew0/home/andy/.bashrc", false, false, false, true)) {
+  if (!isPathExist(bashrc, false, false, false, true)) {
     ++num_failed;
     std::cout << "Failed to identify a writable file that exists." << std::endl;
   }
   ++i;
-  if (!isPathExist("/andrew0/home/andy/.bashrc", false, false, true, true)) {
+  if (!isPathExist(bashrc, false, false, true, true)) {
     ++num_failed;
     std::cout << "Failed to identify a readable / writable file (1) that exists." << std::endl;
   }
   ++i;
-  if (!isPathExist("/andrew0/home/andy/.bashrc", true, false, true, true)) {
+  if (!isPathExist(bashrc, true, false, true, true)) {
     ++num_failed;
     std::cout << "Failed to identify a readable / writable file (2) that exists." << std::endl;
   }
   ++i;
-  if (isPathExist("/andrew0/home/andy/.bashrc", false, true, true, true)) {
+  if (isPathExist(bashrc, false, true, true, true)) {
     ++num_failed;
     std::cout << "This is a file, not a readable / writable directory (2) that exists." << std::endl;
   }
   ++i;
-  if (isPathExist("/andrew0/home/andy/.bashrc", true, true, true, true)) {
+  if (isPathExist(bashrc, true, true, true, true)) {
     ++num_failed;
     std::cout << "File Cannot be both a file and directory." << std::endl;
   }
   ++i;
-  if (isPathExist("/andrew0/home/andy/.ssh", true, true, true, true)) {
+  if (isPathExist(ssh, true, true, true, true)) {
     ++num_failed;
     std::cout << "Directory cannot be both a file and directory." << std::endl;
   }
   ++i;
-  if (!isPathExist("/andrew0/home/andy/.ssh", false, false, false, false)) {
+  if (!isPathExist(ssh, false, false, false, false)) {
     ++num_failed;
     std::cout << "Failed to identify a directory that exists." << std::endl;
   }
   ++i;
-  if (!isPathExist("/andrew0/home/andy/.ssh", false, false, true, false)) {
+  if (!isPathExist(ssh, false, false, true, false)) {
     ++num_failed;
     std::cout << "Failed to identify a readable directory that exists." << std::endl;
   }
   ++i;
-  if (!isPathExist("/andrew0/home/andy/.ssh", false, false, false, true)) {
+  if (!isPathExist(ssh, false, false, false, true)) {
     ++num_failed;
     std::cout << "Failed to identify a writable directory that exists." << std::endl;
   }
   ++i;
-  if (!isPathExist("/andrew0/home/andy/.ssh", false, false, true, true)) {
+  if (!isPathExist(ssh, false, false, true, true)) {
     ++num_failed;
     std::cout << "Failed to identify a readable / writable directory (1) that exists." << std::endl;
   }
   ++i;
-  if (isPathExist("/andrew0/home/andy/.ssh", true, false, true, true)) {
+  if (isPathExist(ssh, true, false, true, true)) {
     ++num_failed;
     std::cout << "This is a directory, not a file a readable / writable file (2) that exists." << std::endl;
   }
   ++i;
-  if (!isPathExist("/andrew0/home/andy/.ssh", false, true, true, true)) {
+  if (!isPathExist(ssh, false, true, true, true)) {
     ++num_failed;
     std::cout << "This is a directory, not a file a readable / writable file (3) that exists." << std::endl;
   }
   ++i;
-  if (isPathExist("/andrew0/home/andy/.ssh", true, true, true, true)) {
+  if (isPathExist(ssh, true, true, true, true)) {
     ++num_failed;
     std::cout << "File Cannot be both a file and directory." << std::endl;
   }
@@ -759,7 +765,7 @@ int main(int , char **) {
   num_failed += test_bin_compare_generic();
   num_failed += test_filename();
   num_failed += test_file_extension();
-  //num_failed += test_file_dir_exists();
+  num_failed += test_file_dir_exists();
 
   struct ip ipHeader;
   ipHeader.ip_p = 6;
