@@ -42,11 +42,15 @@ MacAddresses mac_addresses;
 IpAddresses ip_addresses;
 
 enum SearchTypeEnum { forward_search, backward_search, aho_corasick_binary };
+bool test_mode = false;
+bool dump_verbose = false;
 
 void usage(){
   printf("Usage:\n");
   printf("-h Print this help.\n");
   printf("-v Print verbose output while processing the file.\n");
+  printf("-t Print test data (much less than verbose) while processing the file.\n");
+  printf("-d Dump hex data while in verbose while printing verbose information.\n");
   printf("-r <path to input pcap file>: This PCAP file will be read for all MAC addresses and IP addresses\n");
   printf("-a <path to generated anomaly pcap>: Where to write the anomaly list. This triggers the creation of the anomaly list.\n");
   printf("-p <path to IP output filename, default 'ip_addresses.txt'>: This OPTIONAL file will be populated with the unique, human-readable versions of all IP addresses found in the input PCAP file. If this option is not given, stdout will be used. If '-' is given as the output file, MAC addresses will be printed to stdout.\n");
@@ -148,7 +152,7 @@ void local_pcap_dump(pcap_dumper_t *dumpfile, struct pcap_pkthdr *pkt_header, co
       std::cout << " " << message;
     }
     std::cout << std::endl;
-    dump_hex(pkt_data, pkt_header->len);
+    if (dump_verbose) dump_hex(pkt_data, pkt_header->len);
   }
 
 }
@@ -429,7 +433,7 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
 
 
     if (!ethernet_types.isValid(ether_type_int)) {
-      if (verbose)
+      if (verbose || test_mode)
         std::cout << it << " has unexpected ether type " << std::hex << ntohs(ether->ether_type) << std::dec << std::endl;
       
       // Check for valid Frame Check Sequence (FCS) as per the flow diagram.
@@ -507,6 +511,8 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
         uint32_t search_len = pkt_header->len - 12;
         const uint8_t* data_loc = (pkt_data + 12);
         if (find_macs(data_loc, search_len, dumpfile, pkt_header, pkt_data, verbose, it, search_type, search_macs)) {
+          if (test_mode) 
+            std::cout << it << " DUP MAC with Ethertype IPv4 protocol = " << proto << " (" << static_cast<int>(ipHeader->ip_p) << ")" << " ports: " << tcp_source_port << " / " << tcp_destination_port << std::endl;
           ++it;
           continue;
         }
@@ -518,13 +524,17 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
         uint32_t search_len = pkt_header->len - offset_to_data_ipv4;
         const uint8_t* data_loc = pkt_data + offset_to_data_ipv4;
         if (find_ips(data_loc, search_len, dumpfile, pkt_header, pkt_data, verbose, it, search_type, search_ipv4, search_ipv6)) {
+          if (test_mode)
+            std::cout << it << " DUP IP with Ethertype IPv4 protocol = " << proto << " (" << static_cast<int>(ipHeader->ip_p) << ")" << " ports: " << tcp_source_port << " / " << tcp_destination_port << std::endl;
           ++it;
           continue;
         }
       }
 
       // We are done with this ipv4 packet. No need to search more.
-      // The packet does not contain dupliate data!
+      // The packet does not contain duplicate data!
+      if (test_mode && verbose)
+        std::cout << it << " Skipping packet with Ethertype IPv4 protocol = " << proto << " (" << static_cast<int>(ipHeader->ip_p) << ")" << " ports: " << tcp_source_port << " / " << tcp_destination_port << std::endl;
       ++it;
       continue;
     }
@@ -637,6 +647,8 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
         uint32_t search_len = pkt_header->len - final_data_offset;
         const uint8_t* data_loc = (pkt_data + final_data_offset);
         if (find_macs(data_loc, search_len, dumpfile, pkt_header, pkt_data, verbose, it, search_type, search_macs)) {
+          if (test_mode) 
+            std::cout << it << " DUP MAC with Ethertype IPv6 protocol = " << proto << " (" << static_cast<int>(ipHeader->ip_p) << ")" << " ports: " << tcp_source_port << " / " << tcp_destination_port << std::endl;
           ++it;
           continue;
         }
@@ -648,6 +660,8 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
         uint32_t search_len = pkt_header->len - final_data_offset;
         const uint8_t* data_loc = (pkt_data + final_data_offset);
         if (find_ips(data_loc, search_len, dumpfile, pkt_header, pkt_data, verbose, it, search_type, search_ipv4, search_ipv6)) {
+          if (test_mode) 
+            std::cout << it << " DUP IP with Ethertype IPv6 protocol = " << proto << " (" << static_cast<int>(ipHeader->ip_p) << ")" << " ports: " << tcp_source_port << " / " << tcp_destination_port << std::endl;
           ++it;
           continue;
         }
@@ -655,6 +669,8 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
 
       // We are done with this ipv6 packet. No need to search more.
       // The packet does not contain dupliate data!
+      if (test_mode && verbose)
+        std::cout << it << " Skipping packet with Ethertype IPv6 protocol = " << proto << " (" << static_cast<int>(ipHeader->ip_p) << ")" << " ports: " << tcp_source_port << " / " << tcp_destination_port << std::endl;
       ++it;
       continue;
       // End of IPv6 testing
@@ -676,6 +692,8 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
     const uint8_t* data_loc = (pkt_data + 12);
     if (!ethernet_types.isDupMAC(ether_type_int)) {
       if (find_macs(data_loc, search_len, dumpfile, pkt_header, pkt_data, verbose, it, search_type, search_macs)) {
+        if (test_mode) 
+        std::cout << it << " DUP MAC with Ethertype = " << ether_type_int << std::endl;
         ++it;
         continue;
       }
@@ -683,13 +701,14 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
 
     if (!ethernet_types.isDupIP(ether_type_int)) {
       if (find_ips(data_loc, search_len, dumpfile, pkt_header, pkt_data, verbose, it, search_type, search_ipv4, search_ipv6)) {
+        if (test_mode) 
+        std::cout << it << " DUP IP with Ethertype = " << ether_type_int << std::endl;
         ++it;
         continue;
       }
     }
 
     // Done with all processing for this packet.
-
     it++;
   }
 
@@ -828,10 +847,16 @@ int main(int argc, char **argv){
   bool create_anomaly_list = false;
   const char* anomaly_fname = nullptr;
 
-  while((arg = getopt(argc, argv, "mpvhr:a:")) != -1){
+  while((arg = getopt(argc, argv, "mpvtdhr:a:")) != -1){
     switch(arg) {
     case 'v':
       verbose_output = true;
+      break;
+    case 't':
+      test_mode = true;
+      break;
+    case 'd':
+      dump_verbose = true;
       break;
     case 'a':
       create_anomaly_list=true;

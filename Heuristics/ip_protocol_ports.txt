@@ -19,6 +19,8 @@ PROTOCOL=6
 514		1	1	1		System Logs
 53		1	1	1		Domain Name Service (DNS)
 8305    1   1   0       IP Cameras
+#29152   1   1   1       Test!
+#34049   1   1   0       Test!
 
 
 # Protocol UDP = 17

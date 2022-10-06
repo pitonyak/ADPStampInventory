@@ -650,7 +650,7 @@ int test_file_dir_exists() {
   std::string home="/andrew0/home/andy/";
   home = "/home/andy/";
   std::string bashrc = home + ".bashrc";
-  std::string ssh = home + ".ssh";
+  std::string tmp_dir = "/tmp";
 
   if (!isPathExist(bashrc, false, false, false, false)) {
     ++num_failed;
@@ -687,42 +687,42 @@ int test_file_dir_exists() {
     std::cout << "File Cannot be both a file and directory." << std::endl;
   }
   ++i;
-  if (isPathExist(ssh, true, true, true, true)) {
+  if (isPathExist(tmp_dir, true, true, true, true)) {
     ++num_failed;
     std::cout << "Directory cannot be both a file and directory." << std::endl;
   }
   ++i;
-  if (!isPathExist(ssh, false, false, false, false)) {
+  if (!isPathExist(tmp_dir, false, false, false, false)) {
     ++num_failed;
     std::cout << "Failed to identify a directory that exists." << std::endl;
   }
   ++i;
-  if (!isPathExist(ssh, false, false, true, false)) {
+  if (!isPathExist(tmp_dir, false, false, true, false)) {
     ++num_failed;
     std::cout << "Failed to identify a readable directory that exists." << std::endl;
   }
   ++i;
-  if (!isPathExist(ssh, false, false, false, true)) {
+  if (!isPathExist(tmp_dir, false, false, false, true)) {
     ++num_failed;
     std::cout << "Failed to identify a writable directory that exists." << std::endl;
   }
   ++i;
-  if (!isPathExist(ssh, false, false, true, true)) {
+  if (!isPathExist(tmp_dir, false, false, true, true)) {
     ++num_failed;
     std::cout << "Failed to identify a readable / writable directory (1) that exists." << std::endl;
   }
   ++i;
-  if (isPathExist(ssh, true, false, true, true)) {
+  if (isPathExist(tmp_dir, true, false, true, true)) {
     ++num_failed;
     std::cout << "This is a directory, not a file a readable / writable file (2) that exists." << std::endl;
   }
   ++i;
-  if (!isPathExist(ssh, false, true, true, true)) {
+  if (!isPathExist(tmp_dir, false, true, true, true)) {
     ++num_failed;
     std::cout << "This is a directory, not a file a readable / writable file (3) that exists." << std::endl;
   }
   ++i;
-  if (isPathExist(ssh, true, true, true, true)) {
+  if (isPathExist(tmp_dir, true, true, true, true)) {
     ++num_failed;
     std::cout << "File Cannot be both a file and directory." << std::endl;
   }
