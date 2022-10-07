@@ -1,0 +1,8 @@
+# MAC addresses listed in this file are ignored when 
+# it is the destination MAC address in a packet.
+# Some protocols such as the CISCO Discovery Protocol and 
+# VLAN Trunking Protocol do not have an Ether Type so cannot be filtered
+# based on that.
+# These protocols, however, use a broadcast so they can be filtered / ignored
+# based on the destination MAC Address
+01:00:0c:cc:cc:cc

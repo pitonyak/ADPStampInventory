@@ -41,6 +41,8 @@
 MacAddresses mac_addresses;
 IpAddresses ip_addresses;
 
+MacAddresses dest_mac_to_ignore;
+
 enum SearchTypeEnum { forward_search, backward_search, aho_corasick_binary };
 bool test_mode = false;
 bool dump_verbose = false;
@@ -429,6 +431,17 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
     // Extract the frame MACs and put them into the set for uniqueness discovery
     //const uint8_t *shost = ether->ether_shost;
     //const uint8_t *dhost = ether->ether_dhost;
+
+    // Some protocols do NOT have an associated ether type;
+    // for example, Cisco Discovery Protocol and VLAN Trunking Protocol.
+    // This provides a means of ignoring certain broadcast messages.
+    //
+    if (dest_mac_to_ignore.hasAddress(ether->ether_dhost)) {
+      if (verbose && test_mode) std::cout << it << " Destination MAC is in the ignore list." << std::endl;
+      ++it;
+      continue;
+    }
+
     int ether_type_int = ntohs(ether->ether_type);
 
 
@@ -966,6 +979,10 @@ int main(int argc, char **argv){
     std::cout << " reading files " << mac_fname << " and " << ip_fname << std::endl;
     mac_addresses.read_file(mac_fname);
     ip_addresses.read_file(ip_fname);
+  }
+
+  if (isPathExist("destination_macs.txt", true, false, true, false)) {
+    dest_mac_to_ignore.read_file("destination_macs.txt");
   }
 
   if (create_anomaly_list) {
