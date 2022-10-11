@@ -61,6 +61,11 @@ void usage(){
   printf("\n");
 }
 
+// Written to avoid compiler warnings.
+bool startsWith(const char* s, char c) {
+  return (s != nullptr && s[0] == c);
+}
+
 int main(int argc, char **argv){
   /*Given an input PCAP file, discover all unique MAC addresses and IPs and write them to a file (stdout by default
    */
@@ -71,14 +76,14 @@ int main(int argc, char **argv){
   char *out_mac_fname=_mac_fname;
   char *out_ip_fname=_ip_fname;
   u_int done=0;
-  int res=1, it=0, i=0, index, arg;
+  int res=1, it=0, index, arg;
 
   struct stat filestat;
   std::ofstream mac_out;
   std::ofstream ip_out;
   std::streambuf *coutbuf = std::cout.rdbuf(); // Save the coutbuf in case we later direct to a file
   pcap_t *pcap_file;
-  char *pcap_errbuf;
+  char *pcap_errbuf = nullptr;
   struct pcap_pkthdr *pkt_header;
   const u_char *pkt_data;
 
@@ -94,11 +99,11 @@ int main(int argc, char **argv){
   while((arg = getopt(argc, argv, "hm:p:r:")) != -1){
     switch(arg) {
     case 'p':
-      if(optarg == "-"){out_ip_fname=0;}
+      if(startsWith(optarg, '-')){out_ip_fname=0;}
       else {out_ip_fname=optarg;}
       break;
     case 'm':
-      if(optarg == "-"){out_mac_fname=0;}
+      if(startsWith(optarg, '-')){out_mac_fname=0;}
       else {out_mac_fname=optarg;}
       break;
     case 'r':
@@ -164,7 +169,7 @@ int main(int argc, char **argv){
     mac_to_int(dhost, &mac);
     unique_macs.insert(mac);
 
-    if (ntohs(ether->ether_type) != ETHERTYPE_IP & ntohs(ether->ether_type) != ETHERTYPE_IPV6){
+    if ((ntohs(ether->ether_type) != ETHERTYPE_IP) && (ntohs(ether->ether_type) != ETHERTYPE_IPV6)) {
       // If the frame doesn't contain IP headers, skip extracting the IPs. Cause they don't exist.
       continue;
       it++;
