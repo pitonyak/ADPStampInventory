@@ -1871,7 +1871,7 @@ def main():
 
     parser = ArgumentParser()
     parser.add_argument('-f', '--file', help='Path to input PCAP file', required=True)
-    parser.add_argument('-o', '--output', help='File name for output graphml file', default= "")
+    parser.add_argument('-o', '--output', help='File name for output CSV file', default= "")
     parser.add_argument('-s', '--source', help=
         'comma delimted list of valid source IP addresses, source must be one of these',
         default= "")
