@@ -148,14 +148,35 @@ Increasing the verbosity to two causes the payload length to be printed as well 
 
 
 ### Internet Tools
-- `ciscot7.py` <br>
+- `ciscot7.py` <br/>
 This is a tool designed to decrypt insecure (password 7) Cisco passwords.
 
+ciscot7.py supports the following arguments: <br/>
+
+| parameter | Description |
+|-----------|-------------|
+| -e        | Encrypt Password. |
+| -d        | Decrypt Password; this is the default setting. |
+| -p        | Password to encrypt / decrypt. |
+| -f        | Cisco config file, only for decryption. |
+| --help    | Print usage. |
+
+<br/>
+
+This is a simple example of encrypting and decrypting a password provided at the command line.
+
+~~~~
+$ python ciscot7.py -e -p MyPassword
+Encrypted password: 047612360e325f59060b01
+$ python ciscot7.py -d -p 047612360e325f59060b01
+Decrypted password: MyPassword
+~~~~
+
 ### Internally developed
-- Topology Reconstruction
+- Topology Reconstruction (kmeans.py)
 - Information Graph
 - Configuration File Parsing
-- Randomness Assessment for ESP Payload data
+- Randomness Assessment for ESP Payload data (encryption.ph)
 
 # Acronyms
 
