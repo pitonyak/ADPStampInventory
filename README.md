@@ -7,14 +7,31 @@ The base files (by name) are as follows: <br/>
 | file / directory  | Description  |
 |-------------------|--------------|
 | ciscot7.py        | Decrypt insecure (password 7) Cisco passwords. |
-| encrypted.py      | Test randomness primarily aimed at the ESP layer using IP protocol number 50. |
-| Find_MAC_IP       | Original program to find MAC and IP files. Deprecated, use the Heuristics project|
+| encrypted.py      | Test randomness primarily aimed at the ESP layer using IP protocol number 50. There is a sample output file sample_encrypted.csv and a test program test_encrypted.py. |
+| Find_MAC_IP       | Original program to find MAC and IP files. Deprecated, use the Heuristics project. |
 | Heuristics        | Finds known exploits by examinging PCAP files. |
 | kmeans.py         | Generate an annotated GraphML file from an input JSON file. |
 | README.md         | This file. |
-| test_encrypted.py | Unit tests for encrypted.py |
+| nistspecialpublication800-22r1a.pdf | NIST document related to encrypted.py indicating how to test for randomness. |
 
 The individual tools are listed below.
+
+## Generating a GraphML file using kmeans.py
+
+kmeans.py uses sklearn. Although the sklearn package is the same as scikit-learn package and you are able to install either, it is better to install scikit-learn. If you install sklearn, it will install scikit-learn and when you use `pip list`, it will show sklearn with version 0.0 and scikit-learn with whatever version you installed. Use `pip install scikit-learn` to install the required sklearn dependency. 
+
+
+kmeans.py supports the following arguments: <br/>
+
+| parameter | Description |
+|-----------|-------------|
+| -h        | Print usage. |
+| -f        | Path to input JSON file.. |
+| -d        | Directory of the input JSON files. |
+| -o        | Filename for the Output file. |
+| -c        | Number of kmeans clusters to use. |
+
+TODO: Add a sample input file for kmeans.py.
 
 ## Randomness Testing IPSec With encrypted.py
 
