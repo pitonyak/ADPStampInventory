@@ -55,8 +55,8 @@ void usage(){
   printf("-d Dump hex data while in verbose while printing verbose information.\n");
   printf("-r <path to input pcap file>: This PCAP file will be read for all MAC addresses and IP addresses\n");
   printf("-a <path to generated anomaly pcap>: Where to write the anomaly list. This triggers the creation of the anomaly list.\n");
-  printf("-p <path to IP output filename, default 'ip_addresses.txt'>: This OPTIONAL file will be populated with the unique, human-readable versions of all IP addresses found in the input PCAP file. If this option is not given, stdout will be used. If '-' is given as the output file, MAC addresses will be printed to stdout.\n");
-  printf("-m <path to MAC output filename, default 'mac_addresses.txt'>: This OPTIONAL file will be populated with the unique, human-readable versions of all Ethernet MAC addresses input PCAP file. If this option is not given, stdout will be used. If '-' is given as the output file, MAC addresses will be printed to stdout.\n");
+  printf("-p <path to IP output filename>: This file will be populated with the unique, human-readable versions of all IP addresses found in the input PCAP file. If this option is omitted, the output filename is derived from the input filename by replacing .pcap with .ip.txt.\n");
+  printf("-m <path to MAC output filename>: This file will be populated with the unique, human-readable versions of all MAC addresses found in the input PCAP file. If this option is omitted, the output filename is derived from the input filename by replacing .pcap with .mac.txt.\n");
   printf("\n");
 }
 

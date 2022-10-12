@@ -12,9 +12,9 @@ Configuration files are expected to be in the same directory as the executable. 
 | Configuration File     | Description |
 |------------------------|-------------|
 | eth_types.txt          | A list of the valid / expected Ethernet types. Indicates if protocol is valid, MAC or IP is an expected part of the payload. |
-| ip_protocol_ports.txt  | For each protocol, lists of suported ports. Indicates if protocol is valid, MAC or IP is an expected part of the payload. This file is not finalized, especially in that I have not set the columns for entires that may support the IP or MAC to be part of the payload. If no entry found here, value in ip_protocols.txt is used instead. |
 | ip_protocols.txt       | List of supported IP protocols. Indicates if protocol is valid, MAC or IP is an expected part of the payload. This file is not finalized, especially in that I have not set the columns for entires that may support the IP or MAC to be part of the payload. |
-| ip_types.txt           | **[Deprecated]** List of the valid / expected IP protocols. One entry per IP/Port. See ip_protocols.txt and ip_protocol_ports.txt. |
+| ip_protocol_ports.txt  | For each protocol, lists of suported ports. Indicates if protocol is valid, MAC or IP is an expected part of the payload. This file is not finalized, especially in that I have not set the columns for entires that may support the IP or MAC to be part of the payload. If no entry found here, value in ip_protocols.txt is used instead. |
+| destination_macs.txt   | This is a list of MAC addresses. Any packet with a destination MAC address in this list is immediately dropped. |
 
 The configuration files can be edited in place and the program re-run.
 
@@ -104,9 +104,24 @@ PROTOCOL=17
 53	1	1	1	Domain Name Service (DNS)
 ~~~~
 
+#### destination_macs.txt
+
+This file is just a list of MAC addresses. Comment lines are preceded by a '#' character and ignored. Here is a sample file that ignores a single MAC address. 
+
+~~~~
+# MAC addresses listed in this file are ignored when 
+# it is the destination MAC address in a packet.
+# Some protocols such as the CISCO Discovery Protocol and 
+# VLAN Trunking Protocol do not have an Ether Type so cannot be filtered
+# based on that.
+# These protocols, however, use a broadcast so they can be filtered / ignored
+# based on the destination MAC Address
+01:00:0c:cc:cc:cc
+~~~~
+
 ### Source Code
 
-Source files are built using *make*.
+The following source files are in the project: <br/>
 
 | Source File(s)         | Description |
 |------------------------|-------------|
@@ -125,28 +140,30 @@ Source files are built using *make*.
 
 ### Executables
 
-The executable files are generated using *make* as mentioned in the **Build** section. 
+The executable files are generated using *make* as mentioned in the **Build** section. <br/>
 
 | Executable File        | Description |
 |------------------------|-------------|
 | crc_test               | Generat a 32-bit CRC for a file or list of files. Used to test the CRC code. |
-| find_macs_and_ips      | Independent program to generate a list of MAC and IPs contained in a PCAP file. This functionality is implemented independently in the main heuristic program. |
+| find_macs_and_ips      | Independent program to generate a list of MAC and IPs contained in a PCAP file. This functionality is implemented independently in the main heuristic program. This replaces the program created in the Find_MAC_IP project. It is recommended to use the heuristics program and ommit '-a' so that the anomaly file is not generated. This will still generate the IP and MAC files. |
 | heuristics             | Main executable program to read a PCAP and generate an anomaly PCAP file. |
 | utilities_test         | Test the utility code such as searching. |
 
 ## Build
 
-The heuristic program uses the libpcap library. You must also include the development version. On Ubuntu this means libpcap-dev and on Fedora libpcap-devel. You must have the required libraries installed. 
+Source files are built using *make*.
+
+The heuristic program uses the libpcap library. You must also include the development version. On Ubuntu this means libpcap-dev and on Fedora libpcap-devel. You must have the required libraries installed. Installing these projects using the operating system dependent methods places the required libraries and include files where they are needed; for example, apt-get, apt, dnf, or yum.
 
 Copy Makefile.dat to Makefile to build. This file should work as is depending on the location of the libpcap include files. On Fedora Linux I installed the libpcap development files and things just worked. If you want to read a json file, download the include files from rapidjson then set the location with a similar line to: INCLUDE:=-I/andrew0/home/andy/Devsrc/Battelle/GreenHornet/git_stuff/rapidjson/include
 
 Use "make clean" to clean (delete) things. Use "make crc_test" to build the crc_test executable. Use make by itself to build all of the executables as listed above.
 
-The build flags (CXXFLAGS) in Makefile.dat are best for the production environment. For development, adding sanitize helps to find memory leaks and other errors. 
+The build flags (CXXFLAGS) in Makefile.dat are best for the production environment. For development, adding sanitize helps to find memory leaks and other errors.
 
 `CXXFLAGS:=-O3 -fPIC -Werror -Wall -Wextra -fsanitize=undefined,address -fno-sanitize=alignment`
 
-These flags are always used. 
+These flags are always used. <br/>
 
 | Compiler Flag | Description |
 |------------------------|-------------|
@@ -156,7 +173,7 @@ These flags are always used.
 | Wall   | Turn on all warnings (well almost all). |
 | Wextra | Turn on a few more not covered with -Wall (see https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html); and there are even more warnings still not included with this. |
 
-Only use this in development because they affect runtime, sometimes by a significant amount. 
+Only use this in development because they affect runtime, sometimes by a significant amount. <br/>
 
 | Compiler Flag          | Description |
 |------------------------|-------------|
@@ -228,10 +245,12 @@ $ ./heuristics
 Usage:
 -h Print this help.
 -v Print verbose output while processing the file.
+-t Print test data (much less than verbose) while processing the file.
+-d Dump hex data while in verbose while printing verbose information.
 -r <path to input pcap file>: This PCAP file will be read for all MAC addresses and IP addresses
 -a <path to generated anomaly pcap>: Where to write the anomaly list. This triggers the creation of the anomaly list.
--p <path to IP output filename, default 'ip_addresses.txt'>: This OPTIONAL file will be populated with the unique, human-readable versions of all IP addresses found in the input PCAP file. If this option is not given, stdout will be used. If '-' is given as the output file, MAC addresses will be printed to stdout.
--m <path to MAC output filename, default 'mac_addresses.txt'>: This OPTIONAL file will be populated with the unique, human-readable versions of all Ethernet MAC addresses input PCAP file. If this option is not given, stdout will be used. If '-' is given as the output file, MAC addresses will be printed to stdout.
+-p <path to IP output filename>: This file will be populated with the unique, human-readable versions of all IP addresses found in the input PCAP file. If this option is omitted, the output filename is derived from the input filename by replacing .pcap with .ip.txt.
+-m <path to MAC output filename>: This file will be populated with the unique, human-readable versions of all MAC addresses found in the input PCAP file. If this option is omitted, the output filename is derived from the input filename by replacing .pcap with .mac.txt.
 ~~~~
 
 On startup, the base configuration files ip_protocols.txt, ip_protocol_ports.txt, and eth_types.txt are read.
@@ -258,6 +277,54 @@ No more packets in savefile. Iteration 86401
 Examined 86401 packets
 ~~~~
 
+For testing, use '-t', '-v', and/or '-d'. Adding '-t' produces test messages related to ethertypes, protocols, and ports; which will be too much in production with huge files.
+
+~~~~
+85009 DUP MAC with Ethertype IPv4 protocol = Unknown (170) ports: -1 / -1
+85010 DUP MAC with Ethertype IPv4 protocol = TCP (6) ports: 56287 / 34049
+85011 DUP MAC with Ethertype IPv4 protocol = TCP (6) ports: 56287 / 34049
+85012 DUP MAC with Ethertype IPv4 protocol = TCP (6) ports: 56287 / 34049
+85013 DUP MAC with Ethertype IPv4 protocol = TCP (6) ports: 56287 / 34049
+85014 DUP MAC with Ethertype IPv4 protocol = TCP (6) ports: 56287 / 26369
+85016 DUP MAC with Ethertype = 43690
+~~~~
+
+Using '-v' provides information provides information when Addresses are found in the packet that was not expected.
+
+~~~~
+86386 has unexpected ether type 845
+86387 MAC address found in data
+86392 IPv4 address found in data
+86393 MAC address found in data
+86394 MAC address found in data
+86396 MAC address found in data
+86397 MAC address found in data
+86398 IPv4 address found in data
+86399 MAC address found in data
+~~~~
+
+Using '-t' and '-v' together includes all the previous data but also indicates why packets are skipped.
+
+~~~~
+86385 MAC address found in data
+86385 DUP MAC with Ethertype IPv4 protocol = TCP (6) ports: 43690 / 43690
+86386 has unexpected ether type 845
+86387 MAC address found in data
+86387 DUP MAC with Ethertype IPv4 protocol = TCP (6) ports: 28896 / 34049
+86388 Skipping packet with Ethertype IPv4 protocol = TCP (6) ports: 34049 / 28896
+86389 Skipping packet with Ethertype IPv4 protocol = Unknown (4) ports: -1 / -1
+86390 Skipping packet with Ethertype IPv4 protocol = TCP (6) ports: 34049 / 29152
+86391 Skipping packet with Ethertype IPv4 protocol = TCP (6) ports: 29152 / 34049
+86392 IPv4 address found in data
+86392 DUP IP with Ethertype IPv4 protocol = TCP (6) ports: 29152 / 34049
+~~~~
+
+Finally, adding '-d' and '-v' provides a hex data dump when a duplicate is found. This is very impractical with real files but is great for debugging files with only a few packets. The following example is highly reduced, but shows how the output will appear. Note that '-d' is only relevant in the context of '-v'.
+
+~~~~
+86399 MAC address found in data
+0 c 29 b4 e2 8d 0 c 29 d9 a f4 8 0 45 0 5 dc 50 b9 40 0 40 6 83 5b a 4 40 bb a 4 40 45 e0 71 1 85 7b 57 1e 46 9c
+~~~~
 
 # Speed improvements
 
