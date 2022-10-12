@@ -22,7 +22,7 @@ from scapy.all import *
 # What do we want in our output CSV file?
 #
 # Each test has a numeric value assocaited with it.
-# The confidence level (probably 0.005) determines if a test passes or failes.
+# The confidence level (probably 0.005) determines if a test passes or fails.
 # A value less than (<) the confidence level fails.
 # A value of -1 means that the test was skipped.
 #
@@ -55,7 +55,7 @@ Column  Header  Description
 23  Random Excursions Test (p03)
 24  Random Excursions Test (p04)
 25  Random Excursions Test (p05)
-26  Random Excursions Test (906)
+26  Random Excursions Test (p06)
 27  Random Excursions Test (p07)
 28  Random Excursions Test (p08)
 29  Random Excursions Variant Test (p01)
@@ -75,11 +75,12 @@ Column  Header  Description
 43  Random Excursions Variant Test (p15)
 44  Random Excursions Variant Test (p16)
 45  Random Excursions Variant Test (p17)
-46  File    PCAP file name
-47  Source IP
-48  Dest IP
-49  Data Len
-50  Data        - First few bytes of the data.
+46  Random Excursions Variant Test (p18)
+47  File    PCAP file name
+48  Source IP
+49  Dest IP
+50  Data Len
+51  Data        - First few bytes of the data.
 """
 
 #
@@ -109,15 +110,9 @@ Column  Header  Description
 # pip install seaborn scapy PyX networkx
 # cd /andrew0/home/andy/Devsrc/Battelle/GreenHornet/pcap
 #
-# TODO: Remove this comment after testing and posting.
-# Test files containing encrypted packets:
-# 1     wireshark/fuzz-2006-07-05-11195.pcap
-# 2     wireshark/fuzz-2006-07-05-1209.pcap (that data does NOT look random!)
-# 4     wireshark/fuzz-2006-07-06-20811.pcap
-# 3     wireshark/fuzz-2006-07-06-25704.pcap
-# 4     wireshark/fuzz-2006-07-06-5536.pcap
-#
-#
+
+verbose = 0
+
 #
 # Use this to count the number of bits (ones) in a byte.
 #
@@ -361,7 +356,7 @@ class RandomnessTester:
                       "Random Excursions Test (p03)",
                       "Random Excursions Test (p04)",
                       "Random Excursions Test (p05)",
-                      "Random Excursions Test (906)",
+                      "Random Excursions Test (p06)",
                       "Random Excursions Test (p07)",
                       "Random Excursions Test (p08)",
                       "Random Excursions Variant Test (p01)",
@@ -617,7 +612,7 @@ class RandomnessTester:
                           "\t14. Random Excursions Test (p03)",
                           "\t14. Random Excursions Test (p04)",
                           "\t14. Random Excursions Test (p05)",
-                          "\t14. Random Excursions Test (906)",
+                          "\t14. Random Excursions Test (p06)",
                           "\t14. Random Excursions Test (p07)",
                           "\t14. Random Excursions Test (p08)",
                           "\t15. Random Excursions Variant Test (p01)",
@@ -1873,11 +1868,14 @@ def main():
     parser.add_argument('-f', '--file', help='Path to input PCAP file', required=True)
     parser.add_argument('-o', '--output', help='File name for output CSV file', default= "")
     parser.add_argument('-s', '--source', help=
-        'comma delimted list of valid source IP addresses, source must be one of these',
+        'Comma delimted list of valid source IP addresses, source must be one of these',
         default= "")
     parser.add_argument('-d', '--destination', help=
-        'comma delimted list of valid destination IP addresses, destination must be one of these',
+        'Comma delimted list of valid destination IP addresses, destination must be one of these',
         default= "")
+    parser.add_argument('-v', '--verbose', help=
+        'Set verbose level. 1 identifies every encrypted packet, 2 includes a data dump.',
+        default= "0")
     args = parser.parse_args()
     # TODO: parse the source and destination IP addresses and
     # then ignore all packets that do not match.
@@ -1890,6 +1888,7 @@ def main():
     print("Writing to " + output_file)
     src_ips = args.source.split(',')
     dst_ips = args.destination.split(',')
+    verbose = int(args.verbose)
     counter = 0
     encrypted_counter = 0
     start_time = time.time()
@@ -1909,7 +1908,8 @@ def main():
                 continue
             #if ip_layer.proto != 50:
             #    continue
-            print("Encrypted packet at index " + str(counter - 1) + " " +\
+            if verbose > 0:
+                print("Encrypted packet at index " + str(counter - 1) + " " +\
                   ip_layer.src + " ==> " + ip_layer.dst)
             #
             # Check source IPs
@@ -1928,8 +1928,9 @@ def main():
             #print("for esp_layer.seq: " + str(esp_layer.seq))
             # This is class bytes:
             esp_data = esp_layer.data
-            print("from esp_layer pay load len = " + str(len(esp_data)))
-            print(esp_data)
+            if verbose > 1:
+                print("from esp_layer payload len = " + str(len(esp_data)))
+                print(esp_data)
             #
             # esp_data is of type (class) bytes, which is exactly what I need.
             # Change False to True to print the full export data.
@@ -1950,7 +1951,7 @@ def main():
                 padding = padding_layer.load
                 print("Padding length: " + str(len(padding)) + " ==> " + str(padding))
     end_time = time.time() - start_time
-    print("Total Read time: " + str(end_time) + " for " + str(counter) + \
+    print("\nTotal Read time: " + str(end_time) + " for " + str(counter) + \
           " encrypted:" + str(encrypted_counter))
 if __name__ == '__main__':
     main()
