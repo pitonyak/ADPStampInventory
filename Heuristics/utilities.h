@@ -198,6 +198,15 @@ void dump_hex(const uint8_t* data, uint32_t len);
 bool isPathExist(const std::string& sPath, bool isFile, bool isDirectory, bool canRead, bool canWrite);
 
 //**************************************************************************
+//! This targets / assumes Linux.
+/*!
+ * 
+ * \returns The users home directory.
+ *
+ ***************************************************************************///
+std::string getUserHomeDir();
+
+//**************************************************************************
 //! Assumes that sPath references a file.
 /*!
  * 

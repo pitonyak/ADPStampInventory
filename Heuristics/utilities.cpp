@@ -1,5 +1,5 @@
 
-//#define CAN_USE_FILESYSTEM 1
+#define CAN_USE_FILESYSTEM 1
 
 #ifdef CAN_USE_FILESYSTEM
 #include <filesystem> // C++ 17
@@ -7,7 +7,9 @@
 
 #include <iostream>
 #include <iomanip>
+#include <pwd.h>        // getpwuid
 #include <sys/stat.h>
+#include <unistd.h>     // getuid
 
 #include "utilities.h"
 
@@ -292,6 +294,25 @@ bool isPathExist(const std::string& sPath, bool isFile, bool isDirectory, bool c
   }
 #endif
   return rc;
+}
+
+std::string getUserHomeDir() {
+
+  const char *homedir;
+
+  // On Windows, I will get something like: 
+  // getenv("USEPROFILE") => C:\Users\myuser
+  // getenv("HOMEDRIVE")  => C:
+  // getenv("HOMEPATH")   => \Users\Myuser
+
+  if ((homedir = getenv("HOME")) == nullptr) {
+      homedir = getpwuid(getuid())->pw_dir;
+  }
+  // Maybe this is Windows!
+  if (homedir == nullptr) 
+    homedir = getenv("USEPROFILE");
+  
+  return homedir != nullptr ? homedir : "";
 }
 
 std::string getFilename(const std::string& sPath) {
