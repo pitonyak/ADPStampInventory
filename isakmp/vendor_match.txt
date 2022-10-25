@@ -1,2 +1,3 @@
 # Bytes to match in the vendor ID field for devices of interest
-01:02:03:04:05:06
+# The following example matches the beginning of the bytes for XAUTH
+09:00:26:89:df:d6

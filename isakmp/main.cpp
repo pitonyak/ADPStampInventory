@@ -1,8 +1,11 @@
+#include <cerrno>
 #include <cstring>
+#include <fstream>
 #include <iostream>
 #include <memory>
+#include <sstream>
 #include <string>
-#include <unordered_set>
+#include <vector>
 
 #include <getopt.h>
 #include <net/ethernet.h>
@@ -14,24 +17,108 @@
 
 #include "ip_address_pairs.h"
 #include "isakmp.h"
+#include "string_util.h"
 
 using pcap_handle = std::unique_ptr<pcap_t, decltype(&pcap_close)>;
 using pcap_dump_handle = std::unique_ptr<pcap_dumper_t, decltype(&pcap_dump_close)>;
 
-// TODO: Parse vendor match file and remove this hardcoded byte sequence.
-constexpr uint8_t vendor_match[] = {0x9, 0x0, 0x26, 0x89, 0xdf, 0xd6};
-// constexpr uint8_t vendor_match_ike2[] = {0x43, 0x49, 0x53, 0x43, 0x4f, 0x28};
+/**
+ * @brief Reads a 6-byte sequence from the given file path which will be used to match against the vendor ids in ISAKMP
+ * packets.
+ *
+ * The byte sequence is expected to be of the form "xx:xx:xx:xx:xx:xx", where each 'x' represents a hexadecimal digit.
+ *
+ * @param[in] vendor_file_path The path to the file from which to read a hexadecimal byte sequence.
+ * @return A vector of byte values if the 6-byte sequence could be successfully read from the file; an empty vector
+ * otherwise.
+ */
+std::vector<uint8_t> get_vendor_bytes(const std::string &vendor_file_path)
+{
+    std::ifstream vendor_file(vendor_file_path);
+
+    if (!vendor_file)
+    {
+        std::cerr << "Failed to open vendor file at " << vendor_file_path << ": " << strerror(errno) << std::endl;
+        return {};
+    }
+
+    size_t line_count = 0;
+    std::vector<uint8_t> vendor_bytes;
+    std::string line;
+    while (std::getline(vendor_file, line))
+    {
+        line_count++;
+
+        // Remove trailing and leading whitespace from each line read from the file.
+        trim(line);
+
+        // Skip blank lines and comments.
+        if (line.empty() || line[0] == '#')
+        {
+            continue;
+        }
+
+        // Skip lines that aren't of the expected character length for a 6-byte sequence.
+        constexpr size_t expected_byte_sequence_length = 17;
+        if (line.size() != expected_byte_sequence_length)
+        {
+            continue;
+        }
+
+        // Parse the byte sequence with the expected colon delimiter.
+        std::istringstream byte_string(line);
+        std::string token;
+        constexpr char byte_separator = ':';
+        while (std::getline(byte_string, token, byte_separator))
+        {
+            constexpr size_t expected_byte_chars = 2;
+            if (token.size() != expected_byte_chars)
+            {
+                std::cerr << "Unexpected length of " << token.size() << " for byte \"" << token << "\" on line "
+                          << line_count << std::endl;
+                return {};
+            }
+
+            try
+            {
+                size_t chars_processed;
+                const uint8_t byte = std::stoul(token, &chars_processed, 16);
+                if (chars_processed != expected_byte_chars)
+                {
+                    std::cerr << "Unexpected number of hex characters for byte on line " << line_count << std::endl;
+                    return {};
+                }
+                vendor_bytes.push_back(byte);
+            }
+            catch (const std::invalid_argument &e)
+            {
+                std::cerr << "Invalid hex characters in byte sequence on line " << line_count << std::endl;
+                return {};
+            }
+            catch (const std::exception &e)
+            {
+                std::cerr << "Unexpected error while parsing byte sequence on line " << line_count << ": " << e.what()
+                          << std::endl;
+                return {};
+            }
+        }
+    }
+
+    return vendor_bytes;
+}
 
 /**
- * @brief Searches the given pcap file for ISAKMP packets that contain vendor ID payloads with the expected matching set
- * of bytes and records the source and destination IP addresses associated with these packets.
+ * @brief Searches the given pcap file for ISAKMP packets that contain vendor ID payloads with the specified matching
+ * set of bytes and records the source and destination IP addresses associated with these packets.
  *
  * @param[in,out] pcap_file The pcap file handle for which to search for ISAKMP packets.
+ * @param[in] vendor_match Vector of bytes to match in the vendor id payloads of ISAKMP packets.
  * @param[in,out] address_set The object in which to record source and destination IP addresses for matching ISAKMP
  * packets.
  * @param[in] verbose_output_enabled Flag indicating whether verbose output is enabled for the program.
  */
-void find_address_pairs(pcap_handle &pcap_file, IPAddressPairSet &address_set, bool verbose_output_enabled)
+void find_address_pairs(pcap_handle &pcap_file, const std::vector<uint8_t> &vendor_match, IPAddressPairSet &address_set,
+                        bool verbose_output_enabled)
 {
     struct pcap_pkthdr *packet_header;
     const uint8_t *packet_data;
@@ -101,7 +188,7 @@ void find_address_pairs(pcap_handle &pcap_file, IPAddressPairSet &address_set, b
                 {
                     const auto *vendor_id = reinterpret_cast<const uint8_t *>(current_payload) +
                                             sizeof(struct isakmp_generic_payload_header);
-                    if (memcmp(vendor_id, vendor_match, sizeof(vendor_match)) == 0)
+                    if (memcmp(vendor_id, vendor_match.data(), vendor_match.size()) == 0)
                     {
                         address_set.add_pair(ip_header->ip_src, ip_header->ip_dst);
                         break;
@@ -268,6 +355,14 @@ int main(int argc, char **argv)
         match_file = "vendor_match.txt";
     }
 
+    // Read vendor bytes to match from file.
+    const std::vector<uint8_t> vendor_match = get_vendor_bytes(match_file);
+    if (vendor_match.size() == 0)
+    {
+        std::cerr << "Failed to read vendor id byte sequence from " << match_file << std::endl;
+        return EXIT_FAILURE;
+    }
+
     // Open input pcap file.
     char pcap_open_err[PCAP_ERRBUF_SIZE];
     pcap_handle pcap_file(pcap_open_offline(input_file.c_str(), pcap_open_err), &pcap_close);
@@ -291,7 +386,7 @@ int main(int argc, char **argv)
 
     // Find source/destination address pairs that are sending ISAKMP packets with matching vendor id.
     IPAddressPairSet address_set;
-    find_address_pairs(pcap_file, address_set, verbose_output_enabled);
+    find_address_pairs(pcap_file, vendor_match, address_set, verbose_output_enabled);
 
     std::cout << "Found " << address_set.size() << " unique IP address pairs from matching ISAKMP packets.\n";
 

@@ -18,9 +18,9 @@ CFLAGS:=-O3 -fPIC
 # -fsanitize=undefined	UndefinedBehaviorSanitizer
 # -fno-sanitize=alignment	Of there is a complaint while accessing types at improper boundaries. Only a problem because -fsantize prior.
 #
-CXXFLAGS:=-O3 -fPIC -std=c++17
+#CXXFLAGS:=-O3 -fPIC -std=c++17
 #CXXFLAGS:=-O3 -fPIC -std=c++17 -Werror -Wall -Wextra -fsanitize=undefined,address -fno-sanitize=alignment -g
-#CXXFLAGS:=-O3 -fPIC -std=c++17 -Werror -Wall -Wextra 
+CXXFLAGS:=-O3 -fPIC -std=c++17 -Werror -Wall -Wextra
 INCLUDE:=-I/work1/home/emeneker/local_build/install/libpcap/1.9.1/include
 LIBS:=-lpcap
 
@@ -65,8 +65,8 @@ $(info EXEFILES: $(EXEFILES))
 %.o: %.cpp %.d %.h
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
-isakmp_vendor: main.o ip_address_pairs.o MurmurHash3.o
-	$(CXX) $(CXXFLAGS) main.o ip_address_pairs.o MurmurHash3.o -o isakmp_vendor $(LDFLAGS) $(LIBS)
+isakmp_vendor: main.o ip_address_pairs.o MurmurHash3.o string_util.o
+	$(CXX) $(CXXFLAGS) main.o ip_address_pairs.o MurmurHash3.o string_util.o -o isakmp_vendor $(LDFLAGS) $(LIBS)
 
 clean:
 	rm -f $(DEPFILES) $(OBJFILES) $(EXEFILES)
