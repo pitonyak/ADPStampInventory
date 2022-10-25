@@ -1,6 +1,7 @@
 #include <cerrno>
 #include <cstring>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <memory>
 #include <sstream>
@@ -132,7 +133,7 @@ void find_address_pairs(pcap_handle &pcap_file, const std::vector<uint8_t> &vend
             {
                 std::cout << "Done reading packets from input pcap file.\n";
             }
-            return;
+            break;
         }
         else if (pcap_result == PCAP_ERROR)
         {
@@ -158,29 +159,68 @@ void find_address_pairs(pcap_handle &pcap_file, const std::vector<uint8_t> &vend
                 continue;
             }
 
+            // Get offset to IP payload and UDP header.
             const size_t offset_to_ip_payload = sizeof(struct ether_header) + ip_header->ip_hl * sizeof(uint32_t);
             const auto *udp_header = reinterpret_cast<const struct udphdr *>(packet_data + offset_to_ip_payload);
 
+            // Get UDP source/destination ports.
             uint16_t source_port = ntohs(udp_header->uh_sport);
             uint16_t destination_port = ntohs(udp_header->uh_dport);
+
+            // ISAKMP traffic is expected on ports 500 and 4500.
             constexpr uint16_t isakmp_port = 500;
+            constexpr uint16_t isakmp_nat_port = 4500;
+            bool should_be_encapsulated_esp = false;
             if (source_port != isakmp_port && destination_port != isakmp_port)
             {
-                // TODO: Check port 4500 for UDP-encapsulated packets.
+                if (source_port == isakmp_nat_port || destination_port == isakmp_nat_port)
+                {
+                    // Indicate that the packet should be encapsulated ESP based on the fact that the port is 4500.
+                    should_be_encapsulated_esp = true;
+                }
+                else
+                {
+                    // Skip packets from other ports.
+                    continue;
+                }
+            }
+
+            // Get offset to UDP payload and the ISAKMP header.
+            const size_t offset_to_udp_payload = offset_to_ip_payload + sizeof(struct udphdr);
+            const struct isakmp_header *isakmp_header;
+            bool is_encapsulated_esp = false;
+
+            // Check for Non-ESP marker
+            if (should_be_encapsulated_esp &&
+                *reinterpret_cast<const uint32_t *>(packet_data + offset_to_udp_payload) == 0)
+            {
+                // ISAKMP header is after the non-ESP marker.
+                is_encapsulated_esp = true;
+                isakmp_header = reinterpret_cast<const struct isakmp_header *>(packet_data + offset_to_udp_payload +
+                                                                               sizeof(uint32_t));
+            }
+            else
+            {
+                // ISAMKP header is directly after UDP header.
+                isakmp_header = reinterpret_cast<const struct isakmp_header *>(packet_data + offset_to_udp_payload);
+            }
+
+            // Skip packets where the ISAKMP length is not equal to what remains of the packet.
+            const size_t isakmp_length = ntohl(isakmp_header->length);
+            if (packet_header->len != reinterpret_cast<uintptr_t>(isakmp_header) - reinterpret_cast<uintptr_t>(packet_data) + isakmp_length)
+            {
                 continue;
             }
 
-            const size_t offset_to_udp_payload = offset_to_ip_payload + sizeof(struct udphdr);
-            const auto *isakmp_header =
-                reinterpret_cast<const struct isakmp_header *>(packet_data + offset_to_udp_payload);
-
+            // Skip packets with encrypted payloads for IKEv1.
             if (isakmp_header->flags & isakmp_flags::IKE_Encrypt)
             {
-                // Skip packets with encrypted payloads for IKEv1.
                 continue;
             }
 
-            const size_t offset_to_isakmp_payload = offset_to_udp_payload + sizeof(struct isakmp_header);
+            // Get offset to ISAKMP payload(s).
+            const size_t offset_to_isakmp_payload =
+                offset_to_udp_payload + sizeof(struct isakmp_header) + (is_encapsulated_esp ? sizeof(uint32_t) : 0);
             const auto *current_payload =
                 reinterpret_cast<const struct isakmp_generic_payload_header *>(packet_data + offset_to_isakmp_payload);
             isakmp_payload_type current_payload_type = isakmp_header->next_payload;
@@ -188,9 +228,12 @@ void find_address_pairs(pcap_handle &pcap_file, const std::vector<uint8_t> &vend
             while (current_payload_type != isakmp_payload_type::None &&
                    current_payload_type != isakmp_payload_type::IKE2_Encrypted)
             {
+                // Look for Vendor ID payloads. The payload type has a different value depending on whether this is
+                // IKEv1 or IKEv2.
                 if (current_payload_type == isakmp_payload_type::IKE_VendorId ||
                     current_payload_type == isakmp_payload_type::IKE2_VendorId)
                 {
+                    // Determine if the beginning the of vendor id matches the desired byte sequence.
                     const auto *vendor_id = reinterpret_cast<const uint8_t *>(current_payload) +
                                             sizeof(struct isakmp_generic_payload_header);
                     if (memcmp(vendor_id, vendor_match.data(), vendor_match.size()) == 0)
@@ -218,7 +261,7 @@ void find_address_pairs(pcap_handle &pcap_file, const std::vector<uint8_t> &vend
         {
             if (verbose_output_enabled)
             {
-                std::cout << "Ignoring packet of type " << ethernet_type << "\n";
+                std::cout << "Ignoring packet of ethernet type 0x" << std::hex << ethernet_type << std::dec << "\n";
             }
         }
     }
@@ -366,6 +409,17 @@ int main(int argc, char **argv)
     {
         std::cerr << "Failed to read vendor id byte sequence from " << match_file << std::endl;
         return EXIT_FAILURE;
+    }
+
+    if (verbose_output_enabled)
+    {
+        std::cout << "Vendor id bytes to match: " << std::hex;
+        for (size_t vendor_byte_index = 0; vendor_byte_index < vendor_match.size() - 1; vendor_byte_index++)
+        {
+            std::cout << std::setfill('0') << std::setw(2) << static_cast<short>(vendor_match[vendor_byte_index])
+                      << ':';
+        }
+        std::cout << std::setw(2) << static_cast<short>(vendor_match[vendor_match.size() - 1]) << std::dec << std::endl;
     }
 
     // Open input pcap file.
