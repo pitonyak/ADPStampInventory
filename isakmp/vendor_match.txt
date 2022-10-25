@@ -1,0 +1,2 @@
+# Bytes to match in the vendor ID field for devices of interest
+01:02:03:04:05:06
