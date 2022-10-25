@@ -145,13 +145,18 @@ void find_address_pairs(pcap_handle &pcap_file, const std::vector<uint8_t> &vend
         if (ethernet_type == ETHERTYPE_IP)
         {
             const auto *ip_header = reinterpret_cast<const struct ip *>(packet_data + sizeof(struct ether_header));
+
+            if (ip_header->ip_off > 0)
+            {
+                // TODO: Handle fragmented packets. Ignore such packets for now.
+                continue;
+            }
+
             if (ip_header->ip_p != IPPROTO_UDP)
             {
                 // TODO: Investigate whether ISAKMP traffic can be sent over TCP and handle that.
                 continue;
             }
-
-            // TODO: Handle fragmented packets. ASan may raise errors if the pcap has such packets.
 
             const size_t offset_to_ip_payload = sizeof(struct ether_header) + ip_header->ip_hl * sizeof(uint32_t);
             const auto *udp_header = reinterpret_cast<const struct udphdr *>(packet_data + offset_to_ip_payload);
