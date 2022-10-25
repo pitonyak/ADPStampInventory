@@ -10,9 +10,9 @@ std::size_t ipv4_pair_hash::operator()(const ipv4_pair &pair) const
     // Combine hashes and ensure order of addresses in the pair does not matter.
     if (pair.first.s_addr > pair.second.s_addr)
     {
-        return first_hash + 37 * second_hash;
+        return static_cast<size_t>(first_hash) + 37 * static_cast<size_t>(second_hash);
     }
-    return second_hash + 37 * first_hash;
+    return static_cast<size_t>(second_hash) + 37 * static_cast<size_t>(first_hash);
 }
 
 /**
