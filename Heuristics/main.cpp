@@ -805,8 +805,8 @@ int write_ip_and_mac_from_pcap(const std::string& pcap_fname, const std::string&
       //   that may have been longer than the current IP.
       //const uint8_t* ip_src = (pkt_data + sizeof(struct ether_header) + 12);
       //const uint8_t* ip_dst = (pkt_data + sizeof(struct ether_header) + 16);
-      ip_addresses.addIpAddress((uint8_t*)&(source_ip_address), true, false);
-      ip_addresses.addIpAddress((uint8_t*)&(dest_ip_address), true, false);
+      ip_addresses.addIpAddress((uint8_t*)&(ipHeader->ip_src), true, false);
+      ip_addresses.addIpAddress((uint8_t*)&(ipHeader->ip_dst), true, false);
     }
     else if (ntohs(ether->ether_type) == ETHERTYPE_IPV6) {
       const struct ip6_hdr* ipHeader;
