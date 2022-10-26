@@ -207,7 +207,8 @@ void find_address_pairs(pcap_handle &pcap_file, const std::vector<uint8_t> &vend
 
             // Skip packets where the ISAKMP length is not equal to what remains of the packet.
             const size_t isakmp_length = ntohl(isakmp_header->length);
-            if (packet_header->len != reinterpret_cast<uintptr_t>(isakmp_header) - reinterpret_cast<uintptr_t>(packet_data) + isakmp_length)
+            if (packet_header->len !=
+                reinterpret_cast<uintptr_t>(isakmp_header) - reinterpret_cast<uintptr_t>(packet_data) + isakmp_length)
             {
                 continue;
             }
