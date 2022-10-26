@@ -24,8 +24,8 @@ using pcap_handle = std::unique_ptr<pcap_t, decltype(&pcap_close)>;
 using pcap_dump_handle = std::unique_ptr<pcap_dumper_t, decltype(&pcap_dump_close)>;
 
 /**
- * @brief Reads a 6-byte sequence from the given file path which will be used to match against the vendor ids in ISAKMP
- * packets.
+ * @brief Reads a 6-byte sequence from the given file path which will be used to match against the end of the vendor IDs
+ * in ISAKMP packets.
  *
  * The byte sequence is expected to be of the form "xx:xx:xx:xx:xx:xx", where each 'x' represents a hexadecimal digit.
  *
@@ -109,8 +109,8 @@ std::vector<uint8_t> get_vendor_bytes(const std::string &vendor_file_path)
 }
 
 /**
- * @brief Searches the given pcap file for ISAKMP packets that contain vendor ID payloads with the specified matching
- * set of bytes and records the source and destination IP addresses associated with these packets.
+ * @brief Searches the given pcap file for ISAKMP packets that contain vendor ID payloads that end with the specified
+ * matching set of bytes and records the source and destination IP addresses associated with these packets.
  *
  * @param[in,out] pcap_file The pcap file handle for which to search for ISAKMP packets.
  * @param[in] vendor_match Vector of bytes to match in the vendor id payloads of ISAKMP packets.
@@ -229,15 +229,21 @@ void find_address_pairs(pcap_handle &pcap_file, const std::vector<uint8_t> &vend
             while (current_payload_type != isakmp_payload_type::None &&
                    current_payload_type != isakmp_payload_type::IKE2_Encrypted)
             {
+                // We need a mininmum of 6 bytes, so this vendor will be ignord if the payload length is less than that.
+                constexpr uint16_t vendor_payload_length_min = 6;
+                const uint16_t current_payload_length = ntohs(current_payload->length);
+
                 // Look for Vendor ID payloads. The payload type has a different value depending on whether this is
-                // IKEv1 or IKEv2.
-                if (current_payload_type == isakmp_payload_type::IKE_VendorId ||
-                    current_payload_type == isakmp_payload_type::IKE2_VendorId)
+                // IKEv1 or IKEv2. The vendor payload length must also be >= 6.
+                if ((current_payload_type == isakmp_payload_type::IKE_VendorId ||
+                     current_payload_type == isakmp_payload_type::IKE2_VendorId) &&
+                    current_payload_length > sizeof(isakmp_generic_payload_header) &&
+                    current_payload_length - sizeof(isakmp_generic_payload_header) >= vendor_payload_length_min)
                 {
-                    // Determine if the beginning the of vendor id matches the desired byte sequence.
-                    const auto *vendor_id = reinterpret_cast<const uint8_t *>(current_payload) +
-                                            sizeof(struct isakmp_generic_payload_header);
-                    if (memcmp(vendor_id, vendor_match.data(), vendor_match.size()) == 0)
+                    // Determine if the end of vendor id matches the desired byte sequence.
+                    const auto *vendor_id_suffix = reinterpret_cast<const uint8_t *>(current_payload) +
+                                                   current_payload_length - vendor_payload_length_min;
+                    if (memcmp(vendor_id_suffix, vendor_match.data(), vendor_match.size()) == 0)
                     {
                         address_set.add_pair(ip_header->ip_src, ip_header->ip_dst);
                         break;
@@ -247,7 +253,7 @@ void find_address_pairs(pcap_handle &pcap_file, const std::vector<uint8_t> &vend
                 // Get next payload and its type.
                 current_payload_type = current_payload->next_payload;
                 current_payload = reinterpret_cast<const struct isakmp_generic_payload_header *>(
-                    reinterpret_cast<const uint8_t *>(current_payload) + ntohs(current_payload->length));
+                    reinterpret_cast<const uint8_t *>(current_payload) + current_payload_length);
             }
         }
         else if (ethernet_type == ETHERTYPE_IPV6)
