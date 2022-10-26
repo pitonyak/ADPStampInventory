@@ -785,7 +785,7 @@ int write_ip_and_mac_from_pcap(const std::string& pcap_fname, const std::string&
       bool is_multi = (IpAddresses::is_multicast_address(source_ip_address.s_addr) || IpAddresses::is_multicast_address(dest_ip_address.s_addr)) ;
 
       if (is_broadcast_address) {
-        std::cout << "Skipping Packet containing a broadcast address: 255.255.255.255" << inet_ntoa(source_ip_address) << inet_ntoa(dest_ip_address) << std::endl;
+        std::cout << "Skipping Packet containing a broadcast address: 255.255.255.255" << std::endl;
         continue;
       }
       else if (is_any_address) {
