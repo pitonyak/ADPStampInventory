@@ -332,11 +332,12 @@ void dump_matching_packets(pcap_handle &pcap_file, pcap_dump_handle &pcap_output
 void print_usage(std::ostream &out, const std::string &program_name)
 {
     out << "Usage: " << program_name << " [options] -r <infile> -w <outfile>\n\n";
-    out << "  -r, --read-file=FILE    set input pcap filename\n";
-    out << "  -w, --write-file=FILE   set output pcap filename\n";
-    out << "  -m, --match-file=FILE   set filename to read vendor id bytes to match against ISAKMP packets\n";
-    out << "  -v, --verbose           display verbose output\n";
-    out << "  -h, --help              display this help and exit" << std::endl;
+    out << "  -r, --read-file=FILE    Set input pcap filename\n";
+    out << "  -w, --write-file=FILE   Set output pcap filename\n";
+    out << "  -m, --match-file=FILE   Set filename to read vendor id byte sequence to match against ISAKMP packets.\n";
+    out << "                          If not specified, vendor_match.txt will be used from the current directory\n";
+    out << "  -v, --verbose           Display verbose output\n";
+    out << "  -h, --help              Display this help and exit" << std::endl;
 }
 
 int main(int argc, char **argv)
