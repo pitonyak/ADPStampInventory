@@ -330,7 +330,7 @@ void dump_matching_packets(pcap_handle &pcap_file, pcap_dump_handle &pcap_output
  */
 void print_usage(std::ostream &out, const std::string &program_name)
 {
-    out << "Usage: " << program_name << " [options] -r <> -w <outfile>\n\n";
+    out << "Usage: " << program_name << " [options] -r <infile> -w <outfile>\n\n";
     out << "  -r, --read-file=FILE    set input pcap filename\n";
     out << "  -w, --write-file=FILE   set output pcap filename\n";
     out << "  -m, --match-file=FILE   set filename to read vendor id bytes to match against ISAKMP packets\n";
@@ -452,7 +452,7 @@ int main(int argc, char **argv)
     // Bail out early if no matching ISAKMP packets were found in the input pcap file.
     if (address_set.size() == 0)
     {
-        std::cout << "Skipped writing filtered packets to output file becausse no ISAKMP packets matched.\n";
+        std::cout << "Skipped writing filtered packets to output file because no ISAKMP packets matched.\n";
         return EXIT_SUCCESS;
     }
 
