@@ -190,7 +190,7 @@ void find_address_pairs(pcap_handle &pcap_file, const std::vector<uint8_t> &vend
             const struct isakmp_header *isakmp_header;
             bool is_encapsulated_esp = false;
 
-            // Check for Non-ESP marker
+            // Check for Non-ESP marker. See https://www.rfc-editor.org/rfc/rfc3948#section-2.2.
             if (should_be_encapsulated_esp &&
                 *reinterpret_cast<const uint32_t *>(packet_data + offset_to_udp_payload) == 0)
             {
