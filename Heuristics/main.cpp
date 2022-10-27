@@ -776,6 +776,27 @@ int write_ip_and_mac_from_pcap(const std::string& pcap_fname, const std::string&
     if (ntohs(ether->ether_type) == ETHERTYPE_IP) {
       const struct ip* ipHeader;
       ipHeader = (struct ip*)(pkt_data + sizeof(struct ether_header));
+
+      auto source_ip_address = ipHeader->ip_src;
+      auto dest_ip_address = ipHeader->ip_dst;
+
+      bool is_any_address = (source_ip_address.s_addr == INADDR_ANY || dest_ip_address.s_addr == INADDR_ANY);
+      bool is_broadcast_address = (source_ip_address.s_addr == INADDR_BROADCAST || dest_ip_address.s_addr == INADDR_BROADCAST);
+      bool is_multi = (IpAddresses::is_multicast_address(source_ip_address.s_addr) || IpAddresses::is_multicast_address(dest_ip_address.s_addr)) ;
+
+      if (is_broadcast_address) {
+        std::cout << "Skipping Packet containing a broadcast address: 255.255.255.255" << std::endl;
+        continue;
+      }
+      else if (is_any_address) {
+        std::cout << "Skipping Packet containing a non-routable target with address: 0.0.0.0" << std::endl;
+        continue;
+      }
+      else if (is_multi) {
+        std::cout << "Skipping Packet containing a multicast address with ip address range: 224.x.x.x.-239.x.x.x" << std::endl;
+        continue;
+      }
+
       // Turn the raw src and dst IPs in the packet into human-readable
       //   IPs and insert them into the set
       // Be sure to clear the char* buffer each time so that the end

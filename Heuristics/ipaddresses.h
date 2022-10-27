@@ -87,6 +87,16 @@ public:
     static bool isIPv4Str(const std::string& ip);
 
     //**************************************************************************
+    //! Check if the ip address is a valid multicast address or not.
+    /*!
+     * \param [in]  ip address in integer format.
+     * 
+     * \returns true if ip address is a multicast address, false otherwise.
+     *
+     ***************************************************************************/
+    static bool is_multicast_address(in_addr_t ip);
+
+    //**************************************************************************
     //! Read a file of MAC addresses such as 00:0e:29:25:73:00 with very limited error checking. One line per MAC.
     /*!
      * \param [in] filename  Path to file containing the MAC addresses.
