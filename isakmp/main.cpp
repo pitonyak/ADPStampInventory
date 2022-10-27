@@ -123,6 +123,7 @@ void find_address_pairs(pcap_handle &pcap_file, const std::vector<uint8_t> &vend
 {
     struct pcap_pkthdr *packet_header;
     const uint8_t *packet_data;
+    size_t total_packet_count = 0;
 
     while (true)
     {
@@ -131,7 +132,7 @@ void find_address_pairs(pcap_handle &pcap_file, const std::vector<uint8_t> &vend
         {
             if (verbose_output_enabled)
             {
-                std::cout << "Done reading packets from input pcap file.\n";
+                std::cout << "Done reading " << total_packet_count << " packets from input pcap file.\n";
             }
             break;
         }
@@ -140,6 +141,7 @@ void find_address_pairs(pcap_handle &pcap_file, const std::vector<uint8_t> &vend
             pcap_perror(pcap_file.get(), "Error encountered while reading packets from pcap");
             continue;
         }
+        total_packet_count++;
 
         const auto *ethernet_header = reinterpret_cast<const struct ether_header *>(packet_data);
         const uint16_t ethernet_type = ntohs(ethernet_header->ether_type);
@@ -288,6 +290,8 @@ void dump_matching_packets(pcap_handle &pcap_file, pcap_dump_handle &pcap_output
 {
     struct pcap_pkthdr *packet_header;
     const uint8_t *packet_data;
+    size_t total_packet_count = 0;
+    size_t written_packet_count = 0;
     while (true)
     {
         int pcap_result = pcap_next_ex(pcap_file.get(), &packet_header, &packet_data);
@@ -300,10 +304,12 @@ void dump_matching_packets(pcap_handle &pcap_file, pcap_dump_handle &pcap_output
         {
             if (verbose_output_enabled)
             {
-                std::cout << "Done reading packets from input pcap file.\n";
+                std::cout << "Wrote " << written_packet_count << " / " << total_packet_count
+                          << " packets to output file.\n";
             }
             break;
         }
+        total_packet_count++;
 
         const auto *ethernet_header = reinterpret_cast<const ether_header *>(packet_data);
         const uint16_t ethernet_type = ntohs(ethernet_header->ether_type);
@@ -316,6 +322,7 @@ void dump_matching_packets(pcap_handle &pcap_file, pcap_dump_handle &pcap_output
             {
                 // Write packet to output file.
                 pcap_dump(reinterpret_cast<u_char *>(pcap_output_file.get()), packet_header, packet_data);
+                written_packet_count++;
             }
         }
         else if (ethernet_type == ETHERTYPE_IPV6)
@@ -421,7 +428,7 @@ int main(int argc, char **argv)
 
     if (verbose_output_enabled)
     {
-        std::cout << "Vendor id bytes to match: " << std::hex;
+        std::cout << "ISAKMP vendor ID bytes to match: " << std::hex;
         for (size_t vendor_byte_index = 0; vendor_byte_index < vendor_match.size() - 1; vendor_byte_index++)
         {
             std::cout << std::setfill('0') << std::setw(2) << static_cast<short>(vendor_match[vendor_byte_index])
@@ -441,7 +448,7 @@ int main(int argc, char **argv)
 
     if (verbose_output_enabled)
     {
-        std::cout << "Opened pcap file at " << input_file << std::endl;
+        std::cout << "Opened input pcap file " << input_file << std::endl;
     }
 
     // Ensure that the pcap file only has Ethernet packets
@@ -482,7 +489,7 @@ int main(int argc, char **argv)
 
     // Write out packets from source/destination IP addresses which sent ISAKMP packets with matching vendor id.
     dump_matching_packets(pcap_file, pcap_output_file, address_set, verbose_output_enabled);
-    std::cout << "Wrote filtered packets to " << output_file << std::endl;
+    std::cout << "Wrote filtered packets to output file " << output_file << std::endl;
 
     return EXIT_SUCCESS;
 }
