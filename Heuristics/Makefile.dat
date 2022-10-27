@@ -10,13 +10,19 @@ CFLAGS:=-O3 -fPIC
 #
 # -O3		More optimizations than -O2
 # -fPIC 	emit position-independent code.
+#           I use this because it was used in the original code.
+#           The generated code will be relative to the GLobal Offset Table (GOT).
+#           -fPIC is only needed on some machines so I suspect that the original code
+#           was compiled for OSX.
+# -std=c++17 Enable C++17, which is not available by default in GCC 9 on Ubuntu 20.0.4
 # -Werror 	Make all warnings errors
 # -Wall 	Turn on all warnings (well almost all)
 # -Wextra	Turn on a few more not covered with -Wall (see https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html)
 #
 # -fsanitize=address 	Enable the AddressSanitizer (fast memory error detector)
 # -fsanitize=undefined	UndefinedBehaviorSanitizer
-# -fno-sanitize=alignment	Of there is a complaint while accessing types at improper boundaries. Only a problem because -fsantize prior.
+# -fno-sanitize=alignment	Of there is a complaint while accessing types at improper boundaries.
+#                           Only a problem because -fsantize prior.
 #
 #CXXFLAGS:=-O3 -fPIC -std=c++17
 #CXXFLAGS:=-O3 -fPIC -std=c++17 -Werror -Wall -Wextra -fsanitize=undefined,address -fno-sanitize=alignment
