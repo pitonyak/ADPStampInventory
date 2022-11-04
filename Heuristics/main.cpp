@@ -378,7 +378,11 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
     // pkt_header contains three fields:
     // struct timeval ts (time stamp) with tv_sec and tv_usec for seconds and micro-seconds I guess.
     // uint32_t caplen (length of portion present)
-    // uint32_t len (length of this packet off wire)
+    // uint32_t len (length of this packet off wire) - 
+    //
+    // The len field is reading fine when referenced directly without converting 
+    // from network byte order (big-endian) to host endian (little-endian)
+    // using ntohl().
     //
     // The length fields are probably the same (from what I have seen from a very small sample set)
     // The time is used as follows:
@@ -473,7 +477,7 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
       //  4-bits = [ip_v] Version, so 0100 for IPv4 (byte 0)
       //  4-bits = [ip_hl] HELEN (header length)
       //  8-bits = [ip_tos] Service Type            (byte 1)
-      // 16-bits = [ip_len] total Length            (byte 2)
+      // 16-bits = [ip_len] total Length            (byte 2) [Not used]
       // 16-bits = [ip_id] Identification           (byte 4)
       //  3-bits = Flags                            (byte 6)
       // 13-bits = [lp_off] Fragmentation offset
@@ -484,6 +488,10 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
       // 32-bits = [ip_dst] Destination IP Address  (byte 16)
       // Rest of the Data                           (byte 20)
 
+      //
+      // Note that ports are uint16_t stored in network byte order (big-endian)
+      // so they must be converted before use.
+      //
       int tcp_destination_port = -1;
       int tcp_source_port = -1;
       std::string proto = "Unknown";
@@ -494,23 +502,23 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
         // uint16_t th_sport;      source port
         // uint16_t th_dport;      destination port
         // 
-        // Port 161 could be in source or destination. TODO: ???? If source is 161, special case!
+        // Port 161 could be in source or destination. 
         //
         const struct tcphdr* tcp_header = (const struct tcphdr*)(pkt_data + offset_to_data_ipv4);
-        tcp_destination_port = tcp_header->th_dport;
-        tcp_source_port = tcp_header->th_sport;
+        tcp_destination_port = ntohs(tcp_header->th_dport);
+        tcp_source_port = ntohs(tcp_header->th_sport);
         proto = "TCP";
 
       } else if (static_cast<int>(ipHeader->ip_p) == static_cast<int>(IPPROTO_UDP)) {
 
         // IPPROTO_UDP = 17
         // struct udphdr
-        // uint16_t th_sport;      source port
-        // uint16_t th_dport;      destination port
+        // uint16_t th_sport;      source port (network byte order)
+        // uint16_t th_dport;      destination port (network byte order)
         //
         const struct udphdr* udp_header = (const struct udphdr*)(pkt_data + offset_to_data_ipv4);
-        tcp_destination_port = udp_header->uh_dport;
-        tcp_source_port = udp_header->uh_sport;
+        tcp_destination_port = ntohs(udp_header->uh_dport);
+        tcp_source_port = ntohs(udp_header->uh_sport);
         proto = "UDP";
       }
 
@@ -776,6 +784,27 @@ int write_ip_and_mac_from_pcap(const std::string& pcap_fname, const std::string&
     if (ntohs(ether->ether_type) == ETHERTYPE_IP) {
       const struct ip* ipHeader;
       ipHeader = (struct ip*)(pkt_data + sizeof(struct ether_header));
+
+      auto source_ip_address = ipHeader->ip_src;
+      auto dest_ip_address = ipHeader->ip_dst;
+
+      bool is_any_address = (source_ip_address.s_addr == INADDR_ANY || dest_ip_address.s_addr == INADDR_ANY);
+      bool is_broadcast_address = (source_ip_address.s_addr == INADDR_BROADCAST || dest_ip_address.s_addr == INADDR_BROADCAST);
+      bool is_multi = (IpAddresses::is_multicast_address(source_ip_address.s_addr) || IpAddresses::is_multicast_address(dest_ip_address.s_addr)) ;
+
+      if (is_broadcast_address) {
+        std::cout << "Skipping Packet containing a broadcast address: 255.255.255.255" << std::endl;
+        continue;
+      }
+      else if (is_any_address) {
+        std::cout << "Skipping Packet containing a non-routable target with address: 0.0.0.0" << std::endl;
+        continue;
+      }
+      else if (is_multi) {
+        std::cout << "Skipping Packet containing a multicast address with ip address range: 224.x.x.x.-239.x.x.x" << std::endl;
+        continue;
+      }
+
       // Turn the raw src and dst IPs in the packet into human-readable
       //   IPs and insert them into the set
       // Be sure to clear the char* buffer each time so that the end

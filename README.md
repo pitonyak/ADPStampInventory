@@ -17,6 +17,22 @@ The base files (by name) are as follows: <br/>
 
 The individual tools are listed below.
 
+## Compiler Versions and Environment
+
+The target evironment is Ubuntu 20.0.4, but the client is probably running stock RHEL that has been stigged. Ubuntu 20.0.4 has:
+
+- On Linux, to check your OS and release, use `cat /etc/os-release` or even `cat /etc/os-release | grep PRETTY_NAME` to only see the name.
+- gcc 9.4.0, which supports c++17 when using the `-std=c++17` as a compile time flag. Use `gcc --version` to see the installed version.
+- Python 3. Ubuntu 20.0.4 shows Python 3.8.10. Use `python3 --version` to see the installed version.
+- Optimizations are turned on for C++ using (`-O3`) because speed is important while processing large PCAP files.
+- While compiling, enable warning messages (`-Werror -Wall -Wextra`) to help find errors.
+- In test and debug, allow for memory error checking (`-fsanitize=undefined,address -fno-sanitize=alignment`) but this seriously affects runtime so do not include this in production or while dealing with large files. Enabling sanitize will probably require installing another package or there will be link errors.
+
+Python is likely to use scapy, numpy, Scikit-learn, and tensorflow. 
+
+
+
+
 ## Generating a GraphML file using kmeans.py
 
 kmeans.py uses sklearn. Although the sklearn package is the same as scikit-learn package and you are able to install either, it is better to install scikit-learn. If you install sklearn, it will install scikit-learn and when you use `pip list`, it will show sklearn with version 0.0 and scikit-learn with whatever version you installed. Use `pip install scikit-learn` to install the required sklearn dependency. 

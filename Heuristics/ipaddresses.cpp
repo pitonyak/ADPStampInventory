@@ -44,6 +44,16 @@ uint8_t * IpAddresses::str_to_ip(const std::string& ip, bool isIPv4) {
     return dupIpAddress(ip_addr_max, isIPv4);
 }
 
+ bool IpAddresses::is_multicast_address(in_addr_t ip){
+
+    char *ip_str = reinterpret_cast<char*>(&ip);
+
+    auto first_octet_to_int = ip_str[0] & 0xFF;
+    // we will check only first byte of IP
+    // and if it from 224 to 239, then it can
+    // represent multicast IP.
+    return (first_octet_to_int >=  224 && first_octet_to_int <= 239);
+}
 IpAddresses::IpAddresses() {
 }
 

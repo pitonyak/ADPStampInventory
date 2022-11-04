@@ -10,13 +10,19 @@ CFLAGS:=-O3 -fPIC
 #
 # -O3		More optimizations than -O2
 # -fPIC 	emit position-independent code.
+#           I use this because it was used in the original code.
+#           The generated code will be relative to the GLobal Offset Table (GOT).
+#           -fPIC is only needed on some machines so I suspect that the original code
+#           was compiled for OSX.
+# -std=c++17 Enable C++17, which is not available by default in GCC 9 on Ubuntu 20.0.4
 # -Werror 	Make all warnings errors
 # -Wall 	Turn on all warnings (well almost all)
 # -Wextra	Turn on a few more not covered with -Wall (see https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html)
 #
 # -fsanitize=address 	Enable the AddressSanitizer (fast memory error detector)
 # -fsanitize=undefined	UndefinedBehaviorSanitizer
-# -fno-sanitize=alignment	Of there is a complaint while accessing types at improper boundaries. Only a problem because -fsantize prior.
+# -fno-sanitize=alignment	Of there is a complaint while accessing types at improper boundaries.
+#                           Only a problem because -fsantize prior.
 #
 #CXXFLAGS:=-O3 -fPIC -std=c++17
 #CXXFLAGS:=-O3 -fPIC -std=c++17 -Werror -Wall -Wextra -fsanitize=undefined,address -fno-sanitize=alignment
@@ -40,7 +46,7 @@ SOURCES:=$(patsubst ./%,%,$(SOURCES))
 #These are the dependency files, which make will clean up after it creates them
 DEPFILES:=$(patsubst %.cpp,%.d,$(SOURCES))
 OBJFILES:=$(patsubst %.cpp,%.o,$(SOURCES))
-EXEFILES:=heuristics find_macs_and_ips crc_test utilities_test
+EXEFILES:=heuristics find_macs_and_ips crc_test utilities_test print_ethertypes
 
 # I can avoid this by listing the DEPFILES as part of all.
 #Don't create dependencies when we're cleaning, for instance
@@ -76,6 +82,9 @@ utilities_test: utilities_test.o utilities.o ahocorasickbinary.o bitsetdynamic.o
 
 crc_test: crc_test.o crc32_x.o
 	$(CXX) $(CXXFLAGS) crc_test.o crc32_x.o -o crc_test $(LDFLAGS) $(LIBS)
+
+print_ethertypes: print_ethertypes.o ethtype.o utilities.o 
+	$(CXX) $(CXXFLAGS) print_ethertypes.o utilities.o ethtype.o -o print_ethertypes $(LDFLAGS) $(LIBS)
 
 clean:
 	rm -f $(DEPFILES) $(OBJFILES) $(EXEFILES)
