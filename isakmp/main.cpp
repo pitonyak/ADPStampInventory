@@ -149,7 +149,9 @@ void find_address_pairs(pcap_handle &pcap_file, const std::vector<uint8_t> &vend
         {
             const auto *ip_header = reinterpret_cast<const struct ip *>(packet_data + sizeof(struct ether_header));
 
-            if (ip_header->ip_off > 0)
+            // Mask bits for fragment offset and More Fragments flag. A packet should be considered a fragment if the
+            // More Fragments flag is set or if the fragment offset is non-zero.
+            if ((ntohs(ip_header->ip_off) & (IP_MF | IP_OFFMASK)) > 0)
             {
                 // TODO: Handle fragmented packets. Ignore such packets for now.
                 continue;
