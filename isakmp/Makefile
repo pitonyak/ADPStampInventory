@@ -40,7 +40,7 @@ SOURCES:=$(patsubst ./%,%,$(SOURCES))
 #These are the dependency files, which make will clean up after it creates them
 DEPFILES:=$(patsubst %.cpp,%.d,$(SOURCES))
 OBJFILES:=$(patsubst %.cpp,%.o,$(SOURCES))
-EXEFILES:=isakmp_vendor
+EXEFILES:=isakmp_tool
 
 # I can avoid this by listing the DEPFILES as part of all.
 #Don't create dependencies when we're cleaning, for instance
@@ -65,8 +65,8 @@ $(info EXEFILES: $(EXEFILES))
 %.o: %.cpp %.d %.h
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
-isakmp_vendor: main.o ip_address_pairs.o MurmurHash3.o string_util.o
-	$(CXX) $(CXXFLAGS) main.o ip_address_pairs.o MurmurHash3.o string_util.o -o isakmp_vendor $(LDFLAGS) $(LIBS)
+isakmp_tool: main.o ip_address_pairs.o MurmurHash3.o string_util.o
+	$(CXX) $(CXXFLAGS) main.o ip_address_pairs.o MurmurHash3.o string_util.o -o isakmp_tool $(LDFLAGS) $(LIBS)
 
 clean:
 	rm -f $(DEPFILES) $(OBJFILES) $(EXEFILES)
