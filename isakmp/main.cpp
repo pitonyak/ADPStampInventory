@@ -233,7 +233,7 @@ void find_address_pairs(pcap_handle &pcap_file, const std::vector<uint8_t> &vend
             while (current_payload_type != isakmp_payload_type::None &&
                    current_payload_type != isakmp_payload_type::IKE2_Encrypted)
             {
-                // We need a mininmum of 6 bytes, so this vendor will be ignord if the payload length is less than that.
+                // We need a mininmum of 6 bytes, so this vendor will be ignored if the payload length is less than that.
                 constexpr uint16_t vendor_payload_length_min = 6;
                 const uint16_t current_payload_length = ntohs(current_payload->length);
 
