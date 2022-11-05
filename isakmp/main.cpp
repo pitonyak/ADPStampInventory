@@ -209,11 +209,18 @@ void find_address_pairs(pcap_handle &pcap_file, const std::vector<uint8_t> &vend
                 isakmp_header = reinterpret_cast<const struct isakmp_header *>(packet_data + offset_to_udp_payload);
             }
 
-            // Skip packets where the ISAKMP length is not equal to what remains of the packet.
+            // Skip packets where the ISAKMP length cannot possibly fit in what remains of the packet.
             const size_t isakmp_length = ntohl(isakmp_header->length);
-            if (packet_header->len !=
-                reinterpret_cast<uintptr_t>(isakmp_header) - reinterpret_cast<uintptr_t>(packet_data) + isakmp_length)
+            const size_t remaining_packet_length = packet_header->len - (reinterpret_cast<uintptr_t>(isakmp_header) -
+                                                                         reinterpret_cast<uintptr_t>(packet_data));
+            if (isakmp_length > remaining_packet_length)
             {
+                if (verbose_output_enabled)
+                {
+                    std::cout << "Packet " << total_packet_count << " is likely not ISAKMP\n"
+                              << "ISAKMP length " << isakmp_length << " > remaining packet length of "
+                              << remaining_packet_length << std::endl;
+                }
                 continue;
             }
 
