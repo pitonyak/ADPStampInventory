@@ -24,6 +24,29 @@ using pcap_handle = std::unique_ptr<pcap_t, decltype(&pcap_close)>;
 using pcap_dump_handle = std::unique_ptr<pcap_dumper_t, decltype(&pcap_dump_close)>;
 
 /**
+ * @brief Flags for selecting when to show information for skipped packets due to unsupported/unrecognized values.
+ */
+struct show_skip_flags
+{
+    /// Show information for packets skipped due to having an ethernet type that is neither IPv4 nor IPv6.
+    static constexpr uint32_t EtherType = (1 << 0);
+    /// Show information for packets skipped due to fragmentation.
+    static constexpr uint32_t Fragment = (1 << 1);
+    /// Show information for packets skipped due to them being IPv6.
+    static constexpr uint32_t IPv6 = (1 << 2);
+    /// Show information for packets skipped due to ISAKMP encrypted payload flag.
+    static constexpr uint32_t ISAKMPEncypt = (1 << 3);
+    /// Show information for packets skipped due to ISAKMP length value that cannot fit in packet.
+    static constexpr uint32_t ISAKMPLength = (1 << 4);
+    /// Show information for packets skipped due to non-ISAKMP ports.
+    static constexpr uint32_t Port = (1 << 5);
+    /// Show information for packets skipped due to non-UDP IP protocol.
+    static constexpr uint32_t Protocol = (1 << 6);
+    /// Show information for all skipped packets.
+    static constexpr uint32_t All = UINT32_MAX;
+};
+
+/**
  * @brief Reads a 6-byte sequence from the given file path which will be used to match against the end of the vendor IDs
  * in ISAKMP packets.
  *
@@ -109,6 +132,23 @@ std::vector<uint8_t> get_vendor_bytes(const std::string &vendor_file_path)
 }
 
 /**
+ * @brief Outputs the given number of bytes in hexadecial and separated by spaces.
+ *
+ * @param[in] data Pointer to data to dump.
+ * @param[in] len The number of bytes to dump from the given address.
+ */
+void dump_bytes(const uint8_t *data, size_t len)
+{
+    size_t bytes_dumped = 0;
+    while (bytes_dumped < len)
+    {
+        const int byte_value = data[bytes_dumped++];
+        std::cout << std::hex << std::setfill('0') << std::setw(2) << byte_value << " ";
+    }
+    std::cout << std::dec << std::endl;
+}
+
+/**
  * @brief Searches the given pcap file for ISAKMP packets that contain vendor ID payloads that end with the specified
  * matching set of bytes and records the source and destination IP addresses associated with these packets.
  *
@@ -117,9 +157,12 @@ std::vector<uint8_t> get_vendor_bytes(const std::string &vendor_file_path)
  * @param[in,out] address_set The object in which to record source and destination IP addresses for matching ISAKMP
  * packets.
  * @param[in] verbose_output_enabled Flag indicating whether verbose output is enabled for the program.
+ * @param[in] hex_dump_enabled Flag indicating whether suspected ISAKMP packets should be dumped as a set of hexadecimal
+ * bytes.
+ * @param[in] skips_flags Flags indicating whether information about skipped packets should be displayed.
  */
 void find_address_pairs(pcap_handle &pcap_file, const std::vector<uint8_t> &vendor_match, IPAddressPairSet &address_set,
-                        bool verbose_output_enabled)
+                        bool verbose_output_enabled, bool hex_dump_enabled, uint32_t skip_flags)
 {
     struct pcap_pkthdr *packet_header;
     const uint8_t *packet_data;
@@ -151,15 +194,33 @@ void find_address_pairs(pcap_handle &pcap_file, const std::vector<uint8_t> &vend
 
             // Mask bits for fragment offset and More Fragments flag. A packet should be considered a fragment if the
             // More Fragments flag is set or if the fragment offset is non-zero.
-            if ((ntohs(ip_header->ip_off) & (IP_MF | IP_OFFMASK)) > 0)
+            const uint16_t ip_offset_field = ntohs(ip_header->ip_off);
+            if ((ip_offset_field & (IP_MF | IP_OFFMASK)) > 0)
             {
                 // TODO: Handle fragmented packets. Ignore such packets for now.
+                if (verbose_output_enabled && (skip_flags & show_skip_flags::Fragment))
+                {
+                    bool reserved = ip_offset_field & IP_RF;
+                    bool dont_fragment = ip_offset_field & IP_DF;
+                    bool more_fragments = ip_offset_field & IP_MF;
+                    uint16_t fragment_offset = ip_offset_field & IP_OFFMASK;
+                    std::cout << std::boolalpha << "Packet #" << total_packet_count << " skipped due to fragmentation\n"
+                              << "\tReserved: " << reserved << "\n\tDon't Fragment: " << dont_fragment
+                              << "\n\tMore Fragments: " << more_fragments << "\n\tFragment Offset: " << fragment_offset
+                              << std::endl;
+                }
                 continue;
             }
 
             if (ip_header->ip_p != IPPROTO_UDP)
             {
                 // TODO: Investigate whether ISAKMP traffic can be sent over TCP and handle that.
+                if (verbose_output_enabled && (skip_flags & show_skip_flags::Protocol))
+                {
+                    std::cout << "Packet #" << total_packet_count
+                              << " skipped due to non-UDP IP protocol: " << static_cast<int>(ip_header->ip_p)
+                              << std::endl;
+                }
                 continue;
             }
 
@@ -185,6 +246,12 @@ void find_address_pairs(pcap_handle &pcap_file, const std::vector<uint8_t> &vend
                 else
                 {
                     // Skip packets from other ports.
+                    if (verbose_output_enabled && (skip_flags & show_skip_flags::Port))
+                    {
+                        std::cout << "Packet #" << total_packet_count << " skipped due to non-ISAKMP ports\n"
+                                  << "\tSource Port: " << source_port << "\n\tDestination Port: " << destination_port
+                                  << std::endl;
+                    }
                     continue;
                 }
             }
@@ -215,7 +282,7 @@ void find_address_pairs(pcap_handle &pcap_file, const std::vector<uint8_t> &vend
                                                                          reinterpret_cast<uintptr_t>(packet_data));
             if (isakmp_length > remaining_packet_length)
             {
-                if (verbose_output_enabled)
+                if (verbose_output_enabled && (skip_flags & show_skip_flags::ISAKMPLength))
                 {
                     std::cout << "Packet " << total_packet_count << " is likely not ISAKMP\n"
                               << "ISAKMP length " << isakmp_length << " > remaining packet length of "
@@ -224,9 +291,19 @@ void find_address_pairs(pcap_handle &pcap_file, const std::vector<uint8_t> &vend
                 continue;
             }
 
+            if (verbose_output_enabled && hex_dump_enabled)
+            {
+                std::cout << "Packet #" << total_packet_count << " is ISAKMP:\n";
+                dump_bytes((uint8_t *)isakmp_header, isakmp_length);
+            }
+
             // Skip packets with encrypted payloads for IKEv1.
             if (isakmp_header->flags & isakmp_flags::IKE_Encrypt)
             {
+                if (verbose_output_enabled && (skip_flags & show_skip_flags::ISAKMPEncypt))
+                {
+                    std::cout << "Packet #" << total_packet_count << " skipped due to encrypted payload" << std::endl;
+                }
                 continue;
             }
 
@@ -251,6 +328,14 @@ void find_address_pairs(pcap_handle &pcap_file, const std::vector<uint8_t> &vend
                     current_payload_length > sizeof(isakmp_generic_payload_header) &&
                     current_payload_length - sizeof(isakmp_generic_payload_header) >= vendor_payload_length_min)
                 {
+                    if (verbose_output_enabled && hex_dump_enabled)
+                    {
+                        std::cout << "ISAKMP Vendor: ";
+                        dump_bytes(reinterpret_cast<const uint8_t *>(current_payload) +
+                                       sizeof(isakmp_generic_payload_header),
+                                   current_payload_length - sizeof(isakmp_generic_payload_header));
+                    }
+
                     // Determine if the end of vendor id matches the desired byte sequence.
                     const auto *vendor_id_suffix = reinterpret_cast<const uint8_t *>(current_payload) +
                                                    current_payload_length - vendor_payload_length_min;
@@ -270,14 +355,15 @@ void find_address_pairs(pcap_handle &pcap_file, const std::vector<uint8_t> &vend
         else if (ethernet_type == ETHERTYPE_IPV6)
         {
             // TODO: Handle IPv6.
-            if (verbose_output_enabled)
+            if (verbose_output_enabled && (skip_flags & show_skip_flags::IPv6))
             {
-                std::cout << "Ignoring IPv6 packet\n";
+                std::cout << "Packet #" << total_packet_count << " ignored because it is IPv6\n";
             }
         }
-        else if (verbose_output_enabled)
+        else if (verbose_output_enabled && (skip_flags & show_skip_flags::EtherType))
         {
-            std::cout << "Ignoring packet of ethernet type 0x" << std::hex << ethernet_type << std::dec << "\n";
+            std::cout << "Packet #" << total_packet_count << " ignored due to unsupported ethertype 0x" << std::hex
+                      << std::setfill('0') << std::setw(4) << ethernet_type << std::dec << "\n";
         }
     }
 }
@@ -331,14 +417,7 @@ void dump_matching_packets(pcap_handle &pcap_file, pcap_dump_handle &pcap_output
                 written_packet_count++;
             }
         }
-        else if (ethernet_type == ETHERTYPE_IPV6)
-        {
-            // TODO: Handle IPv6.
-            if (verbose_output_enabled)
-            {
-                std::cout << "Ignoring IPv6 packet\n";
-            }
-        }
+        // TODO: Handle IPv6 using constant ETHERTYPE_IPV6.
     }
 }
 
@@ -351,33 +430,45 @@ void dump_matching_packets(pcap_handle &pcap_file, pcap_dump_handle &pcap_output
 void print_usage(std::ostream &out, const std::string &program_name)
 {
     out << "Usage: " << program_name << " [options] -r <infile> -w <outfile>\n\n";
-    out << "  -r, --read-file=FILE    Set input pcap filename\n";
-    out << "  -w, --write-file=FILE   Set output pcap filename\n";
-    out << "  -m, --match-file=FILE   Set filename to read vendor id byte sequence to match against ISAKMP packets.\n";
-    out << "                          If not specified, vendor_match.txt will be used from the current directory\n";
-    out << "  -v, --verbose           Display verbose output\n";
-    out << "  -h, --help              Display this help and exit" << std::endl;
+    out << "  -r, --read-file=FILE   Set input pcap filename\n";
+    out << "  -w, --write-file=FILE  Set output pcap filename\n";
+    out << "  -m, --match-file=FILE  Set filename to read vendor id byte sequence to match against ISAKMP packets.\n";
+    out << "                         If not specified, vendor_match.txt will be used from the current directory\n";
+    out << "  -v, --verbose          Display verbose output\n";
+    out << "  -d, --dump-hex         Dump hex data for ISAKMP packets in verbose mode\n";
+    out << "  -s, --show-skips=TYPE  Display information in verbose mode about packets which were skipped due to\n";
+    out << "                         the following unsupported/unrecognized attribute types:\n";
+    out << "                           ethertype, fragment, ipv6, isakmp-encrypt, isakmp-length, port, protocol,\n";
+    out << "                           all\n";
+    out << "  -h, --help             Display this help and exit" << std::endl;
 }
 
 int main(int argc, char **argv)
 {
     // Define set of options that can be passed on the command line for this program.
     static struct option long_options[] = {
-        {"help", no_argument, 0, 'h'},
-        {"match-file", required_argument, 0, 'm'},
-        {"read-file", required_argument, 0, 'r'},
-        {"verbose", no_argument, 0, 'v'},
-        {"write-file", required_argument, 0, 'w'},
-        {nullptr, 0, nullptr, 0},
+        {"dump-hex",   no_argument,       0,       'd'},
+        {"help",       no_argument,       0,       'h'},
+        {"match-file", required_argument, 0,       'm'},
+        {"read-file",  required_argument, 0,       'r'},
+        {"show-skips", required_argument, 0,       's'},
+        {"verbose",    no_argument,       0,       'v'},
+        {"write-file", required_argument, 0,       'w'},
+        {nullptr,      0,                 nullptr, 0  },
     };
 
     std::string input_file, output_file, match_file;
     bool verbose_output_enabled = false;
+    bool hex_dump_enabled = false;
+    uint32_t skip_flags = 0;
     int option, option_index;
-    while ((option = getopt_long(argc, argv, "hr:m:vw:", long_options, &option_index)) != -1)
+    while ((option = getopt_long(argc, argv, "dhr:m:s:vw:", long_options, &option_index)) != -1)
     {
         switch (option)
         {
+        case 'd':
+            hex_dump_enabled = true;
+            break;
         case 'h':
             std::cout << "Filter packets from devices sending ISAKMP packets containing a particular vendor id.\n\n";
             print_usage(std::cout, argv[0]);
@@ -389,6 +480,46 @@ int main(int argc, char **argv)
         case 'r':
             input_file = optarg;
             break;
+        case 's':
+            if (strcasecmp(optarg, "ethertype") == 0)
+            {
+                skip_flags |= show_skip_flags::EtherType;
+            }
+            else if (strcasecmp(optarg, "fragment") == 0)
+            {
+                skip_flags |= show_skip_flags::Fragment;
+            }
+            else if (strcasecmp(optarg, "ipv6") == 0)
+            {
+                skip_flags |= show_skip_flags::IPv6;
+            }
+            else if (strcasecmp(optarg, "isakmp-encrypt") == 0)
+            {
+                skip_flags |= show_skip_flags::ISAKMPEncypt;
+            }
+            else if (strcasecmp(optarg, "isakmp-length") == 0)
+            {
+                skip_flags |= show_skip_flags::ISAKMPLength;
+            }
+            else if (strcasecmp(optarg, "port") == 0)
+            {
+                skip_flags |= show_skip_flags::Port;
+            }
+            else if (strcasecmp(optarg, "protocol") == 0)
+            {
+                skip_flags |= show_skip_flags::Protocol;
+            }
+            else if (strcasecmp(optarg, "all") == 0)
+            {
+                skip_flags = show_skip_flags::All;
+            }
+            else
+            {
+                std::cerr << "Invalid argument given to --show-skips option: " << optarg << "\n\n";
+                print_usage(std::cerr, argv[0]);
+                exit(EXIT_FAILURE);
+            }
+            break;
         case 'v':
             verbose_output_enabled = true;
             break;
@@ -396,6 +527,12 @@ int main(int argc, char **argv)
             output_file = optarg;
             break;
         case '?':
+            if (optopt == 's')
+            {
+                std::cerr << "See possible arguments to --show-skips option below.\n\n";
+                print_usage(std::cerr, argv[0]);
+                exit(EXIT_FAILURE);
+            }
             break;
         default:
             std::cerr << "Unrecognized option: " << option << "\n\n";
@@ -466,7 +603,7 @@ int main(int argc, char **argv)
 
     // Find source/destination address pairs that are sending ISAKMP packets with matching vendor id.
     IPAddressPairSet address_set;
-    find_address_pairs(pcap_file, vendor_match, address_set, verbose_output_enabled);
+    find_address_pairs(pcap_file, vendor_match, address_set, verbose_output_enabled, hex_dump_enabled, skip_flags);
 
     std::cout << "Found " << address_set.size() << " unique IP address pairs from matching ISAKMP packets.\n";
 
