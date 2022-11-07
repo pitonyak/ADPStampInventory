@@ -1,0 +1,3 @@
+# Bytes to match in the vendor ID field for devices of interest.
+# The following example matches the end of the bytes for XAUTH.
+26:89:df:d6:b7:12
