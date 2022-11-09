@@ -19,6 +19,7 @@ BitsetDynamic::BitsetDynamic(std::size_t n) : BitsetDynamic() {
 		}
 		m_bits = new uint64_t[byte];
 		m_arraySize = byte;
+		m_numBits = n;
 		for (std::size_t i = 0; i<m_arraySize; ++i) {
 			m_bits[i] = 0;
 		}

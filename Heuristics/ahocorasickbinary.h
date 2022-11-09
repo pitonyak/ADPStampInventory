@@ -99,8 +99,6 @@ public:
     int getAlphabetSize() const { return m_alphabet_size; }
     int getMaxStates() const { return m_max_states; }
 
-    void orEquals(std::vector<bool>& lhs, const std::vector<bool>& rhs) const;
-
 private:
     //**************************************************************************
     //! Find the next state for a transition.
