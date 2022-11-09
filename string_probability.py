@@ -36,9 +36,9 @@ def calc_probability(string_size: int, max_num_occurrences: list, data_size: int
 
     for x, y in zip(X, probability):
         ax.annotate(f"{y:#.3g}%", (x, y), fontsize=10, horizontalalignment='center', verticalalignment='bottom')
-        print(f"P({x}) is {y:#.3g}")
+        print(f"P({x}) is {y:#.3g}%")
     plt.savefig(f"probability_s{string_size}_n{max_num_occurrence}_d{data_size}{data_unit.upper()}.png", dpi=200)
-    
+
 def calc_poisson_pmf(string_size: int, max_num_occurrences: int, data_size: int, interval_exp: int) -> list:
     # https://en.wikipedia.org/wiki/Poisson_distribution
     # S is an 8-bit string of length string_size
