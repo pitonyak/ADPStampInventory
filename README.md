@@ -13,6 +13,8 @@ The base files (by name) are as follows: <br/>
 | isakmp            | Identifies devices of interest based on ISAKMP vendor ID. |
 | kmeans.py         | Generate an annotated GraphML file from an input JSON file. |
 | README.md         | This file. |
+| string_probability.py | TODO |
+| test_encrypted.py | Test encrypted.py |
 | nistspecialpublication800-22r1a.pdf | NIST document related to encrypted.py indicating how to test for randomness. |
 
 The individual tools are listed below.
@@ -28,14 +30,30 @@ The target evironment is Ubuntu 20.0.4, but the client is probably running stock
 - While compiling, enable warning messages (`-Werror -Wall -Wextra`) to help find errors.
 - In test and debug, allow for memory error checking (`-fsanitize=undefined,address -fno-sanitize=alignment`) but this seriously affects runtime so do not include this in production or while dealing with large files. Enabling sanitize will probably require installing another package or there will be link errors.
 
-Python is likely to use scapy, numpy, Scikit-learn, and tensorflow. 
+Usually pip is used to install packages for Python; on Ubuntu, use "sudo apt install python3-pip"
 
+Python is likely to use scapy, numpy, Scikit-learn, and tensorflow.
 
+The following libraries probably need to be installed on a standard system for Python using pip install:
+
+- contourpy
+- cycler
+- fonttools
+- kiwisolver
+- matplotlib
+- networkx
+- numpy
+- packaging
+- pyparsing
+- scapy
+- scikit-learn
+- scipy
+- sklearn
 
 
 ## Generating a GraphML file using kmeans.py
 
-kmeans.py uses sklearn. Although the sklearn package is the same as scikit-learn package and you are able to install either, it is better to install scikit-learn. If you install sklearn, it will install scikit-learn and when you use `pip list`, it will show sklearn with version 0.0 and scikit-learn with whatever version you installed. Use `pip install scikit-learn` to install the required sklearn dependency. 
+kmeans.py uses sklearn. Although the sklearn package is the same as scikit-learn package and you are able to install either, it is better to install scikit-learn. If you install sklearn, it will install scikit-learn and when you use `pip list`, it will show sklearn with version 0.0 and scikit-learn with whatever version you installed. Use `pip install scikit-learn` to install the required sklearn dependency.
 
 
 kmeans.py supports the following arguments: <br/>
@@ -128,6 +146,18 @@ A few notes to consider:
 - A p-value ≥ 0.01 is a passing value for a specific test.
 - The first test, Monobit or Frequency, is one of the most important tests. To quote from the NIST paper, *All subsequent tests are conditioned on having passed this first basic test.* In other words, if this test fails, the data is probably not random.
 
+## Using test_encrypted.py
+
+Run test_encrypted.py to verify that things are installed and working
+
+~~~~
+$ python3 test_encrypted.py
+......
+----------------------------------------------------------------------
+Ran 6 tests in 0.001s
+
+OK
+~~~~
 
 ### Using encrypted.py
 
@@ -177,6 +207,12 @@ Total Read time: 12.936828374862671 for 86401 encrypted:11
 
 Increasing the verbosity to two causes the payload length to be printed as well as a full dump of the data for every encrypted packet. Interesting, but not normally desired.
 
+
+## string_probability.py
+
+
+TODO: Fix so that it can run without displaying a graph that does not show on the Ubuntu or Fedora VMs.
+TODO: Fix to check arguments and print help.
 
 ## Tools by Category
 
