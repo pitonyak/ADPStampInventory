@@ -29,12 +29,22 @@ The target evironment is Ubuntu 20.0.4, but the client is probably running stock
 - Optimizations are turned on for C++ using (`-O3`) because speed is important while processing large PCAP files.
 - While compiling, enable warning messages (`-Werror -Wall -Wextra`) to help find errors.
 - In test and debug, allow for memory error checking (`-fsanitize=undefined,address -fno-sanitize=alignment`) but this seriously affects runtime so do not include this in production or while dealing with large files. Enabling sanitize will probably require installing another package or there will be link errors.
+- Make is currently used to build but there is a move to use cmake, so install cmake.
 
-Usually pip is used to install packages for Python; on Ubuntu, use "sudo apt install python3-pip"
+To summarize, on Ubuntu 20.0.4, install a standard C++ environment with gcc, g++, Python 3, make, and cmake.
 
-Python is likely to use scapy, numpy, Scikit-learn, and tensorflow.
+### C++ Libraries
 
-The following libraries probably need to be installed on a standard system for Python using pip install:
+On Ubuntu, install the libraries: 
+
+- libpcap-dev
+
+Other libraries are expected to be used for some in-progress projects, and this list will be updated.
+
+### Python Modules
+
+Usually pip is used to install packages for Python; on Ubuntu, use "sudo apt install python3-pip". 
+The following Python modules should be installed on a standard system for Python using pip install:
 
 - contourpy
 - cycler
@@ -42,7 +52,7 @@ The following libraries probably need to be installed on a standard system for P
 - kiwisolver
 - matplotlib
 - networkx
-- numpy
+- numpy  (On some systems, may need to use *python3 -m pip install numpy -I* if there is an error.)
 - packaging
 - pyparsing
 - scapy
@@ -50,6 +60,36 @@ The following libraries probably need to be installed on a standard system for P
 - scipy
 - sklearn
 
+Although it is not used by the Python I tried, notes state that the 
+**tensorflow** package is used for some package.
+
+### Environment Testing
+
+A good way to test for Python is to simply run the Python code. 
+Even without using parameters, errors are printed if a required library is not present. 
+This document lists how to use each of the programs, but the intent here is for something 
+simple that checks for the correct libraries. 
+Look elsewhere for details and use this list to test for properly installed libraries. 
+
+| test      | Comment     |
+|-----------|-------------|
+| python3 test_encrypted.py | Ignore comments about deprecated methods |
+| python3 encrypted.py -h  |  Already tested with test_encrypted, but a more complete test would be: *python3 encrypted.py -f in.pcap -o out.csv* |
+| python3 string_probability.py -h  | For a more throrough test, use *python3 string_probability.py -s 4 -n 4 10 -d 30*, which may show a few unimportant errors. |
+| python3 kmeans.py -h  | Print help and check imports. |
+| python3 ciscot7.py --help | Print help and check imports.  |
+
+To test build ability for C++, start with the Heuristics directory. 
+
+| test      | Comment     |
+|-----------|-------------|
+| cp Makefile.dat Makefile | Get the Makefile ready |
+| make | Perform a build, which tests that libpcap is available for linking |
+| ./utilities_test | Check file and directory permissions may fail on Ubuntu because of unexpected permissions to things that were not expected; for example, ability to write to a few specific directories. |
+| ./crc_test crc_test | Calculate the crc of the file crc_test. To verify, install the crc32 command and use that to test for correct 32-bit CRC. |
+| ./heuristics -r in.pcap -a out.pcap | This will read the input pcap file, generate the IP and MAC files in the same directory as the PCAP file and also generate an output PCAP file named out.pcap. |
+
+ 
 
 ## Generating a GraphML file using kmeans.py
 
