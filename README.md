@@ -250,9 +250,35 @@ The probability P(n), as shown above, is the probability that a string of length
 
 The probability that three strings will be seen exactly 4, 10, and 6 times is obtained by multiplying the individual probabilities together for 0.415%.
 
-### The Math
+### The Math in string_probability.py
 
-Each 8-bit character is assumed to be random and uniformily distributed. Probabilities are obtained using the Poisson distribution (see [https://en.wikipedia.org/wiki/Poisson_distribution](https://en.wikipedia.org/wiki/Poisson_distribution)). 
+Each 8-bit character is assumed to be random and uniformily distributed.
+Probabilities are obtained using the Poisson distribution (see [https://en.wikipedia.org/wiki/Poisson_distribution](https://en.wikipedia.org/wiki/Poisson_distribution)). 
+
+\begin{equation}
+2^{-2}
+\end{equation}
+
+The string S contain s 8-bit integers so the Rate of S is $r = 2^{-8s}$.
+
+The Data is expressed in a common unit such as GB so it is represented as 
+$D2^k$ so 10GB is $10*2^{30}$. 
+
+The expected rate of the string S is $λ=r*t = D2^{k}s^{-8s} = D2^{k-8s}$.
+
+The sample run uses 30GB and a string of length 4 yielding $λ=30*2^{-2}$. 
+A poisson library is used to calculate the percentages shown in our sample run.
+
+The Poisson distribution is as follows: 
+
+$P(X=k) = \frac{λ^{k}e^{-λ}}{k!}$
+
+The smallest floating point number in Python is $2.225*10^{-308}$ so values of 
+λ greater than 708 will cause $e^{-λ}$ to underflow to 0. 
+At what point does this occur? Using the equation for λ above, 
+we have that $λ=D2^{k-8s}$ and we want $λ<708$. This implies that
+$708 < D2^{k-8s}$. Take log base 2 of each side. So if 
+$9.5 \geq log_2(D) + k - 8s$ then there will likely be an underflow to zero.
 
 
 ## Tools by Category
