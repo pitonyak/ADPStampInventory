@@ -13,7 +13,7 @@ The base files (by name) are as follows: <br/>
 | isakmp            | Identifies devices of interest based on ISAKMP vendor ID. |
 | kmeans.py         | Generate an annotated GraphML file from an input JSON file. |
 | README.md         | This file. |
-| string_probability.py | TODO |
+| string_probability.py | Determine the probability that a strings of a given length will be seen a specific number of times in data of a specified length. |
 | test_encrypted.py | Test encrypted.py |
 | nistspecialpublication800-22r1a.pdf | NIST document related to encrypted.py indicating how to test for randomness. |
 
@@ -171,7 +171,7 @@ This program uses external Python packages such as scapy, numpy, and scipy. The 
 | -d | Comma delimited list of valid destination IP addresses. If an IP address is included, packets that do not have an approved destination IP addresses are skipped / ignored. |
 | -v | Specify an integer verbosity level. Default is zero, but values of 1 and 2 are currently supported. |
 
-The default verbosity setting is zero, which only prints summary data. The test below has only 11 encrypted packets, wich demonstrates that running multiple tests for randomness takes a lot of time. If time is of the essence, identify specific tests as the most important, such as the Monobit test and one or two others and run only those tests against the data. 
+The default verbosity setting is zero, which only prints summary data. The test below has only 11 encrypted packets, wich demonstrates that running multiple tests for randomness takes a lot of time. If time is of the essence, identify specific tests as the most important, such as the Monobit test and one or two others and run only those tests against the data.
 
 ~~~~
 $ python encrypted.py -f wireshark/fuzz-2010-06-29-8087.pcap -o test.csv
@@ -182,7 +182,7 @@ Writing to test.csv
 Total Read time: 12.85062026977539 for 86401 encrypted:11
 ~~~~
 
-Specifying a verbosity of one identifies the encrypted packets as well as their source and destination. 
+Specifying a verbosity of one identifies the encrypted packets as well as their source and destination.
 
 ~~~~
 $ python encrypted.py -f wireshark/fuzz-2010-06-29-8087.pcap -o test.csv -v 1
@@ -210,9 +210,50 @@ Increasing the verbosity to two causes the payload length to be printed as well 
 
 ## string_probability.py
 
+This program displays the probability that a set of data of size D contains the same string of length S n times. First consider the help.
 
-TODO: Fix so that it can run without displaying a graph that does not show on the Ubuntu or Fedora VMs.
-TODO: Fix to check arguments and print help.
+~~~~
+$ python string_probability.py -h
+usage: String Probability [-h] [-s S] [-n N [N ...]] [-d D] [-u {pb,tb,mb,GB,PB,MB,gb,kb,TB,KB}]
+
+Print the probability of String with length S occurring N times in Data of size D.
+
+options:
+  -h, --help            show this help message and exit
+  -s S                  Length of string S
+  -n N [N ...]          The number of occurrences of S
+  -d D                  The size of the data
+  -u {pb,tb,mb,GB,PB,MB,gb,kb,TB,KB}
+                        The unit of the size of data, default is 'GB'.
+
+Supported systems will display a graph.
+~~~~
+
+In the example below, 30 GB of data is examined. Three strings of length 4 are found to be repeated 4, 10, and 6 times.
+
+~~~~
+$ python string_probability.py -s 4 -n 4 10 6 -d 30
+P(1) is 0.415%
+P(2) is 1.56%
+P(3) is 3.89%
+P(4) is 7.29%
+P(5) is 10.9%
+P(6) is 13.7%
+P(7) is 14.6%
+P(8) is 13.7%
+P(9) is 11.4%
+P(10) is 8.58%
+Probability of 3 strings occurring (4, 10, 6) times with length:4 = 0.0856%
+~~~~
+
+The probability P(n), as shown above, is the probability that a string of length 4 exists exactly n times in 30GB of data. So, the probability that a string of length 4 exists in the data exactly one time is 0.415%.
+
+The probability that three strings will be seen exactly 4, 10, and 6 times is obtained by multiplying the individual probabilities together for 0.415%.
+
+### The Math
+
+Each 8-bit character is assumed to be random and uniformily distributed. Probabilities are obtained using the Poisson distribution (see [https://en.wikipedia.org/wiki/Poisson_distribution](https://en.wikipedia.org/wiki/Poisson_distribution)). 
+
 
 ## Tools by Category
 
