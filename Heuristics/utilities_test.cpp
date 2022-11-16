@@ -70,6 +70,11 @@ int test_aho_overlap() {
     return 1;
   }
 
+  if (acb.countMatches(matches) != 4) {
+    std::cout << "Expected to find 4 matches total, not " << acb.countMatches(matches) << "." << std::endl;
+    return 1;
+  }
+
   std::map<int, std::set<int> >::iterator it;
   // Look at word 1
   it = matches.find(1);

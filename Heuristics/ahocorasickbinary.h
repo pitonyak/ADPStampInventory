@@ -86,6 +86,14 @@ public:
     //**************************************************************************
     //! All matches. The key to the map indicates the index of the keyword. The set contains the ending location of the match.
     /*!
+     * 
+     * Assume the search string is: AACCBABABAAAAC and the search words are AAA (word 0) and BAB (word 1).
+     * The map will contain:
+     * 
+     * {0, {11, 12}} Because instances of AAA end at locations 11 and 12
+     * 
+     * {1, {6, 8}}   Because instances of BAB end at locations 6 and 8
+     * 
      * \param [in]  data Pointer to the data. Will search this data to see if it contains any keyword.
      * 
      * \param [in]  len Length of the data to search; think number of characters.
@@ -94,6 +102,17 @@ public:
      *
      ***************************************************************************/
     std::map<int, std::set<int> > findAllMatches(const uint8_t *data, uint32_t len) const;
+
+    //**************************************************************************
+    //! Count the total number of matches.
+    /*!
+     * 
+     * \param [in] matches is the object returned by findAllMatches.
+     * 
+     * \returns A count of all matches.
+     *
+     ***************************************************************************/
+    int countMatches(std::map<int, std::set<int> >& matches) const;
 
     /*! Number of words this object is searching. This is set when the search machine is built. */
     int getNumWords() const { return m_num_words; }

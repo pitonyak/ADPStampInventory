@@ -287,3 +287,12 @@ std::map<int, std::set<int> > AhoCorasickBinary::findAllMatches(const uint8_t *d
 
 	return matches;
 }
+
+int AhoCorasickBinary::countMatches(std::map<int, std::set<int> >& matches) const {
+	int count = 0;
+	for (std::map<int, std::set<int> >::iterator it = matches.begin(); it != matches.end(); ++it) {
+		count += it->second.size();
+		//for (std::set<int>::iterator iter = it->second->begin(); iter !=)
+	}
+	return count;
+}
