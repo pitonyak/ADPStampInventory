@@ -95,8 +95,13 @@ public:
      ***************************************************************************/
     std::map<int, std::set<int> > findAllMatches(const uint8_t *data, uint32_t len) const;
 
+    /*! Number of words this object is searching. This is set when the search machine is built. */
     int getNumWords() const { return m_num_words; }
+
+    /*! This will be ALPHABET_SIZE, which means 256 for our purposes. */
     int getAlphabetSize() const { return m_alphabet_size; }
+
+    /*! Maximum number of states. This consists of the sum of the length of all "words" that will be searched. In other words, maximum number of nodes. */
     int getMaxStates() const { return m_max_states; }
 
 private:
@@ -129,7 +134,7 @@ private:
      ***************************************************************************/
 	int getGotoIndex(const int state_idx, const int value_idx) const;
 
-	/*! Number of words. */
+	/*! Number of words this object is searching. This is set when the search machine is built. */
 	int m_num_words;
 
 	/*! Number of valid values. If searching characters, might be 26, one for each leter. This code searches 8-bit bytes so 256 possibilities. */
