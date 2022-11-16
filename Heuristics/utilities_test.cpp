@@ -44,6 +44,56 @@ void print_results(int num_passed, int num_failed, const std::string& message) {
   std::cout << message << std::endl;
 }
 
+int test_aho_overlap() {
+  AhoCorasickBinary acb;
+  std::vector<uint8_t *> words;
+  std::vector<int> word_lengths;
+
+  uint8_t word_0[] = {65, 65, 65}; // AAA
+  uint8_t word_1[] = {66, 65, 66}; // BAB
+  words.push_back(word_0);
+  words.push_back(word_1);
+  word_lengths.push_back(sizeof(word_0)/sizeof(*word_0));
+  word_lengths.push_back(sizeof(word_1)/sizeof(*word_1));
+  acb.buildMatchingMachine(words, word_lengths);
+
+  // Word 0 has matches that end at 11 and 12
+  // Word 1 has matches that end at 6 and 8
+  // AACCBABABAAAAC
+  uint8_t search_1[] = {65, 65, 67, 67, 66, 65, 66, 65, 66, 65, 65, 65, 65, 67};
+
+  // Should find four words, both overlapping.
+  std::map<int, std::set<int> > matches = acb.findAllMatches(search_1, sizeof(search_1)/sizeof(*search_1));
+  
+  if (matches.size() != 2) {
+    std::cout << "Expected to find 2 strings not " << matches.size() << "." << std::endl;
+    return 1;
+  }
+
+  std::map<int, std::set<int> >::iterator it;
+  // Look at word 1
+  it = matches.find(1);
+  if (it == matches.end()) {
+    std::cout << "Did not find matches for keyword 1 (BAB)." << std::endl;
+    return 1;
+  } else if (it->second.size() != 2 || it->second.find(6) == it->second.end() || it->second.find(8) == it->second.end()) {
+    std::cout << "Did not find two overlap matches for keyword 1 (BAB)." << std::endl;
+    return 1;
+  }
+
+  it = matches.find(0);
+  if (it == matches.end()) {
+    std::cout << "Did not find matches for keyword 0 (AAA)." << std::endl;
+    return 1;
+  } else if (it->second.size() != 2 || it->second.find(11) == it->second.end() || it->second.find(12) == it->second.end()) {
+    std::cout << "Did not find two overlap matches for keyword 0 (AAA)." << std::endl;
+    return 1;
+  }
+
+  std::cout << "Aho-Corasick Correctly found overlapping matches." << std::endl;
+  return 0;
+}
+
 int test_search() {
 
   SearchFunc searches[] = {&find_match, &reverse_match};
@@ -131,7 +181,7 @@ int test_search() {
 
   acb.buildMatchingMachine(words, word_lengths);
   if (acb.getNumWords() != 0 || acb.getAlphabetSize() != 256 || acb.getMaxStates() != 0) {
-    std::cout << "AhoCorasickBinary machine built incorrectly when sent an empty vetor." << std::endl;
+    std::cout << "AhoCorasickBinary machine initialized incorrectly when sent an empty vetor." << std::endl;
     ++num_failed;
   } else {
     //std::cout << "AhoCorasickBinary machine initialized correctly with empty vector." << std::endl;
@@ -144,22 +194,23 @@ int test_search() {
   words.push_back(word_4);
   words.push_back(word_5);
   words.push_back(word_6);
-  word_lengths.push_back(1);
-  word_lengths.push_back(2);
-  word_lengths.push_back(3);
-  word_lengths.push_back(2);
-  word_lengths.push_back(3);
-  word_lengths.push_back(1);
-  word_lengths.push_back(3);
+  word_lengths.push_back(sizeof(word_0)/sizeof(*word_0));
+  word_lengths.push_back(sizeof(word_1)/sizeof(*word_1));
+  word_lengths.push_back(sizeof(word_2)/sizeof(*word_2));
+  word_lengths.push_back(sizeof(word_3)/sizeof(*word_3));
+  word_lengths.push_back(sizeof(word_4)/sizeof(*word_4));
+  word_lengths.push_back(sizeof(word_5)/sizeof(*word_5));
+  word_lengths.push_back(sizeof(word_6)/sizeof(*word_6));
   acb.buildMatchingMachine(words, word_lengths);
-  if (acb.getNumWords() != 7 || acb.getAlphabetSize() != 256 || acb.getMaxStates() != 15) {
+
+  if (acb.getNumWords() != 7 || acb.getAlphabetSize() != 256 || acb.getMaxStates() != 16) {
     std::cout << "AhoCorasickBinary machine built incorrectly." << std::endl;
     ++num_failed;
   } else {
     //std::cout << "AhoCorasickBinary machine initialized correctly with non-empty vector." << std::endl;
   }
 
-  std::map<int, std::set<int> > matches = acb.findAllMatches(search_1, 6);
+  std::map<int, std::set<int> > matches = acb.findAllMatches(search_1, sizeof(search_1) / sizeof(*search_1));
   std::map<int, std::set<int> >::iterator it;
 
   bool test_passed = true;
@@ -225,7 +276,7 @@ int test_search() {
     ++num_failed;
   }
 
-  if (acb.findFirstMatch(search_3, 1) == -1) {
+  if (acb.findFirstMatch(search_3, sizeof(search_3) / sizeof(*search_3)) == -1) {
     //std::cout << "AhoCorasickBinary::findFirstMatch passed with no match and data len 1." << std::endl;
     ++num_passed;
   } else {
@@ -233,7 +284,7 @@ int test_search() {
     ++num_failed;
   }
 
-  if (acb.findFirstMatch(search_4, 7) == -1) {
+  if (acb.findFirstMatch(search_4, sizeof(search_4) / sizeof(*search_4)) == -1) {
     //std::cout << "AhoCorasickBinary::findFirstMatch passed with no match and data len 7." << std::endl;
     ++num_passed;
   } else {
@@ -241,7 +292,7 @@ int test_search() {
     ++num_failed;
   }
 
-  if (acb.findFirstMatch(search_1, 6) != -1) {
+  if (acb.findFirstMatch(search_1, sizeof(search_1) / sizeof(*search_1)) != -1) {
     //std::cout << "AhoCorasickBinary::findFirstMatch passed with a match and data len 6." << std::endl;
     ++num_passed;
   } else {
@@ -757,7 +808,9 @@ int test_file_dir_exists() {
 }
 
 int main(int , char **) {
+  std::cout << std::endl;
   int num_failed = 0;
+  num_failed += test_aho_overlap();
   num_failed += test_search();
   num_failed += test_bits();
   num_failed += test_ip_mac();

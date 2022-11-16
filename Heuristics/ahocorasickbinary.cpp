@@ -116,6 +116,10 @@ int AhoCorasickBinary::buildMatchingMachine(const std::vector<uint8_t*> &words, 
 		return m_max_states;
 	}
 
+	// In case we use all states, add an extra.
+	// This was a bug in the original code.
+	++m_max_states;
+
 	m_bits_out_state = new BitsetDynamic[m_max_states];
 	m_failure = new int[m_max_states];
 
@@ -131,7 +135,6 @@ int AhoCorasickBinary::buildMatchingMachine(const std::vector<uint8_t*> &words, 
 		// Clears everything and sets all bits to zero.
 		m_bits_out_state[i].resetSize(m_num_words);
 	}
-
 	int states = 1; // Initially, we just have the 0 state
 
 	for (size_t idx_words = 0; idx_words < words.size(); ++idx_words) {
@@ -160,7 +163,6 @@ int AhoCorasickBinary::buildMatchingMachine(const std::vector<uint8_t*> &words, 
         // There's a match of keywords[idx_words] at node currentState.
         m_bits_out_state[currentState].setBit(idx_words, true); 
     }
-
     // State 0 should have an outgoing edge for all characters.
     for (int i = 0; i < m_alphabet_size; ++i) {
     	int idx = getGotoIndex(0, i);
