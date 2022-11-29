@@ -812,6 +812,36 @@ int test_file_dir_exists() {
   return num_failed;
 }
 
+int test_replace_all() {
+  int num_failed = 0;
+  int num_passed = 0;
+  std::string strings[] = {
+    "", "", "", "",
+    "", "a", "", "",
+    "a", "a", "", "",
+    "a", "a", "a", "a",
+    "aaa", "a", "aa", "aaaaaa",
+    "a\"b", "\"", "\"\"", "a\"\"b",
+  };
+  int num_strings = sizeof(strings) / sizeof(*strings);
+  std::cout << "There are " << num_strings << " strings." << std::endl;
+  for (int i=0; i<num_strings; i += 4) {
+    std::string s = replaceAll(strings[i], strings[i+1], strings[i+2]);
+    if (s == strings[i+3]) {
+      ++num_passed;
+    } else {
+      ++num_failed;
+      std::cout << "replaceAll(\"" << strings[i] << "\", \"" << strings[i+1] << "\", \"" << strings[i+2] << "\") != \"" << s << "\" but expected \"" << strings[i+3] << "\"" << std::endl;;
+    }
+  }
+
+  std::cout << std::endl << "replaceAll passed " << num_passed << " tests." << std::endl;
+  if (num_failed > 0)
+    std::cout << std::endl << "replaceAll failed " << num_failed << " tests." << std::endl;
+  return num_failed;
+}
+
+
 int main(int , char **) {
   std::cout << std::endl;
   int num_failed = 0;
@@ -824,6 +854,7 @@ int main(int , char **) {
   num_failed += test_filename();
   num_failed += test_file_extension();
   num_failed += test_file_dir_exists();
+  num_failed += test_replace_all();
 
   struct ip ipHeader;
   ipHeader.ip_p = 6;

@@ -10,6 +10,21 @@
 
 
 //**************************************************************************
+//! Replace all occurrences of one string with another.
+/*!
+ * 
+ * \param [in] s - String that is modified, but the parameter is unchanged.
+ * 
+ * \param [in] from - Find every instance of this string.
+ * 
+ * \param [in] to - Change to this string.
+ * 
+ * \returns Copy of s where "from" has been replaced with "to"
+ *
+ ***************************************************************************///
+std::string replaceAll(const std::string& s, const std::string& from, const std::string& to);
+
+//**************************************************************************
 //! Convert all contained white space "\t\n\v\f\r" to a single space character.
 /*!
  * 
