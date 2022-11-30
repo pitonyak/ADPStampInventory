@@ -77,8 +77,8 @@ heuristics: main.o utilities.o iptype.o crc32_x.o ethtype.o macaddresses.o ipadd
 find_macs_and_ips: find_macs_and_ips.o macaddresses.o ipaddresses.o utilities.o
 	$(CXX) $(CXXFLAGS) find_macs_and_ips.o macaddresses.o ipaddresses.o utilities.o MurmurHash3.o -o find_macs_and_ips $(LDFLAGS) $(LIBS)
 
-utilities_test: utilities_test.o utilities.o ahocorasickbinary.o bitsetdynamic.o ethtype.o iptype.o ipaddresses.o macaddresses.o MurmurHash3.o
-	$(CXX) $(CXXFLAGS) utilities_test.o utilities.o ahocorasickbinary.o bitsetdynamic.o ethtype.o iptype.o ipaddresses.o macaddresses.o MurmurHash3.o -o utilities_test $(LDFLAGS) $(LIBS)
+utilities_test: utilities_test.o utilities.o ahocorasickbinary.o bitsetdynamic.o ethtype.o iptype.o ipaddresses.o macaddresses.o MurmurHash3.o csvwriter.o
+	$(CXX) $(CXXFLAGS) utilities_test.o utilities.o ahocorasickbinary.o bitsetdynamic.o ethtype.o iptype.o ipaddresses.o macaddresses.o MurmurHash3.o csvwriter.o -o utilities_test $(LDFLAGS) $(LIBS)
 
 crc_test: crc_test.o crc32_x.o
 	$(CXX) $(CXXFLAGS) crc_test.o crc32_x.o -o crc_test $(LDFLAGS) $(LIBS)

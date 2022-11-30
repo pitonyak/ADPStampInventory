@@ -14,6 +14,7 @@
 
 #include "ahocorasickbinary.h"
 #include "bitsetdynamic.h"
+#include "csvwriter.h"
 #include "ethtype.h"
 #include "ipaddresses.h"
 #include "iptype.h"
@@ -812,6 +813,60 @@ int test_file_dir_exists() {
   return num_failed;
 }
 
+int test_csv_writer() {
+  int num_failed = 0;
+  int num_passed = 0;
+  std::vector<std::string> heading;
+  heading.push_back("#");
+  heading.push_back("heading 1");
+  heading.push_back("heading \"#\" 2");
+  std::ostringstream strStream;
+  std::string s1 = "\"#\",\"heading 1\",\"heading \"\"#\"\" 2\"\n0,\"zero\",\"ZERO\"\n1,\"one\",\"ONE\"";
+  CSVWriter* csv = new CSVWriter(&strStream);
+  *csv << heading;
+  csv->endRow();
+  *csv << 0 << "zero" << "ZERO";
+  csv->endRow();
+  *csv << 1 << "one" << "ONE";
+  csv->flush();
+  std::string s2 = strStream.str();
+  if (s1 == s2) {
+    ++num_passed;
+  } else {
+    ++num_failed;
+    std::cout << "Using a string stream, CSVWriter created: " << std::endl << s2 << std::endl << std::endl
+         << "Rather than:" << std::endl << s1 << std::endl;
+  }
+  delete csv;
+  csv = nullptr;
+
+  csv = new CSVWriter("csvwriter_test.csv");
+  *csv << heading;
+  csv->endRow();
+  *csv << 0 << "zero" << "ZERO";
+  csv->endRow();
+  *csv << 1 << "one" << "ONE";
+  csv->flush();
+  delete csv;
+  csv = nullptr;
+
+  // Now see if we wrote the file as expected
+  std::ifstream t("csvwriter_test.csv");
+  std::stringstream buffer;
+  buffer << t.rdbuf();
+  s2 = buffer.str();
+  if (s1 == s2) {
+    ++num_passed;
+  } else {
+    ++num_failed;
+    std::cout << "Using a file, CSVWriter created: " << std::endl << s2 << std::endl << std::endl
+         << "Rather than:" << std::endl << s1 << std::endl;
+  }
+
+  print_results(num_passed, num_failed, "CSVWriter tests");
+  return num_failed;
+}
+
 int test_replace_all() {
   int num_failed = 0;
   int num_passed = 0;
@@ -835,9 +890,7 @@ int test_replace_all() {
     }
   }
 
-  std::cout << std::endl << "replaceAll passed " << num_passed << " tests." << std::endl;
-  if (num_failed > 0)
-    std::cout << std::endl << "replaceAll failed " << num_failed << " tests." << std::endl;
+  print_results(num_passed, num_failed, "replaceAll testing");
   return num_failed;
 }
 
@@ -855,6 +908,7 @@ int main(int , char **) {
   num_failed += test_file_extension();
   num_failed += test_file_dir_exists();
   num_failed += test_replace_all();
+  num_failed += test_csv_writer();
 
   struct ip ipHeader;
   ipHeader.ip_p = 6;
