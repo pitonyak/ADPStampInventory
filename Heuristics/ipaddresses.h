@@ -120,6 +120,9 @@ public:
 
     void clear();
 
+    int sizeIPv4() const { return m_unique_ipv4.size(); }
+    int sizeIPv6() const { return m_unique_ipv6.size(); }
+
     std::unique_ptr<std::vector<uint8_t *>> toVector(bool isIPv4) const;
 
     // Store the binary addresses. 

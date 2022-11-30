@@ -45,6 +45,7 @@ IpAddresses ip_addresses;
 MacAddresses dest_mac_to_ignore;
 
 enum SearchTypeEnum { forward_search, backward_search, aho_corasick_binary };
+enum FileTypeEnum { IP_Type, MAC_Type, CSV_Type, Anomaly_Type };
 bool test_mode = false;
 bool dump_verbose = false;
 
@@ -87,46 +88,26 @@ std::unique_ptr<std::vector<int>> getConstWordLengthVector(const int wordLength,
   return v;
 }
 
-//
-// Read a text file one line at a time and add it to an unordered set. 
-// This can read MAC addresses as well as IP addresses. 
-//
-std::unordered_set<std::string>* read_text_file(const char* fname) {
-  if (fname == nullptr) {
-    printf("Ethernet type file name is null\n\n");
-    usage();
-    return nullptr;
-  }
+std::string getAnomalyFileName(const std::string& pcap_filename, FileTypeEnum fileType) {
+  std::string pcap_extension = getFileExtension(pcap_filename);
+  std::string base_filename = pcap_filename.substr(0, pcap_filename.size() - pcap_extension.length() + 1);
 
-  //
-  // Probably not safe to assume that C++17 is availble so do not use <filesystem> such as
-  // std::filesystem::path f{"file.txt"};
-  // if (std::filesystem::exists(f)) ...
-  //
-  std::ifstream file(fname);
-  if(!file.is_open()){
-    std::cout << "File not found" << std::endl;
-    return nullptr;
+  switch(fileType) {
+  case IP_Type      :
+    base_filename.append("ip.txt");
+    break;
+  case MAC_Type     :
+    base_filename.append("mac.txt");
+    break;
+  case CSV_Type     :
+    base_filename = pcap_filename;
+    base_filename.append(".csv");
+    break;
+  case Anomaly_Type :
+    base_filename.append("anomaly").append(pcap_extension);
+    break;
   }
-  std::unordered_set<std::string>* lines = new std::unordered_set<std::string>();
-  std::string line;
-  // Note that reading a file using a FILE* is 4 to 5 times faster.
-  // Processing speed is not an issue since this is not done often and the file is small.
-  while (std::getline(file, line)) {
-    //
-    // remove leading and trailing spaces from the string.
-    //
-    trim(line);
-    //
-    // Ignore blank lines and lines begining with the '#' character. 
-    //
-    if (line.length() == 0 || line.front() == '#') {
-      continue;
-    }
-    if (lines->find(line) == lines->end())
-      lines->insert(line);
-  }
-  return lines;
+  return base_filename;
 }
 
 //**************************************************************************
@@ -143,8 +124,8 @@ std::unordered_set<std::string>* read_text_file(const char* fname) {
  * 
  * \param [in] it current iteration.
  * 
- * \returns True if a duplicate mac is found.
- *
+ * \param [in] message - Message to print if verbose.
+ * 
  ***************************************************************************/
 void local_pcap_dump(pcap_dumper_t *dumpfile, struct pcap_pkthdr *pkt_header, const u_char *pkt_data, bool verbose, int it, const char* message) {
 
@@ -286,6 +267,159 @@ bool find_ips(const uint8_t* search_start_loc, uint32_t search_len, pcap_dumper_
 }
 
 //**************************************************************************
+//! Read the pcap file and create a new IP and MAC file.
+/*!
+ * 
+ * \param [in] pcap_filename Full path to the input PCAP file
+ * 
+ * \param [in] out_mac_fname Filename for the MACs.
+ * 
+ * \param [in] out_ip_fname Filename for the IPs
+ * 
+ * \returns 0 on no error, not very useful at this time.
+ *
+ ***************************************************************************/
+int write_ip_and_mac_from_pcap(const std::string& pcap_filename, const std::string& out_mac_fname, const std::string& out_ip_fname) {
+  mac_addresses.clear();
+  ip_addresses.clear();
+
+  pcap_t *pcap_file;
+  char *pcap_errbuf = nullptr;
+  struct pcap_pkthdr *pkt_header;
+  const u_char *pkt_data;
+
+  const struct ether_header *ether;
+  u_int done=0;
+  int res=1, it=0;
+
+  pcap_file=pcap_open_offline(pcap_filename.c_str(), pcap_errbuf);
+
+  // Ensure that the pcap file only has Ethernet packets
+  if(pcap_datalink(pcap_file) != DLT_EN10MB){
+    std::cerr << "PCAP file " << pcap_filename << "is not an Ethernet capture\n" << std::endl;
+  }
+
+  // Iterate over every packet in the file and print the MAC addresses
+  while(!done){
+    res=pcap_next_ex(pcap_file, &pkt_header, &pkt_data);
+  
+    if(res == PCAP_ERROR_BREAK){
+      fprintf(stderr, "No more packets in savefile. Iteration %d\n", it);
+      break;
+    }
+    if(res != 1){
+      fprintf(stderr, "Error reading packet. Iteration %d\n", it);
+      continue;
+    }
+    ether = (const struct ether_header*)pkt_data;
+
+    // Extract the frame MACs and put them into the set for uniqueness discovery
+    mac_addresses.addMacAddress(ether->ether_shost);
+    mac_addresses.addMacAddress(ether->ether_dhost);
+
+    // If we make it here, there should be IPs in the frame.
+    if (ntohs(ether->ether_type) == ETHERTYPE_IP) {
+      const struct ip* ipHeader;
+      ipHeader = (struct ip*)(pkt_data + sizeof(struct ether_header));
+
+      auto source_ip_address = ipHeader->ip_src;
+      auto dest_ip_address = ipHeader->ip_dst;
+
+      bool is_any_address = (source_ip_address.s_addr == INADDR_ANY || dest_ip_address.s_addr == INADDR_ANY);
+      bool is_broadcast_address = (source_ip_address.s_addr == INADDR_BROADCAST || dest_ip_address.s_addr == INADDR_BROADCAST);
+      bool is_multi = (IpAddresses::is_multicast_address(source_ip_address.s_addr) || IpAddresses::is_multicast_address(dest_ip_address.s_addr)) ;
+
+      if (is_broadcast_address) {
+        std::cout << "Skipping Packet containing a broadcast address: 255.255.255.255" << std::endl;
+        continue;
+      }
+      else if (is_any_address) {
+        std::cout << "Skipping Packet containing a non-routable target with address: 0.0.0.0" << std::endl;
+        continue;
+      }
+      else if (is_multi) {
+        std::cout << "Skipping Packet containing a multicast address with ip address range: 224.x.x.x.-239.x.x.x" << std::endl;
+        continue;
+      }
+
+      // Turn the raw src and dst IPs in the packet into human-readable
+      //   IPs and insert them into the set
+      // Be sure to clear the char* buffer each time so that the end
+      //   of the IP will always be correctly null-terminated
+      // If we don't do this, we risk keeping junk from the previous IP
+      //   that may have been longer than the current IP.
+      //const uint8_t* ip_src = (pkt_data + sizeof(struct ether_header) + 12);
+      //const uint8_t* ip_dst = (pkt_data + sizeof(struct ether_header) + 16);
+      ip_addresses.addIpAddress((uint8_t*)&(ipHeader->ip_src), true, false);
+      ip_addresses.addIpAddress((uint8_t*)&(ipHeader->ip_dst), true, false);
+    }
+    else if (ntohs(ether->ether_type) == ETHERTYPE_IPV6) {
+      const struct ip6_hdr* ipHeader;
+      ipHeader = (struct ip6_hdr*)(pkt_data + sizeof(struct ether_header));
+      ip_addresses.addIpAddress((uint8_t*)&(ipHeader->ip6_src), false, false);
+      ip_addresses.addIpAddress((uint8_t*)&(ipHeader->ip6_dst), false, false);
+    }
+
+    it++;
+  }
+
+  pcap_close(pcap_file);
+
+  // Write the unique MACs to the output file (stdout by default), and then reset std::cout to the default stdout
+  if (out_mac_fname.length() > 0) {
+    mac_addresses.write_file(out_mac_fname);
+  }
+
+  // Write the unique IPs to the output file (stdout by default), and then reset std::cout to the default stdout
+  if(out_ip_fname.length() > 0) {
+    ip_addresses.write_file(out_ip_fname);
+  }
+
+  std::cerr << "Created IP and MAC files from "<< it <<" packets"<<std::endl;
+  return 0;
+}
+
+//**************************************************************************
+//! Create the IP and MAC text files if needed. If they already exist, read them.
+/*!
+ * 
+ * Warnings are printed if it looks like a file cannot be read or if a directory
+ * is not readable, but the problem is ignored. This may cause a core dump, 
+ * but the initial warning will let you know why things failed.
+ * 
+ * On exit, ip_addresses and mac_addresses will be populated with
+ * all of the IP and MAC addresses in the file.
+ * 
+ * \param [in] pcap_filename - Filename of the PCAP file.
+ *
+ ***************************************************************************///
+void read_create_mac_ip_files(const std::string& pcap_filename) {
+  std::string mac_fname = getAnomalyFileName(pcap_filename, MAC_Type);
+  std::string ip_fname = getAnomalyFileName(pcap_filename, IP_Type);
+  
+  bool create_mac_ip_files = !isPathExist(mac_fname, true, false, false, false) || !isPathExist(ip_fname, true, false, false, false);
+
+  if (create_mac_ip_files) {
+    std::string path = getDirectoryFromFilename(mac_fname);
+    if (!isPathExist(path, false, true, true, true)) {
+      std::cout << "Cannot read/write to directory where the MAC file will be created: " << path << std::endl;
+      std::cout << "This may fail to create the MAC file " << mac_fname << std::endl;
+    }
+    std::cout << " creating files " << mac_fname << " and " << ip_fname << std::endl;
+    write_ip_and_mac_from_pcap(pcap_filename, mac_fname, ip_fname);
+  } else {
+    // Check for read permission, we already know the files exist.
+    if (!isPathExist(mac_fname, true, false, true, false) || !isPathExist(ip_fname, true, false, true, false)) {
+      std::cout << "ERROR: Cannot read " << mac_fname << " or " << ip_fname << std::endl;
+      std::cout << "This may fail to create the MAC and IP files" << std::endl;
+    }
+    std::cout << " reading files " << mac_fname << " and " << ip_fname << std::endl;
+    mac_addresses.read_file(mac_fname);
+    ip_addresses.read_file(ip_fname);
+  }
+}
+
+//**************************************************************************
 //! Read the pcap file and create the anomaly file based on the Heuristic
 /*!
  * 
@@ -304,10 +438,18 @@ bool find_ips(const uint8_t* search_start_loc, uint32_t search_len, pcap_dumper_
  * \returns 0 on no error, not very useful at this time.
  *
  ***************************************************************************/
-int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPTypes& ip_types, const char* pcap_fname, const char* anomaly_fname, bool verbose) {
+int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPTypes& ip_types, const std::string& pcap_filename, bool verbose) {
   pcap_t *pcap_file;
   pcap_dumper_t *dumpfile;
   bool done = false;
+
+  std::string anomaly_fname = getAnomalyFileName(pcap_filename, Anomaly_Type);
+  read_create_mac_ip_files(pcap_filename);
+  if (isPathExist(anomaly_fname, true, false, false, false)) {
+    std::cout << "Anomaly file will be over-written: " << anomaly_fname << std::endl;
+  }
+
+
 
   // Aho-Corasick is significantly faster that forward or backward search.
   SearchTypeEnum search_type = aho_corasick_binary;
@@ -352,17 +494,17 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
   int res=1, it=0;
 
   // Open the PCAP file!
-  pcap_file=pcap_open_offline(pcap_fname, pcap_errbuf);
+  pcap_file=pcap_open_offline(pcap_filename.c_str(), pcap_errbuf);
 
   // Ensure that the pcap file only has Ethernet packets
   if(pcap_datalink(pcap_file) != DLT_EN10MB){
-    fprintf(stderr, "PCAP file %s is not an Ethernet capture\n", pcap_fname);
+    fprintf(stderr, "PCAP file %s is not an Ethernet capture\n", pcap_filename.c_str());
     pcap_close(pcap_file);
     return -1;
   }
 
   // Open the dump file
-  dumpfile = pcap_dump_open(pcap_file, anomaly_fname);
+  dumpfile = pcap_dump_open(pcap_file, anomaly_fname.c_str());
 
   if(dumpfile==NULL)
   {
@@ -743,150 +885,34 @@ int create_heuristic_anomaly_file(const EthernetTypes& ethernet_types, const IPT
 }
 
 
-int write_ip_and_mac_from_pcap(const std::string& pcap_fname, const std::string& out_mac_fname, const std::string& out_ip_fname) {
-  mac_addresses.clear();
-  ip_addresses.clear();
-
-  pcap_t *pcap_file;
-  char *pcap_errbuf = nullptr;
-  struct pcap_pkthdr *pkt_header;
-  const u_char *pkt_data;
-
-  const struct ether_header *ether;
-  u_int done=0;
-  int res=1, it=0;
-
-  pcap_file=pcap_open_offline(pcap_fname.c_str(), pcap_errbuf);
-
-  // Ensure that the pcap file only has Ethernet packets
-  if(pcap_datalink(pcap_file) != DLT_EN10MB){
-    std::cerr << "PCAP file " << pcap_fname << "is not an Ethernet capture\n" << std::endl;
+//**************************************************************************
+//! Create the Anomaly and the CSV file. IP and MAC files are created as needed.
+/*!
+ * 
+ * Warnings are printed if it looks like a file cannot be read or if a directory
+ * is not readable, but the problem is ignored. This may cause a core dump, 
+ * but the initial warning will let you know why things failed.
+ * 
+ * On exit, ip_addresses and mac_addresses will be populated with
+ * all of the IP and MAC addresses in the file.
+ * 
+ * \param [in] ethernet_types
+ *
+ * \param [in] ip_types
+ *
+ * \param [in] pcap_filename - Filename of the PCAP file.
+ *
+ * \param [in] verbose
+ *
+ ***************************************************************************///
+int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTypes& ip_types, const std::string& pcap_filename, bool verbose) {
+  std::string csv_fname = getAnomalyFileName(pcap_filename, CSV_Type);
+  std::string anomaly_fname = getAnomalyFileName(pcap_filename, Anomaly_Type);
+  read_create_mac_ip_files(pcap_filename);
+  if (isPathExist(anomaly_fname, true, false, false, false)) {
+    std::cout << "Anomaly file will be over-written: " << anomaly_fname << std::endl;
   }
-
-  // Iterate over every packet in the file and print the MAC addresses
-  while(!done){
-    res=pcap_next_ex(pcap_file, &pkt_header, &pkt_data);
-  
-    if(res == PCAP_ERROR_BREAK){
-      fprintf(stderr, "No more packets in savefile. Iteration %d\n", it);
-      break;
-    }
-    if(res != 1){
-      fprintf(stderr, "Error reading packet. Iteration %d\n", it);
-      continue;
-    }
-    ether = (const struct ether_header*)pkt_data;
-
-    // Extract the frame MACs and put them into the set for uniqueness discovery
-    mac_addresses.addMacAddress(ether->ether_shost);
-    mac_addresses.addMacAddress(ether->ether_dhost);
-
-    // If we make it here, there should be IPs in the frame.
-    if (ntohs(ether->ether_type) == ETHERTYPE_IP) {
-      const struct ip* ipHeader;
-      ipHeader = (struct ip*)(pkt_data + sizeof(struct ether_header));
-
-      auto source_ip_address = ipHeader->ip_src;
-      auto dest_ip_address = ipHeader->ip_dst;
-
-      bool is_any_address = (source_ip_address.s_addr == INADDR_ANY || dest_ip_address.s_addr == INADDR_ANY);
-      bool is_broadcast_address = (source_ip_address.s_addr == INADDR_BROADCAST || dest_ip_address.s_addr == INADDR_BROADCAST);
-      bool is_multi = (IpAddresses::is_multicast_address(source_ip_address.s_addr) || IpAddresses::is_multicast_address(dest_ip_address.s_addr)) ;
-
-      if (is_broadcast_address) {
-        std::cout << "Skipping Packet containing a broadcast address: 255.255.255.255" << std::endl;
-        continue;
-      }
-      else if (is_any_address) {
-        std::cout << "Skipping Packet containing a non-routable target with address: 0.0.0.0" << std::endl;
-        continue;
-      }
-      else if (is_multi) {
-        std::cout << "Skipping Packet containing a multicast address with ip address range: 224.x.x.x.-239.x.x.x" << std::endl;
-        continue;
-      }
-
-      // Turn the raw src and dst IPs in the packet into human-readable
-      //   IPs and insert them into the set
-      // Be sure to clear the char* buffer each time so that the end
-      //   of the IP will always be correctly null-terminated
-      // If we don't do this, we risk keeping junk from the previous IP
-      //   that may have been longer than the current IP.
-      //const uint8_t* ip_src = (pkt_data + sizeof(struct ether_header) + 12);
-      //const uint8_t* ip_dst = (pkt_data + sizeof(struct ether_header) + 16);
-      ip_addresses.addIpAddress((uint8_t*)&(ipHeader->ip_src), true, false);
-      ip_addresses.addIpAddress((uint8_t*)&(ipHeader->ip_dst), true, false);
-    }
-    else if (ntohs(ether->ether_type) == ETHERTYPE_IPV6) {
-      const struct ip6_hdr* ipHeader;
-      ipHeader = (struct ip6_hdr*)(pkt_data + sizeof(struct ether_header));
-      ip_addresses.addIpAddress((uint8_t*)&(ipHeader->ip6_src), false, false);
-      ip_addresses.addIpAddress((uint8_t*)&(ipHeader->ip6_dst), false, false);
-    }
-
-    it++;
-  }
-
-  pcap_close(pcap_file);
-  std::cerr << "Examined "<< it <<" packets"<<std::endl;
-
-  // Write the unique MACs to the output file (stdout by default), and then reset std::cout to the default stdout
-  if (out_mac_fname.length() > 0) {
-    mac_addresses.write_file(out_mac_fname);
-  }
-
-  // Write the unique IPs to the output file (stdout by default), and then reset std::cout to the default stdout
-  if(out_ip_fname.length() > 0) {
-    ip_addresses.write_file(out_ip_fname);
-  }
-
-  return 0;
-}
-
-// Just assume that everything is correct with the file name!
-void create_mac_ip_if_needed(const std::string& pcap_fname) {
-  std::string pcap_extension = getFileExtension(pcap_fname);
-  std::string mac_fname = pcap_fname.substr(0, pcap_fname.size() - pcap_extension.length() + 1);
-  std::string ip_fname = mac_fname;
-  mac_fname.append("mac.txt");
-  ip_fname.append("ip.txt");
-  
-  bool create_mac_ip_files = !isPathExist(mac_fname, true, false, false, false) || !isPathExist(ip_fname, true, false, false, false);
-
-  if (create_mac_ip_files) {
-    std::string path = getDirectoryFromFilename(mac_fname);
-    if (!isPathExist(path, false, true, true, true)) {
-      std::cout << "Cannot read/write to directory where the MAC file will be created: " << path << std::endl;
-      std::cout << "This may fail to create the MAC file " << mac_fname << std::endl;
-    }
-    std::cout << " creating files " << mac_fname << " and " << ip_fname << std::endl;
-    write_ip_and_mac_from_pcap(pcap_fname, mac_fname, ip_fname);
-  } else {
-    if (!isPathExist(mac_fname, true, false, true, false) || !isPathExist(ip_fname, true, false, true, false)) {
-      std::cout << "ERROR: Cannot read " << mac_fname << " or " << ip_fname << std::endl;
-      std::cout << "This may fail to create the MAC and IP files" << std::endl;
-    }
-    std::cout << " reading files " << mac_fname << " and " << ip_fname << std::endl;
-    mac_addresses.read_file(mac_fname);
-    ip_addresses.read_file(ip_fname);
-  }
-}
-
-
-// This code 
-// * automatically creates the IP and MAC file names and creates the files if 
-//   they do not exist. Replace the file extension with "ip.txt" and "mac.txt"
-// * The anomoly file will be named by replace the extension with "anomaly.pcap"
-int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTypes& ip_types, const char* pcap_fname, bool verbose) {
-  std::string pcap_fname_s(pcap_fname);
-  std::string csv_fname = pcap_fname_s;
-  csv_fname.append(".csv");
-  create_mac_ip_if_needed(pcap_fname_s);
-
-  std::string pcap_extension = getFileExtension(pcap_fname_s);
-  std::string anomaly_fname = pcap_fname_s.substr(0, pcap_fname_s.size() - pcap_extension.length() + 1);
-  anomaly_fname.append("anomaly.").append(pcap_extension);
-
+  // Time 2.898seconds to 11m19.323seconds
   pcap_t *pcap_file;
   pcap_dumper_t *dumpfile;
   bool done = false;
@@ -907,8 +933,8 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
     std::unique_ptr<std::vector<int>> lengths_ipv4 = getConstWordLengthVector( 4, ip_addresses.m_unique_ipv4.size());
     std::unique_ptr<std::vector<int>> lengths_ipv6 = getConstWordLengthVector(16, ip_addresses.m_unique_ipv6.size());
     std::unique_ptr<std::vector<int>> lengths_macs = getConstWordLengthVector( 6, mac_addresses.m_unique_macs.size());
-    std::cout << "Initializing ipv4 search" << std::endl;
 
+    std::cout << "Initializing ipv4 search" << std::endl;
     search_ipv4.buildMatchingMachine(*words_ipv4.get(), *lengths_ipv4.get());
     std::cout << "Initializing ipv6 search" << std::endl;
     search_ipv6.buildMatchingMachine(*words_ipv6.get(), *lengths_ipv6.get());
@@ -934,11 +960,11 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
   int res=1, it=0;
 
   // Open the PCAP file!
-  pcap_file=pcap_open_offline(pcap_fname, pcap_errbuf);
+  pcap_file=pcap_open_offline(pcap_filename.c_str(), pcap_errbuf);
 
   // Ensure that the pcap file only has Ethernet packets
   if(pcap_datalink(pcap_file) != DLT_EN10MB){
-    fprintf(stderr, "PCAP file %s is not an Ethernet capture\n", pcap_fname);
+    fprintf(stderr, "PCAP file %s is not an Ethernet capture\n", pcap_filename.c_str());
     pcap_close(pcap_file);
     return -1;
   }
@@ -957,8 +983,10 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
   heading.push_back("Frame Number");
   heading.push_back("Source IP");
   heading.push_back("Destination IP");
-  heading.push_back("IP Matches");
-  heading.push_back("MAC Matches");
+  heading.push_back("Unique IP Matches");
+  heading.push_back("Unique MAC Matches");
+  heading.push_back("Total IP Matches");
+  heading.push_back("Total MAC Matches");
 
   CSVWriter csv(csv_fname);
   int output_row = 0;
@@ -967,15 +995,17 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
   const int offset_to_data_ipv4 = sizeof(struct ether_header) + sizeof(struct ip);
   [[maybe_unused]] const int offset_to_data_ipv6 = sizeof(struct ether_header) + sizeof(struct ip6_hdr);
 
-  int num_ipv4_dups = 0;
-  int num_ipv6_dups = 0;
-  int num_mac_dups = 0;
+  int num_ip_found_unique = 0;
+  int num_mac_found_unique = 0;
+  int num_ip_found_total = 0;
+  int num_mac_found_total = 0;
 
   // Iterate over every packet in the file and print the MAC addresses
   while(!done){
-    num_ipv4_dups = 0;
-    num_ipv6_dups = 0;
-    num_mac_dups = 0;
+    num_ip_found_unique = 0;
+    num_mac_found_unique = 0;
+    num_ip_found_total = 0;
+    num_mac_found_total = 0;
     // pkt_header contains three fields:
     // struct timeval ts (time stamp) with tv_sec and tv_usec for seconds and micro-seconds I guess.
     // uint32_t caplen (length of portion present)
@@ -997,13 +1027,6 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
     // pkt_data points to the data.
     res=pcap_next_ex(pcap_file, &pkt_header, &pkt_data);
 
-    //void * p1 = (void *) pkt_header;
-    //void * p2 = (void *) pkt_data;
-    //std::cout << " p1 = " << p1 << " p2 = " << p2 << std::endl;
-
-    // What is the address of the packet header and data? Do they start at the same place? 
-    // Seems silly if they do. 
-  
     if(res == PCAP_ERROR_BREAK){
       fprintf(stderr, "No more packets in savefile. Iteration %d\n", it);
       break;
@@ -1138,11 +1161,8 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
         uint32_t search_len = pkt_header->len - 12;
         const uint8_t* data_loc = (pkt_data + 12);
         std::map<int, std::set<int> > matches = search_macs.findAllMatches(data_loc, search_len);
-        // TODO: ???
-        // Do not remember, do I want just the number of MACS that are duplicated,
-        // or, the total number of duplicates? 
-        num_mac_dups += matches.size();
-        //num_mac_dups += search_macs.countMatches(matches)
+        num_mac_found_unique += matches.size();
+        num_mac_found_total += search_macs.countMatches(matches);
       }
 
       may_have_dup = ip_types.isDupIP(ipHeader->ip_p, tcp_destination_port) || (tcp_destination_port != tcp_source_port && ip_types.isDupIP(ipHeader->ip_p, tcp_source_port));
@@ -1153,20 +1173,17 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
 
         std::map<int, std::set<int> > matches_4 = search_ipv4.findAllMatches(data_loc, search_len);
         std::map<int, std::set<int> > matches_6 = search_ipv6.findAllMatches(data_loc, search_len);
-        // TODO: ???
-        // Do not remember, do I want just the number of MACS that are duplicated,
-        // or, the total number of duplicates? 
-        num_ipv4_dups += matches_4.size();
-        num_ipv6_dups += matches_6.size();
-        //num_ipv4_dups += search_ipv4.countMatches(matches_4)
-        //num_ipv6_dups += search_ipv6.countMatches(matches_6)
+        num_ip_found_unique += matches_4.size();
+        num_ip_found_unique += matches_6.size();
+        num_ip_found_total += search_ipv4.countMatches(matches_4);
+        num_ip_found_total += search_ipv6.countMatches(matches_6);
       }
 
-      if (num_mac_dups > 0 || num_ipv4_dups > 0 || num_ipv6_dups > 0) {
+      if (num_mac_found_unique > 0 || num_ip_found_unique > 0) {
         //
         pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
         if (test_mode)
-          std::cout << it << " DUP MAC: " << num_mac_dups << " IP:" << (num_ipv4_dups + num_ipv6_dups) << " with Ethertype IPv4 protocol = " << proto << " (" << ip_p << ")" << " ports: " << tcp_source_port << " / " << tcp_destination_port << std::endl;
+          std::cout << it << " DUP MAC: " << num_mac_found_unique << " IP:" << num_ip_found_unique << " with Ethertype IPv4 protocol = " << proto << " (" << ip_p << ")" << " ports: " << tcp_source_port << " / " << tcp_destination_port << std::endl;
 
         if (!has_header) {
           csv << heading;
@@ -1176,8 +1193,10 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
         csv << output_row
             << ip_str_source
             << ip_str_dest
-            << (num_ipv4_dups + num_ipv6_dups)
-            << num_mac_dups;
+            << num_ip_found_unique
+            << num_mac_found_unique
+            << num_ip_found_total
+            << num_mac_found_total;
         csv.endRow();
 
         it++;
@@ -1350,8 +1369,8 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
       // TODO: ???
       // Do not remember, do I want just the number of MACS that are duplicated,
       // or, the total number of duplicates? 
-      num_mac_dups += matches.size();
-      //num_mac_dups += search_macs.countMatches(matches)
+      num_mac_found_unique += matches.size();
+      num_mac_found_total += search_macs.countMatches(matches);
 
 //      if (find_macs(data_loc, search_len, dumpfile, pkt_header, pkt_data, verbose, it, search_type, search_macs)) {
 //        if (test_mode) 
@@ -1367,10 +1386,10 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
       // TODO: ???
       // Do not remember, do I want just the number of MACS that are duplicated,
       // or, the total number of duplicates? 
-      num_ipv4_dups += matches_4.size();
-      num_ipv6_dups += matches_6.size();
-      //num_ipv4_dups += search_ipv4.countMatches(matches_4)
-      //num_ipv6_dups += search_ipv6.countMatches(matches_6)
+      num_ip_found_unique += matches_4.size();
+      num_ip_found_unique += matches_6.size();
+      num_ip_found_total += search_ipv4.countMatches(matches_4);
+      num_ip_found_total += search_ipv6.countMatches(matches_6);
 
       if (find_ips(data_loc, search_len, dumpfile, pkt_header, pkt_data, verbose, it, search_type, search_ipv4, search_ipv6)) {
         if (test_mode) 
@@ -1380,10 +1399,10 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
       }
     }
 
-    if (num_mac_dups > 0 || num_ipv4_dups > 0 || num_ipv6_dups > 0) {
+    if (num_mac_found_unique > 0 || num_ip_found_unique > 0) {
       pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
       if (test_mode)
-        std::cout << it << " DUP MAC: " << num_mac_dups << " IP:" << (num_ipv4_dups + num_ipv6_dups) << " with Ethertype = " << ether_type_int << std::endl;
+        std::cout << it << " DUP MAC: " << num_mac_found_unique << " IP:" << num_ip_found_unique << " with Ethertype = " << ether_type_int << std::endl;
 
       if (!has_header) {
         csv << heading;
@@ -1393,8 +1412,10 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
       csv << output_row
           << ip_str_source
           << ip_str_dest
-          << (num_ipv4_dups + num_ipv6_dups)
-          << num_mac_dups;
+          << num_ip_found_unique
+          << num_mac_found_unique
+          << num_ip_found_total
+          << num_mac_found_total;
       csv.endRow();
 
       it++;
@@ -1420,48 +1441,28 @@ bool startsWith(const char* s, char c) {
 
 int main(int argc, char **argv){
 
-  // TODO: Move this as appropriate. 
-  //
-  // This is how to read the ip_types.txt file, which will 
-  // then be sent to the processor for the pcap file.
-  // Still need to edit ip_types.txt so that it will have 
-  // correct values for types that support repeating IP or MAC addresses.
-  // See the spreadsheet uploaded by Beau.
-  //
-
-  //std::string ip_fname = "ip_types.txt";
-  std::string new_ip_fname = "ip_protocols.txt";
-  std::string new_ip_ports_fname = "ip_protocol_ports.txt";
-
   IPTypes ip_types;
-  //ip_types.readProtocols(ip_fname, true, 10);
-  ip_types.readProtocols(new_ip_fname, false, 10);
-  ip_types.readProtocolPorts(new_ip_ports_fname);
+  ip_types.readProtocols("ip_protocols.txt", false, 10);
+  ip_types.readProtocolPorts("ip_protocol_ports.txt");
   //std::cout << ip_types;
   //std::cout << std::endl;
 
-
-  std::string eth_fname = "eth_types.txt";
   EthernetTypes ethernet_types;
-  ethernet_types.read(eth_fname);
+  ethernet_types.read("eth_types.txt");
   //std::cout << ethernet_types;
   //std::cout << std::endl;
 
   /*Given an input PCAP file, discover all unique MAC addresses and IPs and write them to a file (stdout by default
    */
-  char *pcap_fname=0;
+  //??char *pcap_fname=0;
+  std::string pcap_filename;
   int index, arg;
-
-  std::string ip_fname;
-  std::string mac_fname;
-
-  struct stat filestat;
 
   bool verbose_output = false;
   bool create_anomaly_list = false;
-  const char* anomaly_fname = nullptr;
+  bool create_anomaly_csv = false;
 
-  while((arg = getopt(argc, argv, "mpvtdhr:a:")) != -1){
+  while((arg = getopt(argc, argv, "vtdhr:ac")) != -1){
     switch(arg) {
     case 'v':
       verbose_output = true;
@@ -1472,24 +1473,18 @@ int main(int argc, char **argv){
     case 'd':
       dump_verbose = true;
       break;
+    case 'c':
+      create_anomaly_csv=true;
+      //if (startsWith(optarg, '-')){anomaly_fname=nullptr;}
+      //else {anomaly_fname=optarg;}
+      break;
     case 'a':
       create_anomaly_list=true;
-      //??if(optarg == "-"){anomaly_fname=nullptr;}
-      if (startsWith(optarg, '-')){anomaly_fname=nullptr;}
-      else {anomaly_fname=optarg;}
-      break;
-    case 'm':
-      //if(optarg == "-"){mac_fname="";}
-      if (startsWith(optarg, '-')){mac_fname="";}
-      else {mac_fname=optarg;}
-      break;
-    case 'p':
-      //if(optarg == "-"){ip_fname="";}
-      if (startsWith(optarg, '-')){ip_fname="";}
-      else {ip_fname=optarg;}
+      //if (startsWith(optarg, '-')){anomaly_fname=nullptr;}
+      //else {anomaly_fname=optarg;}
       break;
     case 'r':
-      pcap_fname=optarg;
+      pcap_filename=optarg;
       break;
     case 'h':
       usage();
@@ -1510,99 +1505,31 @@ int main(int argc, char **argv){
   }
 
   // -r <fname> is required as an argument
-  if(pcap_fname == nullptr){
+  if(pcap_filename.empty()){
     usage();
     exit(1);
   }
 
-  if(stat(pcap_fname, &filestat) != 0){
-    std::cerr << "Input file "<<pcap_fname<<" is not accessible" <<std::endl;
-    exit(1);
+  if (!isPathExist(pcap_filename, true, false, false, false)) {
+    std::cout << "PCAP file does not exist: " << pcap_filename << std::endl;
+    return -1;
+  }
+  if (!isPathExist(pcap_filename, true, false, true, false)) {
+    std::cout << "Do not have read permission on PCAP file: " << pcap_filename << std::endl;
+    std::cout << "This may fail to read the PCAP file" << std::endl;
+    //return -1;
   }
 
   // Lets look at the default IP and MAC file names.
   // the pcap_fname probably ends with ".pcap" so lets
   // create the file name "<base_name>.ip.txt" and "<base_name>.mac.txt"
 
-  std::string pcap_fname_s(pcap_fname);
-  std::string pcap_fname_temp(pcap_fname);
-  std::string pcap_extension = getFileExtension(pcap_fname_temp);
-  if (pcap_extension.compare(".pcap") == 0 || pcap_extension.compare(".cap") == 0 ) {
-    if (mac_fname.size() == 0) {
-      mac_fname = pcap_fname_s.substr(0, pcap_fname_s.size() - pcap_extension.length() + 1);
-      mac_fname.append("mac.txt");
-    }
-    if (ip_fname.size() == 0) {
-      ip_fname = pcap_fname_s.substr(0, pcap_fname_s.size() - pcap_extension.length() + 1);
-      ip_fname.append("ip.txt");
-    }
-  } else {
-    if (mac_fname.size() == 0)
-      mac_fname = "mac_addresses.txt";
-    if (ip_fname.size() == 0)
-      ip_fname = "ip_addresses.txt";
-  }
-  
-  if (!isPathExist(pcap_fname_s, true, false, false, false)) {
-    std::cout << "PCAP file does not exist: " << pcap_fname_s << std::endl;
-    return -1;
-  }
-  if (!isPathExist(pcap_fname_s, true, false, true, false)) {
-    std::cout << "Do not have read permission on PCAP file: " << pcap_fname_s << std::endl;
-    std::cout << "This may fail to read the PCAP file" << std::endl;
-    //return -1;
-  }
-
-  bool create_mac_ip_files = !isPathExist(mac_fname, true, false, false, false) || !isPathExist(ip_fname, true, false, false, false);
-
-  if (create_mac_ip_files) {
-    std::string path = getDirectoryFromFilename(mac_fname);
-    if (!isPathExist(path, false, true, true, true)) {
-      std::cout << "Cannot read/write to directory where the MAC file will be created: " << path << std::endl;
-      std::cout << "This may fail to create the MAC file " << mac_fname << std::endl;
-      //return -1;
-    }
-    path = getDirectoryFromFilename(ip_fname);
-    if (!isPathExist(path, false, true, true, true)) {
-      std::cout << "Cannot read/write to directory where the IP file will be created: " << path << std::endl;
-      std::cout << "This may fail to create the IP file "  << ip_fname << std::endl;
-      //return -1;
-    }
-
-    std::cout << " creating files " << mac_fname << " and " << ip_fname << std::endl;
-    write_ip_and_mac_from_pcap(pcap_fname_s, mac_fname, ip_fname);
-  } else {
-    if (!isPathExist(mac_fname, true, false, true, false) || !isPathExist(ip_fname, true, false, true, false)) {
-      std::cout << "ERROR: Cannot read " << mac_fname << " or " << ip_fname << std::endl;
-      std::cout << "This may fail to create the MAC and IP files" << std::endl;
-      //return -1;
-    }
-    std::cout << " reading files " << mac_fname << " and " << ip_fname << std::endl;
-    mac_addresses.read_file(mac_fname);
-    ip_addresses.read_file(ip_fname);
-  }
-
-  if (isPathExist("destination_macs.txt", true, false, true, false)) {
-    dest_mac_to_ignore.read_file("destination_macs.txt");
-  }
-
-  if (create_anomaly_list) {
-    if (anomaly_fname == nullptr) {
-      std::cout << "Anomaly filename cannot be NULL" << std::endl;
-      return -1;
-    }
-    if (isPathExist(anomaly_fname, true, false, false, false)) {
-      std::cout << "Anomaly file will be over-written: " << anomaly_fname << std::endl;
-    }
-    std::string path = getDirectoryFromFilename(anomaly_fname);
-    if (!isPathExist(path, false, true, true, true)) {
-      std::cout << "Cannot read/write to directory where the anomaly file will be created: " << path << std::endl;
-      std::cout << "This may error out" << std::endl;
-      //return -1;
-    }
-
+  if (create_anomaly_csv) {
+    std::cout << "Creating Anomaly and CSV File" << std::endl;
+    create_heuristic_anomaly_csv(ethernet_types, ip_types, pcap_filename, verbose_output);
+  } else if (create_anomaly_list) {
     std::cout << "Creating Anomaly File" << std::endl;
-    create_heuristic_anomaly_file(ethernet_types, ip_types, pcap_fname, anomaly_fname, verbose_output);
+    create_heuristic_anomaly_file(ethernet_types, ip_types, pcap_filename, verbose_output);
   }
 
   return 0;

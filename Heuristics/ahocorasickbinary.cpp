@@ -249,7 +249,8 @@ std::map<int, std::set<int> > AhoCorasickBinary::findAllMatches(const uint8_t *d
 	}
 
 	if (m_bits_out_state == nullptr) {
-		std::cerr << "Aho Corasick algorithm has not been initialized." << std::endl;
+		//This also happens if there is nothing to search.
+		//std::cerr << "Aho Corasick algorithm has not been initialized." << std::endl;
 		return matches;
 	}
 
