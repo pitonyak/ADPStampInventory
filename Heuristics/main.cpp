@@ -56,19 +56,22 @@ void usage(){
   printf("-t Print test data (much less than verbose) while processing the file.\n");
   printf("-d Dump hex data while in verbose while printing verbose information.\n");
   printf("-r <path to input pcap file>: This PCAP file will be read for all MAC addresses and IP addresses\n");
-  printf("-a Generate anomaly PCAP (no CSV). File is same as the PCAP with 'anomaly' added before the extension.\n");
+  printf("-a Generate anomaly PCAP (no CSV). Filename is same as the PCAP with 'anomaly' added before the extension.\n");
   printf("-q Generate anomally PCAP and the CSV file.\n");
   printf("\n");
   printf("All filenames are generated, you cannot choose them.\n");
-  printf("CSV files and Anomaly files are over-written.\n");
+  printf("CSV file and Anomaly file are over-written.\n");
   printf("IP and MAC files are used if they exist and created if they do not.\n");
-  printf("Generating a CSV takes about 300 times longer than just the anomaly file.\n");
+  printf("Generating a CSV may take about 300 times longer than just the anomaly file.\n");
   printf("\n");
 }
 
 //**************************************************************************
 //! Generate a vector of length n with constant values. This is used for the AHO Corasick algorithm.
 /*!
+ * The Aho Corasick algorithm accepts a vector with the things to search and a vector with the
+ * length of each thing; because length information is not available from an array of bytes (sadly).
+ * 
  * \param [in] wordLength Every value has this value.
  * 
  * \param [in] n Creates a vector of this length.
@@ -127,10 +130,11 @@ std::string getAnomalyFileName(const std::string& pcap_filename, FileTypeEnum fi
 //**************************************************************************
 //! Read the pcap file and create a new IP and MAC file.
 /*!
- * 
- * This ALWAYS writes a new file. 
+ * This ALWAYS writes new files overwriting any existing file.
  * Use read_create_mac_ip_files if you want to read the file if it 
  * already exists and create it if it does not.
+ * 
+ * @see read_create_mac_ip_files()
  * 
  * \param [in] pcap_filename Full path to the input PCAP file
  * 
@@ -244,15 +248,18 @@ int write_ip_and_mac_from_pcap(const std::string& pcap_filename, const std::stri
 //**************************************************************************
 //! Create the IP and MAC text files if needed. If they already exist, read them.
 /*!
+ * @see write_ip_and_mac_from_pcap()
+ * @see getAnomalyFileName()
  * 
- * Warnings are printed if it looks like a file cannot be read or if a directory
- * is not readable, but the problem is ignored. This may cause a core dump, 
- * but the initial warning will let you know why things failed.
+ * Given the full path to a PCAP file, generate the file name for the 
+ * list of IP and MAC addresses. 
  * 
- * On exit, ip_addresses and mac_addresses will be populated with
- * all of the IP and MAC addresses in the file.
+ * Generate Warnings if the user does not have appropriate access to
+ * read or write. The problem is igored, which may cause a core dump,
+ * but the warning indicates why things failed.
  * 
- * The default filenames are used as sepcified by getAnomalyFileName().
+ * On exit, ip_addresses and mac_addresses are populated with
+ * the IP and MAC addresses in the file.
  * 
  * \param [in] pcap_filename - Filename of the PCAP file.
  *
@@ -314,7 +321,7 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
   if (isPathExist(anomaly_fname, true, false, false, false)) {
     std::cout << "Anomaly file will be over-written: " << anomaly_fname << std::endl;
   }
-  // Time 2.898seconds becomes 11m19.323seconds if generateCSV is true.
+  // Time 2.898seconds becomes 11m19.323seconds if generateCSV is true for one example file.
   pcap_t *pcap_file;
   pcap_dumper_t *dumpfile;
   bool done = false;
@@ -597,6 +604,8 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
         }
       }
 
+      // This can only be true if we are generating a CSV because if not, 
+      // would have already used continue.
       if (num_mac_found_unique > 0 || num_ip_found_unique > 0) {
         pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
         if (test_mode)
@@ -887,6 +896,19 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
   return 0;
 }
 
+//**************************************************************************
+//! Determine if a "string" starts with a specific character.
+/*!
+ * Safe fast method to check if a character begins with a character.
+ * Should probably just move this into the utilities.
+ * 
+ * \param [in] s - String to check to see if it starts with a character
+ * 
+ * \param [in] c - Character to see if it is the first character in the string
+ * 
+ * \returns True if s is not null and it begins with the character c.
+ *
+ ***************************************************************************/
 bool startsWith(const char* s, char c) {
   return (s != nullptr && s[0] == c);
 }
@@ -904,15 +926,12 @@ int main(int argc, char **argv){
   //std::cout << ethernet_types;
   //std::cout << std::endl;
 
-  /*Given an input PCAP file, discover all unique MAC addresses and IPs and write them to a file (stdout by default
-   */
-  //??char *pcap_fname=0;
   std::string pcap_filename;
-  int index, arg;
+  int arg;
 
   bool verbose_output = false;
-  bool create_anomaly_list = false;
-  bool create_anomaly_csv = false;
+  bool create_anomaly_list = false; // option a
+  bool create_anomaly_csv = false;  // option c
 
   while((arg = getopt(argc, argv, "vtdhr:ac")) != -1){
     switch(arg) {
@@ -942,16 +961,16 @@ int main(int argc, char **argv){
       usage();
       exit(0);
     case '?':
-      if (optopt == 'o'){ std::cerr << "Option -" << optopt <<" requires a filename argument for output" << std::endl; }
-      else if (optopt == 'r'){ std::cerr << "Option -" << optopt <<" requires a filename argument for output" << std::endl; }
-      else {
+      if (optopt == 'r') { 
+        std::cerr << "Option -" << optopt <<" requires a filename argument for output" << std::endl; 
+      } else {
 	      std::cerr << "Unknown option -"<< optopt << std::endl;
       } 
     }
   }
 
   // If any argument was given that isn't a known option, print the usage and exit
-  for (index = optind; index < argc; index++){
+  for (int index = optind; index < argc; index++){
     usage();
     exit(1);
   }
