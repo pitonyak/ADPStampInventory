@@ -12,7 +12,6 @@
 //**************************************************************************
 //! Assist in writing CSV files.
 /*!
-  *
   * There are some caveats with this class and some cheats were performed
   * to simply the coding.
   * 
@@ -52,6 +51,42 @@
   * to be a new field / column. A comma is automatically inserted between
   * each field as needed. You can insert an empty column by calling newCol().
   * 
+  * There are two main methods of using this class, the usual expected case
+  * is to write to a file. When the constructor is called a file is created.
+  * If you use conditional code to decide if a CSV will be created use a pointer
+  * to the class or something similar to this: 
+  * @code{.cpp}
+  * std::unique_ptr<CSVWriter> csv(generateCSV ? new CSVWriter(csv_fname) : nullptr);
+  * if (generateCSV) {
+  *   *csv << 3 << "column" << 3.7;
+  *   csv->endRow();
+  * }
+  * @endcode
+  * 
+  * This can also be used to generate a string. Note the use of a vector
+  * to stream the heading row. This could as easily been done by manually
+  * streaming the header. In my code, I sometimes do not stream the header
+  * until I find the first row of data. This process could be easily automated
+  * into the class; maybe later. Add a method to set the header and then check
+  * in newCol() to see if this is the first row being streamed and if so stream
+  * the header. Options for later if needed.
+  * 
+  * @code{.cpp}
+  *  std::ostringstream strStream;
+  *  std::vector<std::string> heading;
+  *  heading.push_back("#");
+  *  heading.push_back("heading 1");
+  *  heading.push_back("heading 2");
+  *  std::ostringstream strStream;
+  *  CSVWriter csv(&strStream);
+  *  csv << heading;
+  *  csv.endRow();
+  *  csv << 0 << "zero" << "ZERO";
+  *  csv.endRow();
+  *  csv << 1 << "one" << "ONE";
+  *  csv.flush();
+  *  std::string s2 = strStream.str();
+  * @endcode
   * 
   * 
  ***************************************************************************/
@@ -64,6 +99,17 @@ public:
     //! Constructor
     /*!
      * A file is created and opened immediately. The file is closed in the destructor.
+     * 
+     * An implementation detail is that there is no error checking of any sort
+     * and an ofstream is created without checking for permissions or even that
+     * the filename is valid.
+     * 
+     * After the ofstream is created, the ostream is pointed to it and the
+     * ofstream is then only used to close the file in the destructor.
+     * 
+     * The act of creating the object causes a file to be created even if
+     * the file is never used. A trick to avoid this is mentioned in the class level
+     * documentation.
      * 
      * \param [in] filename - A new file is created in the constructor with this name.
      * 
