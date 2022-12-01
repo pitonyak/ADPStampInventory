@@ -4,7 +4,7 @@
 
 CSVWriter::CSVWriter() : 
 		m_filename(""), m_separator(","), m_quote("\""), 
-		m_quote_all_strings(true), m_quoteX2("\"\""), m_column(0), 
+		m_quoteX2("\"\""), m_column(0), 
 		m_ofstream(nullptr), m_ostream(nullptr)
 {
 }
