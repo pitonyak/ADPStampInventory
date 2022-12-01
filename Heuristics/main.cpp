@@ -52,12 +52,13 @@ bool dump_verbose = false;
 void usage(){
   printf("Usage:\n");
   printf("-h Print this help.\n");
-  printf("-v Print verbose output while processing the file.\n");
-  printf("-t Print test data (much less than verbose) while processing the file.\n");
-  printf("-d Dump hex data while in verbose while printing verbose information.\n");
-  printf("-r <path to input pcap file>: This PCAP file will be read for all MAC addresses and IP addresses\n");
   printf("-a Generate anomaly PCAP (no CSV). Filename is same as the PCAP with 'anomaly' added before the extension.\n");
   printf("-c Generate anomally PCAP and the CSV file.\n");
+  printf("-d Dump hex data while in verbose while printing verbose information.\n");
+  printf("-m Force the IP and MAC files to be regenerated.\n");
+  printf("-r <path to input pcap file>: This PCAP file will be read for all MAC addresses and IP addresses.\n");
+  printf("-t Print test data (much less than verbose) while processing the file.\n");
+  printf("-v Print verbose output while processing the file.\n");
   printf("\n");
   printf("All filenames are generated, you cannot choose them.\n");
   printf("CSV file and Anomaly file are over-written.\n");
@@ -932,8 +933,9 @@ int main(int argc, char **argv){
   bool verbose_output = false;
   bool create_anomaly_list = false; // option a
   bool create_anomaly_csv = false;  // option c
+  bool create_mac_ip_file = false;  // option m
 
-  while((arg = getopt(argc, argv, "vtdhr:ac")) != -1){
+  while((arg = getopt(argc, argv, "vtdhr:acm")) != -1){
     switch(arg) {
     case 'v':
       verbose_output = true;
@@ -953,6 +955,9 @@ int main(int argc, char **argv){
       create_anomaly_list=true;
       //if (startsWith(optarg, '-')){anomaly_fname=nullptr;}
       //else {anomaly_fname=optarg;}
+      break;
+    case 'm':
+      create_mac_ip_file=true;
       break;
     case 'r':
       pcap_filename=optarg;
@@ -994,6 +999,10 @@ int main(int argc, char **argv){
   // Lets look at the default IP and MAC file names.
   // the pcap_fname probably ends with ".pcap" so lets
   // create the file name "<base_name>.ip.txt" and "<base_name>.mac.txt"
+  if (create_mac_ip_file) {
+    // This will force a new file to be written.
+    write_ip_and_mac_from_pcap(pcap_filename, getAnomalyFileName(pcap_filename, MAC_Type), getAnomalyFileName(pcap_filename, IP_Type));
+  }
 
   if (create_anomaly_csv) {
     std::cout << "Creating Anomaly and CSV File" << std::endl;
