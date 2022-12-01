@@ -399,7 +399,10 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
   }
 
   std::unique_ptr<CSVWriter> csv(generateCSV ? new CSVWriter(csv_fname) : nullptr);
-  int output_row = 0;
+  // CSV Numbering now starts with record 1 rather than 0, which
+  // matches the frame numbering used in Wireshark, which is
+  // one based rather than zero-based.
+  int output_row = 1;
   bool has_header = false;
 
   const int offset_to_data_ipv4 = sizeof(struct ether_header) + sizeof(struct ip);
