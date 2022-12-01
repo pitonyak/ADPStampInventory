@@ -57,7 +57,7 @@ void usage(){
   printf("-d Dump hex data while in verbose while printing verbose information.\n");
   printf("-r <path to input pcap file>: This PCAP file will be read for all MAC addresses and IP addresses\n");
   printf("-a Generate anomaly PCAP (no CSV). Filename is same as the PCAP with 'anomaly' added before the extension.\n");
-  printf("-q Generate anomally PCAP and the CSV file.\n");
+  printf("-c Generate anomally PCAP and the CSV file.\n");
   printf("\n");
   printf("All filenames are generated, you cannot choose them.\n");
   printf("CSV file and Anomaly file are over-written.\n");
