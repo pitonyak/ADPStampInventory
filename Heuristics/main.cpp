@@ -406,8 +406,17 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
   bool has_header = false;
   bool may_have_dup = false;
 
-  const int offset_to_data_ipv4 = sizeof(struct ether_header) + sizeof(struct ip);
-  [[maybe_unused]] const int offset_to_data_ipv6 = sizeof(struct ether_header) + sizeof(struct ip6_hdr);
+  const int ether_header_size = sizeof(struct ether_header); // 14
+  const int ip_header_size = sizeof(struct ip); // 20
+  //const int tcphdr_size = sizeof(struct tcphdr); // 20
+  //const int udphdr_size = sizeof(struct udphdr); // 8
+  const int offset_to_data_ipv4 = ether_header_size + ip_header_size; // 34
+  //const int offset_to_data_tcpv4 = offset_to_data_ipv4 + tcphdr_size;
+  //const int offset_to_data_udpv4 = offset_to_data_ipv4 + udphdr_size;
+
+  //int offset_to_search_data;
+
+  [[maybe_unused]] const int offset_to_data_ipv6 = ether_header_size + sizeof(struct ip6_hdr);
 
   int num_ip_found_unique = 0;
   int num_mac_found_unique = 0;
@@ -506,7 +515,8 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
     if (ether_type_int == ETHERTYPE_IP) {
 
       const struct ip* ipHeader;
-      ipHeader = (struct ip*)(pkt_data + sizeof(struct ether_header));
+      ipHeader = (struct ip*)(pkt_data + ether_header_size);
+      //offset_to_search_data = offset_to_data_ipv4;
 
       // So, what does an IPv4 header look like? 
       //  4-bits = [ip_v] Version, so 0100 for IPv4 (byte 0)
@@ -541,6 +551,7 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
         tcp_destination_port = ntohs(tcp_header->th_dport);
         tcp_source_port = ntohs(tcp_header->th_sport);
         proto = "TCP";
+        //offset_to_search_data = offset_to_data_tcpv4;
 
       } else if (ip_p == static_cast<int>(IPPROTO_UDP)) {
 
@@ -553,6 +564,7 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
         tcp_destination_port = ntohs(udp_header->uh_dport);
         tcp_source_port = ntohs(udp_header->uh_sport);
         proto = "UDP";
+        //offset_to_search_data = offset_to_data_udpv4;
       }
 
       // If we get here then we can search for duplicates.
@@ -562,8 +574,15 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
       may_have_dup = ip_types.isDupMAC(ip_p, tcp_destination_port) || (tcp_destination_port != tcp_source_port && ip_types.isDupMAC(ip_p, tcp_source_port));
       //std::cout << "May MAC Dup: " << may_have_dup << " proto:" << (int) ipHeader->ip_p << " source:" << tcp_source_port << " dest:" << tcp_destination_port << std::endl;
       if (!may_have_dup) {
+        //
+        // The 12 has us search from immediately AFTER the MAC addresses in the
+        // Ether header. Might be faster to search AFTER the data.
+        //
         uint32_t search_len = pkt_header->len - 12;
         const uint8_t* data_loc = (pkt_data + 12);
+        //uint32_t search_len = pkt_header->len - offset_to_search_data;
+        //const uint8_t* data_loc = (pkt_data + offset_to_search_data);
+
         if (generateCSV) {
           std::map<int, std::set<int> > matches = search_macs.findAllMatches(data_loc, search_len);
           num_mac_found_unique += matches.size();
@@ -579,8 +598,15 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
       may_have_dup = ip_types.isDupIP(ip_p, tcp_destination_port) || (tcp_destination_port != tcp_source_port && ip_types.isDupIP(ip_p, tcp_source_port));
       //std::cout << "May  IP Dup: " << may_have_dup << " proto:" << (int) ipHeader->ip_p << " source:" << tcp_source_port << " dest:" << tcp_destination_port << std::endl;
       if (!may_have_dup) {
+        //
+        // This will search the TCP and UDP headers.
+        // Should we change to ONLY search the data?
+        //
         uint32_t search_len = pkt_header->len - offset_to_data_ipv4;
         const uint8_t* data_loc = pkt_data + offset_to_data_ipv4;
+        //uint32_t search_len = pkt_header->len - offset_to_search_data;
+        //const uint8_t* data_loc = (pkt_data + offset_to_search_data);
+
 
         if (generateCSV) {
           std::map<int, std::set<int> > matches_4 = search_ipv4.findAllMatches(data_loc, search_len);
