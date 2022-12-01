@@ -607,7 +607,6 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
         //uint32_t search_len = pkt_header->len - offset_to_search_data;
         //const uint8_t* data_loc = (pkt_data + offset_to_search_data);
 
-
         if (generateCSV) {
           std::map<int, std::set<int> > matches_4 = search_ipv4.findAllMatches(data_loc, search_len);
           std::map<int, std::set<int> > matches_6 = search_ipv6.findAllMatches(data_loc, search_len);
