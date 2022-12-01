@@ -404,6 +404,7 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
   // one based rather than zero-based.
   int output_row = 1;
   bool has_header = false;
+  bool may_have_dup = false;
 
   const int offset_to_data_ipv4 = sizeof(struct ether_header) + sizeof(struct ip);
   [[maybe_unused]] const int offset_to_data_ipv6 = sizeof(struct ether_header) + sizeof(struct ip6_hdr);
@@ -415,10 +416,6 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
 
   // Iterate over every packet in the file and print the MAC addresses
   while(!done){
-    num_ip_found_unique = 0;
-    num_mac_found_unique = 0;
-    num_ip_found_total = 0;
-    num_mac_found_total = 0;
     // pkt_header contains three fields:
     // struct timeval ts (time stamp) with tv_sec and tv_usec for seconds and micro-seconds I guess.
     // uint32_t caplen (length of portion present)
@@ -483,7 +480,7 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
 
     if (!ethernet_types.isValid(ether_type_int)) {
       if (verbose || test_mode)
-        std::cout << it << " has unexpected ether type " << std::hex << ntohs(ether->ether_type) << std::dec << std::endl;
+        std::cout << it << " has unexpected ether type " << std::hex << ether_type_int << std::dec << std::endl;
       
       // Check for valid Frame Check Sequence (FCS) as per the flow diagram.
       // We ignore the FCS for now because we do not know if it will be available.
@@ -510,8 +507,6 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
 
       const struct ip* ipHeader;
       ipHeader = (struct ip*)(pkt_data + sizeof(struct ether_header));
-      ip_str_source = IpAddresses::ip_to_str((uint8_t*)&(ipHeader->ip_src), true);
-      ip_str_dest =IpAddresses::ip_to_str((uint8_t*)&(ipHeader->ip_dst), true);
 
       // So, what does an IPv4 header look like? 
       //  4-bits = [ip_v] Version, so 0100 for IPv4 (byte 0)
@@ -564,7 +559,7 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
       // Look AFTER the IP header for dupliate IP.
 
       // Search to see if a MAC is repeated.
-      bool may_have_dup = ip_types.isDupMAC(ipHeader->ip_p, tcp_destination_port) || (tcp_destination_port != tcp_source_port && ip_types.isDupMAC(ipHeader->ip_p, tcp_source_port));
+      may_have_dup = ip_types.isDupMAC(ip_p, tcp_destination_port) || (tcp_destination_port != tcp_source_port && ip_types.isDupMAC(ip_p, tcp_source_port));
       //std::cout << "May MAC Dup: " << may_have_dup << " proto:" << (int) ipHeader->ip_p << " source:" << tcp_source_port << " dest:" << tcp_destination_port << std::endl;
       if (!may_have_dup) {
         uint32_t search_len = pkt_header->len - 12;
@@ -581,30 +576,26 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
         }
       }
 
-      // If NOT generating the CSV, do not search for IP if
-      // a MAC has already been found.
-      if (generateCSV || (num_mac_found_unique == 0)) {
-        may_have_dup = ip_types.isDupIP(ipHeader->ip_p, tcp_destination_port) || (tcp_destination_port != tcp_source_port && ip_types.isDupIP(ipHeader->ip_p, tcp_source_port));
-        //std::cout << "May  IP Dup: " << may_have_dup << " proto:" << (int) ipHeader->ip_p << " source:" << tcp_source_port << " dest:" << tcp_destination_port << std::endl;
-        if (!may_have_dup) {
-          uint32_t search_len = pkt_header->len - offset_to_data_ipv4;
-          const uint8_t* data_loc = pkt_data + offset_to_data_ipv4;
+      may_have_dup = ip_types.isDupIP(ip_p, tcp_destination_port) || (tcp_destination_port != tcp_source_port && ip_types.isDupIP(ip_p, tcp_source_port));
+      //std::cout << "May  IP Dup: " << may_have_dup << " proto:" << (int) ipHeader->ip_p << " source:" << tcp_source_port << " dest:" << tcp_destination_port << std::endl;
+      if (!may_have_dup) {
+        uint32_t search_len = pkt_header->len - offset_to_data_ipv4;
+        const uint8_t* data_loc = pkt_data + offset_to_data_ipv4;
 
-          if (generateCSV) {
-            std::map<int, std::set<int> > matches_4 = search_ipv4.findAllMatches(data_loc, search_len);
-            std::map<int, std::set<int> > matches_6 = search_ipv6.findAllMatches(data_loc, search_len);
-            num_ip_found_unique += matches_4.size();
-            num_ip_found_unique += matches_6.size();
-            num_ip_found_total += search_ipv4.countMatches(matches_4);
-            num_ip_found_total += search_ipv6.countMatches(matches_6);
-          } else if (
-            (search_ipv4.findFirstMatch(data_loc, search_len) >= 0) ||
-            (search_ipv6.findFirstMatch(data_loc, search_len) >= 0)) {
-            pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
-            it++;
-            ++output_row;
-            continue;
-          }
+        if (generateCSV) {
+          std::map<int, std::set<int> > matches_4 = search_ipv4.findAllMatches(data_loc, search_len);
+          std::map<int, std::set<int> > matches_6 = search_ipv6.findAllMatches(data_loc, search_len);
+          num_ip_found_unique += matches_4.size();
+          num_ip_found_unique += matches_6.size();
+          num_ip_found_total += search_ipv4.countMatches(matches_4);
+          num_ip_found_total += search_ipv6.countMatches(matches_6);
+        } else if (
+          (search_ipv4.findFirstMatch(data_loc, search_len) >= 0) ||
+          (search_ipv6.findFirstMatch(data_loc, search_len) >= 0)) {
+          pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
+          it++;
+          ++output_row;
+          continue;
         }
       }
 
@@ -612,6 +603,7 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
       // would have already used continue.
       if (num_mac_found_unique > 0 || num_ip_found_unique > 0) {
         pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
+
         if (test_mode)
           std::cout << it << " DUP MAC: " << num_mac_found_unique << " IP:" << num_ip_found_unique << " with Ethertype IPv4 protocol = " << proto << " (" << ip_p << ")" << " ports: " << tcp_source_port << " / " << tcp_destination_port << std::endl;
 
@@ -622,13 +614,17 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
           has_header = true;
         }
         *csv << output_row
-            << ip_str_source
-            << ip_str_dest
+            << IpAddresses::ip_to_str((uint8_t*)&(ipHeader->ip_src), true)
+            << IpAddresses::ip_to_str((uint8_t*)&(ipHeader->ip_dst), true)
             << num_ip_found_unique
             << num_mac_found_unique
             << num_ip_found_total
             << num_mac_found_total;
         csv->endRow();
+        num_ip_found_unique = 0;
+        num_mac_found_unique = 0;
+        num_ip_found_total = 0;
+        num_mac_found_total = 0;
 
         it++;
         ++output_row;
@@ -804,6 +800,10 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
               << num_mac_found_total;
           csv->endRow();
         }
+        num_ip_found_unique = 0;
+        num_mac_found_unique = 0;
+        num_ip_found_total = 0;
+        num_mac_found_total = 0;
 
         it++;
         ++output_row;
@@ -882,6 +882,10 @@ int create_heuristic_anomaly_csv(const EthernetTypes& ethernet_types, const IPTy
           << num_ip_found_total
           << num_mac_found_total;
       csv->endRow();
+      num_ip_found_unique = 0;
+      num_mac_found_unique = 0;
+      num_ip_found_total = 0;
+      num_mac_found_total = 0;
 
       it++;
       ++output_row;
