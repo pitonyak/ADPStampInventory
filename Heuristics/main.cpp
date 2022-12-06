@@ -44,8 +44,6 @@ IpAddresses ip_addresses;
 
 MacAddresses dest_mac_to_ignore;
 
-enum SearchTypeEnum { forward_search, backward_search, aho_corasick_binary };
-enum FileTypeEnum { IP_Type, MAC_Type, CSV_Type, Anomaly_Type };
 bool test_mode = false;
 bool dump_verbose = false;
 
@@ -68,28 +66,6 @@ void usage(){
 }
 
 //**************************************************************************
-//! Generate a vector of length n with constant values. This is used for the AHO Corasick algorithm.
-/*!
- * The Aho Corasick algorithm accepts a vector with the things to search and a vector with the
- * length of each thing; because length information is not available from an array of bytes (sadly).
- * 
- * \param [in] wordLength Every value has this value.
- * 
- * \param [in] n Creates a vector of this length.
- * 
- * \returns A vector with the same value in every element.
- *
- ***************************************************************************/
-std::unique_ptr<std::vector<int>> getConstWordLengthVector(const int wordLength, const int n) {
-  std::unique_ptr<std::vector<int>> v(new std::vector<int>());
-  v->reserve(n);
-  for (int i=0; i< n; ++i) {
-    v->push_back(wordLength);
-  }
-  return v;
-}
-
-//**************************************************************************
 //! Generate filenames from the PCAP based on use. These are the filenames used when generating files.
 /*!
  * 
@@ -107,25 +83,8 @@ std::unique_ptr<std::vector<int>> getConstWordLengthVector(const int wordLength,
  *
  ***************************************************************************/
 std::string getAnomalyFileName(const std::string& pcap_filename, FileTypeEnum fileType) {
-  std::string pcap_extension = getFileExtension(pcap_filename);
-  std::string base_filename = pcap_filename.substr(0, pcap_filename.size() - pcap_extension.length() + 1);
-
-  switch(fileType) {
-  case IP_Type      :
-    base_filename.append("ip.txt");
-    break;
-  case MAC_Type     :
-    base_filename.append("mac.txt");
-    break;
-  case CSV_Type     :
-    base_filename = pcap_filename;
-    base_filename.append(".csv");
-    break;
-  case Anomaly_Type :
-    base_filename.append("anomaly").append(pcap_extension);
-    break;
-  }
-  return base_filename;
+  std::string output_directory = getDirectoryFromFilename(pcap_filename);
+  return getHeuristicFileName(pcap_filename, fileType, output_directory, "anomaly");
 }
 
 //**************************************************************************

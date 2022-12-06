@@ -3,11 +3,13 @@
 
 #include <algorithm> 
 #include <cstdint>
+#include <memory>
 #include <queue>
 #include <string>
 
 #include "MurmurHash3.h"
 
+enum FileTypeEnum { IP_Type, MAC_Type, CSV_Type, Heuristic_Type, Anomaly_Type };
 
 //**************************************************************************
 //! Replace all occurrences of one string with another.
@@ -468,5 +470,38 @@ struct CustomHash_bin16
     }
 };
 
+//**************************************************************************
+//! Generate filenames from the PCAP based on use. These are the filenames used when generating files.
+/*!
+ * 
+ * Assuming the PCAP filename is name.pcap, the generated filename is:
+ * IP_Type  : name.ip.txt
+ * MAC_Type : name.mac.txt
+ * CSV_Type : name.pcap.csv
+ * Anomaly_Type : name.anomaly.pcap
+ * 
+ * \param [in] pcap_filename Full path to the PCAP file.
+ * 
+ * \param [in] fileType What type of file?
+ * 
+ * \returns A filename based on what the file is.
+ *
+ ***************************************************************************/
+std::string getHeuristicFileName(const std::string& pcap_filename, FileTypeEnum fileType, const std::string& output_directory, const std::string& extra_heuristic_name);
+
+//**************************************************************************
+//! Generate a vector of length n with constant values. This is used for the AHO Corasick algorithm.
+/*!
+ * The Aho Corasick algorithm accepts a vector with the things to search and a vector with the
+ * length of each thing; because length information is not available from an array of bytes (sadly).
+ * 
+ * \param [in] wordLength Every value has this value.
+ * 
+ * \param [in] n Creates a vector of this length.
+ * 
+ * \returns A vector with the same value in every element.
+ *
+ ***************************************************************************/
+std::unique_ptr<std::vector<int>> getConstWordLengthVector(const int wordLength, const int n);
 
 #endif // UTILITIES_H

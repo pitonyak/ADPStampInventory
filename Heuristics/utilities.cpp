@@ -503,3 +503,42 @@ bool is_bin16_equal(const uint8_t *left, const uint8_t *right) {
 
   return (*left_1 == *right_1) && (*left_2 == *right_2);
 }
+
+std::string getHeuristicFileName(const std::string& pcap_filename, FileTypeEnum fileType, const std::string& output_directory, const std::string& extra_heuristic_name) {
+  std::string return_filename = output_directory;
+  std::string pcap_extension = getFileExtension(pcap_filename);
+  std::string base_filename_with_extension = getFilename(pcap_filename);
+  std::string base_filename_no_extension = base_filename_with_extension.substr(0, base_filename_with_extension.size() - pcap_extension.size() + 1);
+  std::string forward_slash = "/";
+
+  if (!return_filename.empty() && !hasEnding(return_filename, forward_slash, false)) {
+    return_filename.append(forward_slash);
+  }
+
+  switch(fileType) {
+  case IP_Type      :
+    return_filename.append(base_filename_no_extension).append("ip.txt");
+    break;
+  case MAC_Type     :
+    return_filename.append(base_filename_no_extension).append("mac.txt");
+    break;
+  case CSV_Type     :
+    return_filename.append(base_filename_with_extension).append(".csv");
+    break;
+  case Anomaly_Type :
+  case Heuristic_Type :
+    return_filename.append(base_filename_no_extension).append(extra_heuristic_name).append(pcap_extension);
+    break;
+  }
+  return return_filename;
+}
+
+std::unique_ptr<std::vector<int>> getConstWordLengthVector(const int wordLength, const int n) {
+  std::unique_ptr<std::vector<int>> v(new std::vector<int>());
+  v->reserve(n);
+  for (int i=0; i< n; ++i) {
+    v->push_back(wordLength);
+  }
+  return v;
+}
+
