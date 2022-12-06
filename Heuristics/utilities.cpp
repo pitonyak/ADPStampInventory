@@ -1,4 +1,14 @@
 
+
+//
+// With current arguments, cannot include the regex header.
+// The build totally fails to build, so, disable that specific check
+// for now.
+//
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#include <regex>
+#pragma GCC diagnostic pop
+
 #define CAN_USE_FILESYSTEM 1
 
 #ifdef CAN_USE_FILESYSTEM
@@ -367,6 +377,75 @@ std::string getFileExtension(const std::string& sPath) {
   std::string s = sPath.substr(pos);
   return s.find_last_of("\\/") == std::string::npos ? s : "";
 #endif
+}
+
+std::string convertFileSpecToRegExp(std::string filespec) {
+  if (filespec.empty()) {
+    return filespec;
+  }
+  std::string s;
+  s.append("^");
+  for (auto idx=filespec.length(); idx > 0; --idx) {
+    char& c = filespec.at(filespec.length()-idx);
+    switch(c) {
+    case '*' :
+      s.append(".*");
+      break;
+    case '?' :
+      s.append(".");
+      break;
+    // ^ is an escape character in cmd.exe, so maybe this should become "\\" by itself.
+    case '^' :
+    case '(' :
+    case ')' :
+    case '[' :
+    case ']' :
+    case '$' :
+    case '.' :
+    case '{' :
+    case '}' :
+    case '|' :
+    case '\\' :
+      s.append("\\");
+      s.push_back(c);
+      break;
+    default:
+      s.push_back(c);
+      break;
+    }
+  }
+  s.append("$");
+  return s;
+}
+
+std::vector<std::string> readDirectory(const std::string& sPath, const std::string& spec, bool isRegEx, bool includeFiles, bool includeDirs) {
+  std::vector<std::string> filenames;
+  std::string regexToUse = spec;
+  if (spec.empty()) {
+    regexToUse = "^.*$";
+  } else if (!isRegEx) {
+    regexToUse = convertFileSpecToRegExp(spec);
+  }
+  std::regex file_regex(regexToUse);
+  // Just assume C++17 and use the file system classes
+  for (const auto& entry : std::filesystem::directory_iterator(sPath)) {
+    const auto filenameStr = entry.path().filename().string();
+    if (!regex_match(filenameStr, file_regex)) {
+      continue;
+    }
+    if (entry.is_directory()) {
+      if (includeDirs)
+        filenames.push_back(filenameStr);
+      std::cout << "dir:  " << filenameStr << '\n';
+    } else if (entry.is_regular_file()) {
+      if (includeFiles)
+        filenames.push_back(filenameStr);
+      std::cout << "file: " << filenameStr << '\n';
+    } else {
+      std::cout << "??    " << filenameStr << '\n';
+    }
+  }
+  return filenames;
 }
 
 bool is_bin_less(const uint8_t *left, const uint8_t *right, size_t len) {

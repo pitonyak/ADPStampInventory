@@ -256,6 +256,10 @@ std::string getFileExtension(const std::string& sPath);
  ***************************************************************************///
 std::string getFilename(const std::string& sPath);
 
+std::vector<std::string> readDirectory(const std::string& sPath, const std::string& spec="", bool isRegEx=false, bool includeFiles=true, bool includeDirs=false);
+
+std::string convertFileSpecToRegExp(std::string filespec);
+
 //**************************************************************************
 //! Generic binary compare for less than. This is half the speed of the specific methods that know the size.
 /*!

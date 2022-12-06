@@ -924,5 +924,7 @@ int main(int , char **) {
   if (num_failed > 0)
     std::cout << "ERROR *********: number of tests failed:" << num_failed << std::endl;
 
+  //readDirectory("./", "*.cpp", false, true, false);
+
   return -num_failed;
 }
