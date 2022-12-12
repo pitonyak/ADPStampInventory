@@ -915,6 +915,7 @@ int main(int argc, char **argv){
 
   EthernetTypes ethernet_types;
   ethernet_types.read("eth_types.txt");
+  dest_mac_to_ignore.read_file("dest_mac_to_ignore");
   //std::cout << ethernet_types;
   //std::cout << std::endl;
 
