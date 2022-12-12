@@ -4,7 +4,6 @@
 #include <cstring>
 #include <fstream>
 #include <iomanip>
-#include <netinet/in.h>
 #include <vector>
 
 #include "ipaddresses.h"

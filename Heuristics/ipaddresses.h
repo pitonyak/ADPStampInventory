@@ -1,10 +1,11 @@
 #ifndef IP_ADDRESSES_H
 #define IP_ADDRESSES_H
 
-#include <iostream>
-#include <set>
 #include <cstdint>
+#include <iostream>
 #include <memory>
+#include <netinet/in.h>
+#include <set>
 #include <string>
 #include <unordered_set>
 
