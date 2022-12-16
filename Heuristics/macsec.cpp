@@ -197,52 +197,25 @@ int strip_macsec_vlan_frames(const EthernetTypes &ethernet_types, const std::str
     if (pkt_header->len > buffer_size) // if frame size is bigger than buffer,
     {
       buffer_size = pkt_header->len + 100;
-      delete newpkt_data;
+      delete[] newpkt_data;
       newpkt_data = new u_char[buffer_size + 1];
     }
 
     memcpy(newpkt_data, pkt_data, 12);
     int macsec_etype_int = ntohs(*(uint16_t *)(pkt_data + macsec_offset_etype));
     if(macsec_etype_int == ETHERTYPE_VLAN) {
-      newpkt_header.caplen = newpkt_header.caplen - 2;
-      newpkt_header.len = newpkt_header.len - 2;
+      newpkt_header.caplen = newpkt_header.caplen - 4;
+      newpkt_header.len = newpkt_header.len - 4;
       memcpy(newpkt_data + 12, pkt_data + macsec_offset_etype + 4, newpkt_header.len - 12);
     } else {
       memcpy(newpkt_data + 12, pkt_data + macsec_offset_etype, newpkt_header.len - 12);
     }
 
-    // Checke packet length
-
-    // offset_to_search_data = offset_to_data_ipv4;
-
-    // So, what does an IPv4 header look like?
-    //  4-bits = [ip_v] Version, so 0100 for IPv4 (byte 0)
-    //  4-bits = [ip_hl] HELEN (header length)
-    //  8-bits = [ip_tos] Service Type            (byte 1)
-    // 16-bits = [ip_len] total Length            (byte 2) [Not used]
-    // 16-bits = [ip_id] Identification           (byte 4)
-    //  3-bits = Flags                            (byte 6)
-    // 13-bits = [lp_off] Fragmentation offset
-    //  8-bits = [ip_ttl] Time to live            (byte 8)
-    //  8-bits = [ip_p] Protocol                  (byte 9) (17=UDP, 6=TCP) source / destination port.
-    // 16-bits = [ip_sum] Header Checksum         (byte 10)
-    // 32-bits = [ip_src] Source IP Address       (byte 12)
-    // 32-bits = [ip_dst] Destination IP Address  (byte 16)
-    // Rest of the Data                           (byte 20)
-
-    //
-    // Note that ports are uint16_t stored in network byte order (big-endian)
-    // so they must be converted before use.
-    //
-
-    // Remember to ntohs
-    // before loop:
-    //.New packetheader*(struct pcap_pkthdr). sizeof(struct pcap_pkthdr)
-    // New newdata*. temp pointer
-    // allocate buffer. size? Verify each packet's size
+    pcap_dump((u_char *)dumpfile, &newpkt_header, newpkt_data);
     it++;
   }
 
+  delete[] newpkt_data;
   pcap_close(pcap_file);
   pcap_dump_close(dumpfile);
   std::cerr << "Examined " << it << " packets" << std::endl;
