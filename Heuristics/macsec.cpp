@@ -90,22 +90,21 @@ int strip_macsec_vlan_frames(const EthernetTypes &ethernet_types, const std::str
     return -1;
   }
 
-  bool has_header = false;
+  // ??? NOT USED bool has_header = false;
 
   const int ether_header_size = sizeof(struct ether_header);          // 14
   const int ip_header_size = sizeof(struct ip);                       // 20
-  const int offset_to_data_ipv4 = ether_header_size + ip_header_size; // 34
-  const int macsec_offset_etype = 28;                                 // used to skip the first 28 bytes of a frame to check if there is vlan following it
-  const int vlan_offset = 4;                                          // used to skip an extra 4 bytes of a frame to account for vlan
-  int total_new_data_offset = macsec_offset_etype;
+  //const int offset_to_data_ipv4 = ether_header_size + ip_header_size; // 34
+  //const int macsec_offset_etype = 28;                                 // used to skip the first 28 bytes of a frame to check if there is vlan following it
+  //const int vlan_offset = 4;                                          // used to skip an extra 4 bytes of a frame to account for vlan
+  //int total_new_data_offset = macsec_offset_etype;
 
   unsigned int buffer_size = 1024 * 1024 * 2; // 2m
   u_char *newpkt_data = new u_char[buffer_size + 1];
   struct pcap_pkthdr newpkt_header;
-  u_char macsec_etype[2];
 
   // Iterate over every packet in the file and print the MAC addresses
-  while (!done)
+  while (!done && (abort_requested == nullptr || !abort_requested->load()))
   {
 
     // pkt_header contains three fields:
@@ -190,21 +189,18 @@ int strip_macsec_vlan_frames(const EthernetTypes &ethernet_types, const std::str
 
     total_new_data_offset = macsec_offset_etype;
     newpkt_header.ts = pkt_header->ts; // timeval will be the same
-    const u_char *macsec_etype_data_offset = (pkt_data + macsec_offset_etype);
 
     if (pkt_header->len > buffer_size) // if frame size is bigger than buffer,
     {
-      buffer_size = buffer_size * 2;
-      if (buffer_size < pkt_header->len) {
-        buffer_size = pkt_header->len + 2;
-      }
+      buffer_size = pkt_header->len + 100;
       delete newpkt_data;
       newpkt_data = new u_char[buffer_size + 1];
     }
     
-    memcpy(macsec_etype, macsec_etype_data_offset, 2);
-    int macsec_etype_int = ntohs(macsec_etype);
-    if( == ETHERTYPE_VLAN)
+    int macsec_etype_int = ntohs(*(uint16_t *)(pkt_data + macsec_offset_etype));
+    if(macsec_etype_int == ETHERTYPE_VLAN) {
+      // Do something here!
+    }
 
     // Checke packet length
 
