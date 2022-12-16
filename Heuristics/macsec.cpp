@@ -12,7 +12,7 @@
 #include <iomanip>
 #include <iostream>
 #include <locale>
-#include <net/ethernet.h>
+#include <net/ethernet.h>  // ETHERTYPE_VLAN 0x8000
 #include <net/if_arp.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
@@ -38,7 +38,6 @@
 #include "pcap.h"
 #include "utilities.h"
 #define ETHERTYPE_MACSEC 0x88e5 /* MACSEC */
-#define ETHERTYPE_VLAN 0x8000 /* Vlan */
 
 
 // The MAC and IP addresses in this file.
@@ -48,13 +47,11 @@ MacAddresses dest_mac_to_ignore;
 std::string extra_name = "anomaly";
 std::string output_directory = "";
 static int test_flag;
-static int verbose_flag;
 
 int strip_macsec_vlan_frames(const EthernetTypes &ethernet_types, const std::string &pcap_filename, std::string output_directory, std::string extra_heuristic_name, bool verbose, std::atomic_bool *abort_requested)
 {
   std::string anomaly_fname = getHeuristicFileName(pcap_filename, Anomaly_Type, output_directory, extra_heuristic_name);
 
-  // Time 2.898seconds becomes 11m19.323seconds if generateCSV is true for one example file.
   pcap_t *pcap_file;
   pcap_dumper_t *dumpfile;
   bool done = false;
@@ -102,13 +99,10 @@ int strip_macsec_vlan_frames(const EthernetTypes &ethernet_types, const std::str
   const int vlan_offset = 4;                                          // used to skip an extra 4 bytes of a frame to account for vlan
   int total_new_data_offset = macsec_offset_etype;
 
-  [[maybe_unused]] const int offset_to_data_ipv6 = ether_header_size + sizeof(struct ip6_hdr);
-
-  unsigned short int buffer_size = 1024 * 2; // 2m
+  unsigned int buffer_size = 1024 * 1024 * 2; // 2m
   u_char *newpkt_data = new u_char[buffer_size];
-  unsigned short int buffer_size = 1024;
-  struct pcap_pkthdr *newpkt_header = new pcap_pkthdr[buffer_size];
-  int *macsec_etype = new int[2];
+  struct pcap_pkthdr newpkt_header;
+  u_char macsec_etype[2];
 
   // Iterate over every packet in the file and print the MAC addresses
   while (!done)
@@ -186,73 +180,56 @@ int strip_macsec_vlan_frames(const EthernetTypes &ethernet_types, const std::str
       pcap_dump((u_char *)dumpfile, pkt_header, pkt_data);
       it++;
       continue;
-    }
-
-    // Check for type IP (0x800)
-    // This type is skipped for some types, but not others.
-    // Set the eth_types.txt file so that it does NOT indicate that
-    // this type has copies of the IP or MAC and rely on this check instead.
-    // The header follows the ether_header
-
-    if (ether_type_int == ETHERTYPE_MACSEC)
-    {
-      total_new_data_offset = macsec_offset_etype;
-      newpkt_header->ts = pkt_header->ts; // timeval will be the same
-      const u_char *macsec_etype_data_offset = (pkt_data + macsec_offset_etype);
-
-      if (pkt_header->len > buffer_size) // if frame size is bigger than buffer,
-      {
-        u_char *newpkt_data = new u_char[buffer_size];
-      }
-      
-      memcpy(macsec_etype, macsec_etype_data_offset, 2);
-      int macsec_etype_int = ntohs(macsec_etype);
-      if( == ETHERTYPE_VLAN)
-
-      // Checke packet length
-
-      // offset_to_search_data = offset_to_data_ipv4;
-
-      // So, what does an IPv4 header look like?
-      //  4-bits = [ip_v] Version, so 0100 for IPv4 (byte 0)
-      //  4-bits = [ip_hl] HELEN (header length)
-      //  8-bits = [ip_tos] Service Type            (byte 1)
-      // 16-bits = [ip_len] total Length            (byte 2) [Not used]
-      // 16-bits = [ip_id] Identification           (byte 4)
-      //  3-bits = Flags                            (byte 6)
-      // 13-bits = [lp_off] Fragmentation offset
-      //  8-bits = [ip_ttl] Time to live            (byte 8)
-      //  8-bits = [ip_p] Protocol                  (byte 9) (17=UDP, 6=TCP) source / destination port.
-      // 16-bits = [ip_sum] Header Checksum         (byte 10)
-      // 32-bits = [ip_src] Source IP Address       (byte 12)
-      // 32-bits = [ip_dst] Destination IP Address  (byte 16)
-      // Rest of the Data                           (byte 20)
-
-      //
-      // Note that ports are uint16_t stored in network byte order (big-endian)
-      // so they must be converted before use.
-      //
-
-      // Remember to ntohs
-      // before loop:
-      //.New packetheader*(struct pcap_pkthdr). sizeof(struct pcap_pkthdr)
-      // New newdata*. temp pointer
-      // allocate buffer. size? Verify each packet's size
-    }
-    else
-    {
-      if (verbose || test_flag)
+    } else if (ETHERTYPE_MACSEC != ether_type_int) {
+      if (verbose)
         std::cout << it << " has no MACSEC layer " << std::hex << ether_type_int << std::dec << std::endl;
-
-      // Check for valid Frame Check Sequence (FCS) as per the flow diagram.
-      // We ignore the FCS for now because we do not know if it will be available.
-      // As of 09/29/2022 it is assumed that we will not check for this.
-
       pcap_dump((u_char *)dumpfile, pkt_header, pkt_data);
       it++;
       continue;
     }
 
+    total_new_data_offset = macsec_offset_etype;
+    newpkt_header.ts = pkt_header->ts; // timeval will be the same
+    const u_char *macsec_etype_data_offset = (pkt_data + macsec_offset_etype);
+
+    if (pkt_header->len > buffer_size) // if frame size is bigger than buffer,
+    {
+      u_char *newpkt_data = new u_char[buffer_size];
+    }
+    
+    memcpy(macsec_etype, macsec_etype_data_offset, 2);
+    int macsec_etype_int = ntohs(macsec_etype);
+    if( == ETHERTYPE_VLAN)
+
+    // Checke packet length
+
+    // offset_to_search_data = offset_to_data_ipv4;
+
+    // So, what does an IPv4 header look like?
+    //  4-bits = [ip_v] Version, so 0100 for IPv4 (byte 0)
+    //  4-bits = [ip_hl] HELEN (header length)
+    //  8-bits = [ip_tos] Service Type            (byte 1)
+    // 16-bits = [ip_len] total Length            (byte 2) [Not used]
+    // 16-bits = [ip_id] Identification           (byte 4)
+    //  3-bits = Flags                            (byte 6)
+    // 13-bits = [lp_off] Fragmentation offset
+    //  8-bits = [ip_ttl] Time to live            (byte 8)
+    //  8-bits = [ip_p] Protocol                  (byte 9) (17=UDP, 6=TCP) source / destination port.
+    // 16-bits = [ip_sum] Header Checksum         (byte 10)
+    // 32-bits = [ip_src] Source IP Address       (byte 12)
+    // 32-bits = [ip_dst] Destination IP Address  (byte 16)
+    // Rest of the Data                           (byte 20)
+
+    //
+    // Note that ports are uint16_t stored in network byte order (big-endian)
+    // so they must be converted before use.
+    //
+
+    // Remember to ntohs
+    // before loop:
+    //.New packetheader*(struct pcap_pkthdr). sizeof(struct pcap_pkthdr)
+    // New newdata*. temp pointer
+    // allocate buffer. size? Verify each packet's size
     it++;
   }
 
