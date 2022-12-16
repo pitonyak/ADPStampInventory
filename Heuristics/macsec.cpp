@@ -95,7 +95,7 @@ int strip_macsec_vlan_frames(const EthernetTypes &ethernet_types, const std::str
   //const int ether_header_size = sizeof(struct ether_header);          // 14
   //const int ip_header_size = sizeof(struct ip);                       // 20
   //const int offset_to_data_ipv4 = ether_header_size + ip_header_size; // 34
-  const int macsec_offset_etype = 28;                                 // used to skip the first 28 bytes of a frame to check if there is vlan following it
+  const int macsec_offset_etype = 28;                                   // used to skip the first 28 bytes of a frame to check if there is vlan following it
   //const int vlan_offset = 4;                                          // used to skip an extra 4 bytes of a frame to account for vlan
   //int total_new_data_offset = macsec_offset_etype;
 
@@ -187,9 +187,9 @@ int strip_macsec_vlan_frames(const EthernetTypes &ethernet_types, const std::str
       continue;
     }
 
-    //total_new_data_offset = macsec_offset_etype;
+//    total_new_data_offset = macsec_offset_etype;
     newpkt_header.ts = pkt_header->ts; // timeval will be the same
-    // 16 bytes from the macsec header and 16 bytes from the IPV at the end.
+    // 16 bytes from the macsec header and 16 bytes from the ICV at the end.
     newpkt_header.caplen = pkt_header->caplen - 32;
     newpkt_header.len = pkt_header->len - 32;
 
@@ -200,10 +200,15 @@ int strip_macsec_vlan_frames(const EthernetTypes &ethernet_types, const std::str
       delete newpkt_data;
       newpkt_data = new u_char[buffer_size + 1];
     }
-    
+
+    memcpy(newpkt_data, pkt_data, 12);
     int macsec_etype_int = ntohs(*(uint16_t *)(pkt_data + macsec_offset_etype));
     if(macsec_etype_int == ETHERTYPE_VLAN) {
-      // Do something here!
+      newpkt_header.caplen = newpkt_header.caplen - 2;
+      newpkt_header.len = newpkt_header.len - 2;
+      memcpy(newpkt_data + 12, pkt_data + macsec_offset_etype + 4, newpkt_header.len - 12);
+    } else {
+      memcpy(newpkt_data + 12, pkt_data + macsec_offset_etype, newpkt_header.len - 12);
     }
 
     // Checke packet length
