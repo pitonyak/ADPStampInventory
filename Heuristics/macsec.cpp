@@ -100,7 +100,7 @@ int strip_macsec_vlan_frames(const EthernetTypes &ethernet_types, const std::str
   int total_new_data_offset = macsec_offset_etype;
 
   unsigned int buffer_size = 1024 * 1024 * 2; // 2m
-  u_char *newpkt_data = new u_char[buffer_size];
+  u_char *newpkt_data = new u_char[buffer_size + 1];
   struct pcap_pkthdr newpkt_header;
   u_char macsec_etype[2];
 
@@ -194,7 +194,12 @@ int strip_macsec_vlan_frames(const EthernetTypes &ethernet_types, const std::str
 
     if (pkt_header->len > buffer_size) // if frame size is bigger than buffer,
     {
-      u_char *newpkt_data = new u_char[buffer_size];
+      buffer_size = buffer_size * 2;
+      if (buffer_size < pkt_header->len) {
+        buffer_size = pkt_header->len + 2;
+      }
+      delete newpkt_data;
+      newpkt_data = new u_char[buffer_size + 1];
     }
     
     memcpy(macsec_etype, macsec_etype_data_offset, 2);
