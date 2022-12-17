@@ -1,52 +1,20 @@
 #include "process_pcap.h"
 
-#include <algorithm>
-#include <arpa/inet.h>
 #include <cstdint>
 #include <cstring>
 #include <ctime>
 #include <ctype.h>
 #include <fstream>
-#include <functional>
-#include <getopt.h>
 #include <iomanip>
 #include <iostream>
-#include <locale>
 #include <net/ethernet.h>  // ETHERTYPE_VLAN 0x8000
-#include <net/if_arp.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
-#include <netinet/ip6.h>
-#include <netinet/tcp.h>
-#include <netinet/udp.h>
-#include <set>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <unordered_map>
-#include <unordered_set>
-#include <vector>
 
 #include "crc32_x.h"
-#include "ethtype.h"
-#include "ipaddresses.h"
-#include "iptype.h"
-#include "macaddresses.h"
 #include "pcap.h"
 #include "utilities.h"
 #define ETHERTYPE_MACSEC 0x88e5 /* MACSEC */
-
-
-// The MAC and IP addresses in this file.
-MacAddresses mac_addresses;
-IpAddresses ip_addresses;
-MacAddresses dest_mac_to_ignore;
-std::string extra_name = "anomaly";
-std::string output_directory = "";
-static int test_flag;
 
 int strip_macsec_vlan_frames(const EthernetTypes &ethernet_types, const std::string &pcap_filename, std::string output_directory, std::string extra_heuristic_name, bool verbose, std::atomic_bool *abort_requested)
 {
@@ -169,7 +137,7 @@ int strip_macsec_vlan_frames(const EthernetTypes &ethernet_types, const std::str
 
     if (!ethernet_types.isValid(ether_type_int))
     {
-      if (verbose || test_flag)
+      if (verbose)
         std::cout << it << " has unexpected ether type " << std::hex << ether_type_int << std::dec << std::endl;
 
       // Check for valid Frame Check Sequence (FCS) as per the flow diagram.

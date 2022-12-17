@@ -71,8 +71,8 @@ $(info EXEFILES: $(EXEFILES))
 %.o: %.cpp %.d %.h
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
-heuristics: main.o utilities.o iptype.o crc32_x.o ethtype.o macaddresses.o ipaddresses.o bitsetdynamic.o MurmurHash3.o csvwriter.o process_pcap_mac_ip.o process_pcap_heuristic.o
-	$(CXX) $(CXXFLAGS) main.o utilities.o iptype.o crc32_x.o ethtype.o macaddresses.o ipaddresses.o ahocorasickbinary.o bitsetdynamic.o MurmurHash3.o csvwriter.o process_pcap_mac_ip.o process_pcap_heuristic.o -o heuristics $(LDFLAGS) $(LIBS)
+heuristics: main.o utilities.o iptype.o crc32_x.o ethtype.o macaddresses.o ipaddresses.o bitsetdynamic.o MurmurHash3.o csvwriter.o process_pcap_mac_ip.o process_pcap_heuristic.o macsec.o
+	$(CXX) $(CXXFLAGS) main.o utilities.o iptype.o crc32_x.o ethtype.o macaddresses.o ipaddresses.o ahocorasickbinary.o bitsetdynamic.o MurmurHash3.o csvwriter.o process_pcap_mac_ip.o process_pcap_heuristic.o macsec.o -o heuristics $(LDFLAGS) $(LIBS)
 
 find_macs_and_ips: find_macs_and_ips.o macaddresses.o ipaddresses.o utilities.o
 	$(CXX) $(CXXFLAGS) find_macs_and_ips.o macaddresses.o ipaddresses.o utilities.o MurmurHash3.o -o find_macs_and_ips $(LDFLAGS) $(LIBS)
