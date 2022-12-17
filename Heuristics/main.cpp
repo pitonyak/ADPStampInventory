@@ -33,6 +33,7 @@ void usage(){
   std::cout << "  --name <NAME> By default, file.pcap generates file.anomaly.pcap" << std::endl;
   std::cout << "            use --name bob to generate file.bob.pcap instead.  " << std::endl;
   std::cout << "  --ipmac Force creation of the IP and MAC files." << std::endl;
+  std::cout << "  --macsec Strip MACSEC and VLAN and place in a new PCAP." << std::endl;
   std::cout << std::endl;
   std::cout << "  -? Shortened version of --help" << std::endl;
   std::cout << "  -h Shortened version of --heuristic" << std::endl;
@@ -40,6 +41,7 @@ void usage(){
   std::cout << "  -c Shortened version of --csv" << std::endl;
   std::cout << "  -p Shortened version of --pcap" << std::endl;
   std::cout << "  -d Shortened version of --directory" << std::endl;
+  std::cout << "  -m Shortened version of --macsec" << std::endl;
   std::cout << "  -n Shortened version of --name" << std::endl;
   std::cout << std::endl;
   std::cout << "All filenames are generated, you cannot choose them." << std::endl;
@@ -68,6 +70,7 @@ int main(int argc, char **argv){
   bool create_anomaly_list = false;
   bool create_anomaly_csv  = false;
   bool create_mac_ip_file  = false;
+  bool remove_mac_sec = false;
   std::string pcap_filename = "";;
   int c;
   while (1) {
@@ -86,13 +89,14 @@ int main(int argc, char **argv){
       {"pcap",      required_argument, 0, 'p'},
       {"directory", required_argument, 0, 'd'},
       {"name",      required_argument, 0, 'n'},
+      {"macsec",    no_argument,       0, 'm'},
       {0, 0, 0, 0}
     };
 
     /* getopt_long stores the option index here. */
     int option_index = 0;
 
-    c = getopt_long (argc, argv, "?ihcp:d:n:", long_options, &option_index);
+    c = getopt_long (argc, argv, "?ihcp:d:n:m", long_options, &option_index);
 
     /* Detect the end of the options. */
     if (c == -1)
@@ -130,6 +134,10 @@ int main(int argc, char **argv){
 
       case 'd':
         output_directory = optarg ? optarg : "";
+        break;
+
+      case 'm':
+        remove_mac_sec = true;
         break;
 
       case 'n':
@@ -201,6 +209,10 @@ std::cout << "Check for unknown options." << std::endl;
   } else if (create_anomaly_list) {
     std::cout << "Creating Anomaly File" << std::endl;
     create_heuristic_anomaly_csv(dest_mac_to_ignore, mac_addresses, ip_addresses, ethernet_types, ip_types, pcap_filename, output_directory, extra_name, verbose_flag, create_anomaly_csv, abort_requested);
+  }
+
+  if (remove_mac_sec) {
+    strip_macsec_vlan_frames(ethernet_types, pcap_filename, output_directory, extra_name, verbose_flag, abort_requested);
   }
 
   return 0;
