@@ -36,6 +36,8 @@ int strip_macsec_vlan_frames(const EthernetTypes &ethernet_types, const std::str
   const struct ether_header *ether;
 
   int res = 1, it = 0;
+  int num_macsec = 0;
+  int num_vlan = 0;
 
   // Open the PCAP file!
   pcap_file = pcap_open_offline(pcap_filename.c_str(), pcap_errbuf);
@@ -57,8 +59,6 @@ int strip_macsec_vlan_frames(const EthernetTypes &ethernet_types, const std::str
     fprintf(stderr, "\nError opening output file\n");
     return -1;
   }
-
-  // ??? NOT USED bool has_header = false;
 
   //const int ether_header_size = sizeof(struct ether_header);          // 14
   //const int ip_header_size = sizeof(struct ip);                       // 20
@@ -155,6 +155,8 @@ int strip_macsec_vlan_frames(const EthernetTypes &ethernet_types, const std::str
       continue;
     }
 
+    ++num_macsec;
+
 //    total_new_data_offset = macsec_offset_etype;
     newpkt_header.ts = pkt_header->ts; // timeval will be the same
     // 16 bytes from the macsec header and 16 bytes from the ICV at the end.
@@ -172,6 +174,7 @@ int strip_macsec_vlan_frames(const EthernetTypes &ethernet_types, const std::str
     memcpy(newpkt_data, pkt_data, 12);
     int macsec_etype_int = ntohs(*(uint16_t *)(pkt_data + macsec_offset_etype));
     if(macsec_etype_int == ETHERTYPE_VLAN) {
+      ++num_vlan;
       newpkt_header.caplen = newpkt_header.caplen - 4;
       newpkt_header.len = newpkt_header.len - 4;
       memcpy(newpkt_data + 12, pkt_data + macsec_offset_etype + 4, newpkt_header.len - 12);
@@ -186,7 +189,7 @@ int strip_macsec_vlan_frames(const EthernetTypes &ethernet_types, const std::str
   delete[] newpkt_data;
   pcap_close(pcap_file);
   pcap_dump_close(dumpfile);
-  std::cerr << "Examined " << it << " packets" << std::endl;
+  std::cerr << "Examined " << it << " packets. Number with MACSEC:" << num_macsec << " Number with VLAN:" << num_vlan << std::endl;
 
   return 0;
 }

@@ -18,11 +18,17 @@
  * 
  * @see read_create_mac_ip_files()
  * 
+ * \param [out] mac_addresses This will contain the MAC addresses contained in the PCAP file.
+ * 
+ * \param [out] ip_addresses This will contain the MAC addresses contained in the PCAP file.
+ * 
  * \param [in] pcap_filename Full path to the input PCAP file
  * 
- * \param [in] out_mac_fname Filename for the MACs.
+ * \param [in] out_mac_fname Full path to the file that will contain the MAC addresses.
  * 
- * \param [in] out_ip_fname Filename for the IPs
+ * \param [in] out_ip_fname Full path to the file that will contain the IP addresses.
+ * 
+ * \param [in] abort_requested If not nullptr, then used to ask a thread to cancel processing.
  * 
  * \returns 0 on no error, not very useful at this time.
  *
@@ -45,8 +51,18 @@ int write_ip_and_mac_from_pcap(MacAddresses& mac_addresses, IpAddresses& ip_addr
  * On exit, ip_addresses and mac_addresses are populated with
  * the IP and MAC addresses in the file.
  * 
- * \param [in] pcap_filename - Filename of the PCAP file.
+ * \param [out] mac_addresses This will contain the MAC addresses contained in the PCAP file.
+ * 
+ * \param [out] ip_addresses This will contain the MAC addresses contained in the PCAP file.
+ * 
+ * \param [in] pcap_filename Filename of the PCAP file.
  *
+ * \param [in] output_directory Directory that will (or does) contain the MAC and IP files. If empty, stored in the same directory as the PCAP file.
+ *
+ * \param [in] extra_heuristic_name May be used in creating the filenames used for the MAC and IP addresses.
+ *
+ * \param [in] abort_requested If not nullptr, then used to ask a thread to cancel processing.
+ * 
  ***************************************************************************///
 void read_create_mac_ip_files(MacAddresses& mac_addresses, IpAddresses& ip_addresses, const std::string& pcap_filename, std::string output_directory, std::string extra_heuristic_name, std::atomic_bool* abort_requested);
 
@@ -61,21 +77,54 @@ void read_create_mac_ip_files(MacAddresses& mac_addresses, IpAddresses& ip_addre
  * On exit, ip_addresses and mac_addresses will be populated with
  * all of the IP and MAC addresses in the file.
  * 
- * \param [in] ethernet_types
+ * \param [in] dest_mac_to_ignore All traffic to this MAC address is ignored while creating the anomaly file.
  *
- * \param [in] ip_types
+ * \param [out] mac_addresses This will contain the MAC addresses contained in the PCAP file. If the file already exist, it is simply read.
+ * 
+ * \param [out] ip_addresses This will contain the MAC addresses contained in the PCAP file. If the file already exist, it is simply read.
+ * 
+ * \param [in] ethernet_types Contains the list of Ethernet Types, are they valid, are other MAC or IP addresses expected in the payload.
  *
- * \param [in] pcap_filename - Filename of the PCAP file.
+ * \param [in] ip_types Contains the list of IP Types and ports, are they valid, are other MAC or IP addresses expected in the payload.
  *
- * \param [in] verbose
+ * \param [in] pcap_filename Filename of the PCAP file.
+ *
+ * \param [in] output_directory Directory that will (or does) contain the MAC and IP files. If empty, stored in the same directory as the PCAP file.
+ *
+ * \param [in] extra_heuristic_name May be used in creating the filenames used for the MAC and IP addresses.
+ *
+ * \param [in] verbose Should information be printed while processing a file.
  *
  * \param [in] generateCSV If True, generate a CSV file, otherwise do not create a CSV file.
  *
+ * \param [in] abort_requested If not nullptr, then used to ask a thread to cancel processing.
+ * 
  * \returns 0 on no error, -1 otherwise.
  * 
  ***************************************************************************///
 int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses& mac_addresses, IpAddresses& ip_addresses, const EthernetTypes& ethernet_types, const IPTypes& ip_types, const std::string& pcap_filename, std::string output_directory, std::string extra_heuristic_name, bool verbose, bool generateCSV, std::atomic_bool* abort_requested);
 
+//**************************************************************************
+//! Copy the PCAP file removing MACSEC and VLAN headers / trailers from the PCAP.
+/*!
+ * 
+ * \param [in] ethernet_types Contains the list of Ethernet Types, are they valid, are other MAC or IP addresses expected in the payload. This is not really needed but we use it anyway.
+ *
+ * \param [in] ip_types Contains the list of IP Types and ports, are they valid, are other MAC or IP addresses expected in the payload.
+ *
+ * \param [in] pcap_filename Filename of the PCAP file.
+ *
+ * \param [in] output_directory Directory that will (or does) contain the MAC and IP files. If empty, stored in the same directory as the PCAP file.
+ *
+ * \param [in] extra_heuristic_name May be used in creating the filenames used for the MAC and IP addresses.
+ *
+ * \param [in] verbose Should information be printed while processing a file.
+ *
+ * \param [in] abort_requested If not nullptr, then used to ask a thread to cancel processing.
+ * 
+ * \returns 0 on no error, -1 otherwise.
+ * 
+ ***************************************************************************///
 int strip_macsec_vlan_frames(const EthernetTypes &ethernet_types, const std::string &pcap_filename, std::string output_directory, std::string extra_heuristic_name, bool verbose, std::atomic_bool *abort_requested);
 
 #endif
