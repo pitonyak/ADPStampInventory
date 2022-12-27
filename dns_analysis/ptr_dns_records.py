@@ -16,6 +16,7 @@ def main():
     caps = PcapNgReader(file_name)
     out_file = args.output
     output = []
+    counts = {}
 
     for packet in caps:
         if not packet.haslayer("DNS"):
@@ -26,13 +27,16 @@ def main():
             query_name = query_name.split(".")
             output_address = query_name[3] + "." +  query_name[2] + "." + query_name[1] + "." + query_name[0]
             if output_address in output:
-                continue
+                current = counts[output_address]
+                updated = current + 1
+                counts[output_address] = updated
             else:
                 output.append(output_address)
+                counts[output_address] = 1
     idx = len(output)
     with open (out_file, "w") as f:
         for i in range(0, idx):
-            f.write(output[i] + "\n")
+            f.write(output[i] + "," + str(counts[output[i]]) + "\n")
 
 
 if __name__ == '__main__':
