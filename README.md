@@ -7,6 +7,7 @@ The base files (by name) are as follows: <br/>
 | file / directory  | Description  |
 |-------------------|--------------|
 | ciscot7.py        | Decrypt insecure (password 7) Cisco passwords. |
+| dns_analysis      | Directory containing DNS Analysis code. |
 | encrypted.py      | Test randomness primarily aimed at the ESP layer using IP protocol number 50. There is a sample output file sample_encrypted.csv and a test program test_encrypted.py. |
 | Find_MAC_IP       | Original program to find MAC and IP files. Deprecated, use the Heuristics project. |
 | Heuristics        | Finds known exploits by examinging PCAP files. |
