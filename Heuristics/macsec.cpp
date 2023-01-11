@@ -16,6 +16,8 @@
 #include "utilities.h"
 #define ETHERTYPE_MACSEC 0x88e5 /* MACSEC */
 
+// This code generates a new PCAP file with MACSEC and VLAN frames removed.
+
 int strip_macsec_vlan_frames(const EthernetTypes &ethernet_types, const std::string &pcap_filename, std::string output_directory, std::string extra_heuristic_name, bool verbose, std::atomic_bool *abort_requested)
 {
   std::string anomaly_fname = getHeuristicFileName(pcap_filename, Anomaly_Type, output_directory, extra_heuristic_name);
@@ -105,17 +107,6 @@ int strip_macsec_vlan_frames(const EthernetTypes &ethernet_types, const std::str
     {
       fprintf(stderr, "Error reading packet. Iteration %d\n", it);
       continue;
-    }
-
-    // The only purpose for this code is to show what is in the packet header
-    if (verbose && it < 10)
-    {
-      time_t ttime = pkt_header->ts.tv_sec;
-      tm *local_time = localtime(&ttime);
-      std::cout << "index " << it << " caplen:" << pkt_header->caplen << " len:" << pkt_header->len << " ts:" << pkt_header->ts.tv_sec << "." << pkt_header->ts.tv_usec;
-      std::cout << " Time: " << 1 + local_time->tm_hour << ":";
-      std::cout << 1 + local_time->tm_min << ":";
-      std::cout << 1 + local_time->tm_sec << "." << pkt_header->ts.tv_usec << " " << 1 + local_time->tm_mon << "/" << local_time->tm_mday << "/" << 1900 + local_time->tm_year << std::endl;
     }
 
     // The packet data begins with the Ethernet header, so if we cast to that:
