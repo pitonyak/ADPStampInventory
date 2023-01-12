@@ -12,6 +12,18 @@
 
 class HeuristicThread;
 
+//**************************************************************************
+//! Encapsulate a pool of threads, so you create one of these rather than individual threads.
+/*!
+ * 
+ * Encapsulate a pool of threads.
+ * 
+ * 
+ * 
+ *
+ ***************************************************************************/
+
+
 class HeuristicThreadPool
 {
 public:
@@ -61,17 +73,32 @@ public:
     //! Set the output directory in this object and every thread.
     /*!
      * 
-     * \param [in] output_directory - Where output files are stored.
+     * \param [in] output_directory - Where output files are stored. Sets for all threads.
      * 
      ***************************************************************************/
     void setOutputDirectory(const std::string& output_directory);
 
+    //**************************************************************************
+    //! Set the Extra Heuristic Name in this object and every thread.
+    /*!
+     * 
+     * \param [in] name - May be used in creating the filenames used for the MAC and IP addresses.
+     * 
+     ***************************************************************************/
     void setExtraHeuristicName(const std::string& name);
 
+    //**************************************************************************
+    //! Setup to process every PCAP in a directory.
+    /*!
+     * 
+     * \param [in] dir_path Directory to process
+     * 
+     * \param [in] spec File Spec or Regular expression used to match files to be processed.
+     * 
+     * \param [in] isRegEx if True, the spec is treated as a regular expression rather than a file spec.
+     * 
+     ***************************************************************************/
     void processDirectory(std::string dir_path, std::string spec="*.pcap", bool isRegEx=false);
-
-
-
 private:
     //**************************************************************************
     //! Copy Constructor.
@@ -105,12 +132,29 @@ private:
 
     int m_num_threads;
     std::string m_output_directory;
+
+    // List of threads.
     std::vector<HeuristicThread*> m_threads;
+
+    // Thread numbers are stored in m_waiting_threads when they are NOT running.
+    // You can choose a thread to run by pulling a thread from here. 
+    // Use the m_pcap_name_mutex before accessing this object.
     std::set<int> m_waiting_threads;
+
+    // Number of threads running.
     std::atomic_int m_num_running;
+
+    // If true, then abort has been requested.
     std::atomic_bool m_abort_requested;
 
+    // Mutex used to control access 
+    // to m_pcap_name and m_waiting_threads.
     std::recursive_mutex m_pcap_name_mutex;
+
+    // List of PCAP file names to be processed.
+    // When a thread finishes, it will pull the next
+    // file in the list to process. 
+    // Use the m_pcap_name_mutex before accessing this object.
     std::queue<std::string> m_pcap_name;
 };
 

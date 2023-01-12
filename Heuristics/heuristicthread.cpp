@@ -31,8 +31,7 @@ HeuristicThread::HeuristicThread(int thread_id, std::string output_directory, bo
     m_ip_types.readProtocolPorts("ip_protocol_ports.txt");
 
     m_ethernet_types.read("eth_types.txt");
-    m_dest_mac_to_ignore.read_file("dest_mac_to_ignore");
-
+    m_dest_mac_to_ignore.read_file("destination_macs.txt");
 }
 
 HeuristicThread::~HeuristicThread()
