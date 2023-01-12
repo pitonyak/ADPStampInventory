@@ -488,10 +488,12 @@ struct CustomHash_bin16
  * 
  * \param [in] fileType What type of file?
  * 
+ * \param [in] index add an index counter as part of the file name. -1 means no index.
+ * 
  * \returns A filename based on what the file is.
  *
  ***************************************************************************/
-std::string getHeuristicFileName(const std::string& pcap_filename, FileTypeEnum fileType, const std::string& output_directory, const std::string& extra_heuristic_name);
+std::string getHeuristicFileName(const std::string& pcap_filename, FileTypeEnum fileType, const std::string& output_directory, const std::string& extra_heuristic_name, int index=-1);
 
 //**************************************************************************
 //! Generate a vector of length n with constant values. This is used for the AHO Corasick algorithm.

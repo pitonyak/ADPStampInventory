@@ -895,6 +895,91 @@ int test_replace_all() {
 }
 
 
+int test_getHeuristicFileName() {
+  int num_failed = 0;
+  int num_passed = 0;
+
+  FileTypeEnum file_types[] = { IP_Type, MAC_Type, CSV_Type, Heuristic_Type, Anomaly_Type };
+  std::string pcap_filename = "bob.pcap";
+  //FileTypeEnum fileType, 
+  std::string output_directory = "out";
+  const std::string extra_heuristic_name = "extra";
+  int index=-1;
+  int output_idx = 0;
+
+  const char* output_names[] = { 
+    "out/bob.ip.txt", "out/bob.mac.txt", "out/bob.pcap.csv", "out/bob.extra.pcap", "out/bob.extra.pcap",
+    "bob.ip.txt", "bob.mac.txt", "bob.pcap.csv", "bob.extra.pcap", "bob.extra.pcap",
+    "bob.000.ip.txt", "bob.000.mac.txt", "bob.000.pcap.csv", "bob.000.extra.pcap", "bob.000.extra.pcap",
+    "bob.017.ip.txt", "bob.017.mac.txt", "bob.017.pcap.csv", "bob.017.extra.pcap", "bob.017.extra.pcap",
+    "bob.2345.ip.txt", "bob.2345.mac.txt", "bob.2345.pcap.csv", "bob.2345.extra.pcap", "bob.2345.extra.pcap",
+  };
+
+  std::string expected_name;
+  std::string name;
+  for (long unsigned int i=0; i<sizeof(file_types)/sizeof(*file_types); ++i) {
+    name = getHeuristicFileName(pcap_filename, file_types[i], output_directory, extra_heuristic_name, index);
+    expected_name = output_names[output_idx++];
+    if (name == expected_name) {
+      ++num_passed;
+    } else {
+      ++num_failed;
+      std::cout << "Expected (" << expected_name << ") not (" << name << ")" << std::endl;
+    }
+  }
+  output_directory = "";
+  for (long unsigned int i=0; i<sizeof(file_types)/sizeof(*file_types); ++i) {
+    name = getHeuristicFileName(pcap_filename, file_types[i], output_directory, extra_heuristic_name, index);
+    expected_name = output_names[output_idx++];
+    if (name == expected_name) {
+      ++num_passed;
+    } else {
+      ++num_failed;
+      std::cout << "Expected (" << expected_name << ") not (" << name << ")" << std::endl;
+    }
+  }
+
+  index = 0;
+  for (long unsigned int i=0; i<sizeof(file_types)/sizeof(*file_types); ++i) {
+    name = getHeuristicFileName(pcap_filename, file_types[i], output_directory, extra_heuristic_name, index);
+    expected_name = output_names[output_idx++];
+    if (name == expected_name) {
+      ++num_passed;
+    } else {
+      ++num_failed;
+      std::cout << "Expected (" << expected_name << ") not (" << name << ")" << std::endl;
+    }
+  }
+
+  index = 17;
+  for (long unsigned int i=0; i<sizeof(file_types)/sizeof(*file_types); ++i) {
+    name = getHeuristicFileName(pcap_filename, file_types[i], output_directory, extra_heuristic_name, index);
+    expected_name = output_names[output_idx++];
+    if (name == expected_name) {
+      ++num_passed;
+    } else {
+      ++num_failed;
+      std::cout << "Expected (" << expected_name << ") not (" << name << ")" << std::endl;
+    }
+  }
+
+  index = 2345;
+  for (long unsigned int i=0; i<sizeof(file_types)/sizeof(*file_types); ++i) {
+    name = getHeuristicFileName(pcap_filename, file_types[i], output_directory, extra_heuristic_name, index);
+    expected_name = output_names[output_idx++];
+    if (name == expected_name) {
+      ++num_passed;
+    } else {
+      ++num_failed;
+      std::cout << "Expected (" << expected_name << ") not (" << name << ")" << std::endl;
+    }
+  }
+
+  print_results(num_passed, num_failed, "getHeuristicFileName");
+  return num_failed;
+}
+
+
 int main(int , char **) {
   std::cout << std::endl;
   int num_failed = 0;
@@ -909,6 +994,7 @@ int main(int , char **) {
   num_failed += test_file_dir_exists();
   num_failed += test_replace_all();
   num_failed += test_csv_writer();
+  num_failed += test_getHeuristicFileName();
 
   struct ip ipHeader;
   ipHeader.ip_p = 6;

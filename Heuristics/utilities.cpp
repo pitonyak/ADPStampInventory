@@ -583,30 +583,52 @@ bool is_bin16_equal(const uint8_t *left, const uint8_t *right) {
   return (*left_1 == *right_1) && (*left_2 == *right_2);
 }
 
-std::string getHeuristicFileName(const std::string& pcap_filename, FileTypeEnum fileType, const std::string& output_directory, const std::string& extra_heuristic_name) {
+std::string getHeuristicFileName(const std::string& pcap_filename, FileTypeEnum fileType, const std::string& output_directory, const std::string& extra_heuristic_name, int index) {
   std::string return_filename = output_directory;
   std::string pcap_extension = getFileExtension(pcap_filename);
   std::string base_filename_with_extension = getFilename(pcap_filename);
-  std::string base_filename_no_extension = base_filename_with_extension.substr(0, base_filename_with_extension.size() - pcap_extension.size() + 1);
+
+  // Add "+1" to include trailing period
+  std::string base_filename_no_extension = base_filename_with_extension.substr(0, base_filename_with_extension.size() - pcap_extension.size());
   std::string forward_slash = "/";
 
   if (!return_filename.empty() && !hasEnding(return_filename, forward_slash, false)) {
     return_filename.append(forward_slash);
   }
 
+  std::string index_str = ".";
+
+  if (index >= 0) {
+    // A string stream can do this, but, some implementations
+    // such as visual studio uses local locks around locale information.
+    //#include <sstream>
+    //#include <iomanip>
+    //std::stringstream ss;
+    //ss << std::setw(10) << std::setfill('0') << index;
+    //std::string s = ss.s
+    // In C++20, just use std::format
+    char buffer[25];
+    sprintf(buffer, "%03d", index);
+    index_str.append(buffer);
+    if (fileType != CSV_Type) 
+      index_str.append(".");
+  } else if (fileType == CSV_Type) {
+    index_str = "";
+  }
+
   switch(fileType) {
   case IP_Type      :
-    return_filename.append(base_filename_no_extension).append("ip.txt");
+    return_filename.append(base_filename_no_extension).append(index_str).append("ip.txt");
     break;
   case MAC_Type     :
-    return_filename.append(base_filename_no_extension).append("mac.txt");
+    return_filename.append(base_filename_no_extension).append(index_str).append("mac.txt");
     break;
   case CSV_Type     :
-    return_filename.append(base_filename_with_extension).append(".csv");
+    return_filename.append(base_filename_no_extension).append(index_str).append(pcap_extension).append(".csv");
     break;
   case Anomaly_Type :
   case Heuristic_Type :
-    return_filename.append(base_filename_no_extension).append(extra_heuristic_name).append(pcap_extension);
+    return_filename.append(base_filename_no_extension).append(index_str).append(extra_heuristic_name).append(pcap_extension);
     break;
   }
   return return_filename;
