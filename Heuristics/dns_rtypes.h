@@ -1,3 +1,7 @@
+
+// See dns_LICENSE file
+// Original code from: https://github.com/pflarr/dns_parse
+
 #ifndef __RTYPES_H__
 #define __RTYPES_H__
 

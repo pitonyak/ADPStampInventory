@@ -1,3 +1,7 @@
+
+// See dns_LICENSE file
+// Original code from: https://github.com/pflarr/dns_parse
+
 #include "dns_parse.h"
 #include "dns_network.h"
 

@@ -1,3 +1,7 @@
+
+// See dns_LICENSE file
+// Original code from: https://github.com/pflarr/dns_parse
+
 // Structs and defines common to most of DNS parse.
 
 #ifndef __DP_MAIN

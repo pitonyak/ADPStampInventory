@@ -1,0 +1,39 @@
+The dns_parse code was originally taken from the following github repository
+
+https://github.com/pflarr/dns_parse
+
+This is the original license associated to the code:
+
+This software has been authored by an employee or employees of Los
+Alamos National Security, LLC, operator of the Los Alamos National
+Laboratory (LANL) under Contract No. DE-AC52-06NA25396 with the
+U.S.  Department of Energy.  The U.S. Government has rights to use,
+reproduce, and distribute this software.  The public may copy,
+distribute, prepare derivative works and publicly display this
+software without charge, provided that this Notice and any
+statement of authorship are reproduced on all copies.  Neither the
+Government nor LANS makes any warranty, express or implied, or
+assumes any liability or responsibility for the use of this
+software.  If software is modified to produce derivative works,
+such modified software should be clearly marked, so as not to
+confuse it with the version available from LANL.
+
+
+-- SUPPORTED PROTOCOLS --
+Ethernet
+MPLS
+IPv4 (including fragment reassembly)
+IPv6 (including fragment reassembly)
+UDP
+TCP (with flow state saving and loading between pcaps)
+DNS (on any port)
+
+-- AUTHOR INFO --
+Paul Ferrell
+pferrell@lanl.gov
+
+Filenames were changed to all start with dns_ to set them apart from other code. 
+
+Initial changes were to allow the code to compile using C++ rather than just C.
+More changes will be made to allow for the creation of a CSV file (or similar)
+showing the desired outputs for our usage. 
