@@ -3,6 +3,7 @@
 #ifndef __DP_MAIN
 #define __DP_MAIN
 
+#include <string>
 #include <pcap.h>
 // For standard int type declarations.
 #include <stdint.h>
@@ -49,7 +50,7 @@ typedef struct {
     uint16_t EXCLUDED[MAX_EXCLUDES];
     uint16_t EXCLUDES;
     char SEP;
-    char * RECORD_SEP;
+    std::string RECORD_SEP;
     int AD_ENABLED;
     int NS_ENABLED;
     int datalink;
@@ -57,7 +58,7 @@ typedef struct {
     int PRETTY_DATE;
     int PRINT_RR_NAME;
     int MISSING_TYPE_WARNINGS;
-    char * TCP_STATE_PATH;
+    std::string TCP_STATE_PATH;
     uint32_t DEDUPS;
     struct tcp_info * tcp_sessions_head;
     struct ip_fragment * ip_fragment_head;
@@ -105,8 +106,8 @@ typedef struct {
 } dns_info;
 
 // Including these earlier leads to all sorts of circular dependencies.
-#include "tcp.h"
-#include "network.h"
+#include "dns_tcp.h"
+#include "dns_network.h"
 
 #define FORCE 1
 

@@ -27,7 +27,7 @@ CFLAGS:=-O3 -fPIC
 #CXXFLAGS:=-O3 -fPIC -std=c++17
 #CXXFLAGS:=-O3 -fPIC -std=c++17 -Werror -Wall -Wextra -fsanitize=undefined,address -fno-sanitize=alignment
 CXXFLAGS:=-O3 -fPIC -std=c++17 -Werror -Wall -Wextra 
-INCLUDE:=-I/work1/home/emeneker/local_build/install/libpcap/1.9.1/include
+#INCLUDE:=-I/work1/home/emeneker/local_build/install/libpcap/1.9.1/include
 LIBS:=-lpcap
 
 # So clean is always considered out of date.
@@ -46,7 +46,7 @@ SOURCES:=$(patsubst ./%,%,$(SOURCES))
 #These are the dependency files, which make will clean up after it creates them
 DEPFILES:=$(patsubst %.cpp,%.d,$(SOURCES))
 OBJFILES:=$(patsubst %.cpp,%.o,$(SOURCES))
-EXEFILES:=heuristics find_macs_and_ips crc_test utilities_test print_ethertypes
+EXEFILES:=heuristics find_macs_and_ips crc_test utilities_test print_ethertypes dns_parse
 
 # I can avoid this by listing the DEPFILES as part of all.
 #Don't create dependencies when we're cleaning, for instance
@@ -85,6 +85,9 @@ crc_test: crc_test.o crc32_x.o
 
 print_ethertypes: print_ethertypes.o ethtype.o utilities.o 
 	$(CXX) $(CXXFLAGS) print_ethertypes.o utilities.o ethtype.o -o print_ethertypes $(LDFLAGS) $(LIBS)
+
+dns_parse: dns_tcp.o dns_network.o dns_rtypes.o dns_strutils.o dns_parse.o
+	$(CXX) $(CXXFLAGS) dns_tcp.o dns_network.o dns_rtypes.o dns_strutils.o dns_parse.o -o dns_parse $(LDFLAGS) $(LIBS)
 
 clean:
 	rm -f $(DEPFILES) $(OBJFILES) $(EXEFILES)
