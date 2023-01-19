@@ -46,7 +46,7 @@ def main():
                 if query_type == 12:
                     rr_name = rr_name.split(".")
                     rr_name = rr_name[3] + "." + rr_name[2] + "." + rr_name[1] + "." + rr_name[0] 
-                temp_output = (rr_name, r_data, ttl)
+                temp_output = (rr_name, r_data, query_type, ttl)
                 if temp_output in answer_output:
                     count = answer_output[temp_output]
                     count += 1
@@ -64,12 +64,13 @@ def main():
     answer_keys = list(answer_output.keys())
     idx = len(answer_keys)
     with open(answers_out_file, "w") as f:
-        f.write("RR_Name,RData,TTL,Count,Host_List\n")
+        f.write("RR_Name,RData,TTL,Query_Type,Count,Host_List\n")
         for i in range(0, idx):
             count = answer_output[answer_keys[i]]
             f.write(str(answer_keys[i][0]) + ",")
             f.write(str(answer_keys[i][1]) + ",")
             f.write(str(answer_keys[i][2]) + ",")
+            f.write(str(answer_keys[i][3]) + ",")
             f.write(str(count) + ",")
             host_list = str(answer_hosts[answer_keys[i]])
             f.write(host_list + "\n")
