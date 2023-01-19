@@ -64,7 +64,7 @@ def main():
     answer_keys = list(answer_output.keys())
     idx = len(answer_keys)
     with open(answers_out_file, "w") as f:
-        f.write("RR_Name,RData,TTL,Query_Type,Count,Host_List\n")
+        f.write("RR_Name,RData,Query_Type,TTL,Count,Host_List\n")
         for i in range(0, idx):
             count = answer_output[answer_keys[i]]
             f.write(str(answer_keys[i][0]) + ",")
