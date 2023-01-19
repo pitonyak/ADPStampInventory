@@ -16,8 +16,45 @@
 #include "utilities.h"
 
 
+void print_csv_row(std::unique_ptr<CSVWriter>& csv, bool& wrote_csv_header, int output_row, 
+  const std::string& ip_str_source, const std::string& ip_str_dest, 
+  int num_ip_found_unique, int num_mac_found_unique,
+  int num_ip_found_total, int num_mac_found_total)
+{
+  if (csv == nullptr) {
+    return;
+  }
+  if (!wrote_csv_header) {
+      std::vector<std::string> heading;
+      heading.push_back("Frame Number");
+      heading.push_back("Source IP");
+      heading.push_back("Destination IP");
+      heading.push_back("Unique IP Matches");
+      heading.push_back("Unique MAC Matches");
+      heading.push_back("Total IP Matches");
+      heading.push_back("Total MAC Matches");
+      *csv << heading;
+      csv->endRow();
+      wrote_csv_header = true;
+  }
+  *csv << output_row
+      << ip_str_source
+      << ip_str_dest
+      << num_ip_found_unique
+      << num_mac_found_unique
+      << num_ip_found_total
+      << num_mac_found_total;
+  csv->endRow();
+}
 
 int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses& mac_addresses, IpAddresses& ip_addresses, const EthernetTypes& ethernet_types, const IPTypes& ip_types, const std::string& pcap_filename, std::string output_directory, std::string extra_heuristic_name, bool verbose, bool generateCSV, std::atomic_bool* abort_requested) {
+
+  // If set to 0, then finding anything causes the packet to be
+  // saved. If either of these are greater than zero then
+  // both must match.
+  int min_ip_matches  = 0;
+  int min_mac_matches = 0;
+
   std::string csv_fname = getHeuristicFileName(pcap_filename, CSV_Type, output_directory, extra_heuristic_name);
   std::string anomaly_fname = getHeuristicFileName(pcap_filename, Anomaly_Type, output_directory, extra_heuristic_name);
   read_create_mac_ip_files(mac_addresses, ip_addresses, pcap_filename, output_directory, extra_heuristic_name, abort_requested);
@@ -64,7 +101,6 @@ int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses&
   // uint32_t len (length of this packet off wire)
   struct pcap_pkthdr *pkt_header;
   const u_char *pkt_data;
-
   const struct ether_header *ether;
 
   int res=1, it=0;
@@ -89,24 +125,13 @@ int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses&
     return -1;
   }
 
-  std::vector<std::string> heading;
-  if (generateCSV) {
-    heading.push_back("Frame Number");
-    heading.push_back("Source IP");
-    heading.push_back("Destination IP");
-    heading.push_back("Unique IP Matches");
-    heading.push_back("Unique MAC Matches");
-    heading.push_back("Total IP Matches");
-    heading.push_back("Total MAC Matches");
-  }
-
   std::unique_ptr<CSVWriter> csv(generateCSV ? new CSVWriter(csv_fname) : nullptr);
   // CSV Numbering now starts with record 1 rather than 0, which
   // matches the frame numbering used in Wireshark, which is
   // one based rather than zero-based.
   int output_row = 1;
-  bool has_header = false;
-  bool may_have_dup = false;
+  bool wrote_csv_header = false;
+  bool may_contain_dup_data = false;
 
   const int ether_header_size = sizeof(struct ether_header); // 14
   const int ip_header_size = sizeof(struct ip); // 20
@@ -115,8 +140,6 @@ int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses&
   const int offset_to_data_ipv4 = ether_header_size + ip_header_size; // 34
   //const int offset_to_data_tcpv4 = offset_to_data_ipv4 + tcphdr_size;
   //const int offset_to_data_udpv4 = offset_to_data_ipv4 + udphdr_size;
-
-  //int offset_to_search_data;
 
   [[maybe_unused]] const int offset_to_data_ipv6 = ether_header_size + sizeof(struct ip6_hdr);
 
@@ -196,12 +219,16 @@ int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses&
       // Check for valid Frame Check Sequence (FCS) as per the flow diagram.
       // We ignore the FCS for now because we do not know if it will be available.
       // As of 09/29/2022 it is assumed that we will not check for this.
-
       pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
-      it++;
+      ++it;
       ++output_row;
       continue;
     }
+
+    num_ip_found_unique = 0;
+    num_mac_found_unique = 0;
+    num_ip_found_total = 0;
+    num_mac_found_total = 0;
 
     // Check for type IP (0x800)
     // This type is skipped for some types, but not others.
@@ -212,13 +239,10 @@ int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses&
     int tcp_source_port = -1;
     int ip_p = -1;
     std::string proto = "Unknown";
-    std::string ip_str_source;
-    std::string ip_str_dest;
     if (ether_type_int == ETHERTYPE_IP) {
 
       const struct ip* ipHeader;
       ipHeader = (struct ip*)(pkt_data + ether_header_size);
-      //offset_to_search_data = offset_to_data_ipv4;
 
       // So, what does an IPv4 header look like? 
       //  4-bits = [ip_v] Version, so 0100 for IPv4 (byte 0)
@@ -253,7 +277,6 @@ int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses&
         tcp_destination_port = ntohs(tcp_header->th_dport);
         tcp_source_port = ntohs(tcp_header->th_sport);
         proto = "TCP";
-        //offset_to_search_data = offset_to_data_tcpv4;
 
       } else if (ip_p == static_cast<int>(IPPROTO_UDP)) {
 
@@ -266,50 +289,61 @@ int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses&
         tcp_destination_port = ntohs(udp_header->uh_dport);
         tcp_source_port = ntohs(udp_header->uh_sport);
         proto = "UDP";
-        //offset_to_search_data = offset_to_data_udpv4;
       }
 
       // If we get here then we can search for duplicates.
       // Look AFTER the IP header for dupliate IP.
 
       // Search to see if a MAC is repeated.
-      may_have_dup = ip_types.isDupMAC(ip_p, tcp_destination_port) || (tcp_destination_port != tcp_source_port && ip_types.isDupMAC(ip_p, tcp_source_port));
-      //std::cout << "May MAC Dup: " << may_have_dup << " proto:" << (int) ipHeader->ip_p << " source:" << tcp_source_port << " dest:" << tcp_destination_port << std::endl;
-      if (!may_have_dup) {
+      may_contain_dup_data = ip_types.isDupMAC(ip_p, tcp_destination_port) || (tcp_destination_port != tcp_source_port && ip_types.isDupMAC(ip_p, tcp_source_port));
+      //std::cout << "May MAC Dup: " << may_contain_dup_data << " proto:" << (int) ipHeader->ip_p << " source:" << tcp_source_port << " dest:" << tcp_destination_port << std::endl;
+
+      if (!may_contain_dup_data) {
         //
-        // The 12 has us search from immediately AFTER the MAC addresses in the
+        // An offset of 12 searches immediately AFTER the MAC addresses in the
         // Ether header. Might be faster to search AFTER the data.
         //
         uint32_t search_len = pkt_header->len - 12;
         const uint8_t* data_loc = (pkt_data + 12);
-        //uint32_t search_len = pkt_header->len - offset_to_search_data;
-        //const uint8_t* data_loc = (pkt_data + offset_to_search_data);
 
-        if (generateCSV) {
+        if (generateCSV || min_mac_matches > 1) {
           std::map<int, std::set<int> > matches = search_macs.findAllMatches(data_loc, search_len);
           num_mac_found_unique += matches.size();
           num_mac_found_total += search_macs.countMatches(matches);
         } else if (search_macs.findFirstMatch(data_loc, search_len) >= 0) {
-          pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
-          it++;
-          ++output_row;
-          continue;
+          // Do not need an IP match and not generating a CSV, 
+          // just record it and move on.
+          if (min_ip_matches < 1) {
+            pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
+            ++it;
+            ++output_row;
+            continue;
+          }
+          ++num_mac_found_total;
+          ++num_mac_found_unique;
         }
       }
 
-      may_have_dup = ip_types.isDupIP(ip_p, tcp_destination_port) || (tcp_destination_port != tcp_source_port && ip_types.isDupIP(ip_p, tcp_source_port));
-      //std::cout << "May  IP Dup: " << may_have_dup << " proto:" << (int) ipHeader->ip_p << " source:" << tcp_source_port << " dest:" << tcp_destination_port << std::endl;
-      if (!may_have_dup) {
+      // If there was a minimum number of MACs and
+      // did not find them, then ignore the rest!
+      if (num_mac_found_total < min_mac_matches && min_mac_matches > 0) {
+        // Did not find enough MACs.
+        ++it;
+        continue;
+      }
+
+      may_contain_dup_data = ip_types.isDupIP(ip_p, tcp_destination_port) || (tcp_destination_port != tcp_source_port && ip_types.isDupIP(ip_p, tcp_source_port));
+      //std::cout << "May  IP Dup: " << may_contain_dup_data << " proto:" << (int) ipHeader->ip_p << " source:" << tcp_source_port << " dest:" << tcp_destination_port << std::endl;
+
+      if (!may_contain_dup_data) {
         //
         // This will search the TCP and UDP headers.
         // Should we change to ONLY search the data?
         //
         uint32_t search_len = pkt_header->len - offset_to_data_ipv4;
         const uint8_t* data_loc = pkt_data + offset_to_data_ipv4;
-        //uint32_t search_len = pkt_header->len - offset_to_search_data;
-        //const uint8_t* data_loc = (pkt_data + offset_to_search_data);
 
-        if (generateCSV) {
+        if (generateCSV || min_ip_matches > 1) {
           std::map<int, std::set<int> > matches_4 = search_ipv4.findAllMatches(data_loc, search_len);
           std::map<int, std::set<int> > matches_6 = search_ipv6.findAllMatches(data_loc, search_len);
           num_ip_found_unique += matches_4.size();
@@ -320,48 +354,43 @@ int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses&
           (search_ipv4.findFirstMatch(data_loc, search_len) >= 0) ||
           (search_ipv6.findFirstMatch(data_loc, search_len) >= 0)) {
           pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
-          it++;
+          ++it;
           ++output_row;
           continue;
         }
       }
 
-      // This can only be true if we are generating a CSV because if not, 
+      if (num_ip_found_total < min_ip_matches && min_ip_matches > 0) {
+        // Did not find enough IP.
+        ++it;
+        continue;
+      }
+
+      // If we make it here, then we should dump the data if we found anything;
+      // because we already verified that we found enough.
+
+      bool should_dump = num_ip_found_total > 0 || num_mac_found_total > 0;
+
+      // This can only be true if we are generating a CSV because if not,
       // would have already used continue.
-      if (num_mac_found_unique > 0 || num_ip_found_unique > 0) {
+      if (should_dump) {
         pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
 
         if (verbose)
           std::cout << it << " DUP MAC: " << num_mac_found_unique << " IP:" << num_ip_found_unique << " with Ethertype IPv4 protocol = " << proto << " (" << ip_p << ")" << " ports: " << tcp_source_port << " / " << tcp_destination_port << std::endl;
 
-        // We are here which means that we are generating a CSV.
-        if (!has_header) {
-          *csv << heading;
-          csv->endRow();
-          has_header = true;
+        if (generateCSV) {
+          std::string ip_str_source = IpAddresses::ip_to_str((uint8_t*)&(ipHeader->ip_src), true);
+          std::string ip_str_dest = IpAddresses::ip_to_str((uint8_t*)&(ipHeader->ip_dst), true);
+          print_csv_row(csv, wrote_csv_header, output_row, ip_str_source, ip_str_dest, num_ip_found_unique, num_mac_found_unique, num_ip_found_total, num_mac_found_total);
         }
-        *csv << output_row
-            << IpAddresses::ip_to_str((uint8_t*)&(ipHeader->ip_src), true)
-            << IpAddresses::ip_to_str((uint8_t*)&(ipHeader->ip_dst), true)
-            << num_ip_found_unique
-            << num_mac_found_unique
-            << num_ip_found_total
-            << num_mac_found_total;
-        csv->endRow();
-        num_ip_found_unique = 0;
-        num_mac_found_unique = 0;
-        num_ip_found_total = 0;
-        num_mac_found_total = 0;
-
-        it++;
+        ++it;
         ++output_row;
         continue;
       }
 
       // We are done with this ipv4 packet. No need to search more.
       // The packet does not contain duplicate data!
-      if (verbose)
-        std::cout << it << " Skipping packet with Ethertype IPv4 protocol = " << proto << " (" << ip_p << ")" << " ports: " << tcp_source_port << " / " << tcp_destination_port << std::endl;
       ++it;
       continue;
     }
@@ -464,9 +493,9 @@ int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses&
       // Look AFTER the IP header for dupliate IP.
 
       // Search to see if a MAC is repeated.
-      bool may_have_dup = ip_types.isDupMAC(static_cast<int>(next_header), tcp_destination_port) || (tcp_destination_port != tcp_source_port && ip_types.isDupMAC(static_cast<int>(next_header), tcp_source_port));
-      //std::cout << "May MAC Dup: " << may_have_dup << " proto:" << (int) ipHeader->ip_p << " source:" << tcp_source_port << " dest:" << tcp_destination_port << std::endl;
-      if (!may_have_dup) {
+      bool may_contain_dup_data = ip_types.isDupMAC(static_cast<int>(next_header), tcp_destination_port) || (tcp_destination_port != tcp_source_port && ip_types.isDupMAC(static_cast<int>(next_header), tcp_source_port));
+      //std::cout << "May MAC Dup: " << may_contain_dup_data << " proto:" << (int) ipHeader->ip_p << " source:" << tcp_source_port << " dest:" << tcp_destination_port << std::endl;
+      if (!may_contain_dup_data) {
         uint32_t search_len = pkt_header->len - final_data_offset;
         const uint8_t* data_loc = (pkt_data + final_data_offset);
         if (generateCSV) {
@@ -475,7 +504,7 @@ int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses&
           num_mac_found_total += search_macs.countMatches(matches);
         } else if (search_macs.findFirstMatch(data_loc, search_len) >= 0) {
           pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
-          it++;
+          ++it;
           ++output_row;
           continue;
         }
@@ -484,9 +513,9 @@ int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses&
       // If NOT generating the CSV, do not search for IP if
       // a MAC has already been found.
       if (generateCSV || (num_mac_found_unique == 0)) {
-        may_have_dup = ip_types.isDupIP(static_cast<int>(next_header), tcp_destination_port) || (tcp_destination_port != tcp_source_port && ip_types.isDupIP(static_cast<int>(next_header), tcp_source_port));
-        //std::cout << "May  IP Dup: " << may_have_dup << " proto:" << (int) ipHeader->ip_p << " source:" << tcp_source_port << " dest:" << tcp_destination_port << std::endl;
-        if (!may_have_dup) {
+        may_contain_dup_data = ip_types.isDupIP(static_cast<int>(next_header), tcp_destination_port) || (tcp_destination_port != tcp_source_port && ip_types.isDupIP(static_cast<int>(next_header), tcp_source_port));
+        //std::cout << "May  IP Dup: " << may_contain_dup_data << " proto:" << (int) ipHeader->ip_p << " source:" << tcp_source_port << " dest:" << tcp_destination_port << std::endl;
+        if (!may_contain_dup_data) {
           uint32_t search_len = pkt_header->len - final_data_offset;
           const uint8_t* data_loc = (pkt_data + final_data_offset);
           if (generateCSV) {
@@ -500,7 +529,7 @@ int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses&
             (search_ipv4.findFirstMatch(data_loc, search_len) >= 0) ||
             (search_ipv6.findFirstMatch(data_loc, search_len) >= 0)) {
             pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
-            it++;
+            ++it;
             ++output_row;
             continue;
           }
@@ -513,26 +542,12 @@ int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses&
           std::cout << it << " DUP MAC: " << num_mac_found_unique << " IPv6:" << num_ip_found_unique << " with Ethertype IPv4 protocol = " << proto << " (" << ip_p << ")" << " ports: " << tcp_source_port << " / " << tcp_destination_port << std::endl;
 
         if (generateCSV) {
-          if (!has_header) {
-            *csv << heading;
-            csv->endRow();
-            has_header = true;
-          }
-          *csv << output_row
-              << ip_str_source
-              << ip_str_dest
-              << num_ip_found_unique
-              << num_mac_found_unique
-              << num_ip_found_total
-              << num_mac_found_total;
-          csv->endRow();
+          std::string ip_str_source;
+          std::string ip_str_dest;
+          print_csv_row(csv, wrote_csv_header, output_row, ip_str_source, ip_str_dest, num_ip_found_unique, num_mac_found_unique, num_ip_found_total, num_mac_found_total);
         }
-        num_ip_found_unique = 0;
-        num_mac_found_unique = 0;
-        num_ip_found_total = 0;
-        num_mac_found_total = 0;
 
-        it++;
+        ++it;
         ++output_row;
         continue;
       }
@@ -556,25 +571,40 @@ int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses&
     //    otherwise, save to the anomally file. 
     // This first makes sure that the MAC address is NOT expected to be repeated. 
 
+    may_contain_dup_data = ethernet_types.isDupMAC(ether_type_int);
+
     // Search to see if a MAC is repeated.
     uint32_t search_len = pkt_header->len - 12;
     const uint8_t* data_loc = (pkt_data + 12);
-    if (!ethernet_types.isDupMAC(ether_type_int)) {
+    if (!may_contain_dup_data) {
 
-      if (generateCSV) {
+      if (generateCSV || min_mac_matches > 1) {
         std::map<int, std::set<int> > matches = search_macs.findAllMatches(data_loc, search_len);
         num_mac_found_unique += matches.size();
         num_mac_found_total += search_macs.countMatches(matches);
       } else if (search_macs.findFirstMatch(data_loc, search_len) >= 0) {
-        pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
-        it++;
-        ++output_row;
-        continue;
+        if (min_ip_matches < 1) {
+          // Do not need an IP match and not generating a CSV, 
+          // just record it and move on.
+          pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
+          ++it;
+          ++output_row;
+          continue;
+        }
+        ++num_mac_found_unique;
+        ++num_mac_found_total;
       }
     }
 
-    if (!ethernet_types.isDupIP(ether_type_int)) {
-      if (generateCSV) {
+    if (num_mac_found_total < min_mac_matches && min_mac_matches > 0) {
+      // Did not find enough MACs.
+      ++it;
+      continue;
+    }
+
+    may_contain_dup_data = ethernet_types.isDupIP(ether_type_int);
+    if (!may_contain_dup_data) {
+      if (generateCSV || min_ip_matches > 1) {
         std::map<int, std::set<int> > matches_4 = search_ipv4.findAllMatches(data_loc, search_len);
         std::map<int, std::set<int> > matches_6 = search_ipv6.findAllMatches(data_loc, search_len);
         num_ip_found_unique += matches_4.size();
@@ -585,10 +615,16 @@ int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses&
         (search_ipv4.findFirstMatch(data_loc, search_len) >= 0) || 
         (search_ipv4.findFirstMatch(data_loc, search_len) >= 0)) {
         pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
-        it++;
+        ++it;
         ++output_row;
         continue;
       }
+    }
+
+    if (num_ip_found_total < min_ip_matches && min_ip_matches > 0) {
+      // Did not find enough IP.
+      ++it;
+      continue;
     }
 
     if (num_mac_found_unique > 0 || num_ip_found_unique > 0) {
@@ -596,33 +632,20 @@ int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses&
       if (verbose)
         std::cout << it << " DUP MAC: " << num_mac_found_unique << " IP:" << num_ip_found_unique << " with Ethertype = " << ether_type_int << std::endl;
 
-      if (!has_header) {
-        *csv << heading;
-        csv->endRow();
-        has_header = true;
+      if (generateCSV) {
+        std::string ip_str_source;
+        std::string ip_str_dest;
+        print_csv_row(csv, wrote_csv_header, output_row, ip_str_source, ip_str_dest, num_ip_found_unique, num_mac_found_unique, num_ip_found_total, num_mac_found_total);
       }
-      *csv << output_row
-          << ip_str_source
-          << ip_str_dest
-          << num_ip_found_unique
-          << num_mac_found_unique
-          << num_ip_found_total
-          << num_mac_found_total;
-      csv->endRow();
-      num_ip_found_unique = 0;
-      num_mac_found_unique = 0;
-      num_ip_found_total = 0;
-      num_mac_found_total = 0;
 
-      it++;
+      ++it;
       ++output_row;
       continue;
     }
 
     // Done with all processing for this packet.
-    it++;
+    ++it;
   }
-
 
   pcap_close(pcap_file);
   pcap_dump_close(dumpfile);
