@@ -99,10 +99,18 @@ void read_create_mac_ip_files(MacAddresses& mac_addresses, IpAddresses& ip_addre
  *
  * \param [in] abort_requested If not nullptr, then used to ask a thread to cancel processing.
  * 
+ * \param [in] min_ip_matches If zero, finding at least 1 IP causes the packet to be written to be dumped to the anomaly file.
+ *                            If > zero, must have at least that many unique matches.
+ *                            If < zero, do not search for an IP.
+ * 
+ * \param [in] min_mac_matches If zero, finding at least 1 MAC causes the packet to be written to be dumped to the anomaly file.
+ *                             If > zero, must have at least that many unique matches.
+ *                             If < zero, do not search for a MAC.
+ * 
  * \returns 0 on no error, -1 otherwise.
  * 
  ***************************************************************************///
-int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses& mac_addresses, IpAddresses& ip_addresses, const EthernetTypes& ethernet_types, const IPTypes& ip_types, const std::string& pcap_filename, std::string output_directory, std::string extra_heuristic_name, bool verbose, bool generateCSV, std::atomic_bool* abort_requested);
+int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses& mac_addresses, IpAddresses& ip_addresses, const EthernetTypes& ethernet_types, const IPTypes& ip_types, const std::string& pcap_filename, std::string output_directory, std::string extra_heuristic_name, bool verbose, bool generateCSV, std::atomic_bool* abort_requested, int min_ip_matches, int min_mac_matches);
 
 //**************************************************************************
 //! Copy the PCAP file removing MACSEC and VLAN headers / trailers from the PCAP.

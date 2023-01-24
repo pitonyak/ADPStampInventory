@@ -18,7 +18,7 @@
 // Process OSPF packets (IP Protocol 89), which means recognize them
 // and then print information about them.
 
-int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses& mac_addresses, IpAddresses& ip_addresses, const EthernetTypes& ethernet_types, const IPTypes& ip_types, const std::string& pcap_filename, std::string output_directory, std::string extra_heuristic_name, bool verbose, bool generateCSV, std::atomic_bool* abort_requested) {
+int process_pcap_ospf(MacAddresses& dest_mac_to_ignore, MacAddresses& mac_addresses, IpAddresses& ip_addresses, const EthernetTypes& ethernet_types, const IPTypes& ip_types, const std::string& pcap_filename, std::string output_directory, std::string extra_heuristic_name, bool verbose, bool generateCSV, std::atomic_bool* abort_requested) {
   std::string csv_fname = getHeuristicFileName(pcap_filename, CSV_Type, output_directory, extra_heuristic_name);
   std::string anomaly_fname = getHeuristicFileName(pcap_filename, Anomaly_Type, output_directory, extra_heuristic_name);
   read_create_mac_ip_files(mac_addresses, ip_addresses, pcap_filename, output_directory, extra_heuristic_name, abort_requested);

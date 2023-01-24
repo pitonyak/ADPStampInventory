@@ -18,8 +18,8 @@
 
 
 
-HeuristicThread::HeuristicThread(int thread_id, std::string output_directory, bool generate_csv, bool verbose)
-	: m_thread_id(thread_id), m_output_directory(output_directory), 
+HeuristicThread::HeuristicThread(int thread_id, std::string output_directory, bool generate_csv, bool verbose, int min_ip_matches, int min_mac_matches)
+	: m_min_ip_matches(min_ip_matches), m_min_mac_matches(min_mac_matches), m_thread_id(thread_id), m_output_directory(output_directory), 
       m_generate_csv(generate_csv), m_verbose(verbose)
 {
     m_working.store(false);
@@ -134,7 +134,7 @@ void HeuristicThread::doWork(std::string pcap_filename) {
     // ??????
     try {
 
-        create_heuristic_anomaly_csv(m_dest_mac_to_ignore, m_mac_addresses, m_ip_addresses, m_ethernet_types, m_ip_types, pcap_filename, m_output_directory, m_extra_heuristic_name, m_verbose, m_generate_csv, &m_abort_requested);
+        create_heuristic_anomaly_csv(m_dest_mac_to_ignore, m_mac_addresses, m_ip_addresses, m_ethernet_types, m_ip_types, pcap_filename, m_output_directory, m_extra_heuristic_name, m_verbose, m_generate_csv, &m_abort_requested, m_min_ip_matches, m_min_mac_matches);
     }
     catch(std::runtime_error& e) 
     {

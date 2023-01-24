@@ -41,8 +41,16 @@ public:
      * 
      * \param [in] numThreads - Number of threads to create.
      * 
+     * \param [in] min_ip_matches If zero, finding at least 1 IP causes the packet to be written to be dumped to the anomaly file.
+     *                            If > zero, must have at least that many unique matches.
+     *                            If < zero, do not search for an IP.
+     * 
+     * \param [in] min_mac_matches If zero, finding at least 1 MAC causes the packet to be written to be dumped to the anomaly file.
+     *                             If > zero, must have at least that many unique matches.
+     *                             If < zero, do not search for a MAC.
+     * 
      ***************************************************************************/
-    HeuristicThreadPool(std::string output_directory="", int numThreads=5, bool generate_csv=true, bool verbose=false);
+    HeuristicThreadPool(std::string output_directory="", int numThreads=5, bool generate_csv=true, bool verbose=false, int min_ip_matches=2, int min_mac_matches=2);
 
     ~HeuristicThreadPool();
 

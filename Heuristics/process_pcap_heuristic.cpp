@@ -47,13 +47,7 @@ void print_csv_row(std::unique_ptr<CSVWriter>& csv, bool& wrote_csv_header, int 
   csv->endRow();
 }
 
-int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses& mac_addresses, IpAddresses& ip_addresses, const EthernetTypes& ethernet_types, const IPTypes& ip_types, const std::string& pcap_filename, std::string output_directory, std::string extra_heuristic_name, bool verbose, bool generateCSV, std::atomic_bool* abort_requested) {
-
-  // If set to 0, then finding anything causes the packet to be
-  // saved. If either of these are greater than zero then
-  // both must match.
-  int min_ip_matches  = 0;
-  int min_mac_matches = 0;
+int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses& mac_addresses, IpAddresses& ip_addresses, const EthernetTypes& ethernet_types, const IPTypes& ip_types, const std::string& pcap_filename, std::string output_directory, std::string extra_heuristic_name, bool verbose, bool generateCSV, std::atomic_bool* abort_requested, int min_ip_matches, int min_mac_matches) {
 
   std::string csv_fname = getHeuristicFileName(pcap_filename, CSV_Type, output_directory, extra_heuristic_name);
   std::string anomaly_fname = getHeuristicFileName(pcap_filename, Anomaly_Type, output_directory, extra_heuristic_name);
@@ -298,7 +292,8 @@ int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses&
       may_contain_dup_data = ip_types.isDupMAC(ip_p, tcp_destination_port) || (tcp_destination_port != tcp_source_port && ip_types.isDupMAC(ip_p, tcp_source_port));
       //std::cout << "May MAC Dup: " << may_contain_dup_data << " proto:" << (int) ipHeader->ip_p << " source:" << tcp_source_port << " dest:" << tcp_destination_port << std::endl;
 
-      if (!may_contain_dup_data) {
+      // Do NOT search MACS if min_mac_matches < 0.
+      if (min_mac_matches >= 0 && !may_contain_dup_data) {
         //
         // An offset of 12 searches immediately AFTER the MAC addresses in the
         // Ether header. Might be faster to search AFTER the data.
@@ -326,7 +321,7 @@ int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses&
 
       // If there was a minimum number of MACs and
       // did not find them, then ignore the rest!
-      if (num_mac_found_total < min_mac_matches && min_mac_matches > 0) {
+      if (num_mac_found_unique < min_mac_matches && min_mac_matches > 0) {
         // Did not find enough MACs.
         ++it;
         continue;
@@ -335,7 +330,7 @@ int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses&
       may_contain_dup_data = ip_types.isDupIP(ip_p, tcp_destination_port) || (tcp_destination_port != tcp_source_port && ip_types.isDupIP(ip_p, tcp_source_port));
       //std::cout << "May  IP Dup: " << may_contain_dup_data << " proto:" << (int) ipHeader->ip_p << " source:" << tcp_source_port << " dest:" << tcp_destination_port << std::endl;
 
-      if (!may_contain_dup_data) {
+      if (min_ip_matches >= 0 && !may_contain_dup_data) {
         //
         // This will search the TCP and UDP headers.
         // Should we change to ONLY search the data?
@@ -360,7 +355,7 @@ int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses&
         }
       }
 
-      if (num_ip_found_total < min_ip_matches && min_ip_matches > 0) {
+      if (num_ip_found_unique < min_ip_matches && min_ip_matches > 0) {
         // Did not find enough IP.
         ++it;
         continue;
@@ -576,7 +571,7 @@ int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses&
     // Search to see if a MAC is repeated.
     uint32_t search_len = pkt_header->len - 12;
     const uint8_t* data_loc = (pkt_data + 12);
-    if (!may_contain_dup_data) {
+    if (min_mac_matches >= 0 && !may_contain_dup_data) {
 
       if (generateCSV || min_mac_matches > 1) {
         std::map<int, std::set<int> > matches = search_macs.findAllMatches(data_loc, search_len);
@@ -596,14 +591,14 @@ int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses&
       }
     }
 
-    if (num_mac_found_total < min_mac_matches && min_mac_matches > 0) {
+    if (num_mac_found_unique < min_mac_matches && min_mac_matches > 0) {
       // Did not find enough MACs.
       ++it;
       continue;
     }
 
     may_contain_dup_data = ethernet_types.isDupIP(ether_type_int);
-    if (!may_contain_dup_data) {
+    if (min_ip_matches >= 0 && !may_contain_dup_data) {
       if (generateCSV || min_ip_matches > 1) {
         std::map<int, std::set<int> > matches_4 = search_ipv4.findAllMatches(data_loc, search_len);
         std::map<int, std::set<int> > matches_6 = search_ipv6.findAllMatches(data_loc, search_len);
@@ -621,7 +616,7 @@ int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses&
       }
     }
 
-    if (num_ip_found_total < min_ip_matches && min_ip_matches > 0) {
+    if (num_ip_found_unique < min_ip_matches && min_ip_matches > 0) {
       // Did not find enough IP.
       ++it;
       continue;

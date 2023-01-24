@@ -34,6 +34,8 @@ void usage(){
   std::cout << "            use --name bob to generate file.bob.pcap instead.  " << std::endl;
   std::cout << "  --ipmac Force creation of the IP and MAC files." << std::endl;
   std::cout << "  --macsec Strip MACSEC and VLAN and place in a new PCAP." << std::endl;
+  std::cout << "  --min_ip_matches Min num of unique IPs to write a packet to anomaly file and CSV. Defaults to 2." << std::endl;
+  std::cout << "  --min_mac_matches Min num of unique IPs to write a packet to anomaly file and CSV. Defaults to 2." << std::endl;
   std::cout << std::endl;
   std::cout << "  -? Shortened version of --help" << std::endl;
   std::cout << "  -h Shortened version of --heuristic" << std::endl;
@@ -52,6 +54,10 @@ void usage(){
 }
 
 int main(int argc, char **argv){
+
+  int min_ip_matches = 2;
+  int min_mac_matches = 2;
+  std::string temp_string;
 
   IPTypes ip_types;
   ip_types.readProtocols("ip_protocols.txt", false, 10);
@@ -80,6 +86,7 @@ int main(int argc, char **argv){
       {"verbose",   no_argument,       &verbose_flag, 1},
       {"brief",     no_argument,       &verbose_flag, 0},
       {"test",      no_argument,       &test_flag, 1},
+      /* Can I set an int directly */
       {"notest",    no_argument,       &test_flag, 0},
       /* These options don’t set a flag. We distinguish them by their indices. */
       {"help",      no_argument,       0, '?'},
@@ -90,6 +97,8 @@ int main(int argc, char **argv){
       {"directory", required_argument, 0, 'd'},
       {"name",      required_argument, 0, 'n'},
       {"macsec",    no_argument,       0, 'm'},
+      {"min_ip_matches",  required_argument, 0, 'x'},
+      {"min_mac_matches", required_argument, 0, 'y'},
       {0, 0, 0, 0}
     };
 
@@ -142,6 +151,20 @@ int main(int argc, char **argv){
 
       case 'n':
         extra_name = optarg ? optarg : "";
+        break;
+
+      case 'x':
+        temp_string = optarg ? optarg : "";
+        if (!temp_string.empty()) {
+          min_ip_matches = std::stoi(temp_string);
+        }
+        break;
+
+      case 'y':
+        temp_string = optarg ? optarg : "";
+        if (!temp_string.empty()) {
+          min_mac_matches = std::stoi(temp_string);
+        }
         break;
 
       case '?':
@@ -205,10 +228,10 @@ std::cout << "Check for unknown options." << std::endl;
 
   if (create_anomaly_csv) {
     std::cout << "Creating Anomaly and CSV File" << std::endl;
-    create_heuristic_anomaly_csv(dest_mac_to_ignore, mac_addresses, ip_addresses, ethernet_types, ip_types, pcap_filename, output_directory, extra_name, verbose_flag, create_anomaly_csv, abort_requested);
+    create_heuristic_anomaly_csv(dest_mac_to_ignore, mac_addresses, ip_addresses, ethernet_types, ip_types, pcap_filename, output_directory, extra_name, verbose_flag, create_anomaly_csv, abort_requested, min_ip_matches, min_mac_matches);
   } else if (create_anomaly_list) {
     std::cout << "Creating Anomaly File" << std::endl;
-    create_heuristic_anomaly_csv(dest_mac_to_ignore, mac_addresses, ip_addresses, ethernet_types, ip_types, pcap_filename, output_directory, extra_name, verbose_flag, create_anomaly_csv, abort_requested);
+    create_heuristic_anomaly_csv(dest_mac_to_ignore, mac_addresses, ip_addresses, ethernet_types, ip_types, pcap_filename, output_directory, extra_name, verbose_flag, create_anomaly_csv, abort_requested, min_ip_matches, min_mac_matches);
   }
 
   if (remove_mac_sec) {

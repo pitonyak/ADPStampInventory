@@ -57,8 +57,16 @@ public:
      *
      * \param [in] dest_mac_to_ignore All traffic to this MAC address is ignored while creating the anomaly file.
      *
+     * \param [in] min_ip_matches If zero, finding at least 1 IP causes the packet to be written to be dumped to the anomaly file.
+     *                            If > zero, must have at least that many unique matches.
+     *                            If < zero, do not search for an IP.
+     * 
+     * \param [in] min_mac_matches If zero, finding at least 1 MAC causes the packet to be written to be dumped to the anomaly file.
+     *                             If > zero, must have at least that many unique matches.
+     *                             If < zero, do not search for a MAC.
+     * 
      ***************************************************************************///
-    HeuristicThread(int thread_id = 0, std::string output_directory="", bool generate_csv=true, bool verbose=false);
+    HeuristicThread(int thread_id = 0, std::string output_directory="", bool generate_csv=true, bool verbose=false, int min_ip_matches=2, int min_mac_matches=2);
 
     /*! Destructor. Currently simple, calling abort and join. */
     ~HeuristicThread();
@@ -108,6 +116,12 @@ public:
     void setOutputDirectory(const std::string& output_directory);
     std::string getExtraHeuristicName() const { return m_extra_heuristic_name; }
     void setExtraHeuristicName(const std::string& name) { m_extra_heuristic_name = name; }
+
+    int getMinIpMatches() const { return m_min_ip_matches; }
+    void setMinIpMatches(int x) { m_min_ip_matches = x; }
+
+    int getMinMacMatches() const { return m_min_mac_matches; }
+    void setMinMacMatches(int x) { m_min_mac_matches = x; }
 
 private:
     //**************************************************************************
@@ -163,6 +177,9 @@ private:
      * 
      ***************************************************************************/
     HeuristicThread(HeuristicThread&& x);
+
+    int m_min_ip_matches;
+    int m_min_mac_matches;
 
     /*! Thread index in the thread pool object. */
     int m_thread_id;

@@ -3,7 +3,7 @@
 #include "utilities.h"
 
 
-HeuristicThreadPool::HeuristicThreadPool(std::string output_directory, int numThreads, bool generate_csv, bool verbose) : 
+HeuristicThreadPool::HeuristicThreadPool(std::string output_directory, int numThreads, bool generate_csv, bool verbose, int min_ip_matches, int min_mac_matches) : 
 	m_num_threads(numThreads), m_output_directory(output_directory)
 {
 	m_abort_requested.store(false);
@@ -14,7 +14,7 @@ HeuristicThreadPool::HeuristicThreadPool(std::string output_directory, int numTh
 	// TODO: Create actual threads!
 	// Or do I create them when they are needed? 
 	for (int i=0; i<m_num_threads; ++i) {
-		HeuristicThread* htp = new HeuristicThread(i, m_output_directory, generate_csv, verbose);
+		HeuristicThread* htp = new HeuristicThread(i, m_output_directory, generate_csv, verbose, min_ip_matches, min_mac_matches);
 		m_threads.push_back(htp);
 		m_waiting_threads.insert(i);
 	}
