@@ -105,7 +105,7 @@ int main(int argc, char **argv){
     /* getopt_long stores the option index here. */
     int option_index = 0;
 
-    c = getopt_long (argc, argv, "?ihcp:d:n:m", long_options, &option_index);
+    c = getopt_long (argc, argv, "?ihcp:d:n:mxy", long_options, &option_index);
 
     /* Detect the end of the options. */
     if (c == -1)

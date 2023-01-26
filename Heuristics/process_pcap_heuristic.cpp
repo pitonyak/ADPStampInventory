@@ -16,6 +16,27 @@
 #include "utilities.h"
 
 
+#include<sstream>
+
+std::string time_t_to_string(struct pcap_pkthdr *pkt_header) {
+  if (pkt_header == nullptr)
+    return "";
+  std::stringstream ss;
+
+  time_t ttime = pkt_header->ts.tv_sec;
+  tm *local_time = localtime(&ttime);
+  //ss << pkt_header->ts.tv_sec << "." << pkt_header->ts.tv_usec;
+  //ss << " Time: ";
+  ss << 1 + local_time->tm_mon << "/" << local_time->tm_mday << "/" << 1900 + local_time->tm_year;
+  ss << " ";
+  ss << 1 + local_time->tm_hour << ":";
+  ss << 1 + local_time->tm_min << ":";
+  ss << 1 + local_time->tm_sec << "." << pkt_header->ts.tv_usec;
+  return ss.str();
+}
+
+
+
 void print_csv_row(std::unique_ptr<CSVWriter>& csv, bool& wrote_csv_header, int output_row, 
   const std::string& ip_str_source, const std::string& ip_str_dest, 
   int num_ip_found_unique, int num_mac_found_unique,
@@ -59,6 +80,8 @@ int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses&
   pcap_t *pcap_file;
   pcap_dumper_t *dumpfile;
   bool done = false;
+  std::string first_source_date;
+  std::string first_dest_date;
 
   // Aho-Corasick is significantly faster that forward or backward search.
   AhoCorasickBinary search_ipv4;
@@ -174,14 +197,19 @@ int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses&
       continue;
     }
 
+    if (it == 1) {
+      first_source_date = time_t_to_string(pkt_header);
+    }
+
+    // Not efficient because might make this call a bunch, but, 
+    // I do not want to place this every time I dump a packet.
+    if (output_row == 1) {
+      first_dest_date = time_t_to_string(pkt_header);
+    }
+
     // The only purpose for this code is to show what is in the packet header
     if (verbose && it < 10) {
-      time_t ttime = pkt_header->ts.tv_sec;
-      tm *local_time = localtime(&ttime);
-      std::cout << "index " << it << " caplen:" << pkt_header->caplen << " len:" << pkt_header->len << " ts:" << pkt_header->ts.tv_sec << "." << pkt_header->ts.tv_usec;
-      std::cout << " Time: "<< 1 + local_time->tm_hour << ":";
-      std::cout << 1 + local_time->tm_min << ":";
-      std::cout << 1 + local_time->tm_sec << "." << pkt_header->ts.tv_usec << " " << 1 + local_time->tm_mon << "/" << local_time->tm_mday << "/" << 1900 + local_time->tm_year << std::endl;
+      std::cout << "index " << it << " caplen:" << pkt_header->caplen << " len:" << pkt_header->len << " ts:" << time_t_to_string(pkt_header) << std::endl;
     }
 
     // The packet data begins with the Ethernet header, so if we cast to that:
@@ -644,7 +672,22 @@ int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses&
 
   pcap_close(pcap_file);
   pcap_dump_close(dumpfile);
-  std::cout << " Examined "<< it <<" packets in file " << pcap_filename << std::endl;
+  // both it and output_row start at 1 so they are one off the total processed.
+  --it;
+  --output_row;
+ 
 
+
+  std::cout << std::endl;
+  std::cout << "Examined "<< it <<" packets in " << pcap_filename << std::endl;
+  std::cout << "Time of first packet in souce file: " << first_source_date << std::endl << std::endl;
+
+  if (output_row == 1) {
+    std::cout << "The anomaly file contains no packets" << std::endl;
+  } else {
+    std::cout << "Wrote " << output_row << " packets to " << anomaly_fname  << std::endl;
+    std::cout << "Time of first packet in anomaly file: " << first_dest_date << std::endl;
+  }
+  std::cout << std::endl;
   return 0;
 }
