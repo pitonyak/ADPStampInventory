@@ -8,6 +8,7 @@
 #include <netinet/ip6.h>  // struct ip6_hdr
 #include <netinet/tcp.h>  // struct tcphdr
 #include <netinet/udp.h>  // struct udphdr
+#include<sstream>
 
 #include "ahocorasickbinary.h"
 #include "crc32_x.h"
@@ -16,22 +17,23 @@
 #include "utilities.h"
 
 
-#include<sstream>
-
 std::string time_t_to_string(struct pcap_pkthdr *pkt_header) {
   if (pkt_header == nullptr)
     return "";
   std::stringstream ss;
 
   time_t ttime = pkt_header->ts.tv_sec;
-  tm *local_time = localtime(&ttime);
-  //ss << pkt_header->ts.tv_sec << "." << pkt_header->ts.tv_usec;
-  //ss << " Time: ";
-  ss << 1 + local_time->tm_mon << "/" << local_time->tm_mday << "/" << 1900 + local_time->tm_year;
-  ss << " ";
-  ss << 1 + local_time->tm_hour << ":";
-  ss << 1 + local_time->tm_min << ":";
-  ss << 1 + local_time->tm_sec << "." << pkt_header->ts.tv_usec;
+  //tm *local_time = localtime(&ttime);
+  tm *local_time = std::gmtime(&ttime);
+
+
+
+  //ss << 1900 + local_time->tm_year << "-" << sprintf("%02d", 1 + local_time->tm_mon) << "-"  << sprintf("%02d", local_time->tm_mday);
+  ss << 1900 + local_time->tm_year << "-" << std::setw(2) << std::setfill('0') << (1 + local_time->tm_mon) << "-"  << local_time->tm_mday;
+  ss << "T";
+  ss << std::setw(2) << 1 + local_time->tm_hour << ":";
+  ss << std::setw(2) << 1 + local_time->tm_min << ":";
+  ss << std::setw(2) << 1 + local_time->tm_sec << "Z";
   return ss.str();
 }
 
