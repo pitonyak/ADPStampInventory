@@ -20,187 +20,6 @@ static int strip_8A88 = 0; // Q-in-Q / Service Tag
 static int strip_8100 = 0; // Customer Tag
 static int strip_88E5 = 0; // macsec
 
-bool strip_mpls(uint32_t packet_len, const u_char *pkt_data, uint32_t mpls_start, uint32_t& mpls_len, int& new_ethertype) {
-
-  mpls_len = 0;
-  new_ethertype = 0;
-
-  // Assume this is an MPLS packet.
-  // 20 for the label
-  // 03 experimental bits
-  // 01 bit (bottom of stack flag)
-  // 08 bits Time To Live
-
-  // Bottom of stack flag with a value of 0 means
-  // that there is another MPLS flag.
-  uint8_t bos;
-  do {
-    std::cout << "MPLS Layer." << std::endl;
-    // Deal with truncated MPLS.
-    if (packet_len < (mpls_start + mpls_len + 4)) {
-      std::cout << "Truncated Packet(mpls) at length " << (mpls_len + 4) << std::endl;
-      return false;
-    }
-    //uint32_t label = (pkt_data[mpls_start + mpls_len + 2] >> 4) + pkt_data[mpls_start + mpls_len + 1] * 16 + pkt_data[mpls_start + mpls_len] * 4096;
-    //std::cout << "MPLS Layer label = " << std::hex << label << std::dec << " or " << label << std::endl;
-    bos = pkt_data[mpls_start + mpls_len + 2] & 0x01;
-    mpls_len += 4;
-  } while (bos == 0);
-
-  if (packet_len < (mpls_start + mpls_len)) {
-    std::cout << "Truncated Packet(mpls) at length " << mpls_len << std::endl;
-    return false;
-  }
-
-  // 'Guess' the next protocol. This can result in false positives.
-  uint8_t ip_ver = pkt_data[mpls_start + mpls_len] >> 4;
-  switch (ip_ver) {
-    case 0x04:
-      new_ethertype = 0x0800; break;
-    case 0x06:
-      new_ethertype = 0x86DD; break;
-    default:
-      std::cout << "Warning, returning ethernet type 0 from MPLS" << std::endl;
-      new_ethertype = 0;
-  }
-
-  return true;
-}
-
-int process_mpls(const std::string& pcap_filename, std::string output_directory, std::string extra_heuristic_name, std::atomic_bool* abort_requested) {
-
-  std::string output_fname = getHeuristicFileName(pcap_filename, Anomaly_Type, output_directory, extra_heuristic_name);
-  if (isPathExist(output_fname, true, false, false, false)) {
-    std::cout << "Output file will be over-written: " << output_fname << std::endl;
-  }
-
-  pcap_t *pcap_file;
-  pcap_dumper_t *dumpfile;
-  bool done = false;
-
-  char *pcap_errbuf = nullptr;
-  //
-  // This structure has three fields:
-  // struct timeval ts (time stamp)
-  // uint32_t caplen (length of portion present)
-  // uint32_t len (length of this packet off wire)
-  struct pcap_pkthdr *pkt_header;
-  struct pcap_pkthdr pkt_header_copy;
-
-  const u_char *pkt_data;
-  uint32_t data_copy_len = 1024 * 1024 * 4;
-  u_char *pkt_data_copy = new u_char[data_copy_len + 1];
-
-  struct ether_header *ether;
-
-  int res=1, it=1;
-  int num_mpls = 0;
-
-  // Open the PCAP file!
-  pcap_file=pcap_open_offline(pcap_filename.c_str(), pcap_errbuf);
-
-  // Ensure that the pcap file only has Ethernet packets
-  if(pcap_datalink(pcap_file) != DLT_EN10MB){
-    fprintf(stderr, "PCAP file %s is not an Ethernet capture\n", pcap_filename.c_str());
-    pcap_close(pcap_file);
-    return -1;
-  }
-
-  // Open the dump file
-  dumpfile = pcap_dump_open(pcap_file, output_fname.c_str());
-
-  if(dumpfile==NULL)
-  {
-    pcap_close(pcap_file);
-    fprintf(stderr,"\nError opening output file\n");
-    return -1;
-  }
-
-  const int ether_header_size = sizeof(struct ether_header); // 14
-
-  // Iterate over every packet in the file and print the MAC addresses
-  while(!done && (abort_requested == nullptr || !abort_requested->load()) ){
-    // pkt_header contains three fields:
-    // struct timeval ts (time stamp) with tv_sec and tv_usec for seconds and micro-seconds I guess.
-    // uint32_t caplen (length of portion present)
-    // uint32_t len (length of this packet off wire) - 
-    //
-    // The len field is reading fine when referenced directly without converting 
-    // from network byte order (big-endian) to host endian (little-endian)
-    // using ntohl().
-    //
-    // pkt_data points to the data.
-    res=pcap_next_ex(pcap_file, &pkt_header, &pkt_data);
-
-    if(res == PCAP_ERROR_BREAK){
-      fprintf(stderr, "No more packets in savefile. Iteration %d\n", it);
-      break;
-    }
-    if(res != 1){
-      fprintf(stderr, "Error reading packet. Iteration %d\n", it);
-      continue;
-    }
-
-    // The packet data begins with the Ethernet header, so if we cast to that:
-    // uint8_t   ether_dhost [6]  MAC address
-    // uint8_t   ether_shost [6]  MAC address
-    // uint16_t  etherType        Ethernet type
-    ether = (struct ether_header*)pkt_data;
-
-    // IPv4 address is 4 bytes
-    // IPv6 address is 16 bytes
-    // MAC address is 6 bytes
-
-    int ether_type_int = ntohs(ether->ether_type);
-
-    if (ether_type_int == 0x8847) {
-      // Strip MPLS and move on!
-      uint32_t mpls_start = ether_header_size;
-      uint32_t mpls_len = 0;
-      int new_ethertype = 0;
-      bool ok = strip_mpls(pkt_header->len, pkt_data, mpls_start, mpls_len, new_ethertype);
-      std::cout << "Packet " << it << " MPLS " << ok << " mpls_len:" << mpls_len << " new_ethertype:" << std::hex << new_ethertype << std::dec << std::endl;
-      if (ok) {
-        if (pkt_header->len > data_copy_len) {
-          delete[] pkt_data_copy;
-          data_copy_len = pkt_header->len * 2;
-          pkt_data_copy = new u_char[data_copy_len + 1];
-        }
-        memcpy( &pkt_header_copy, pkt_header, sizeof(struct pcap_pkthdr) );
-        pkt_header_copy.len -= mpls_len;
-        pkt_header_copy.caplen = pkt_header_copy.len;
-
-        memcpy( pkt_data_copy, pkt_data,  mpls_start);
-        memcpy( pkt_data_copy + mpls_start, pkt_data + mpls_start + mpls_len,  pkt_header->len - mpls_start - mpls_len);
-        ether = (struct ether_header*)pkt_data_copy;
-        ether->ether_type = htons(new_ethertype);
-        pcap_dump( (u_char *)dumpfile, &pkt_header_copy, pkt_data_copy);
-      }
-
-      ++num_mpls;
-    } else {
-      // Not MPLS
-      //std::cout << "Packet " << it << " is not MPLS type is " << std::hex << ether_type_int << std::dec << std::endl;
-      pcap_dump( (u_char *)dumpfile, pkt_header, pkt_data);
-    }
-    // Done with all processing for this packet.
-    ++it;
-  }
-
-  delete[] pkt_data_copy;
-  pcap_close(pcap_file);
-  pcap_dump_close(dumpfile);
-  std::cout << " Examined "<< (it - 1) <<" packets in file " << pcap_filename << std::endl;
-
-  return 0;
-}
-
-
-// *****************************************************
-// *****************************************************
-// *****************************************************
-// *****************************************************
-
 //**************************************************************************
 //! memcpy implemenation where the semantics are known; copies left to right.
 /*!
@@ -245,7 +64,6 @@ bool strip_mpls_method(struct pcap_pkthdr& pkt_header, u_char *pkt_data) {
   // that there is another MPLS flag.
   uint8_t bos;
   do {
-    std::cout << "MPLS Layer." << std::endl;
     // Deal with truncated MPLS.
     if (pkt_header.len < (mpls_start + mpls_len + 4)) {
       std::cout << "Truncated Packet(mpls) at length " << (mpls_len + 4) << std::endl;
@@ -271,21 +89,49 @@ bool strip_mpls_method(struct pcap_pkthdr& pkt_header, u_char *pkt_data) {
       new_ethertype = 0x86DD; break;
     default:
       // TODO: handle this
-      std::cout << "Warning, returning ethernet type 0 from MPLS" << std::endl;
+      // If 0, 1, 2, 3 are all zero then "01 80 c2 then move the 01 on down."
+      if (ip_ver != 0)
+        std::cout << "Warning, unexpected non-zero version from MPLS: " << std::hex << (int)ip_ver << std::dec << std::endl;
+      else {
+        /**
+        std::cout << "bytes: " << std::hex 
+        << (int) pkt_data[mpls_start + mpls_len] << " "
+        << (int) pkt_data[mpls_start + mpls_len + 1] << " "
+        << (int) pkt_data[mpls_start + mpls_len + 2] << " "
+        << (int) pkt_data[mpls_start + mpls_len + 3] << " "
+        << (int) pkt_data[mpls_start + mpls_len + 4] << " "
+        << (int) pkt_data[mpls_start + mpls_len + 5] << " "
+        << (int) pkt_data[mpls_start + mpls_len + 6] << " "
+        << std::dec << std::endl;
+        **/
+      }
       new_ethertype = 0;
   }
 
+  struct ether_header* ethernet_header = (struct ether_header*)pkt_data;
   // now shift things around
   if (new_ethertype != 0) {
 
-      // Leave the first portion up to mpls_start
-      memcpy_ltor( pkt_data + mpls_start, pkt_data + mpls_start + mpls_len,  pkt_header.len - mpls_start - mpls_len);
-      struct ether_header* ethernet_header = (struct ether_header*)pkt_data;
-      ethernet_header->ether_type = htons(new_ethertype);
-      pkt_header.len -= mpls_len;
-      pkt_header.caplen = pkt_header.len;
-      return true;
+    //std::cout << "MPLS len:" << mpls_len << std::endl;
+    // Leave the first portion up to mpls_start
+    memcpy_ltor( pkt_data + mpls_start, pkt_data + mpls_start + mpls_len,  pkt_header.len - mpls_start - mpls_len);
+    ethernet_header->ether_type = htons(new_ethertype);
+    pkt_header.len -= mpls_len;
+    pkt_header.caplen = pkt_header.len;
+    return true;
   }
+  // TODO:
+  // This is gutsy!
+  // Just shift the entire thing down and see what happens!
+  // If four bytes are zero, then shift them all down
+  if ((uint32_t)pkt_data[mpls_start + mpls_len] == 0) {
+    pkt_header.len = pkt_header.len - mpls_start - mpls_len - 4;
+    pkt_header.caplen = pkt_header.len;
+    memcpy_ltor( pkt_data, pkt_data + mpls_start + mpls_len+4,  pkt_header.len);
+    // Do NOT set the ethernet type
+    return true;
+  }
+
 
   return false;
 }
@@ -346,6 +192,8 @@ int strip_stuff(const std::string& pcap_filename, std::string output_directory, 
   if (isPathExist(output_fname, true, false, false, false)) {
     std::cout << "Output file will be over-written: " << output_fname << std::endl;
   }
+
+  std::cout << "strip_mpls_u:" << strip_mpls_u << " strip_mpls_m:" << strip_mpls_m << std::endl;
 
   pcap_t *pcap_file;
   pcap_dumper_t *dumpfile;
@@ -442,11 +290,11 @@ int strip_stuff(const std::string& pcap_filename, std::string output_directory, 
     ethernet_header = (struct ether_header*)pkt_data_copy;
     int ether_type_int = ntohs(ethernet_header->ether_type);
 
-    
+    //std::cout << "Packet " << it << std::endl;
     do {
       packet_modified = false;
       if (strip_mpls_u && ether_type_int == 0x8847) {
-        packet_modified = strip_macsec_method(pkt_header_copy, pkt_data_copy);
+        packet_modified = strip_mpls_method(pkt_header_copy, pkt_data_copy);
         if (packet_modified) {
           ++num_mpls_u;
           ether_type_int = ntohs(ethernet_header->ether_type);
@@ -454,6 +302,7 @@ int strip_stuff(const std::string& pcap_filename, std::string output_directory, 
       }
       if (strip_mpls_m && ether_type_int == 0x8848) {
         // Do Something
+        // std::cout << "MPLS multicast, have not looked at this yet." << std::endl;
         ++num_mpls_m;
       }
       if (strip_qq && ether_type_int == 0x8A88) {
@@ -506,26 +355,21 @@ int strip_stuff(const std::string& pcap_filename, std::string output_directory, 
 
 void usage(){
   std::cout << "Usage" << std::endl;
-  std::cout << "  --help    Print usage instructions." << std::endl;
-  std::cout << "  --pcap <NAME> Full path to the PCAP file to read." << std::endl;
-  std::cout << "  --directory <NAME> Output directory where files are stored." << std::endl;
-  std::cout << "            defaults to the directory containing the PCAP ile." << std::endl;
-  std::cout << "  --name <NAME> By default, file.pcap generates file.anomaly.pcap" << std::endl;
-  std::cout << "            use --name bob to generate file.bob.pcap instead.  " << std::endl;
-  std::cout << "  --macsec    Strip MACSEC." << std::endl;
-  std::cout << "  --88E5      Strip MACSEC" << std::endl;
-  std::cout << "  --8100      Strip VLAN (Customer Tag)." << std::endl;
-  std::cout << "  --8A88      Strip VLAN (Q-in-Q)." << std::endl;
-  std::cout << "  --vlan (-v) Strip VLAN (Customer Tag and Q-in-Q)." << std::endl;
-  std::cout << "  --8847      Strip MPLS (MPLS Unicast)." << std::endl;
-  std::cout << "  --8848      Strip MPLS (MPLS Multicast)." << std::endl;
-  std::cout << "  --mpls (-m) Strip MPLS (MPLS Multicast and Unicast)." << std::endl;
+  std::cout << "  -? --help      Print usage instructions." << std::endl;
+  std::cout << "  -p --pcap <NAME> Full path to the PCAP file to read." << std::endl;
+  std::cout << "  -d --directory <NAME> Output directory where files are stored." << std::endl;
+  std::cout << "                 defaults to the directory containing the PCAP ile." << std::endl;
+  std::cout << "  -n --name <NAME> By default, file.pcap generates file.anomaly.pcap" << std::endl;
+  std::cout << "                 use --name bob to generate file.bob.pcap instead.  " << std::endl;
+  std::cout << "     --macsec    Strip MACSEC." << std::endl;
+  std::cout << "     --88E5      Strip MACSEC" << std::endl;
+  std::cout << "     --8100      Strip VLAN (Customer Tag)." << std::endl;
+  std::cout << "     --8A88      Strip VLAN (Q-in-Q)." << std::endl;
+  std::cout << "  -v --vlan Strip VLAN (Customer Tag and Q-in-Q)." << std::endl;
+  std::cout << "     --8847      Strip MPLS (MPLS Unicast)." << std::endl;
+  std::cout << "     --8848      Strip MPLS (MPLS Multicast)." << std::endl;
+  std::cout << "  -m --mpls Strip MPLS (MPLS Multicast and Unicast)." << std::endl;
   std::cout << "  " << std::endl;
-  std::cout << std::endl;
-  std::cout << "  -? Shortened version of --help" << std::endl;
-  std::cout << "  -p Shortened version of --pcap" << std::endl;
-  std::cout << "  -d Shortened version of --directory" << std::endl;
-  std::cout << "  -n Shortened version of --name" << std::endl;
   std::cout << std::endl;
   std::cout << "All filenames are generated, you cannot choose them." << std::endl;
   std::cout << "Existing destination files are over-written." << std::endl;
@@ -540,10 +384,8 @@ int main(int argc, char **argv) {
   std::string pcap_filename = "";
   pcap_filename = "/andrew0/home/andy/Devsrc/Battelle/GreenHornet/git_stuff/toolbox_git/toolbox/wireshark/mpls/EoMPLS.pcap";
   std::string output_directory = "out";
-  std::string extra_heuristic_name = "no_mpls";
   std::atomic_bool* abort_requested = nullptr;
   std::string extra_name = "stripped";
-  bool remove_mac_sec = false;
 
   int c;
   while (1) {
@@ -612,6 +454,7 @@ int main(int argc, char **argv) {
         break;
 
       case 'm':
+        std::cout << "Stripping 8848 and 8847" << std::endl;
         strip_8848 = strip_8847 = 1;
         break;
 
@@ -671,10 +514,17 @@ std::cout << "Check for unknown options." << std::endl;
   if (output_directory.empty())
     output_directory = getDirectoryFromFilename(pcap_filename);
 
-  if (abort_requested != nullptr) 
-    std::cout << "What???" << std::endl;
-  if (remove_mac_sec)
-    std::cout << "Remove mac_sec" << std::endl;
+  std::cout << "extra_name:" << extra_name << std::endl;
 
-  //process_mpls(pcap_filename, output_directory, extra_heuristic_name, abort_requested);
+  // strip_8847 MPLS Unicast
+  // strip_8848 MPLS Multicast
+  // strip_8A88 Q-in-Q / Service Tag
+  // strip_8100 Customer Tag
+  // strip_88E5 macsec
+  if (strip_8847 || strip_8848 || strip_8A88 || strip_8100 || strip_88E5)
+    strip_stuff(pcap_filename, output_directory, extra_name, abort_requested, strip_8847, strip_8848, strip_8A88, strip_8100, strip_88E5);
+  else {
+    usage();
+    std::cout << std::endl << "No stripping requested" << std::endl;
+  }
 }
