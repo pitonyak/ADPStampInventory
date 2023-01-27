@@ -46,7 +46,7 @@ SOURCES:=$(patsubst ./%,%,$(SOURCES))
 #These are the dependency files, which make will clean up after it creates them
 DEPFILES:=$(patsubst %.cpp,%.d,$(SOURCES))
 OBJFILES:=$(patsubst %.cpp,%.o,$(SOURCES))
-EXEFILES:=heuristics find_macs_and_ips crc_test utilities_test print_ethertypes dns_parse
+EXEFILES:=heuristics find_macs_and_ips crc_test utilities_test print_ethertypes dns_parse packet_stripper
 
 # I can avoid this by listing the DEPFILES as part of all.
 #Don't create dependencies when we're cleaning, for instance
@@ -88,6 +88,9 @@ print_ethertypes: print_ethertypes.o ethtype.o utilities.o
 
 dns_parse: dns_tcp.o dns_network.o dns_rtypes.o dns_strutils.o dns_parse.o
 	$(CXX) $(CXXFLAGS) dns_tcp.o dns_network.o dns_rtypes.o dns_strutils.o dns_parse.o -o dns_parse $(LDFLAGS) $(LIBS)
+
+packet_stripper: packet_stripper.o utilities.o
+	$(CXX) $(CXXFLAGS) packet_stripper.o utilities.o -o packet_stripper $(LDFLAGS) $(LIBS)
 
 clean:
 	rm -f $(DEPFILES) $(OBJFILES) $(EXEFILES)
