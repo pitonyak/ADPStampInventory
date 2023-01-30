@@ -379,7 +379,6 @@ void usage(){
 
 int main(int argc, char **argv) {
   std::string pcap_filename = "";
-  pcap_filename = "/andrew0/home/andy/Devsrc/Battelle/GreenHornet/git_stuff/toolbox_git/toolbox/wireshark/mpls/EoMPLS.pcap";
   std::string output_directory = "out";
   std::atomic_bool* abort_requested = nullptr;
   std::string extra_name = "stripped";
