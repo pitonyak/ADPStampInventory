@@ -473,7 +473,7 @@ int main(int argc, char **argv) {
         break;
 
       default:
-        printf("Aborting\n");
+        printf("Aborting because unexpected argument\n");
         exit(1);
       }
   }
