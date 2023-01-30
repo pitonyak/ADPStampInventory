@@ -391,17 +391,21 @@ int main(int argc, char **argv) {
       /* These options set a flag. */
       {"8100",     no_argument,       &strip_8100, 1},  // VLAN Tagged Fram (Customer Tag)
       {"8A88",     no_argument,       &strip_8A88, 1},  // VLAN Tagged Fram (Q-in-Q)
+      {"8a88",     no_argument,       &strip_8A88, 1},  // VLAN Tagged Fram (Q-in-Q)
       {"8847",     no_argument,       &strip_8847, 1},  // MPLS Unicast
       {"8848",     no_argument,       &strip_8848, 1},  // MPLS Multicast
       {"88E5",     no_argument,       &strip_88E5, 1},  // MacSec
+      {"88e5",     no_argument,       &strip_88E5, 1},  // MacSec
       {"macsec",   no_argument,       &strip_88E5, 1},  // MacSec
 
       {"no8100",   no_argument,       &strip_8100, 0},
       {"no8A88",   no_argument,       &strip_8A88, 0},
+      {"no8a88",   no_argument,       &strip_8A88, 0},
       {"no8847",   no_argument,       &strip_8847, 0},
       {"no8848",   no_argument,       &strip_8848, 0},
       {"nomacsec", no_argument,       &strip_88E5, 0},
       {"no88E5",   no_argument,       &strip_88E5, 0},
+      {"no88e5",   no_argument,       &strip_88E5, 0},
       
       /* Can I set an int directly */
       /* These options don’t set a flag. We distinguish them by their indices. */
@@ -417,7 +421,7 @@ int main(int argc, char **argv) {
     /* getopt_long stores the option index here. */
     int option_index = 0;
 
-    c = getopt_long (argc, argv, "?p:d:nmv", long_options, &option_index);
+    c = getopt_long (argc, argv, "?p:d:n:mv", long_options, &option_index);
 
     /* Detect the end of the options. */
     if (c == -1)
