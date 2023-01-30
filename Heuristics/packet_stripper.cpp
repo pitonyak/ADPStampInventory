@@ -48,7 +48,7 @@ void memcpy_ltor(u_char *dest, u_char *src, uint32_t n) {
   }
 }
 
-bool strip_mpls_method(struct pcap_pkthdr& pkt_header, u_char *pkt_data) {
+bool strip_mpls_u_method(struct pcap_pkthdr& pkt_header, u_char *pkt_data) {
 
   uint32_t mpls_start = sizeof(struct ether_header);
   uint32_t mpls_len = 0;
@@ -193,8 +193,6 @@ int strip_stuff(const std::string& pcap_filename, std::string output_directory, 
     std::cout << "Output file will be over-written: " << output_fname << std::endl;
   }
 
-  std::cout << "strip_mpls_u:" << strip_mpls_u << " strip_mpls_m:" << strip_mpls_m << std::endl;
-
   pcap_t *pcap_file;
   pcap_dumper_t *dumpfile;
   bool done = false;
@@ -294,7 +292,7 @@ int strip_stuff(const std::string& pcap_filename, std::string output_directory, 
     do {
       packet_modified = false;
       if (strip_mpls_u && ether_type_int == 0x8847) {
-        packet_modified = strip_mpls_method(pkt_header_copy, pkt_data_copy);
+        packet_modified = strip_mpls_u_method(pkt_header_copy, pkt_data_copy);
         if (packet_modified) {
           ++num_mpls_u;
           ether_type_int = ntohs(ethernet_header->ether_type);
@@ -323,7 +321,6 @@ int strip_stuff(const std::string& pcap_filename, std::string output_directory, 
         packet_modified = strip_macsec_method(pkt_header_copy, pkt_data_copy);
         if (packet_modified) {
           ++num_macsec;
-          ++num_ct;
           ether_type_int = ntohs(ethernet_header->ether_type);
         }
       }
@@ -342,11 +339,11 @@ int strip_stuff(const std::string& pcap_filename, std::string output_directory, 
   if (num_mpls_u > 0)
     std::cout << "Removed " << num_mpls_u << " MPLS Unicast (8847) packet headers" << std::endl;
   if (num_mpls_m > 0)
-    std::cout << "Removed " << num_mpls_m << " MPLS Multicast (8848) packet headers" << std::endl;
+    std::cout << "(not implemented) Removed " << num_mpls_m << " MPLS Multicast (8848) packet headers" << std::endl;
   if (num_qq > 0)
-    std::cout << "Removed " << num_qq << " Q-in-Q / Service Tag (0x8A88) packet headers" << std::endl;
+    std::cout << "(untested) Removed " << num_qq << " Q-in-Q / Service Tag (0x8A88) packet headers" << std::endl;
   if (num_ct > 0)
-    std::cout << "Removed " << num_ct << " Customer Tag (0x8100) packet headers" << std::endl;
+    std::cout << "(untested) Removed " << num_ct << " Customer Tag (0x8100) packet headers" << std::endl;
   if (num_macsec > 0)
     std::cout << "Removed " << num_macsec << " Macsec (0x88E5) packet headers" << std::endl;
 
