@@ -1,8 +1,9 @@
 
 #include "process_pcap.h"
 
-#include <getopt.h>
 #include <cstring>
+#include <filesystem>
+#include <getopt.h>
 #include <iomanip>
 #include <iostream>
 #include <net/ethernet.h> // struct ether_header
@@ -356,7 +357,7 @@ void usage(){
   std::cout << "  -p --pcap <NAME> Full path to the PCAP file to read." << std::endl;
   std::cout << "  -d --directory <NAME> Output directory where files are stored." << std::endl;
   std::cout << "                 defaults to the directory containing the PCAP ile." << std::endl;
-  std::cout << "  -n --name <NAME> By default, file.pcap generates file.anomaly.pcap" << std::endl;
+  std::cout << "  -n --name <NAME> By default, file.pcap generates file.stripped.pcap" << std::endl;
   std::cout << "                 use --name bob to generate file.bob.pcap instead.  " << std::endl;
   std::cout << "     --macsec    Strip MACSEC." << std::endl;
   std::cout << "     --88E5      Strip MACSEC" << std::endl;
@@ -366,6 +367,8 @@ void usage(){
   std::cout << "     --8847      Strip MPLS (MPLS Unicast)." << std::endl;
   std::cout << "     --8848      Strip MPLS (MPLS Multicast)." << std::endl;
   std::cout << "  -m --mpls Strip MPLS (MPLS Multicast and Unicast)." << std::endl;
+  std::cout << "  -t --input_dir <DIR> Read all files matching input_spec." << std::endl;
+  std::cout << "  -s --input_spec <SPEC> Default is *.pcap" << std::endl;
   std::cout << "  " << std::endl;
   std::cout << std::endl;
   std::cout << "All filenames are generated, you cannot choose them." << std::endl;
@@ -382,6 +385,9 @@ int main(int argc, char **argv) {
   std::string output_directory = "out";
   std::atomic_bool* abort_requested = nullptr;
   std::string extra_name = "stripped";
+
+  std::string input_dir = "";
+  std::string input_spec = "*.pcap";
 
   int c;
   while (1) {
@@ -412,6 +418,8 @@ int main(int argc, char **argv) {
       {"pcap",      required_argument, 0, 'p'},
       {"directory", required_argument, 0, 'd'},
       {"name",      required_argument, 0, 'n'},
+      {"input_dir", required_argument, 0, 't' },
+      {"input_spec",required_argument, 0, 's' },
       {"mpls",      no_argument,       0, 'm'},
       {"vlan",      no_argument,       0, 'v'},
       {0, 0, 0, 0}
@@ -420,7 +428,7 @@ int main(int argc, char **argv) {
     /* getopt_long stores the option index here. */
     int option_index = 0;
 
-    c = getopt_long (argc, argv, "?p:d:n:mv", long_options, &option_index);
+    c = getopt_long (argc, argv, "?p:d:n:mvt:s:", long_options, &option_index);
 
     /* Detect the end of the options. */
     if (c == -1)
@@ -445,12 +453,12 @@ int main(int argc, char **argv) {
         return -1;
         break;
 
-      case 'p':
-        pcap_filename = optarg ? optarg : "";
-        break;
-
       case 'd':
         output_directory = optarg ? optarg : "";
+        break;
+
+      case 't':
+        input_dir = optarg ? optarg : "";
         break;
 
       case 'm':
@@ -460,6 +468,14 @@ int main(int argc, char **argv) {
 
       case 'n':
         extra_name = optarg ? optarg : "";
+        break;
+
+      case 'p':
+        pcap_filename = optarg ? optarg : "";
+        break;
+
+      case 's':
+        input_spec = optarg ? optarg : "";
         break;
 
       case 'v':
@@ -477,15 +493,6 @@ int main(int argc, char **argv) {
       }
   }
 
-
-  if(pcap_filename.empty()){
-    std::cout << "PCAP file must be specified." << std::endl;
-    usage();
-    exit(1);
-  }
-
-std::cout << "Out of the loop" << std::endl;
-
   if (optind < argc)
   {
     printf ("non-option ARGV-elements: ");
@@ -493,38 +500,64 @@ std::cout << "Out of the loop" << std::endl;
       printf ("%s ", argv[optind++]);
     putchar ('\n');
   }
-std::cout << "Check for unknown options." << std::endl;
+
   // If any argument was given that isn't a known option, print the usage and exit
   for (int index = optind; index < argc; index++){
     usage();
     exit(1);
   }
 
+  std::vector<std::string> files_to_read;
+  if (!input_dir.empty()) {
+    if (!isPathExist(input_dir, false, true, false, false)) {
+      std::cout << "Input directory does not exist: " << input_dir << std::endl;
+      return -1;
+    }
+    if(!pcap_filename.empty()) {
+      std::cout << std::endl;
+      std::cout << "Both directory and file were specified, file will be ignored: " << pcap_filename << std::endl;
+      std::cout << std::endl;
+    }
+    std::cout << "input spec is " << input_spec << " input dir is " << input_dir << std::endl;
+    files_to_read = readDirectory(input_dir, input_spec, false, true, false);
+  } else if(pcap_filename.empty()) {
+    std::cout << "PCAP file or input directory must be specified." << std::endl;
+    usage();
+    exit(1);
+  } else  {
+    input_dir = getDirectoryFromFilename(pcap_filename);
+    files_to_read.push_back(getFilename(pcap_filename));
+  }
 
-  if (!isPathExist(pcap_filename, true, false, false, false)) {
-    std::cout << "PCAP file does not exist: " << pcap_filename << std::endl;
+  if (files_to_read.empty()) {
+    std::cout << "No files to process specified." << std::endl;
     return -1;
   }
-  if (!isPathExist(pcap_filename, true, false, true, false)) {
-    std::cout << "Do not have read permission on PCAP file: " << pcap_filename << std::endl;
-    std::cout << "This may fail to read the PCAP file" << std::endl;
-    //return -1;
-  }
 
-  if (output_directory.empty())
-    output_directory = getDirectoryFromFilename(pcap_filename);
+  if (strip_8847 || strip_8848 || strip_8A88 || strip_8100 || strip_88E5) {
+    for (const std::string& fname : files_to_read) {
+      std::cout << std::endl;
 
-  std::cout << "extra_name:" << extra_name << std::endl;
+      std::filesystem::path fname_path(input_dir);
+      fname_path /= fname;
+      pcap_filename = fname_path;
 
-  // strip_8847 MPLS Unicast
-  // strip_8848 MPLS Multicast
-  // strip_8A88 Q-in-Q / Service Tag
-  // strip_8100 Customer Tag
-  // strip_88E5 macsec
-  if (strip_8847 || strip_8848 || strip_8A88 || strip_8100 || strip_88E5)
-    strip_stuff(pcap_filename, output_directory, extra_name, abort_requested, strip_8847, strip_8848, strip_8A88, strip_8100, strip_88E5);
-  else {
+      if (output_directory.empty())
+        output_directory = input_dir;
+
+      if (!isPathExist(pcap_filename, true, false, false, false)) {
+        std::cout << "PCAP file does not exist: " << pcap_filename << std::endl;
+      } else {
+        if (!isPathExist(pcap_filename, true, false, true, false)) {
+          std::cout << "Do not have read permission on PCAP file: " << pcap_filename << std::endl;
+          std::cout << "This may fail to read the PCAP file" << std::endl;
+        }
+        std::cout << "Stripping from input file " << pcap_filename << std::endl;
+        strip_stuff(pcap_filename, output_directory, extra_name, abort_requested, strip_8847, strip_8848, strip_8A88, strip_8100, strip_88E5);
+      }
+    }
+  } else {
     usage();
-    std::cout << std::endl << "No stripping requested" << std::endl;
+    std::cout << std::endl << "No stripping requested." << std::endl;
   }
 }

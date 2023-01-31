@@ -1,4 +1,5 @@
 
+#include <filesystem>
 #include <getopt.h>
 #include <iomanip>
 #include <iostream>
@@ -21,30 +22,23 @@ static int verbose_flag;
 
 void usage(){
   std::cout << "Usage" << std::endl;
-  std::cout << "  --help    Print usage instructions." << std::endl;
-  std::cout << "  --verbose Turn on verbose mode." << std::endl;
-  std::cout << "  --brief   Turn off verbose mode." << std::endl;
-  std::cout << "  --test    Turn on test mode." << std::endl;
-  std::cout << "  --heuristic Generate the heuristic anomaly file (no CSV)." << std::endl;
-  std::cout << "  --csv     Generate the CSV and the anomaly file." << std::endl;
-  std::cout << "  --pcap <NAME> Full path to the PCAP file to read." << std::endl;
-  std::cout << "  --directory <NAME> Output directory where files are stored." << std::endl;
+  std::cout << "  -? --help    Print usage instructions." << std::endl;
+  std::cout << "     --verbose Turn on verbose mode." << std::endl;
+  std::cout << "     --brief   Turn off verbose mode." << std::endl;
+  std::cout << "     --test    Turn on test mode." << std::endl;
+  std::cout << "  -h --heuristic Generate the heuristic anomaly file (no CSV)." << std::endl;
+  std::cout << "  -c --csv     Generate the CSV and the anomaly file." << std::endl;
+  std::cout << "  -p --pcap <NAME> Full path to the PCAP file to read." << std::endl;
+  std::cout << "  -d --directory <NAME> Output directory where files are stored." << std::endl;
   std::cout << "            defaults to the directory containing the PCAP ile." << std::endl;
-  std::cout << "  --name <NAME> By default, file.pcap generates file.anomaly.pcap" << std::endl;
+  std::cout << "  -n --name <NAME> By default, file.pcap generates file.anomaly.pcap" << std::endl;
   std::cout << "            use --name bob to generate file.bob.pcap instead.  " << std::endl;
-  std::cout << "  --ipmac Force creation of the IP and MAC files." << std::endl;
-  std::cout << "  --macsec Strip MACSEC and VLAN and place in a new PCAP." << std::endl;
-  std::cout << "  --min_ip_matches Min num of unique IPs to write a packet to anomaly file and CSV. Defaults to 2." << std::endl;
-  std::cout << "  --min_mac_matches Min num of unique IPs to write a packet to anomaly file and CSV. Defaults to 2." << std::endl;
-  std::cout << std::endl;
-  std::cout << "  -? Shortened version of --help" << std::endl;
-  std::cout << "  -h Shortened version of --heuristic" << std::endl;
-  std::cout << "  -i Shortened version of --ipmac" << std::endl;
-  std::cout << "  -c Shortened version of --csv" << std::endl;
-  std::cout << "  -p Shortened version of --pcap" << std::endl;
-  std::cout << "  -d Shortened version of --directory" << std::endl;
-  std::cout << "  -m Shortened version of --macsec" << std::endl;
-  std::cout << "  -n Shortened version of --name" << std::endl;
+  std::cout << "  -i --ipmac Force creation of the IP and MAC files." << std::endl;
+  std::cout << "  -m --macsec Strip MACSEC and VLAN and place in a new PCAP." << std::endl;
+  std::cout << "  -x --min_ip_matches Min num of unique IPs to write a packet to anomaly file and CSV. Defaults to 2." << std::endl;
+  std::cout << "  -y --min_mac_matches Min num of unique IPs to write a packet to anomaly file and CSV. Defaults to 2." << std::endl;
+  std::cout << "  -t --input_dir <DIR> Read all files matching input_spec." << std::endl;
+  std::cout << "  -s --input_spec <SPEC> Default is *.pcap" << std::endl;
   std::cout << std::endl;
   std::cout << "All filenames are generated, you cannot choose them." << std::endl;
   std::cout << "CSV file and Anomaly file are over-written." << std::endl;
@@ -77,7 +71,10 @@ int main(int argc, char **argv){
   bool create_anomaly_csv  = false;
   bool create_mac_ip_file  = false;
   bool remove_mac_sec = false;
-  std::string pcap_filename = "";;
+  std::string pcap_filename = "";
+  std::string input_dir = "";
+  std::string input_spec = "*.pcap";
+
   int c;
   while (1) {
     static struct option long_options[] =
@@ -93,6 +90,8 @@ int main(int argc, char **argv){
       {"heuristic", no_argument,       0, 'h'},
       {"csv",       no_argument,       0, 'c'},
       {"ipmac",     no_argument,       0, 'i'},
+      {"input_dir", required_argument, 0, 't' },
+      {"input_spec",required_argument, 0, 's' },
       {"pcap",      required_argument, 0, 'p'},
       {"directory", required_argument, 0, 'd'},
       {"name",      required_argument, 0, 'n'},
@@ -105,7 +104,7 @@ int main(int argc, char **argv){
     /* getopt_long stores the option index here. */
     int option_index = 0;
 
-    c = getopt_long (argc, argv, "?ihcp:d:n:mxy", long_options, &option_index);
+    c = getopt_long (argc, argv, "?ihcp:d:n:mxys:t:", long_options, &option_index);
 
     /* Detect the end of the options. */
     if (c == -1)
@@ -139,6 +138,14 @@ int main(int argc, char **argv){
 
       case 'p':
         pcap_filename = optarg ? optarg : "";
+        break;
+
+      case 's':
+        input_spec = optarg ? optarg : "";
+        break;
+
+      case 't':
+        input_dir = optarg ? optarg : "";
         break;
 
       case 'd':
@@ -185,8 +192,6 @@ int main(int argc, char **argv){
     exit(1);
   }
 
-std::cout << "Out of the loop" << std::endl;
-
   if (optind < argc)
   {
     printf ("non-option ARGV-elements: ");
@@ -194,49 +199,90 @@ std::cout << "Out of the loop" << std::endl;
       printf ("%s ", argv[optind++]);
     putchar ('\n');
   }
-std::cout << "Check for unknown options." << std::endl;
+
   // If any argument was given that isn't a known option, print the usage and exit
   for (int index = optind; index < argc; index++){
     usage();
     exit(1);
   }
 
+  std::vector<std::string> files_to_read;
+  if (!input_dir.empty()) {
+    if (!isPathExist(input_dir, false, true, false, false)) {
+      std::cout << "Input directory does not exist: " << input_dir << std::endl;
+      return -1;
+    }
+    if(!pcap_filename.empty()) {
+      std::cout << std::endl;
+      std::cout << "Both directory and file were specified, file will be ignored: " << pcap_filename << std::endl;
+      std::cout << std::endl;
+    }
+    std::cout << "input spec is " << input_spec << " input dir is " << input_dir << std::endl;
+    files_to_read = readDirectory(input_dir, input_spec, false, true, false);
+  } else if(pcap_filename.empty()) {
+    std::cout << "PCAP file or input directory must be specified." << std::endl;
+    usage();
+    exit(1);
+  } else  {
+    input_dir = getDirectoryFromFilename(pcap_filename);
+    files_to_read.push_back(getFilename(pcap_filename));
+  }
 
-  if (!isPathExist(pcap_filename, true, false, false, false)) {
-    std::cout << "PCAP file does not exist: " << pcap_filename << std::endl;
+  if (files_to_read.empty()) {
+    std::cout << "No files to process specified." << std::endl;
     return -1;
   }
-  if (!isPathExist(pcap_filename, true, false, true, false)) {
-    std::cout << "Do not have read permission on PCAP file: " << pcap_filename << std::endl;
-    std::cout << "This may fail to read the PCAP file" << std::endl;
-    //return -1;
-  }
-
-  if (output_directory.empty())
-    output_directory = getDirectoryFromFilename(pcap_filename);
 
   std::atomic_bool* abort_requested = nullptr;
-  // Lets look at the default IP and MAC file names.
-  // the pcap_fname probably ends with ".pcap" so lets
-  // create the file name "<base_name>.ip.txt" and "<base_name>.mac.txt"
-  if (create_mac_ip_file) {
-    // This will force a new file to be written.
-    std::string out_mac_fname = getHeuristicFileName(pcap_filename, MAC_Type, output_directory, extra_name);
-    std::string out_ip_fname = getHeuristicFileName(pcap_filename, IP_Type, output_directory, extra_name);
-    write_ip_and_mac_from_pcap(mac_addresses, ip_addresses, pcap_filename, out_mac_fname, out_ip_fname, abort_requested);
+
+  for (const std::string& fname : files_to_read) {
+
+    mac_addresses.clear();
+    ip_addresses.clear();
+
+    std::filesystem::path fname_path(input_dir);
+    fname_path /= fname;
+    pcap_filename = fname_path;
+
+    if (output_directory.empty())
+      output_directory = input_dir;
+
+    if (!isPathExist(pcap_filename, true, false, false, false)) {
+      std::cout << "PCAP file does not exist: " << pcap_filename << std::endl;
+    } else {
+      if (!isPathExist(pcap_filename, true, false, true, false)) {
+        std::cout << "Do not have read permission on PCAP file: " << pcap_filename << std::endl;
+        std::cout << "This may fail to read the PCAP file" << std::endl;
+      }
+
+      std::cout << std::endl;
+      // Lets look at the default IP and MAC file names.
+      // the pcap_fname probably ends with ".pcap" so lets
+      // create the file name "<base_name>.ip.txt" and "<base_name>.mac.txt"
+      if (create_mac_ip_file) {
+        // This will force a new file to be written.
+        std::cout << "Creating MAC and IP file from " << pcap_filename << std::endl;
+        std::string out_mac_fname = getHeuristicFileName(pcap_filename, MAC_Type, output_directory, extra_name);
+        std::string out_ip_fname = getHeuristicFileName(pcap_filename, IP_Type, output_directory, extra_name);
+        write_ip_and_mac_from_pcap(mac_addresses, ip_addresses, pcap_filename, out_mac_fname, out_ip_fname, abort_requested);
+      }
+
+      if (create_anomaly_csv) {
+        std::cout << "Creating Anomaly and CSV File from " << pcap_filename << std::endl;
+        create_heuristic_anomaly_csv(dest_mac_to_ignore, mac_addresses, ip_addresses, ethernet_types, ip_types, pcap_filename, output_directory, extra_name, verbose_flag, create_anomaly_csv, abort_requested, min_ip_matches, min_mac_matches);
+      } else if (create_anomaly_list) {
+        std::cout << "Creating Anomaly File from" << pcap_filename << std::endl;
+        create_heuristic_anomaly_csv(dest_mac_to_ignore, mac_addresses, ip_addresses, ethernet_types, ip_types, pcap_filename, output_directory, extra_name, verbose_flag, create_anomaly_csv, abort_requested, min_ip_matches, min_mac_matches);
+      }
+
+      if (remove_mac_sec) {
+        std::cout << "Removing Macsec from " << pcap_filename << std::endl;
+        strip_macsec_vlan_frames(ethernet_types, pcap_filename, output_directory, extra_name, verbose_flag, abort_requested);
+      }
+    }
   }
 
-  if (create_anomaly_csv) {
-    std::cout << "Creating Anomaly and CSV File" << std::endl;
-    create_heuristic_anomaly_csv(dest_mac_to_ignore, mac_addresses, ip_addresses, ethernet_types, ip_types, pcap_filename, output_directory, extra_name, verbose_flag, create_anomaly_csv, abort_requested, min_ip_matches, min_mac_matches);
-  } else if (create_anomaly_list) {
-    std::cout << "Creating Anomaly File" << std::endl;
-    create_heuristic_anomaly_csv(dest_mac_to_ignore, mac_addresses, ip_addresses, ethernet_types, ip_types, pcap_filename, output_directory, extra_name, verbose_flag, create_anomaly_csv, abort_requested, min_ip_matches, min_mac_matches);
-  }
 
-  if (remove_mac_sec) {
-    strip_macsec_vlan_frames(ethernet_types, pcap_filename, output_directory, extra_name, verbose_flag, abort_requested);
-  }
 
   return 0;
 }

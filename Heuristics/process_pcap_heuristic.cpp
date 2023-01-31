@@ -78,7 +78,7 @@ int create_heuristic_anomaly_csv(MacAddresses& dest_mac_to_ignore, MacAddresses&
   if (isPathExist(anomaly_fname, true, false, false, false)) {
     std::cout << "Anomaly file will be over-written: " << anomaly_fname << std::endl;
   }
-  // Time 2.898seconds becomes 11m19.323seconds if generateCSV is true for one example file.
+
   pcap_t *pcap_file;
   pcap_dumper_t *dumpfile;
   bool done = false;
