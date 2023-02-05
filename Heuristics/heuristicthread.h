@@ -13,6 +13,8 @@
 #include "iptype.h"
 #include "macaddresses.h"
 
+class HeuristicThreadPool;
+
 //**************************************************************************
 //! A thread that will run the heuristic.
 /*!
@@ -23,8 +25,6 @@
  * 
  *
  ***************************************************************************/
-
-
 
 class HeuristicThread
 {
@@ -66,7 +66,7 @@ public:
      *                             If < zero, do not search for a MAC.
      * 
      ***************************************************************************///
-    HeuristicThread(int thread_id = 0, std::string output_directory="", bool generate_csv=true, bool verbose=false, int min_ip_matches=2, int min_mac_matches=2);
+    HeuristicThread(HeuristicThreadPool* parent, int thread_id = 0, std::string output_directory="", bool generate_csv=true, bool verbose=false, int min_ip_matches=2, int min_mac_matches=2);
 
     /*! Destructor. Currently simple, calling abort and join. */
     ~HeuristicThread();
@@ -228,6 +228,8 @@ private:
 
     /*! Contains the list of Ethernet Types, are they valid, are other MAC or IP addresses expected in the payload. */
     EthernetTypes m_ethernet_types;
+
+    HeuristicThreadPool* m_parent;
 };
 
 

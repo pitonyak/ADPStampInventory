@@ -54,7 +54,7 @@ public:
 
     ~HeuristicThreadPool();
 
-    // To be called, once the should start.
+    // To be called, once they should start.
     bool run();
 
     int numRunning() const 
@@ -69,6 +69,10 @@ public:
 
     void abortAndJoin();
 
+    void waitForFinish();
+    bool isFinished();
+
+    int numFiles();
     bool addFile(const std::string& filename);
     bool addFile(const std::vector<std::string>& filenames);
 

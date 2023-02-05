@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "ethtype.h"
+#include "heuristicthreadpool.h"
 #include "ipaddresses.h"
 #include "iptype.h"
 #include "macaddresses.h"
@@ -49,6 +50,7 @@ void usage(){
 
 int main(int argc, char **argv){
 
+  int num_threads = 1;
   int min_ip_matches = 2;
   int min_mac_matches = 2;
   std::string temp_string;
@@ -98,13 +100,14 @@ int main(int argc, char **argv){
       {"macsec",    no_argument,       0, 'm'},
       {"min_ip_matches",  required_argument, 0, 'x'},
       {"min_mac_matches", required_argument, 0, 'y'},
+      {"num_threads",     required_argument, 0, 'z'},
       {0, 0, 0, 0}
     };
 
     /* getopt_long stores the option index here. */
     int option_index = 0;
 
-    c = getopt_long (argc, argv, "?ihcp:d:n:mxys:t:", long_options, &option_index);
+    c = getopt_long (argc, argv, "?ihcp:d:n:mxys:t:z:", long_options, &option_index);
 
     /* Detect the end of the options. */
     if (c == -1)
@@ -174,6 +177,18 @@ int main(int argc, char **argv){
         }
         break;
 
+      case 'z':
+        temp_string = optarg ? optarg : "";
+        if (!temp_string.empty()) {
+          num_threads = std::stoi(temp_string);
+          if (num_threads < 1) {
+            usage();
+            std::cout << std::endl << "Number of threads must be > 0" << std::endl;
+            return -1;
+          }
+        }
+        break;
+
       case '?':
         usage();
         exit(1);
@@ -183,13 +198,6 @@ int main(int argc, char **argv){
         printf("Aborting\n");
         exit(1);
       }
-  }
-
-
-  if(pcap_filename.empty()){
-    std::cout << "PCAP file must be specified." << std::endl;
-    usage();
-    exit(1);
   }
 
   if (optind < argc)
@@ -234,6 +242,10 @@ int main(int argc, char **argv){
   }
 
   std::atomic_bool* abort_requested = nullptr;
+  HeuristicThreadPool thread_pool(output_directory, num_threads, create_anomaly_csv, verbose_flag, min_ip_matches, min_mac_matches);
+  if (num_threads > (int)files_to_read.size()) {
+    num_threads = (int)files_to_read.size();
+  }
 
   for (const std::string& fname : files_to_read) {
 
@@ -255,6 +267,10 @@ int main(int argc, char **argv){
         std::cout << "This may fail to read the PCAP file" << std::endl;
       }
 
+      // The threadpool is not run until after the loop.
+      // If it should be run at all.
+      thread_pool.addFile(pcap_filename);
+
       std::cout << std::endl;
       // Lets look at the default IP and MAC file names.
       // the pcap_fname probably ends with ".pcap" so lets
@@ -267,12 +283,14 @@ int main(int argc, char **argv){
         write_ip_and_mac_from_pcap(mac_addresses, ip_addresses, pcap_filename, out_mac_fname, out_ip_fname, abort_requested);
       }
 
-      if (create_anomaly_csv) {
-        std::cout << "Creating Anomaly and CSV File from " << pcap_filename << std::endl;
-        create_heuristic_anomaly_csv(dest_mac_to_ignore, mac_addresses, ip_addresses, ethernet_types, ip_types, pcap_filename, output_directory, extra_name, verbose_flag, create_anomaly_csv, abort_requested, min_ip_matches, min_mac_matches);
-      } else if (create_anomaly_list) {
-        std::cout << "Creating Anomaly File from" << pcap_filename << std::endl;
-        create_heuristic_anomaly_csv(dest_mac_to_ignore, mac_addresses, ip_addresses, ethernet_types, ip_types, pcap_filename, output_directory, extra_name, verbose_flag, create_anomaly_csv, abort_requested, min_ip_matches, min_mac_matches);
+      if (num_threads <= 1) {
+        if (create_anomaly_csv) {
+          std::cout << "Creating Anomaly and CSV File from " << pcap_filename << std::endl;
+          create_heuristic_anomaly_csv(dest_mac_to_ignore, mac_addresses, ip_addresses, ethernet_types, ip_types, pcap_filename, output_directory, extra_name, verbose_flag, create_anomaly_csv, abort_requested, min_ip_matches, min_mac_matches);
+        } else if (create_anomaly_list) {
+          std::cout << "Creating Anomaly File from" << pcap_filename << std::endl;
+          create_heuristic_anomaly_csv(dest_mac_to_ignore, mac_addresses, ip_addresses, ethernet_types, ip_types, pcap_filename, output_directory, extra_name, verbose_flag, create_anomaly_csv, abort_requested, min_ip_matches, min_mac_matches);
+        }
       }
 
       if (remove_mac_sec) {
@@ -282,6 +300,20 @@ int main(int argc, char **argv){
     }
   }
 
+  // If there are no files to process, then num_threads was set to 0.
+  if (num_threads > 1 && thread_pool.numFiles() > 0 && (create_anomaly_csv || create_anomaly_list)) {
+    // With memory watching on!
+    // About 13 minutes 35 seconds threaded. 
+    // About 95 minutes 26 seconds not threaded.
+    // With memory watching off!
+    // About 5 minutes 50 seconds threaded. 
+    // About 95 minutes 26 seconds not threaded.
+    thread_pool.setExtraHeuristicName(extra_name);
+    thread_pool.run();
+    thread_pool.waitForFinish();
+    thread_pool.stop();
+    std::cout << std::endl << " Threads are finished " << std::endl;
+  }
 
 
   return 0;

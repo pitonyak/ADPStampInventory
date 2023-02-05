@@ -1,5 +1,5 @@
-#ifndef HEURISTIC_THREAD_POOL_H
-#define HEURISTIC_THREAD_POOL_H
+#ifndef PROCESS_PCAP_H
+#define PROCESS_PCAP_H
 
 #include <atomic>
 

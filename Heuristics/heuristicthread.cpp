@@ -6,6 +6,7 @@
 #include <stdlib.h>
 
 #include "heuristicthread.h"
+#include "heuristicthreadpool.h"
 #include "process_pcap.h"
 
 
@@ -18,9 +19,9 @@
 
 
 
-HeuristicThread::HeuristicThread(int thread_id, std::string output_directory, bool generate_csv, bool verbose, int min_ip_matches, int min_mac_matches)
+HeuristicThread::HeuristicThread(HeuristicThreadPool* parent, int thread_id, std::string output_directory, bool generate_csv, bool verbose, int min_ip_matches, int min_mac_matches)
 	: m_min_ip_matches(min_ip_matches), m_min_mac_matches(min_mac_matches), m_thread_id(thread_id), m_output_directory(output_directory), 
-      m_generate_csv(generate_csv), m_verbose(verbose)
+      m_generate_csv(generate_csv), m_verbose(verbose), m_parent(parent)
 {
     m_working.store(false);
     m_running.store(false);
@@ -99,21 +100,38 @@ void HeuristicThread::runFunc()
             }
             if (!next_pcap_filename.empty()) {
                 doWork(next_pcap_filename);
+                if (m_parent != nullptr) {
+                    next_pcap_filename = m_parent->finishedProcessing(m_thread_id);
+                    if (!next_pcap_filename.empty()) {
+                        setNextPcap(next_pcap_filename);
+                    }
+                }
             } else {
+                // TODO: 
                 // Sleep for a bit!
-                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                // std::cout << "Thread " << m_thread_id << " waiting for work." << std::endl;
+                // std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+                //
+                // ALL files should be set before run,
+                // no more files implies finished!
+                // By doing this, work cannot continue in this thread!
+                // 
+                std::cout << "Thread " << m_thread_id << " is finished" << std::endl;
+                m_abort_requested.store(true);
             }
         }
         catch(std::runtime_error& e) 
         {
-            // Some more specific
+            std::cout << "run time error in HeuristicThread::runFunc: " << e.what() << std::endl;
         }
         catch(...) 
         {
             // Make sure that nothing leaves the thread for now...
+            std::cout << "Exception of unknown type in HeuristicThread::runFunc" << std::endl;
         }
     }
 
+    std::cout << "Thread " << m_thread_id << " is finished" << std::endl;
     m_running.store(false);
     m_working.store(false);
     m_abort_requested.store(true);
@@ -130,19 +148,18 @@ void HeuristicThread::doWork(std::string pcap_filename) {
         return;
     }
     m_working.store(true);
-    // Do what needs to be done here!
-    // ??????
     try {
 
         create_heuristic_anomaly_csv(m_dest_mac_to_ignore, m_mac_addresses, m_ip_addresses, m_ethernet_types, m_ip_types, pcap_filename, m_output_directory, m_extra_heuristic_name, m_verbose, m_generate_csv, &m_abort_requested, m_min_ip_matches, m_min_mac_matches);
     }
     catch(std::runtime_error& e) 
     {
-        // Some more specific
+        std::cout << "run time error in HeuristicThread::doWork: " << e.what() << std::endl;
     }
     catch(...) 
     {
         // Make sure that nothing leaves the thread for now...
+        std::cout << "Exception of unknown type in HeuristicThread::doWork" << std::endl;
     }
     m_working.store(false);
 }

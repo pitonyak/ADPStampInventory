@@ -2,6 +2,8 @@
 #include "heuristicthread.h"
 #include "utilities.h"
 
+#include <chrono>
+#include <filesystem>
 
 HeuristicThreadPool::HeuristicThreadPool(std::string output_directory, int numThreads, bool generate_csv, bool verbose, int min_ip_matches, int min_mac_matches) : 
 	m_num_threads(numThreads), m_output_directory(output_directory)
@@ -11,10 +13,8 @@ HeuristicThreadPool::HeuristicThreadPool(std::string output_directory, int numTh
 
 	m_threads.reserve(m_num_threads);
 
-	// TODO: Create actual threads!
-	// Or do I create them when they are needed? 
 	for (int i=0; i<m_num_threads; ++i) {
-		HeuristicThread* htp = new HeuristicThread(i, m_output_directory, generate_csv, verbose, min_ip_matches, min_mac_matches);
+		HeuristicThread* htp = new HeuristicThread(this, i, m_output_directory, generate_csv, verbose, min_ip_matches, min_mac_matches);
 		m_threads.push_back(htp);
 		m_waiting_threads.insert(i);
 	}
@@ -23,7 +23,6 @@ HeuristicThreadPool::HeuristicThreadPool(std::string output_directory, int numTh
 HeuristicThreadPool::~HeuristicThreadPool()
 {
     abortAndJoin();
-    // TODO: Put in a wait until things are no longer running!
 	for (HeuristicThread* thread : m_threads) {
     	if (thread != nullptr) {
     		delete thread;
@@ -47,9 +46,10 @@ bool HeuristicThreadPool::run()
 {
     try 
     {
-        //m_thread = std::thread(&HeuristicThreadPool::runFunc, this);
+        // It is assumed that as of right now, nothing is running!
         std::lock_guard guard(m_pcap_name_mutex); // CTAD, C++17
         while (!m_pcap_name.empty() && !m_waiting_threads.empty()) {
+			std::cout << "in run()" << std::endl;
         	std::set<int>::iterator it = m_waiting_threads.begin();
         	if (it != m_waiting_threads.end()) {
         		int thread_id = *it;
@@ -57,6 +57,10 @@ bool HeuristicThreadPool::run()
             	std::string nextFile = m_pcap_name.front();
 	        	m_pcap_name.pop();
 	        	m_threads[thread_id]->setNextPcap(nextFile);
+	        	if (!m_threads[thread_id]->running()) {
+	        		m_threads[thread_id]->run();
+	        	}
+				std::cout << "run() just set thread " << thread_id << " with file " << nextFile << std::endl;
 	        	m_num_running++;
     		}
         }
@@ -67,6 +71,17 @@ bool HeuristicThreadPool::run()
     }
 
     return true;
+}
+
+int HeuristicThreadPool::numFiles() {
+	try {
+        std::lock_guard guard(m_pcap_name_mutex); // CTAD, C++17
+        return m_pcap_name.size();
+    }
+    catch(...) {
+    	std::cout << "Exception getting number of files" << std::endl;
+    }
+    return 0;
 }
 
 bool HeuristicThreadPool::addFile(const std::string& filename) {
@@ -81,7 +96,7 @@ bool HeuristicThreadPool::addFile(const std::string& filename) {
         m_pcap_name.push(filename);
     }
     catch(...) {
-    	// TODO: Print error
+    	std::cout << "Exception add a file" << std::endl;
         return false;
     }
 	return true;
@@ -102,7 +117,7 @@ bool HeuristicThreadPool::addFile(const std::vector<std::string>& filenames) {
         }
     }
     catch(...) {
-    	// TODO: Print error
+    	std::cout << "Exception adding files" << std::endl;
         return false;
     }
 	return true;
@@ -120,6 +135,10 @@ void HeuristicThreadPool::aborting(int threadID) {
 }
 
 std::string HeuristicThreadPool::finishedProcessing(int threadID) {
+	// TODO: When written, this assumed that files might be added for 
+	// more processing. I changed the thread itself so that it
+	// aborts if nothing else to process. 
+	// The waiting thread can no longer be started I think.
 	try {
         std::lock_guard guard(m_pcap_name_mutex); // CTAD, C++17
         if (m_pcap_name.empty()) {
@@ -170,7 +189,30 @@ void HeuristicThreadPool::processDirectory(std::string dir_path, std::string spe
 		std::cout << "No files matching file spec " << spec << " found in directory " << dir_path << std::endl;
 	} else {
 		std::cout << "Found " << files.size() << " files matching file spec " << spec << " in directory " << dir_path << std::endl;
-		addFile(files);
+		std::string pcap_filename;
+		// Although I could add all the files in one shot, these do NOT have the path 
+		// as part of the filename.
+		for (const std::string& fname : files) {
+			std::filesystem::path fname_path(dir_path);
+	    	fname_path /= fname;
+	    	pcap_filename = fname_path;
+			addFile(pcap_filename);
+		}
 		run();
 	}
+}
+
+bool HeuristicThreadPool::isFinished() {
+	std::lock_guard guard(m_pcap_name_mutex); // CTAD, C++17
+	std::cout << " Active threads:" << m_num_running << "  Number of files in queue: " << m_pcap_name.size() << std::endl;
+	return m_num_running == 0 && m_pcap_name.empty();
+}
+
+void HeuristicThreadPool::waitForFinish() {
+	int sleepMillis = 10000;
+	while (!isFinished()) {
+		//std::cout << "Sleeping for " << sleepMillis << " milliseconds" << std::endl;
+		std::this_thread::sleep_for(std::chrono::milliseconds(sleepMillis));
+	}
+	std::cout << "Finally finished" << std::endl;
 }
