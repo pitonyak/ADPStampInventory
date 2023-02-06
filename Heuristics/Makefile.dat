@@ -30,6 +30,13 @@ CXXFLAGS:=-O3 -fPIC -std=c++17 -Werror -Wall -Wextra
 #INCLUDE:=-I/work1/home/emeneker/local_build/install/libpcap/1.9.1/include
 LIBS:=-lpcap
 
+#
+# This library is used for multi-threading
+# but only needed to be included on Ubuntu, not Fedora.
+# Odd, bug ok.
+#
+LDFLAGS:=-lpthread
+
 # So clean is always considered out of date.
 .PHONY=clean
 
