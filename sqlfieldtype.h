@@ -1,6 +1,7 @@
 #ifndef SQLFIELDTYPE_H
 #define SQLFIELDTYPE_H
 
+#include "genericdataobjectfilter.h"
 #include <QVariant>
 #include <QStringList>
 #include <QRegularExpression>
@@ -9,12 +10,41 @@
 //**************************************************************************
 //! Used to track types in DDL.
 /*!
- * Names are tested in the order that they are added to the list.
+ * Field Names are tested in the order that they are added to the list.
  * A name will match as "name(int1, int2)", "name(int1)", or "name".
  * No attempt has been made to make this efficient. Ease of coding was
  * put in front of efficiency. That can be fixed if this is seen as
  * a choke point.
- * \date 2011-2020
+ *
+ * When this object is created, it is created listing supporting
+ * SQL types. The first and second names are used where this might be
+ * something like:
+ *
+ * SqlFieldType("NVARCHAR", "NATIONAL CHARACTER VARYING", QMetaType::QString, true, false)
+ *
+ * This causes two names to be added, NVARCHAR and NATIONAL CHARACTER VARYING.
+ * We then indicate that this maps to a QString, it supports a length, but it does not support a precision.
+ * The full list is as follows:
+ *
+ * "NVARCHAR", "NATIONAL CHARACTER VARYING", QMetaType::QString, true, false
+ * "NCHAR", "NATIONAL CHARACTER", QMetaType::QString, true, false
+ * "VARCHAR", "CHARACTER VARYING", QMetaType::QString, true, false
+ * "CHARACTER", "CHAR", QMetaType::QChar, true, false
+ * "BIT VARYING", "BIT", QMetaType::Bool, true, false
+ * "TIMESTAMPTZ", "TIMESTAMP WITH TIME ZONE", QMetaType::QDateTime, false, false
+ * "TIMESTAMP", QMetaType::QDateTime, false, false
+ * "TIMETZ", "TIME WITH TIME ZONE", QMetaType::QTime, false, false
+ * "TIME", QMetaType::QTime, false, false
+ * "DATE", QMetaType::QDate, false, false
+ * "INTEGER", QMetaType::Int, false, false
+ * "SMALLINT",  QMetaType::Int, false, false
+ * "FLOAT", "REAL", QMetaType::QString, false, false
+ * "DOUBLE PRECISION", "DOUBLE", QMetaType::QString, false, false
+ * "NUMERIC", "DECIMAL", QMetaType::QString, false, true
+ *
+ * Later, I can search a list of these to determine the type as obtained from DDL.
+ *
+ * \date 2011-2023
  **************************************************************************/
 
 Q_DECLARE_LOGGING_CATEGORY(sqlFieldTypeCategory)
@@ -35,10 +65,10 @@ public:
     //**************************************************************************
     //! constructor.
     /*!
+     * \param firstName a name added for matching.
      * \param qType QVariant type used to represent this SQL type.
      * \param supportsLen If true, the type may be written with (n) to specify the length.
      * \param supportsPrec If true, the type may be written with (precision, scale).
-     * \param firstName a name added for matching.
      *
      ***************************************************************************/
     SqlFieldType(const QString& firstName, QMetaType::Type qType=QMetaType::Void, bool supportsLen=false, bool supportsPrec=false);
@@ -46,11 +76,11 @@ public:
     //**************************************************************************
     //! constructor.
     /*!
+     * \param firstName a name added for matching.
+     * \param secondName a name added for matching.
      * \param qType QVariant type used to represent this SQL type.
      * \param supportsLen If true, the type may be written with (n) to specify the length.
      * \param supportsPrec If true, the type may be written with (precision, scale).
-     * \param firstName a name added for matching.
-     * \param secondName a name added for matching.
      *
      ***************************************************************************/
     SqlFieldType(const QString& firstName, const QString& secondName, QMetaType::Type qType=QMetaType::Void, bool supportsLen=false, bool supportsPrec=false);
@@ -154,6 +184,9 @@ public:
     //**************************************************************************
     //! Add a name that can be used to match the DDL.
     /*!
+     * The name is "simplified" before adding, which means that leading and trailing white space is removed.
+     * Runs of white space are replaced by a single space.
+     *
      * \param aName Name that can match the DDL. Names are matched in the order that they are added.
      *
      ***************************************************************************/
@@ -170,6 +203,8 @@ public:
     //**************************************************************************
     //! Determine if the provided name is supported by this type object.
     /*!
+     * In other words, see if this contains the simplified name.
+     *
      * \param aName Name that can match the DDL. Names are matched in the order that they are added.
      *
      * \returns True if the name (case insensitive) is supported by this type.
@@ -183,7 +218,7 @@ public:
 
 private:
     //**************************************************************************
-    //! I have no idea what this does
+    //! The argument is a DDL type and and the regex that provides a match is returned.
     /*!
      * Search the list of supported names. Supported names may contain a space, but the space is converted to a regular expression for one or more spaces.
      *

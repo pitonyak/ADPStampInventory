@@ -40,7 +40,7 @@
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2012-2019
+ * \date 2012-2021
  **************************************************************************/
 template <class T> class ChangeTracker : public ChangeTrackerBase
 {
@@ -59,7 +59,7 @@ public:
   QStack<ChangedObject<T>*>* pop() { return m_list.isEmpty() ? nullptr : m_list.pop(); }
 
   // Make versions that return a changed object.
-  // I don't think that any of these are every used so they should probably be deleted.
+  // These are never used so they should probably be deleted.
   // The idea was that we new that there was that the requested stack item contained a single item.
   // ChangedObject<T>* valueObject(const int i) const;
   // ChangedObject<T>* topObject() const;

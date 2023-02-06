@@ -11,7 +11,7 @@
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2012-2019
+ * \date 2012-2021
  **************************************************************************/
 class ChangeTrackerBase : public QObject
 {

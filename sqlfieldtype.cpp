@@ -131,7 +131,7 @@ void SqlFieldType::supportsPrecision(bool supportsPrec)
 
 QRegularExpression* SqlFieldType::firstMatchingRegExp(const QString& aName) const
 {
-    // bases contains three different regular expressions.
+    // Three regular expressions are used / tested.
     // Each regular expression is some variant on white spaces and numbers.
     // Initial testing shows that I am only testing against things such as "VARCHAR"
     const char* bases[] = {"\\(\\s*(-?\\d+)\\s*,\\s*(-?\\d+)\\s*\\)\\s*", "\\(\\s*(-?\\d+)\\s*\\)\\s*", ""};
@@ -170,6 +170,8 @@ void SqlFieldType::addName(const QString& aName)
 
 bool SqlFieldType::containsName(const QString& aName) const
 {
+    // Remove leading and trailing white space.
+    // Runs of white space replaced with a single space.
     QString simplifiedName = aName.simplified();
     return !simplifiedName.isEmpty() && !simplifiedName.isNull() && m_supportedNames.contains(simplifiedName, Qt::CaseInsensitive);
 }

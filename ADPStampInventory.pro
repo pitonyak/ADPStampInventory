@@ -9,7 +9,8 @@ QT       += sql
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-QMAKE_CXXFLAGS += -std=c++0x -g
+#QMAKE_CXXFLAGS += -std=c++0x -g
+QMAKE_CXXFLAGS += -g
 
 
 #-------------------------------------------------
@@ -57,9 +58,6 @@ SOURCES += main.cpp\
     genericdatacollection.cpp \
     tableeditorgenericgrid.cpp \
     genericdatacollectiontablemodel.cpp \
-    actiontrackerobject.cpp \
-    actiontrackerobjectbase.cpp \
-    actiontracker.cpp \
     comparer.cpp \
     tablefieldevalnode.cpp \
     tablefieldbinarytreeevalnode.cpp \
@@ -125,9 +123,6 @@ HEADERS  += mainwindow.h \
     genericdatacollection.h \
     tableeditorgenericgrid.h \
     genericdatacollectiontablemodel.h \
-    actiontrackerobject.h \
-    actiontrackerobjectbase.h \
-    actiontracker.h \
     comparer.h \
     tablefieldevalnode.h \
     tablefieldbinarytreeevalnode.h \

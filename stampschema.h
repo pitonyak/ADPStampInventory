@@ -5,6 +5,8 @@
 #include <QHash>
 #include "describesqltable.h"
 
+// This is not used and can probably be deleted!
+
 class StampSchema
 {
 public:

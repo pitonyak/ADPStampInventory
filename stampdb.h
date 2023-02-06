@@ -25,14 +25,14 @@ class GenericDataCollection;
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2012-2020
+ * \date 2012-2023
  **************************************************************************/
 
 class StampDB : public QObject
 {
   Q_OBJECT
 public:
-  /*! \brief Constructor
+  /*! \brief Constructor, which contains the DDL required to create the entire schema.
    *
    *  \param [in, out] parent The object's owner. The parent's destructor destroys this object.
    */
@@ -289,7 +289,6 @@ private:
   /*! Regular expression that matches on "create table  <name> (...)"  */
   QRegularExpression *m_outerDDLRegExp;
 
-  // TODO: Replace this with the DDL returned by DescribeTables class.
   /*! Each string is the DDL to create a single table. */
   QStringList *m_desiredSchemaDDLList;
 

@@ -5,13 +5,13 @@
 
 //**************************************************************************
 /*! \class ChangedObjectBase
- * \brief Base for tracking changed objects so the Template class will contain less code.
+ * \brief Base for tracking a single cell (row, col) changed object so the Template class will contain less code.
  *
  * Row, column, and type is similar for all objects. The Template class will contain the changed and original object.
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2012-2019
+ * \date 2012-2021
  **************************************************************************/
 class ChangedObjectBase : public QObject
 {
