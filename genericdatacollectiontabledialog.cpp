@@ -507,7 +507,7 @@ QModelIndex GenericDataCollectionTableDialog::find(const QString& s, const bool 
   return QModelIndex();
 }
 
-QModelIndex GenericDataCollectionTableDialog::find(const QString& s, const QModelIndex& startIndex, const bool searchForward)
+QModelIndex GenericDataCollectionTableDialog::find(const QString& s, const QModelIndex& startIndex, const bool /** searchForward **/)
 {
   // TODO: Deal with unused parameter searchForward.
   qDebug("In ::find()");
