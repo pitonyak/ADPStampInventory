@@ -55,6 +55,7 @@ int main(int argc, char *argv[])
                                      "qt.gui.shortcutmap=false\n"
                                      "qt.qpa.input*.debug=false\n"
                                      "qt.qpa.events*.debug=false\n"
+                                     "qt.qpa.wayland=false\n"
                                      "qt.qpa.wayland.backingstore=false\n"
                                      "qt.pointer*.debug=false\n"
                                      "qt.accessibility*.debug=false\n"
