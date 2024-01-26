@@ -642,6 +642,7 @@ void GenericDataCollectionsTableModel::undoChange()
 
 QString GenericDataCollectionsTableModel::incrementScottNumber(const QString& scott) const
 {
+    qDebug() << "Attempt to increment " << scott;
   // This is either the scotts number, or something like
   // <country>/<Scotts>/<type>
 
@@ -660,6 +661,7 @@ QString GenericDataCollectionsTableModel::incrementScottNumber(const QString& sc
     for (int i=0; i<list.size(); ++i) {
       QString x = list.at(i);
       if (x.contains(reDigit)) {
+          qDebug() << " found the number portion: " << x;
         list.replace(i, incrementScottNumber(x));
         return list.join('/');
       }
@@ -798,14 +800,58 @@ QList<int> GenericDataCollectionsTableModel::duplicateRows(const QModelIndexList
       if (autoIncrement || appendChar) {
         if (newData->containsValue("scott")) {
           if (autoIncrement) {
-            qDebug() << "?? auto increment is true so increment: " << newData->getString("scott");
             newData->setValueNative("scott", incrementScottNumber(newData->getString("scott")));
-            qDebug() << "?? After increment, value is : " << newData->getString("scott");
           }
           if (appendChar) {
-            qDebug() << "?? append char is true so append a character";
             newData->setValueNative("scott", newData->getString("scott").append(charToAppend));
           }
+        } else if (newData->containsValue("catalogid") && m_tables.contains("catalog")) {
+            //
+            // newData->getString("catalogid") returns catalog.id as oppossed to the
+            // string version displayed to the user.
+            //
+            // The catalogid returns the id / key from the catalog table.
+            // What I would like to do is to find "scott" value from the catalog
+            // increment the scott number and then check to see if there is an entry
+            // with the new scott number where the typeid is the same.
+            // So, assuming that the scott catalog id is 1043 and the typeid is 34,
+            // something like this:
+            // "select catalog.id where catalog.scott='1044' and catalog.typeid=34"
+            int this_cat_id = newData->getInt("catalogid");
+            qDebug() << "contains table catalog : " << m_tables.contains("catalog");
+
+            // This does contain the table, but be paranoid!
+            const GenericDataCollection* cat_table = m_tables["catalog"];
+            const GenericDataObject* cat_object = (cat_table != nullptr)
+                    ? cat_table->getObjectById(this_cat_id) : nullptr;
+
+            // This will an empty string unless we can increment the scott number
+            // and that scott number is in the catalog.
+            if (cat_object != nullptr) {
+                QString scott = cat_object->getString("scott");
+                if (autoIncrement) scott = incrementScottNumber(scott);
+                if (appendChar) scott.append(charToAppend);
+                //qDebug() << "original Scott number is: " << cat_object->getString("scott");
+                //qDebug() << "new Scott number is: " << scott;
+                // Is there an object with this scott, country, and type?
+                QStringList names;
+                QStringList values;
+                names << "scott" << "countryid" << "typeid";
+                values << scott << cat_object->getString("countryid") << cat_object->getString("typeid");
+                // There should be but one!
+                // Should I write a find first version to just get out?
+                QList<const GenericDataObject*> list = cat_table->getMatchingValues(names, values, Qt::CaseSensitive);
+                if (list.count() != 1) {
+                    qDebug() << "Warning, found more than one matching catalog entry for scott " << scott;
+                }
+                if (list.count() > 0) {
+                    int new_cat_id = list[0]->getInt("id");
+                    qDebug() << "new catalog id for scott " << scott << " is " << new_cat_id;
+                    newData->setValueNative("catalogid", new_cat_id);
+                }
+            }
+        } else {
+            qDebug() << "catalogid not found so do not attempt to increment";
         }
       }
       if (newData->containsValue("updated") && newData->isDateTime("updated")) {

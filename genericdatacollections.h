@@ -47,6 +47,13 @@ public:
     GenericDataCollection* getTable(const QString& tableName);
     const GenericDataCollection* getTable(const QString& tableName) const;
 
+    //**************************************************************************
+    /*! \brief Get the data object from a table if the ID (database key) exists.
+     *
+     *  \param [in] tableName Is the case insensitive table name.
+     *  \param [in] id is the database key. If this exists, the data value from the table is returned. If not, column meta-data is returned.
+     *  \return Object with the specified key (id) or null if the table or object does not exist.
+     ***************************************************************************/
     GenericDataObject* getObject(const QString& tableName, const int id);
 
     //**************************************************************************

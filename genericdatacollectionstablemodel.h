@@ -211,6 +211,10 @@ private:
   ChangeTracker<GenericDataObject> m_changeTracker;
 
   //LinkedFieldCache m_linkedFieldCache;
+  /*! Stores values that can be used  in drop-downs.
+   *  This essentially has the data for all the linked supporteing tables.
+   *  Well, I think it does.
+   */
   LinkedFieldSelectionCache m_linkCache;
 
   /*! Used when editing the value table. When a value is updated, the "source" is set. */

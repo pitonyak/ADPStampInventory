@@ -10,6 +10,17 @@
  *
  * \brief Quick link for a <Table, object ID, Field Name, Cached Value>
  *
+ * A column in a view table can show the value in a pretty way.
+ * As an example, I probably do not want to use the catalog value in my inventory
+ * as the actual id to the value in the tables.
+ *
+ * What I show instead is the "country/scott #/type"
+ *
+ * The catalog table stores the country as country.id and I want country.name
+ * And this class helps to derefence all of this data by pulling it all into
+ * memory at the same time. A horrible way to do this, but my DB is small
+ * compared to avalable RAM so I don't care.
+ *
  * When a new value is chosen for linked field, a drop down containing all supported values
  * is displayed. This class caches the linked values for a specific table / field combination.
  *
@@ -91,6 +102,12 @@ public:
      *  Use this to quickly obtain the field list names for a specific field in a table.
      *  The cache identifier takes a source table and a source field and
      *  builds an identifier that references another table and a list of fields in that table.
+     *
+     *  Think of this as QHash<tablename, QHash<fieldname, cache_identifier> >
+     *
+     *  If a column is a single field, then the identifier is "tablename|fieldname"
+     *
+     *  If a column is a list fields such as a, b, c, then the identifier is "tablename|a|b|c"
      */
     QHash<QString, QHash<QString, QString> > m_tableFieldToCashIdentifierName;
 };

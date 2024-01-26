@@ -231,6 +231,19 @@ public:
    */
   int countValues(const QString& name, const QString& compareValue, const Qt::CaseSensitivity sensitive = Qt::CaseInsensitive) const;
 
+  /*! \brief Get all values that match the listed search criteria.
+   *
+   *  The use case is to find a stamp with a scott number with a
+   *  specific type and country. This is used when duplicating a
+   *  a stamp in the inventory while incrementing the value.
+   *
+   *  \param [in] names Lowercase names for properties of interest.
+   *  \param [in] values Values against which to compare.
+   *  \param [in] sensitive Case sensitivity, default is NOT case sensitive.
+   *  \return All objects that match the specified values.
+   */
+  QList<const GenericDataObject*> getMatchingValues(const QStringList& names, const QStringList& values, const Qt::CaseSensitivity sensitive = Qt::CaseInsensitive) const;
+
   /*! \brief Find the first object instance that contains a named property with the specified value.
    *  \param [in] name Case Insensitive name of the property of interest.
    *  \param [in] compareValue Value against which to compare.

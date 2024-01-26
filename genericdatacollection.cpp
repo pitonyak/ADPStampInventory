@@ -192,6 +192,37 @@ const GenericDataObject* GenericDataCollection::getObjectByValue(const QString& 
   return nullptr;
 }
 
+QList<const GenericDataObject*> GenericDataCollection::getMatchingValues(const QStringList& names, const QStringList& values, const Qt::CaseSensitivity sensitive) const
+{
+    QList<const GenericDataObject*> list;
+    int max_num = names.count() > values.count() ? values.count() : names.count();
+    if (max_num < 1) return list;
+    foreach (QString name, names) {
+        // This should also catch the case where a name is not all
+        // lowercase.
+        if (!m_LowerCasePropertyNameMap.contains(name)) {
+            qDebug() << "Table does not contain name name " << name;
+            return list;
+        }
+    }
+    QHashIterator<int, GenericDataObject*> i(m_objects);
+    bool object_matches;
+    while (i.hasNext())
+    {
+      i.next();
+      if (i.value() != nullptr)
+      {
+          object_matches = true;
+          for (int index=0; index<max_num && object_matches; ++index) {
+              object_matches = i.value()->valueIs(names[index], values[index], sensitive);
+          }
+          if (object_matches)
+              list << i.value();
+      }
+    }
+    return list;
+}
+
 int GenericDataCollection::countValues(const QString& name, const QString& compareValue, const Qt::CaseSensitivity sensitive) const
 {
   int iCount = 0;

@@ -19,6 +19,11 @@ void GenericDataCollections::addCollection(const QString& name, GenericDataColle
     }
 }
 
+GenericDataObject* GenericDataCollections::getObject(const QString& tableName, const int id) {
+    GenericDataCollection* table = getTable(tableName);
+    return (table != nullptr) ? table->getObjectById(id) : nullptr;
+}
+
 QVariant GenericDataCollections::getValue(const QString& tableName, const int id, const QString& fieldName)
 {
   GenericDataCollection* table = getTable(tableName);

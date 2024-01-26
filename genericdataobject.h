@@ -215,6 +215,16 @@ public:
 
   int compare(const GenericDataObject& obj, const QList<TableSortField*>& sortFields) const;
   int compare(const GenericDataObject& obj, const QStringList &fields, Qt::CaseSensitivity sensitive=Qt::CaseInsensitive) const;
+
+  /*! \brief Is this field less than obj?
+   *
+   *  The list of sort fields provide the order in which the object fields (names) should be sorted
+   *  and how they should be sorted and compared.
+   *
+   *  \param [in] obj is the Object against which to compare.
+   *  \param [in] sortFields is a list of fields. These fields indicate the order in which to compare objects.
+   *  \return True this object is less than obj.
+   */
   bool lessThan(const GenericDataObject& obj, const QList<TableSortField *> &sortFields) const;
 
   // TODO: Create a generic object filter!
