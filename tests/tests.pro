@@ -12,7 +12,8 @@ DEFINES *= QT_USE_QSTRINGBUILDER
 CONFIG += console
 QT += testlib
 
-SOURCES += testmain.cpp \
+SOURCES += \
+    testmain.cpp \
     testall.cpp \
     ../app/imageutility.cpp \
 

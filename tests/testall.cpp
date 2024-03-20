@@ -1,6 +1,7 @@
 
 #include "testall.h"
 #include "imageutility.h"
+#include "stampdb.h"
 
 void TestAll::testImageUtility() {
     ImageUtility iu;
@@ -18,4 +19,9 @@ void TestAll::testImageUtility() {
     QVERIFY(list.size() > 0);
     list = iu.findBookImages("USA", "", "4972a");
     QVERIFY(list.size() > 0);
+    list = iu.findBookImages("USA", "rw", "rw1");
+    QVERIFY(list.size() > 0);
+    list = iu.findBookImages("USA", "RW", "RW1");
+    QVERIFY(list.size() > 0);
 }
+

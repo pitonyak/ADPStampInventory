@@ -10,7 +10,7 @@
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2012-2018
+ * \date 2012-2024
  **************************************************************************/
 
 namespace Ui {
@@ -32,17 +32,17 @@ public:
 signals:
 
 public slots:
+    void addMissingBookValues();
+    void configure();
     void createDB();
     void createSchema();
-    void getSchema();
-    void readCSV();
-    void exportCSV();
-    void openSQLWindow();
-    void configure();
     void editTable();
-    void addMissingBookValues();
+    void exportCSV();
+    void findMissingImages();
+    void getSchema();
+    void openSQLWindow();
+    void readCSV();
     void testing();
-
 
 private:
     //void setupToolBar();

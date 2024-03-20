@@ -34,6 +34,7 @@ SOURCES += main.cpp\
     changetrackerbase.cpp \
     checkboxonlydelegate.cpp \
     comparer.cpp \
+    configuredialog.cpp \
     constants.cpp \
     csvcolumn.cpp \
     csvcontroller.cpp \
@@ -90,6 +91,7 @@ HEADERS  += \
     changetrackerbase.h \
     checkboxonlydelegate.h \
     comparer.h \
+    configuredialog.h \
     constants.h \
     csvcolumn.h \
     csvcontroller.h \

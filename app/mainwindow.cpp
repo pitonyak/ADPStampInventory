@@ -11,6 +11,7 @@
 #include "describesqltables.h"
 #include "genericdatacollections.h"
 #include "globals.h"
+#include "configuredialog.h"
 
 #include <QDebug>
 #include <QMessageBox>
@@ -78,6 +79,7 @@ void MainWindow::setupMenuBar()
   menu->addAction(tr("&SQL Window"), this, SLOT(openSQLWindow()));
   menu->addAction(tr("Configure"), this, SLOT(configure()));
   menu->addAction(tr("Add Missing Values"), this, SLOT(addMissingBookValues()));
+  menu->addAction(tr("List Missing Images"), this, SLOT(findMissingImages()));
   menu->addAction(tr("Edit Table"), this, SLOT(editTable()));
 
   menu = menuBar()->addMenu(tr("&Help"));
@@ -347,7 +349,8 @@ void MainWindow::openSQLWindow()
 
 void MainWindow::configure()
 {
-  if (createDBWorker()) {
+  bool testTableSortFieldDialog = false;
+  if (testTableSortFieldDialog && createDBWorker()) {
 
       GenericDataCollection gdc;
       gdc.makeDummy();
@@ -412,6 +415,9 @@ void MainWindow::configure()
 **/
       //GenericDataCollectionTableDialog dlg(tableName, *gdo, *m_db, schema);
       //dlg.exec();
+  } else {
+      ConfigureDialog dlg;
+      dlg.exec();
   }
 }
 
@@ -502,6 +508,12 @@ void MainWindow::addMissingBookValues()
     }
     ScrollMessageBox::question(this, "Done", QString(tr("Added %1 entries to the book values table. %2 failed.")).arg(added).arg(failed));
   }
+}
+
+void MainWindow::findMissingImages()
+{
+    // TODO: Add code here!
+    QMessageBox::warning(this, tr("ERROR"), "Not yet implemented");
 }
 
 #include <QXmlStreamReader>

@@ -40,6 +40,7 @@ public:
   static QString Settings_LastSQLDialogString;
   static QString Settings_MainWindowGeometry;
 
+  static QString Settings_ConfigureDlgGeometry;
   static QString Settings_SortFieldDlgGeometry;
   static QString Settings_FilterFieldDlgGeometry;
   static QString SortFieldConfigDialogLastConfigPath;
@@ -54,6 +55,12 @@ public:
   static QString Settings_SearchFindValue;
   static QString Settings_SearchReplaceValue;
   static QString Settings_SearchOptions;
+
+  /*! Settings Name to access the path to the base catalog images. */
+  static QString Settings_CatalogImagePath;
+
+  /*! Settings Name to access the path to the user images. */
+  static QString Settings_UserImagePath;
 
 };
 
