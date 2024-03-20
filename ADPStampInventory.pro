@@ -61,7 +61,6 @@ SOURCES += main.cpp\
     comparer.cpp \
     tablefieldevalnode.cpp \
     tablefieldbinarytreeevalnode.cpp \
-    valuefilter.cpp \
     valuecomparer.cpp \
     tablesortfield.cpp \
     genericdataobjectlessthan.cpp \
@@ -126,7 +125,6 @@ HEADERS  += mainwindow.h \
     comparer.h \
     tablefieldevalnode.h \
     tablefieldbinarytreeevalnode.h \
-    valuefilter.h \
     valuecomparer.h \
     tablesortfield.h \
     genericdataobjectlessthan.h \
