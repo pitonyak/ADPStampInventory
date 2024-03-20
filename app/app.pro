@@ -60,18 +60,10 @@ SOURCES += main.cpp\
     linkbackfilterdelegate.cpp \
     linkedfieldcache.cpp \
     linkedfieldselectioncache.cpp \
-    logconfigdialog.cpp \
-    logmessagecontainer.cpp \
-    logmessagequeue.cpp \
-    logroutinginfodialog.cpp \
-    logroutinginfotablemodel.cpp \
     mainwindow.cpp \
-    messagecomponenttablemodel.cpp \
     qtenummapper.cpp \
     scrollmessagebox.cpp \
     searchoptions.cpp \
-    simpleloggeradp.cpp \
-    simpleloggerroutinginfo.cpp \
     sqldialog.cpp \
     sqlfieldtype.cpp \
     sqlfieldtypemaster.cpp \
@@ -125,19 +117,11 @@ HEADERS  += \
     linkbackfilterdelegate.h \
     linkedfieldcache.h \
     linkedfieldselectioncache.h \
-    logconfigdialog.h \
-    logmessagecontainer.h \
-    logmessagequeue.h \
-    logroutinginfodialog.h \
-    logroutinginfotablemodel.h \
     mainwindow.h \
-    messagecomponenttablemodel.h \
     nullptr.h \
     qtenummapper.h \
     scrollmessagebox.h \
     searchoptions.h \
-    simpleloggeradp.h \
-    simpleloggerroutinginfo.h \
     sqldialog.h \
     sqlfieldtype.h \
     sqlfieldtypemaster.h \
@@ -157,8 +141,7 @@ HEADERS  += \
     variantcomparer.h \
     xmlutility.h \
 
-FORMS    += mainwindow.ui \
-    logroutinginfodialog.ui
+FORMS    += mainwindow.ui
 
 DESTDIR = $$PWD/../build
 

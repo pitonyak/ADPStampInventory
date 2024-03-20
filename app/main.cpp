@@ -1,11 +1,11 @@
 #include <QApplication>
 #include "mainwindow.h"
-#include "simpleloggeradp.h"
+//??#include "simpleloggeradp.h"
 #include "globals.h"
 #include <QLoggingCategory>
 #include <iostream>
 
-SimpleLoggerADP logger;
+//??SimpleLoggerADP logger;
 QtEnumMapper enumMapper;
 
 //
@@ -83,6 +83,8 @@ QtEnumMapper& getEnumMapper()
 //** Logging helpers.
 //**
 //**************************************************************************
+
+/**
 SimpleLoggerADP& getLogger()
 {
   return logger;
@@ -117,3 +119,4 @@ void userMessage(const QString& message, const QString& location, const QDateTim
 {
     logger.receiveMessage(message, location, dateTime, SimpleLoggerRoutingInfo::UserMessage, level);
 }
+**/
