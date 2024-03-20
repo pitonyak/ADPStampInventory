@@ -14,13 +14,11 @@ QT += testlib
 
 SOURCES += testmain.cpp \
     testall.cpp \
-    testvaluecomparer.cpp \
-    ../app/valuecomparer.cpp \
+    ../app/imageutility.cpp \
 
 HEADERS += \
     testall.h \
-    testvaluecomparer.h \
-    ../app/valuecomparer.h \
+    ../app/imageutility.h \
 
 INCLUDEPATH += \
     ../app 

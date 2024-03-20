@@ -3,6 +3,9 @@
 
 #include <QObject>
 #include <QString>
+#include <QList>
+#include <QFile>
+#include <QDir>
 
 //**************************************************************************
 /*! \class ImageUtility
@@ -28,6 +31,14 @@ public:
    */
     explicit ImageUtility(QObject *parent = 0);
 
+    QStringList findBookImages(const QString& country, const QString& category, const QString& catNumber) const;
+
+
+    void setBaseDirectory(const QString& x) { setBaseDirectory(QDir(x)); }
+    void setBaseDirectory(const QDir& x);
+
+    QDir getBaseDirectory() { return m_BaseDirectory; }
+    const QDir& getBaseDirectory() const { return m_BaseDirectory; }
 signals:
 
 public slots:
@@ -35,9 +46,8 @@ public slots:
 private:
 
     /*! \brief Where to start when trying to find an image. */
-    QString m_BaseDirectory;
+    QDir m_BaseDirectory;
 
 };
-
 
 #endif // IMAGEUTILITY_H
