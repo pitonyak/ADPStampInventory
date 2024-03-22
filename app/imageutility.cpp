@@ -41,12 +41,38 @@ QString ImageUtility::getStampPath(const QString& country, const QString& catego
     return cat_path + QDir::separator() + QString::number(thousands);
 }
 
-QStringList ImageUtility::findBookImages(const QString& country, const QString& category, const QString& catNumber) const
+bool ImageUtility::splitCatalogNumber(const QString& catalogNumber, QString& category, QString& num, QString& trailer) const
+{
+    QRegularExpression catNumberRx("^([^0-9]*)(\\d+)(.*)$", QRegularExpression::CaseInsensitiveOption | QRegularExpression::DotMatchesEverythingOption);
+    QRegularExpressionMatchIterator i = catNumberRx.globalMatch(catalogNumber);
+    QString leading_num_str;
+
+    if (!i.hasNext()) {
+        qCritical() << "Category (" << catalogNumber << ") does not have the correct format";
+        category = "";
+        num = "";
+        trailer = "";
+        return false;
+    }
+
+    QRegularExpressionMatch match = i.next();
+    category = match.captured(1);
+    num = match.captured(2);
+    trailer = match.captured(3);
+    return true;
+}
+
+QStringList ImageUtility::findBookImages(const QString& country, const QString& catNumber) const
 {
     // Path looks something like:
     // base/country/category/<number>/catNumber<optional_stuff>
     // Country code is always uppercase!
     QStringList return_list;
+
+    QString category;
+    QString num;
+    QString trailer;
+    splitCatalogNumber(catNumber, category, num, trailer);
 
     QString stamp_path = getStampPath(country, category, catNumber);
     QDir stamp_dir(stamp_path);

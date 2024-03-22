@@ -265,6 +265,18 @@ public:
    ***************************************************************************/
   bool executeQuery(const QString& sqlSelect, QList<QSqlRecord>& records, const QString& keyField, QHash<int, int>& keys);
 
+  //**************************************************************************
+  /*! \brief Execute an SQL Query
+   *
+   *  \param [in] query Query to execute (so you can bind values and such)
+   *  \param [out] records List of records as returned by the SQL command.
+   *  \param [in] keyField Field name containing the DB Key, probably "id". May be blank.
+   *  \param [out] keys If we have a valid keyField, then this associates the ID to the returned record.
+   *  \return True on success, false otherwise.
+   ***************************************************************************/
+  bool executeQuery(QSqlQuery& query, QList<QSqlRecord>& records, const QString& keyField, QHash<int, int>& keys);
+
+
   /*!
    * @brief getOneColumnAsString Get every value for the first column returned by the SQL statement.
    * @param sqlSelect SQL statement assumed to select at least one row.

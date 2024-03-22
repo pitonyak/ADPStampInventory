@@ -31,8 +31,9 @@ public:
    */
     explicit ImageUtility(QObject *parent = 0);
 
-    QStringList findBookImages(const QString& country, const QString& category, const QString& catNumber) const;
+    QStringList findBookImages(const QString& country, const QString& catNumber) const;
 
+    bool splitCatalogNumber(const QString& catalogNumber, QString& category, QString& num, QString& trailer) const;
 
     void setBaseDirectory(const QString& x) { setBaseDirectory(QDir(x)); }
     void setBaseDirectory(const QDir& x);

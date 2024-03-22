@@ -763,7 +763,51 @@ bool StampDB::executeQuery(const QString& sqlSelect, QList<QSqlRecord>& records,
 
     QSqlDatabase& db = getDB();
     QSqlQuery query(db);
+    query.prepare(sqlSelect);
+    return executeQuery(query, records, keyField, keys);
+    /**
     if (!query.exec(sqlSelect))
+    {
+        ScrollMessageBox::information(nullptr, "ERROR", query.lastError().text());
+        return false;
+    }
+    else if (query.isSelect())
+    {
+
+        int keyIndex = query.record().indexOf(keyField);
+        int recordKey = -1;
+
+        while (query.isActive() && query.next())
+        {
+            QSqlRecord rec = query.record();
+            if (keyIndex >= 0)
+            {
+                bool ok = false;
+                recordKey = rec.value(keyIndex).toInt(&ok);
+                if (keys.contains(recordKey)) {
+
+                    // I really do not expect this, but, do it anyway.
+                    // Replace the previous record.
+                    records[keys[recordKey]] = rec;
+                } else {
+                    keys.insert(recordKey, records.size());
+                    records.append(rec);
+                }
+            } else {
+                records.append(rec);
+            }
+        }
+    } else {
+        // query.numRowsAffected();
+    }
+    return true;
+**/
+}
+
+bool StampDB::executeQuery(QSqlQuery& query,  QList<QSqlRecord>& records, const QString& keyField, QHash<int, int>& keys)
+{
+
+    if (!query.exec())
     {
         ScrollMessageBox::information(nullptr, "ERROR", query.lastError().text());
         return false;

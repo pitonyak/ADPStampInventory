@@ -12,6 +12,7 @@
 #include "genericdatacollections.h"
 #include "globals.h"
 #include "configuredialog.h"
+#include "imageutility.h"
 
 #include <QDebug>
 #include <QMessageBox>
@@ -481,7 +482,6 @@ void MainWindow::addMissingBookValues()
 
     // Set the sourceID based on the latest year that we have
     // select id from valuesource order by valuesource.year DESC limit 1
-    // TODO; Create a dialog to prompt for the value source to use.
     int sourceId = m_db->selectValueSourceId(this);
 
     QList<QSqlRecord> ignoredRecords;
@@ -512,8 +512,187 @@ void MainWindow::addMissingBookValues()
 
 void MainWindow::findMissingImages()
 {
-    // TODO: Add code here!
-    QMessageBox::warning(this, tr("ERROR"), "Not yet implemented");
+    QScopedPointer<QSettings> pSettings(getQSettings());
+    QString imagePath = pSettings->value(Constants::Settings_CatalogImagePath).toString();
+    ImageUtility iu;
+    iu.setBaseDirectory(imagePath);
+
+    if (createDBWorker()) {
+      QString country_sql = "select id, name, a3 from country order by name DESC ";
+      QList<QSqlRecord> records;
+
+      QString country_keyField;
+      QHash<int, int> keys;
+
+      if (!m_db->executeQuery(country_sql, records, country_keyField, keys)) {
+        QMessageBox::warning(this, tr("ERROR"), tr("Failed to execute SQL."));
+        return;
+      } else if (records.size() < 1) {
+        QMessageBox::warning(this, tr("No Records Found"), tr("No catalog entries found without values."));
+        return;
+      }
+
+      QStringList country_list;
+      QStringList bad_country_list;
+      for (QSqlRecord r : records) {
+        if (!r.isNull(2)) {
+          QString a_country = r.field(2).value().toString();
+          if (iu.hasCountry(a_country)) {
+            country_list << a_country;
+          } else {
+              bad_country_list << a_country;
+          }
+        }
+      }
+
+      // See how many catalog entries with this country
+      QStringList country_count_list;
+      QSqlQuery count_cat_query(m_db->getDB());
+      QSqlQuery count_inv_query(m_db->getDB());
+
+      count_inv_query.prepare("select count(*) from inventory, catalog, country where inventory.catalogid=catalog.id AND catalog.countryid=country.id AND country.a3=:c");
+      for (QString country : bad_country_list) {
+          records.clear();
+          keys.clear();
+          count_cat_query.prepare("SELECT COUNT(*) FROM catalog, country WHERE catalog.countryid=country.id AND country.a3=:c");
+          count_cat_query.bindValue(":c", country);
+          int num_catalog = 0;
+          int num_inventory = 0;
+          if (!m_db->executeQuery(count_cat_query, records, country_keyField, keys)) {
+              QMessageBox::warning(this, tr("ERROR"), tr("Failed to execute SQL."));
+              return;
+          } else if (records.size() < 1) {
+              QMessageBox::warning(this, tr("No Records Found"), tr("This should not happen when counting records"));
+              return;
+          } else {
+              num_catalog = records.at(0).field(0).value().toInt();
+          }
+
+          if (num_catalog > 0) {
+              records.clear();
+              keys.clear();
+              count_inv_query.bindValue(":c", country);
+              if (!m_db->executeQuery(count_inv_query, records, country_keyField, keys)) {
+                  QMessageBox::warning(this, tr("ERROR"), tr("Failed to execute SQL."));
+                  return;
+              } else if (records.size() < 1) {
+                  QMessageBox::warning(this, tr("No Records Found"), tr("This should not happen when counting records"));
+                  return;
+              } else {
+                  num_inventory = records.at(0).field(0).value().toInt();
+              }
+          }
+          country_count_list << (country + "(N)\tcat:" + QString::number(num_catalog) + "\tinv:" + QString::number(num_inventory));
+      }
+
+      for (QString country : country_list) {
+          records.clear();
+          keys.clear();
+          count_cat_query.bindValue(":c", country);
+          int num_catalog = 0;
+          int num_inventory = 0;
+          if (!m_db->executeQuery(count_cat_query, records, country_keyField, keys)) {
+              QMessageBox::warning(this, tr("ERROR"), tr("Failed to execute SQL."));
+              return;
+          } else if (records.size() < 1) {
+              QMessageBox::warning(this, tr("No Records Found"), tr("This should not happen when counting records"));
+              return;
+          } else {
+              num_catalog = records.at(0).field(0).value().toInt();
+          }
+          if (num_catalog > 0) {
+              records.clear();
+              keys.clear();
+              country_keyField.clear();
+              count_inv_query.bindValue(":c", country);
+              if (!m_db->executeQuery(count_inv_query, records, country_keyField, keys)) {
+                  QMessageBox::warning(this, tr("ERROR"), tr("Failed to execute SQL."));
+                  return;
+              } else if (records.size() < 1) {
+                  QMessageBox::warning(this, tr("No Records Found"), tr("This should not happen when counting records"));
+                  return;
+              } else {
+                  num_inventory = records.at(0).field(0).value().toInt();
+              }
+          }
+          country_count_list << (country + "(Y)\tcat:" + QString::number(num_catalog) + "\tinv:" + QString::number(num_inventory));
+      }
+
+
+      if (country_list.size() > 0)
+        ScrollMessageBox::information(this, "Has Country Image Directory", country_count_list.join("\n"));
+
+      // Now check each stamp for an image:
+      QSqlQuery sel_cat_query(m_db->getDB());
+      sel_cat_query.prepare("SELECT scott FROM catalog, country WHERE catalog.countryid=country.id AND country.a3=:c order by scott ASC");
+
+      QString last_scott;
+      QString first_scott_in_run;
+      QString this_scott;
+      QString this_category;
+      QString last_category;
+      QString num_str;
+      QString trailer;
+      QStringList running_result;
+      bool last_had_image;
+      int num_missing_total=0;
+      int num_missing_in_run;
+      for (QString country : country_list) {
+          last_had_image = true;
+          num_missing_in_run = 0;
+          num_missing_total = 0;
+          records.clear();
+          keys.clear();
+          sel_cat_query.bindValue(":c", country);
+          if (!m_db->executeQuery(sel_cat_query, records, country_keyField, keys)) {
+              QMessageBox::warning(this, tr("ERROR"), tr("Failed to execute SQL."));
+              return;
+          } else if (records.size() < 1) {
+              QMessageBox::warning(this, tr("No Records Found"), tr("This should not happen when counting records"));
+              return;
+          }
+          for (QSqlRecord r : records) {
+              this_scott = r.field(0).value().toString();
+              iu.splitCatalogNumber(this_scott, this_category, num_str, trailer);
+              if (this_category != last_category && !running_result.isEmpty()) {
+                  if (num_missing_in_run == 1) {
+                      running_result << first_scott_in_run;
+                  } else if (num_missing_in_run > 1) {
+                      running_result << (first_scott_in_run + " - " + last_scott + " (" + QString::number(num_missing_in_run) + ")");
+                  }
+                  last_had_image = true;
+                  num_missing_in_run = 0;
+              }
+              if (iu.findBookImages(country, this_scott).isEmpty()) {
+                  ++num_missing_total;
+                  ++num_missing_in_run;
+                  if (last_had_image) {
+                      first_scott_in_run = this_scott;
+                      last_scott = this_scott;
+                      last_had_image = false;
+                      last_category = this_category;
+                  } else {
+                      last_scott = this_scott;
+                  }
+              } else if (!last_had_image) {
+                  // We have an image now but did not last time.
+                  if (num_missing_in_run == 1) {
+                      running_result << first_scott_in_run;
+                  } else {
+                      running_result << (first_scott_in_run + " - " + last_scott + " (" + QString::number(num_missing_in_run) + ")");
+                  }
+                  last_had_image = true;
+                  num_missing_in_run = 0;
+              }
+          }
+          if (!running_result.isEmpty()) {
+              ScrollMessageBox::information(this, QString::number(num_missing_total) + " Missing Stamps For " + country, running_result.join("\n"));
+          }
+
+      }
+
+    }
+
 }
 
 #include <QXmlStreamReader>
