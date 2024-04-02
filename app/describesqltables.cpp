@@ -173,6 +173,7 @@ DescribeSqlTables DescribeSqlTables::getStampSchema()
 
   QString catalogType[] = {"catalogtype", "Catalog Type", "Stamp category such as Air Mail, Postage, or Envelope",
              "id", "Id", "INTEGER", "Table Key", "10",
+             "prefix", "Prefix", "VARCHAR", "Prefix for a stamp value that determines the type", "20",
              "name", "Name", "VARCHAR", "Viewable name such as Air Mail or Postage", "20",
              "description", "Description", "VARCHAR", "Longer descriptive name", "100"};
 
@@ -250,7 +251,6 @@ DescribeSqlTables DescribeSqlTables::getStampSchema()
              "centering", "Centering", "VARCHAR", "Grade the centering if desired. F, VF, XF, etc.", "10",
              "back", "Back", "VARCHAR", "Comments such as NH, OG, LH, VLH, NG.", "10",
              "comment", "Comment", "VARCHAR", "Comments about this stamp.", "200",
-             "certificate", "Certificate", "VARCHAR", "Stamp certificate information", "200",
              "purchasedate", "Purchased", "DATE", "When the stamp was purchased MM/DD/YYYY", "10",
              "paid", "Paid", "DOUBLE", "What did I pay", "10",
              "dealerid", "Dealer", "INTEGER", "From whom did I aquire this stamp.", "10",
