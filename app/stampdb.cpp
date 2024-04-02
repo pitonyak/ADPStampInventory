@@ -99,6 +99,7 @@ StampDB::StampDB(QObject *parent) :
                              " centering VARCHAR(30),"
                              " back VARCHAR(20),"
                              " comment VARCHAR(100),"
+                             " certificate VARCHAR(100),"
                              " purchasedate DATE,"
                              " paid FLOAT,"
                              " dealerid INTEGER,"

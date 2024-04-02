@@ -4,9 +4,12 @@
 #include <QRegularExpression>
 
 
-ImageUtility::ImageUtility(QObject *parent) : QObject(parent)
+ImageUtility::ImageUtility(QObject *parent) : QObject(parent),
+    m_catNumberRxNoCat("^(\\d+)(.*)$", QRegularExpression::CaseInsensitiveOption | QRegularExpression::DotMatchesEverythingOption),
+    m_catNumberRxWithCat("^([^0-9]*)(\\d+)(.*)$", QRegularExpression::CaseInsensitiveOption | QRegularExpression::DotMatchesEverythingOption)
 {
     // TODO: Add more such as initializing paths perhaps.
+    //
 }
 
 QString ImageUtility::getStampPath(const QString& country, const QString& category, const QString& catNumber) const
@@ -41,10 +44,35 @@ QString ImageUtility::getStampPath(const QString& country, const QString& catego
     return cat_path + QDir::separator() + QString::number(thousands);
 }
 
+bool ImageUtility::splitCatalogNumber(const QString& catalogNumber, QString& num, QString& trailer) const
+{
+    QRegularExpressionMatchIterator i = m_catNumberRxNoCat.globalMatch(catalogNumber);
+
+    if (!i.hasNext()) {
+        qCritical() << "Catalog Number (" << catalogNumber << ") does not have the correct format";
+        num = "";
+        trailer = "";
+        return false;
+    }
+
+    QRegularExpressionMatch match = i.next();
+    num = match.captured(1);
+    trailer = match.captured(2);
+    return true;
+}
+
+
 bool ImageUtility::splitCatalogNumber(const QString& catalogNumber, QString& category, QString& num, QString& trailer) const
 {
-    QRegularExpression catNumberRx("^([^0-9]*)(\\d+)(.*)$", QRegularExpression::CaseInsensitiveOption | QRegularExpression::DotMatchesEverythingOption);
-    QRegularExpressionMatchIterator i = catNumberRx.globalMatch(catalogNumber);
+    if (catalogNumber.startsWith("1CVP", Qt::CaseInsensitive)) {
+        category = "1CVP";
+        return splitCatalogNumber(catalogNumber.mid(4), num, trailer);
+    }
+    if (catalogNumber.startsWith("2CVP", Qt::CaseInsensitive)) {
+        category = "2CVP";
+        return splitCatalogNumber(catalogNumber.mid(4), num, trailer);
+    }
+    QRegularExpressionMatchIterator i = m_catNumberRxWithCat.globalMatch(catalogNumber);
     QString leading_num_str;
 
     if (!i.hasNext()) {

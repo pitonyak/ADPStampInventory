@@ -250,6 +250,7 @@ DescribeSqlTables DescribeSqlTables::getStampSchema()
              "centering", "Centering", "VARCHAR", "Grade the centering if desired. F, VF, XF, etc.", "10",
              "back", "Back", "VARCHAR", "Comments such as NH, OG, LH, VLH, NG.", "10",
              "comment", "Comment", "VARCHAR", "Comments about this stamp.", "200",
+             "certificate", "Certificate", "VARCHAR", "Stamp certificate information", "200",
              "purchasedate", "Purchased", "DATE", "When the stamp was purchased MM/DD/YYYY", "10",
              "paid", "Paid", "DOUBLE", "What did I pay", "10",
              "dealerid", "Dealer", "INTEGER", "From whom did I aquire this stamp.", "10",

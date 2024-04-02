@@ -6,6 +6,7 @@
 #include <QList>
 #include <QFile>
 #include <QDir>
+#include <QRegularExpression>
 
 //**************************************************************************
 /*! \class ImageUtility
@@ -33,6 +34,7 @@ public:
 
     QStringList findBookImages(const QString& country, const QString& catNumber) const;
 
+    bool splitCatalogNumber(const QString& catalogNumber, QString& num, QString& trailer) const;
     bool splitCatalogNumber(const QString& catalogNumber, QString& category, QString& num, QString& trailer) const;
 
     void setBaseDirectory(const QString& x) { setBaseDirectory(QDir(x)); }
@@ -80,6 +82,9 @@ signals:
 public slots:
 
 private:
+
+    QRegularExpression m_catNumberRxNoCat;
+    QRegularExpression m_catNumberRxWithCat;
 
     /*! \brief Where to start when trying to find an image. */
     QDir m_BaseDirectory;
