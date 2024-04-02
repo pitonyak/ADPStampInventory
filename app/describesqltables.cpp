@@ -251,6 +251,7 @@ DescribeSqlTables DescribeSqlTables::getStampSchema()
              "centering", "Centering", "VARCHAR", "Grade the centering if desired. F, VF, XF, etc.", "10",
              "back", "Back", "VARCHAR", "Comments such as NH, OG, LH, VLH, NG.", "10",
              "comment", "Comment", "VARCHAR", "Comments about this stamp.", "200",
+             "certificate", "Certificate", "VARCHAR", "Comments about this stamp.", "200",
              "purchasedate", "Purchased", "DATE", "When the stamp was purchased MM/DD/YYYY", "10",
              "paid", "Paid", "DOUBLE", "What did I pay", "10",
              "dealerid", "Dealer", "INTEGER", "From whom did I aquire this stamp.", "10",
@@ -290,7 +291,7 @@ DescribeSqlTables DescribeSqlTables::getStampSchema()
              "address4", "Address 4", "VARCHAR", "Address Line", "100",
              "phone", "Phone", "VARCHAR", "Phone Number", "20",
              "fax", "Fax", "VARCHAR", "Fax Number", "20",
-             "comment", "Comment", "VARCHAR", "Comments about this stamp.", "200",
+             "comment", "Comment", "VARCHAR", "Comments about this dealer.", "200",
              "email", "e-mail", "VARCHAR", "e-mail address", "60",
              "website", "Web", "VARCHAR", "Web Site", "60"};
   n=sizeof(dealer) / sizeof(dealer[0]);
