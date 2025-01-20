@@ -77,6 +77,7 @@ void MainWindow::setupMenuBar()
   menu->addAction(tr("&View Schema"), this, SLOT(getSchema()));
   menu->addAction(tr("&Import CSV"), this, SLOT(readCSV()));
   menu->addAction(tr("&Export CSV"), this, SLOT(exportCSV()));
+  menu->addAction(tr("&Export CSV (one file)"), this, SLOT(exportInventoryCSV()));
   menu->addAction(tr("&SQL Window"), this, SLOT(openSQLWindow()));
   menu->addAction(tr("Configure"), this, SLOT(configure()));
   menu->addAction(tr("Add Missing Values"), this, SLOT(addMissingBookValues()));
@@ -335,6 +336,105 @@ void MainWindow::exportCSV()
     m_db->exportToCSV(writeDir.canonicalPath(), false);
 }
 
+void MainWindow::exportInventoryCSV()
+{
+    if (!createDBWorker()) {
+        return;
+    }
+    QScopedPointer<QSettings> pSettings(getQSettings());
+    QString lastWritePath = pSettings->value(Constants::Settings_LastCSVDirWrite).toString();
+    if (lastWritePath.isEmpty()) {
+        lastWritePath = pSettings->value(Constants::Settings_LastCSVDirOpen).toString();
+    }
+
+    QString defaultExtension = tr("CSV files (*.csv)");
+    QString fileWritePath = QFileDialog::getSaveFileName(nullptr, "Export CSV (One File)", lastWritePath, tr("Text files (*.txt);;CSV files (*.csv);;All files (*.*)"), &defaultExtension);
+    if (fileWritePath.isEmpty()) {
+        return;
+    }
+    CSVWriter writer;
+    if (!writer.setStreamFromPath(fileWritePath))
+    {
+        ScrollMessageBox::information(this, "ERROR", QString(tr("Write: Failed to open CSV file %1")).arg(fileWritePath));
+    }
+
+
+    QDir writeDir = fileWritePath;
+
+    if (QFile::exists(writeDir.filePath("full_inventory.csv"))) {
+        if (ScrollMessageBox::question(this, "WARNING", QString(tr("OVerwrite full_inventory.csv"))) != QDialogButtonBox::Yes)
+        {
+            return;
+        }
+    }
+    pSettings->setValue(Constants::Settings_LastCSVDirWrite, writeDir.canonicalPath());
+
+    QString sqlString = "SELECT CONCAT(country.a3, '/', catalog.scott, '/', catalogtype.name) AS scott, inventory.quantity, inventory.grade,  inventory.condition, inventory.selvage, inventory.centering, inventory.back, inventory.comment, catalog.description, catalog.facevalue, inventory.paid, bookvalues.bookvalue, inventory.valuemultiplier, inventory.certificate, inventory.purchasedate, catalog.releasedate, dealer.name AS dealer_name, stamplocation.name AS location_name, stamplocation.description AS location_description, inventory.updated , country.name AS 'country', country.a3, catalog.scott AS scott_num, catalogtype.name as type, inventory.id FROM inventory, catalog, bookvalues, country, stamplocation, valuetype, dealer, catalogtype WHERE  inventory.catalogid=catalog.id AND catalog.countryid=country.id AND inventory.dealerid=dealer.id AND stamplocation.id=inventory.locationid AND valuetype.description=inventory.grade AND bookvalues.valuetypeid=valuetype.id AND catalog.id=bookvalues.catalogid  AND catalogtype.id=catalog.typeid ORDER BY country.a3, ABS(catalog.scott), catalogtype.name";
+    QSqlDatabase& db = m_db->getDB();
+    QSqlQuery query(db);
+    if (!query.exec(sqlString))
+    {
+        ScrollMessageBox::information(this, "ERROR", query.lastError().text());
+        return;
+    }
+    if (!query.isSelect()) {
+        ScrollMessageBox::information(this, "ERROR", "Why is the query NOT a select? BUG!!!");
+        return;
+    }
+    QSqlRecord rec = query.record();
+    int numCols = rec.count();
+
+    // CSV Headers
+    CSVLine headerLine;
+    QStringList fieldNames;
+    QStringList intHeader = {"quantity", "id"};
+    QStringList dateHeader = {"releasedate", "purchasedate"};
+    QStringList dateTimeHeader = {"updated"};
+    QStringList floatHeader = {"facevalue", "paid", "bookvalue", "valuemultiplier"};
+    int i;
+    for (i=0; i<rec.count(); ++i)
+    {
+        QString fieldName = rec.fieldName(i);
+        fieldNames << fieldName;
+        if (intHeader.contains(fieldName)) {
+            headerLine.append(CSVColumn(fieldName, false, QMetaType::Long));
+        } else if (floatHeader.contains(fieldName)) {
+            headerLine.append(CSVColumn(fieldName, false, QMetaType::Float16));
+        } else if (dateHeader.contains(fieldName)) {
+            headerLine.append(CSVColumn(fieldName, false, QMetaType::QDate));
+        } else if (dateTimeHeader.contains(fieldName)) {
+            headerLine.append(CSVColumn(fieldName, false, QMetaType::QDateTime));
+        } else {
+            headerLine.append(CSVColumn(fieldName, true, QMetaType::QString));
+        }
+    }
+    writer.setHeader(headerLine);
+    writer.writeHeader();
+
+    while (query.isActive() && query.next())
+    {
+        CSVLine line;
+        for (int col=0; col<numCols; ++col)
+        {
+            QString fieldName = fieldNames[col];
+            QString fieldValue = query.value(col).toString();
+            if (intHeader.contains(fieldName)) {
+                line.append(CSVColumn(fieldValue, false, QMetaType::Long));
+            } else if (floatHeader.contains(fieldName)) {
+                line.append(CSVColumn(fieldValue, false, QMetaType::Float16));
+            } else if (dateHeader.contains(fieldName)) {
+                line.append(CSVColumn(fieldValue, false, QMetaType::QDate));
+            } else if (dateTimeHeader.contains(fieldName)) {
+                line.append(CSVColumn(fieldValue, false, QMetaType::QDateTime));
+            } else {
+                line.append(CSVColumn(fieldValue, true, QMetaType::QString));
+            }
+        }
+        writer.write(line);
+    }
+    writer.cleanup();
+    ScrollMessageBox::information(this, "Done", "Full CSV Export Finished");
+}
 
 void MainWindow::openSQLWindow()
 {

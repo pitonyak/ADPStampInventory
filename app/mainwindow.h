@@ -38,6 +38,7 @@ public slots:
     void createSchema();
     void editTable();
     void exportCSV();
+    void exportInventoryCSV();
     void findMissingImages();
     void getSchema();
     void openSQLWindow();
