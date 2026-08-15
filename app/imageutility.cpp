@@ -133,7 +133,7 @@ QStringList ImageUtility::findBookImages(const QString& country, const QString& 
 void ImageUtility::setBaseDirectory(const QDir& x)
 {
     if (!x.exists()) {
-        qCritical() << "Base image directory does not exist: " << x.path();
+        qCritical() << "In setBaseDirectory, path does not exist: " << x.path();
     }
     m_BaseDirectory = x;
 }
