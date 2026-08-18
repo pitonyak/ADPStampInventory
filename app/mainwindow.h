@@ -37,6 +37,8 @@ public slots:
     void createDB();
     void createSchema();
     void editTable();
+    void editTableInventory();
+    void editTableCatalog();
     void exportCSV();
     void exportInventoryCSV();
     void findMissingImages();
@@ -47,6 +49,14 @@ public slots:
 
 private:
     //void setupToolBar();
+
+    //**************************************************************************
+    /*! \brief Open the named table
+     *
+     *  \param [in] tableName Name of the table to open for editing.
+     *
+     ***************************************************************************/
+    void editTableByName(const QString tableName);
 
     //**************************************************************************
     /*! \brief Create the menu bar

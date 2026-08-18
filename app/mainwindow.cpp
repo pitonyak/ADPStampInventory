@@ -72,17 +72,19 @@ void MainWindow::setupMenuBar()
   menu->addAction(tr("&Test"), this, SLOT(testing()));
 
   menu = menuBar()->addMenu(tr("&Tools"));
-  menu->addAction(tr("&Create DB"), this, SLOT(createDB()));
+  menu->addAction(tr("Create DB"), this, SLOT(createDB()));
   menu->addAction(tr("Create &Schema"), this, SLOT(createSchema()));
   menu->addAction(tr("&View Schema"), this, SLOT(getSchema()));
-  menu->addAction(tr("&Import CSV"), this, SLOT(readCSV()));
+  menu->addAction(tr("Import CSV"), this, SLOT(readCSV()));
   menu->addAction(tr("&Export CSV"), this, SLOT(exportCSV()));
-  menu->addAction(tr("&Export CSV (one file)"), this, SLOT(exportInventoryCSV()));
+  menu->addAction(tr("Export CSV (one file)"), this, SLOT(exportInventoryCSV()));
   menu->addAction(tr("&SQL Window"), this, SLOT(openSQLWindow()));
   menu->addAction(tr("Configure"), this, SLOT(configure()));
   menu->addAction(tr("Add Missing Values"), this, SLOT(addMissingBookValues()));
   menu->addAction(tr("List Missing Images"), this, SLOT(findMissingImages()));
   menu->addAction(tr("Edit Table"), this, SLOT(editTable()));
+  menu->addAction(tr("Edit &Inventory"), this, SLOT(editTableInventory()));
+  menu->addAction(tr("Edit &Catalog"), this, SLOT(editTableCatalog()));
 
   menu = menuBar()->addMenu(tr("&Help"));
 
@@ -800,79 +802,106 @@ void MainWindow::findMissingImages()
 void MainWindow::editTable()
 {
 
-  DescribeSqlTables schema = DescribeSqlTables::getStampSchema();
-  /**
-  QString s;
-  QXmlStreamWriter writer(&s);
-  writer.setAutoFormatting(true);
-  writer.writeStartDocument();
-  schema.writeXml(writer);
-  writer.writeEndDocument();
+    if (!createDBWorker()) {
+        return;
+    }
+    DescribeSqlTables schema = DescribeSqlTables::getStampSchema();
+    /**
+    QString s;
+    QXmlStreamWriter writer(&s);
+    writer.setAutoFormatting(true);
+    writer.writeStartDocument();
+    schema.writeXml(writer);
+    writer.writeEndDocument();
 
-  qDebug(qPrintable(s));
+    qDebug(qPrintable(s));
 
-  QXmlStreamReader reader(s);
-  DescribeSqlTables schema2 = DescribeSqlTables::readXml(reader);
+    QXmlStreamReader reader(s);
+    DescribeSqlTables schema2 = DescribeSqlTables::readXml(reader);
 
-  QString s2;
-  QXmlStreamWriter writer2(&s2);
-  writer2.setAutoFormatting(true);
-  writer2.writeStartDocument();
-  schema2.writeXml(writer2);
-  writer2.writeEndDocument();
+    QString s2;
+    QXmlStreamWriter writer2(&s2);
+    writer2.setAutoFormatting(true);
+    writer2.writeStartDocument();
+    schema2.writeXml(writer2);
+    writer2.writeEndDocument();
 
-  if (s.compare(s2) != 0) {
-      qDebug("Failure, s != s2");
-      qDebug(qPrintable(s2));
-  } else {
-      qDebug("Yeah!, s == s2");
-      qDebug(qPrintable(s2));
-  }
-  **/
+    if (s.compare(s2) != 0) {
+        qDebug("Failure, s != s2");
+        qDebug(qPrintable(s2));
+    } else {
+        qDebug("Yeah!, s == s2");
+        qDebug(qPrintable(s2));
+    }
+    **/
 
-  if (createDBWorker()) {
-      QStringList tableNames = schema.getTableNames();
-      tableNames.sort(Qt::CaseInsensitive);
-      bool ok;
-      //QString s = schema.getDDL(true).join("\n\n");
-      //ScrollMessageBox::information(this, "Schema", s);
+    QStringList tableNames = schema.getTableNames();
+    tableNames.sort(Qt::CaseInsensitive);
+    bool ok;
+    //QString s = schema.getDDL(true).join("\n\n");
+    //ScrollMessageBox::information(this, "Schema", s);
 
-      QScopedPointer<QSettings> pSettings(getQSettings());
-      int focusedNameIndex = 0;
-      if (tableNames.size() > 0) {
+    QScopedPointer<QSettings> pSettings(getQSettings());
+    int focusedNameIndex = 0;
+    if (tableNames.size() > 0) {
         QString startName = pSettings->value(Constants::Settings_GenericDataCollectionLastEditedTable, tableNames.at(0)).toString();
         focusedNameIndex = tableNames.indexOf(startName);
         if (focusedNameIndex < 0) {
           focusedNameIndex = 0;
         }
-      }
+    }
 
-      QString tableName = QInputDialog::getItem(this, tr("Choose Table"), tr("Table"), tableNames, focusedNameIndex, false, &ok);
+    QString tableName = QInputDialog::getItem(this, tr("Choose Table"), tr("Table"), tableNames, focusedNameIndex, false, &ok);
+    editTableByName(tableName);
 
-      //int maxID = m_db->getMaxId(tableName);
-      //ScrollMessageBox::information(this, "Max ID", QString("Max ID is %1").arg(maxID));
-      if (ok && !tableName.isEmpty()) {
-        pSettings->setValue(Constants::Settings_GenericDataCollectionLastEditedTable, tableName);
-        //GenericDataCollection* data = m_db->readTableName(tableName);
-        //GenericDataCollection* data = m_db->readTableBySchema(tableName);
+    //int maxID = m_db->getMaxId(tableName);
+    //ScrollMessageBox::information(this, "Max ID", QString("Max ID is %1").arg(maxID));
+}
 
-        // This reads the table along with all linked / related tables.
-        GenericDataCollections* data = m_db->readTableWithLinks(tableName);
-        Q_ASSERT_X(data != nullptr, "MainWindow::editTable", "Returned data is null");
+void MainWindow::editTableInventory()
+{
+    editTableByName("inventory");
+}
 
-        //??ScrollMessageBox::information(this, "Supported Tables", data->getNames().join("\n"));
+void MainWindow::editTableCatalog()
+{
+    editTableByName("catalog");
+}
 
-        Q_ASSERT_X(data->contains(tableName), "MainWindow::editTable", "Table not returned");
-        if (data != nullptr)
-        {
-          int defaultSourceId = -1;
-          if (tableName.compare("bookvalues", Qt::CaseInsensitive) == 0) {
+void MainWindow::editTableByName(const QString tableName)
+{
+    if (tableName.isEmpty() || !createDBWorker()) {
+        return;
+    }
+
+    DescribeSqlTables schema = DescribeSqlTables::getStampSchema();
+    QStringList tableNames = schema.getTableNames();
+    if (!tableNames.contains(tableName, Qt::CaseSensitive)) {
+        ScrollMessageBox::critical(this, "Table Not Found", tableName);
+        return;
+    }
+    //tableNames.sort(Qt::CaseInsensitive);
+
+    QScopedPointer<QSettings> pSettings(getQSettings());
+
+    pSettings->setValue(Constants::Settings_GenericDataCollectionLastEditedTable, tableName);
+
+    // This reads the table along with all linked / related tables.
+    GenericDataCollections* data = m_db->readTableWithLinks(tableName);
+    //GenericDataCollection* data = m_db->readTableBySchema(tableName);
+    Q_ASSERT_X(data != nullptr, "MainWindow::editTable", "Returned data is null");
+
+    //ScrollMessageBox::information(this, "Supported Tables", data->getNames().join("\n"));
+
+    Q_ASSERT_X(data->contains(tableName), "MainWindow::editTableByName", "Table not returned");
+    if (data != nullptr)
+    {
+        int defaultSourceId = -1;
+        if (tableName.compare("bookvalues", Qt::CaseInsensitive) == 0) {
             defaultSourceId = m_db->selectValueSourceId(this);
-          }
-          GenericDataCollectionTableDialog dlg(tableName, *data->getTable(tableName), *m_db, schema, data, defaultSourceId);
-          dlg.exec();
-          delete data;
         }
-      }
-  }
+        GenericDataCollectionTableDialog dlg(tableName, *data->getTable(tableName), *m_db, schema, data, defaultSourceId);
+        dlg.exec();
+        delete data;
+    }
 }
