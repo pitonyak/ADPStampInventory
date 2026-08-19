@@ -612,6 +612,8 @@ void MainWindow::addMissingBookValues()
   }
 }
 
+#include "scottnumber.h"
+
 void MainWindow::findMissingImages()
 {
     QScopedPointer<QSettings> pSettings(getQSettings());
@@ -687,6 +689,7 @@ void MainWindow::findMissingImages()
           country_count_list << (country + "(N)\tcat:" + QString::number(num_catalog) + "\tinv:" + QString::number(num_inventory));
       }
 
+      // Get a list of each country
       for (QString country : country_list) {
           records.clear();
           keys.clear();
@@ -724,17 +727,17 @@ void MainWindow::findMissingImages()
       if (country_list.size() > 0)
         ScrollMessageBox::information(this, "Has Country Image Directory", country_count_list.join("\n"));
 
-      // Now check each stamp for an image:
+      // Now check each stamp for an image/
+      // This sorts the full SCOTT value alphabetically, which is a problem because "4" > "1332".
+      // To avoid this, the entire list is pulled for each country and sorted
+      // using the ScottNumber class. Not efficient, but it works as desired.
       QSqlQuery sel_cat_query(m_db->getDB());
       sel_cat_query.prepare("SELECT scott FROM catalog, country WHERE catalog.countryid=country.id AND country.a3=:c order by scott ASC");
 
       QString last_scott;
       QString first_scott_in_run;
       QString this_scott;
-      QString this_category;
       QString last_category;
-      QString num_str;
-      QString trailer;
       QStringList running_result;
       bool last_had_image;
       int num_missing_total=0;
@@ -753,10 +756,24 @@ void MainWindow::findMissingImages()
               QMessageBox::warning(this, tr("No Records Found"), tr("This should not happen when counting records"));
               return;
           }
+
+          // I can either sort values by Category/number/trailer, or have a sorted list of
+          // a ScottNumber data type includes: country, category, number (int), and trailer
+          // Sorting is then done using appropriate data types.
+          // Step 1 is to pull ALL scott numbers from the DB.
+          QList<ScottNumber> scott_numbers;
           for (QSqlRecord r : records) {
               this_scott = r.field(0).value().toString();
-              iu.splitCatalogNumber(this_scott, this_category, num_str, trailer);
-              if (this_category != last_category && !running_result.isEmpty()) {
+              scott_numbers << ScottNumber(country, this_scott);
+          }
+
+          std::sort(scott_numbers.begin(), scott_numbers.end());
+
+          for (ScottNumber& sn : scott_numbers) {
+              // sn.getCategory() % QString::number(sn.getNumber()) % sn.getTrailer();
+              this_scott = sn.getScott();
+
+              if (sn.getCategory() != last_category && !running_result.isEmpty()) {
                   if (num_missing_in_run == 1) {
                       running_result << first_scott_in_run;
                   } else if (num_missing_in_run > 1) {
@@ -772,7 +789,7 @@ void MainWindow::findMissingImages()
                       first_scott_in_run = this_scott;
                       last_scott = this_scott;
                       last_had_image = false;
-                      last_category = this_category;
+                      last_category = sn.getCategory();
                   } else {
                       last_scott = this_scott;
                   }
@@ -790,11 +807,8 @@ void MainWindow::findMissingImages()
           if (!running_result.isEmpty()) {
               ScrollMessageBox::information(this, QString::number(num_missing_total) + " Missing Stamps For " + country, running_result.join("\n"));
           }
-
       }
-
     }
-
 }
 
 #include <QXmlStreamReader>

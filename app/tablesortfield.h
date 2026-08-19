@@ -22,7 +22,7 @@ class QXmlStreamReader;
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2013-2020
+ * \date 2013-2026
  ***************************************************************************/
 class TableSortField : public QObject
 {
@@ -39,7 +39,7 @@ public:
    ***************************************************************************/
    TableSortField(const TableSortField& obj);
 
-  //**************************************************************************
+    //**************************************************************************
     /*! \brief Default constructor with the specified parent.
      *
      *  All objects owned by the parent are destroyed in the destructor.
@@ -236,9 +236,38 @@ public:
 
      QXmlStreamWriter& write(QXmlStreamWriter& writer) const;
 
+     //**************************************************************************
+     /*! \brief Write a list of fields to an XML object (I think).
+      *
+      *  Write a list of table sort fields in a form similar to:
+      *  \code
+      *  <TableSortFields><TableSortField></TableSortField><TableSortField></TableSortField></TableSortFields>
+      *  \endcode
+      *
+      *  I have no idea if this is used anywhere!
+      *
+      *  \param [in] list Fields to write as XML.
+      *  \param [in, out] writer Stream to which the XML is written.
+      *  \return Reference to the stream.
+      ***************************************************************************/
      static QXmlStreamWriter& write(const QList<TableSortField>& list, QXmlStreamWriter& writer);
+
+     //**************************************************************************
+     /*! \brief Read an XML string into a list of sort fields.
+      *
+      *  I have no idea if this is used anywhere!
+      *
+      *  \param [out] list Fields to read from XML.
+      *  \param [in, out] reader
+      *  \return Reference to the stream.
+      ***************************************************************************/
      static QXmlStreamReader& read(QList<TableSortField>& list, QXmlStreamReader& reader);
 
+     //**************************************************************************
+     /*! \brief Return a list of human readable names for the sort orders, specifically, Ascending and Descending.
+      *
+      *  \return String list with the text Ascending and Descending.
+      ***************************************************************************/
      static QStringList sortOrderNames();
 
 private:

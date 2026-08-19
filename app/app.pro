@@ -63,6 +63,7 @@ SOURCES += main.cpp\
     linkedfieldselectioncache.cpp \
     mainwindow.cpp \
     qtenummapper.cpp \
+    scottnumber.cpp \
     scrollmessagebox.cpp \
     searchoptions.cpp \
     sqldialog.cpp \
@@ -122,6 +123,7 @@ HEADERS  += \
     mainwindow.h \
     nullptr.h \
     qtenummapper.h \
+    scottnumber.h \
     scrollmessagebox.h \
     searchoptions.h \
     sqldialog.h \

@@ -8,10 +8,11 @@
 /*! \class VariantComparer
  * \brief Use to compare two variant variables.
  *
+ * This is used by the GenericDataObjectFilter.
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
- * \date 2014-2020
+ * \date 2014-2026
  ***************************************************************************/
 class VariantComparer : public QObject
 {
