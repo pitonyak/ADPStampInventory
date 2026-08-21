@@ -1,15 +1,26 @@
 
 #include "imageutility.h"
 #include <QDebug>
+#include <QPainter>
+#include <QRect>
 #include <QRegularExpression>
 
-
-ImageUtility::ImageUtility(QObject *parent) : QObject(parent),
+ImageUtility::ImageUtility(QObject *parent) : QObject(parent), m_noFileFoundImage(nullptr),
     m_catNumberRxNoCat("^(\\d+)(.*)$", QRegularExpression::CaseInsensitiveOption | QRegularExpression::DotMatchesEverythingOption),
     m_catNumberRxWithCat("^([^0-9]*)(\\d+)(.*)$", QRegularExpression::CaseInsensitiveOption | QRegularExpression::DotMatchesEverythingOption)
 {
-    // TODO: Add more such as initializing paths perhaps.
-    //
+    // Build the default image when no file is found.
+    m_noFileFoundImage = new QPixmap(400, 400);
+    m_noFileFoundImage->fill(Qt::white);
+    QPainter painter(m_noFileFoundImage);
+    painter.setPen(Qt::black);
+    painter.drawText(m_noFileFoundImage->rect(), Qt::AlignCenter, "No Image Found");
+}
+
+ImageUtility::~ImageUtility()
+{
+    delete m_noFileFoundImage;
+    m_noFileFoundImage = nullptr;
 }
 
 QString ImageUtility::getStampPath(const QString& country, const QString& category, const QString& catNumber) const
@@ -26,7 +37,6 @@ QString ImageUtility::getStampPath(const QString& country, const QString& catego
 
     QRegularExpressionMatchIterator i = catNumberRx.globalMatch(catNumber);
     QString leading_num_str;
-    //QString letter;
 
     if (!i.hasNext()) {
         qCritical() << "Category (" << category << ") with catelog number does not have the correct format: " << catNumber;
@@ -35,7 +45,7 @@ QString ImageUtility::getStampPath(const QString& country, const QString& catego
 
     QRegularExpressionMatch match = i.next();
     leading_num_str = match.captured(1);
-    //letter = match.captured(2);
+    //QString letter = match.captured(2);
     // Numbers are in sets grouped by 1000
     int thousands = leading_num_str.toInt() / 1000 * 1000;
     if (thousands == 0) {
@@ -128,6 +138,26 @@ QStringList ImageUtility::findBookImages(const QString& country, const QString& 
     }
 
     return return_list;
+}
+
+QList<QPixmap> ImageUtility::getBookImages(const QStringList& paths) const
+{
+    QList<QPixmap> images;
+    for (const QString& path: paths) {
+        QFileInfo fileInfo(path);
+        // This first check is probably redundant.
+        if (fileInfo.exists() && fileInfo.isFile()) {
+            QPixmap pix(path);
+            if (!pix.isNull()) {
+                images.append(pix);
+            } else {
+                qDebug() << "ImageUtility::getBookImages : Path exists, but image failed to load : " << path;
+            }
+        } else {
+            qDebug() << "ImageUtility::getBookImages : Ignoring path : " << path;
+        }
+    }
+    return images;
 }
 
 void ImageUtility::setBaseDirectory(const QDir& x)

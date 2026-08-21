@@ -7,8 +7,6 @@ void TestAll::testImageUtility() {
     ImageUtility iu;
     iu.setBaseDirectory("/andrew0/home/andy/Devsrc/Qt/Projects/Stamps/Images/book");
 
-
-
     QString catalogNumber("RW7a");
     QString category;
     QString num;
@@ -47,8 +45,6 @@ void TestAll::testImageUtility() {
     QVERIFY(! iu.splitCatalogNumber("xXa", category, num, trailer));
     QVERIFY(! iu.splitCatalogNumber("!", category, num, trailer));
 
-
-/**
     QStringList list;
     list = iu.findBookImages("USA", "100");
     QVERIFY(list.size() > 0);
@@ -66,6 +62,8 @@ void TestAll::testImageUtility() {
     QVERIFY(list.size() > 0);
     list = iu.findBookImages("USA", "RW1");
     QVERIFY(list.size() > 0);
-**/
+
+    QList<QPixmap> pixList = iu.getBookImages("USA", "11");
+    QVERIFY(pixList.size() > 0);
 }
 
