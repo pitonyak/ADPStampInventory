@@ -155,3 +155,6 @@ FORMS    += mainwindow.ui
 
 DESTDIR = $$PWD/../build
 
+RESOURCES += \
+    resources.qrc
+

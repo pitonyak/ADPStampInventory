@@ -11,13 +11,12 @@ AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent) {
   setWindowFlags(windowFlags() &
                  ~Qt::WindowContextHelpButtonHint); // Remove the '?' button
 
-  // 2. Create the layout structure
   auto *mainLayout = new QVBoxLayout(this);
   auto *contentLayout = new QHBoxLayout();
 
   auto *logoLabel = new QLabel(this);
   QPixmap logo(
-      ":/images/logo.png"); // Path to your Qt Resource File (.qrc) TODO
+      ":/images/4_my_stamp.png"); // Path to your Qt Resource File (.qrc)
   if (!logo.isNull()) {
     logoLabel->setPixmap(
         logo.scaled(64, 64, Qt::KeepAspectRatio, Qt::SmoothTransformation));
@@ -31,11 +30,11 @@ AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent) {
   infoLabel->setOpenExternalLinks(true); // Allows users to click hyperlinks
   infoLabel->setText(
       "<h2><b>ADP Stamp Inventory</b></h2>"
-      "<p>Version 2.4.1 (64-bit) ??? TODO: Can I pull something from here?</p>"
+      "<p>Version 0.5.1 (64-bit)</p>"
       "<p>Built on: " __DATE__ "</p>"
       "<p>&copy; 2026 Andrew Pitonyak</p>"
-      "<p><a href='https://www.pitonyak.org'>TODO reference  the git "
-      "repo</a></p>");
+      "<p><a href='https://github.com/pitonyak/ADPStampInventory'>https://github.com/pitonyak/ADPStampInventory"
+      "</a></p>");
   contentLayout->addWidget(infoLabel);
   contentLayout->setStretchFactor(infoLabel, 1);
 
