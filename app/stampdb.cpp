@@ -4,6 +4,7 @@
 #include "csvwriter.h"
 #include "genericdatacollection.h"
 #include "genericdatacollections.h"
+#include "imageutility.h"
 
 #include <QFile>
 #include <QDir>
@@ -23,6 +24,8 @@
 #include <QList>
 #include <QtGlobal>
 #include <QInputDialog>
+#include <QCollator>
+#include <algorithm> // Required for std::sort
 
 StampDB::StampDB(QObject *parent) :
   QObject(parent),
@@ -729,6 +732,72 @@ QString StampDB::getClosestTableName(const QString& aName)
     }
   }
   return "";
+}
+
+QList<QSharedPointer<CatalogEntry>> StampDB::getCatalog(bool sort)
+{
+    QList<QSharedPointer<CatalogEntry>> list;
+    QString sqlSelect = "select catalog.id, catalog.scott, country.a3, catalog.releasedate, catalog.facevalue, catalog.description, catalog.updated from catalog, country where catalog.countryid= country.id AND country.a3='USA' order by catalog.scott";
+    if (openDB())
+    {
+        QSqlDatabase& db = getDB();
+        QSqlQuery query(db);
+
+        if (!query.exec(sqlSelect))
+        {
+            ScrollMessageBox::information(nullptr, "ERROR", query.lastError().text());
+        }
+        else if (query.isSelect())
+        {
+            ImageUtility iu;
+            while (query.isActive() && query.next())
+            {
+                int i = 0;
+                long dbId = query.record().value(i).isNull() ? -1 : query.record().value(i).toLongLong();
+                ++i;
+                QString catalogId = query.record().value(i).isNull() ? "" : query.record().value(i).toString();
+                ++i;
+                const QString& countryA3 = query.record().value(i).isNull() ? "" : query.record().value(i).toString();
+                ++i;
+                const QDateTime releaseDate = query.record().value(i).isNull() ? QDateTime::currentDateTime() : query.record().value(i).toDateTime();
+                ++i;
+                float faceValue = query.record().value(i).isNull() ? 0.0 : query.record().value(i).toFloat();
+                ++i;
+                const QString& description = query.record().value(i).isNull() ? "" : query.record().value(i).toString();
+                ++i;
+                const QDateTime updatedDate = query.record().value(i).isNull() ? QDateTime::currentDateTime() : query.record().value(i).toDateTime();
+                list.append(QSharedPointer<CatalogEntry>::create(dbId, faceValue, catalogId, countryA3, description, releaseDate, updatedDate, nullptr));
+                QString category;
+                QString num;
+                QString trailer;
+                iu.splitCatalogNumber(catalogId, category, num, trailer);
+                list.last()->setIdCategory(category);
+                list.last()->setIdNum(num.toLong());
+                list.last()->setIdTrailer(trailer);
+            }
+        }
+    }
+    if (sort)
+    {
+        QCollator collator;
+        collator.setCaseSensitivity(Qt::CaseInsensitive);
+        collator.setNumericMode(true);
+        std::sort(list.begin(), list.end(), [&collator](const QSharedPointer<CatalogEntry> &a, const QSharedPointer<CatalogEntry> &b){
+            int tempCompare = a->getCountryA3().compare(b->getCountryA3(), Qt::CaseInsensitive);
+            if (tempCompare != 0) {
+                return tempCompare < 0;
+            }
+            tempCompare = a->getIdCategory().compare(b->getIdCategory(), Qt::CaseInsensitive);
+            if (tempCompare != 0) {
+                return tempCompare < 0;
+            }
+            if (a->getIdNum() != b->getIdNum()) {
+                return a->getIdNum() < b->getIdNum();
+            }
+            return a->getIdTrailer() < b->getIdTrailer();
+        });
+    }
+    return list;
 }
 
 QStringList StampDB::getOneColumnAsString(const QString& sqlSelect)

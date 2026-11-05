@@ -28,6 +28,8 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
+    aboutdialog.cpp \
+    catalogentry.cpp \
     changedobject.cpp \
     changedobjectbase.cpp \
     changetracker.cpp \
@@ -57,6 +59,7 @@ SOURCES += main.cpp\
     genericdataobject.cpp \
     genericdataobjectfilter.cpp \
     genericdataobjectlessthan.cpp \
+    imagedialog.cpp \
     imageutility.cpp \
     linkbackfilterdelegate.cpp \
     linkedfieldcache.cpp \
@@ -86,6 +89,8 @@ SOURCES += main.cpp\
     xmlutility.cpp \
 
 HEADERS  += \
+    aboutdialog.h \
+    catalogentry.h \
     changedobject.h \
     changedobjectbase.h \
     changetracker.h \
@@ -116,6 +121,7 @@ HEADERS  += \
     genericdataobjectfilter.h \
     genericdataobjectlessthan.h \
     globals.h \
+    imagedialog.h \
     imageutility.h \
     linkbackfilterdelegate.h \
     linkedfieldcache.h \

@@ -13,6 +13,8 @@
 #include "globals.h"
 #include "configuredialog.h"
 #include "imageutility.h"
+#include "aboutdialog.h"
+#include "imagedialog.h"
 
 #include <QDebug>
 #include <QMessageBox>
@@ -87,6 +89,7 @@ void MainWindow::setupMenuBar()
   menu->addAction(tr("Edit &Catalog"), this, SLOT(editTableCatalog()));
 
   menu = menuBar()->addMenu(tr("&Help"));
+  menu->addAction(tr("&About Adp Stamp Inventory"), this, SLOT(helpAbout()));
 
 
   /**
@@ -527,6 +530,10 @@ void MainWindow::configure()
 
 void MainWindow::testing() {
   if (createDBWorker()) {
+        ImageDialog dialog(m_db, "USA", "4", this);
+        dialog.exec();
+        return;
+
     QString sql = "select id, (\"id\" || ' - ' || \"description\") As x from valuesource where ID > 0 order by valuesource.year DESC ";
     QList<QSqlRecord> records;
 
@@ -616,10 +623,10 @@ void MainWindow::addMissingBookValues()
 
 void MainWindow::findMissingImages()
 {
-    QScopedPointer<QSettings> pSettings(getQSettings());
-    QString imagePath = pSettings->value(Constants::Settings_CatalogImagePath).toString();
+    //QScopedPointer<QSettings> pSettings(getQSettings());
+    //QString imagePath = pSettings->value(Constants::Settings_CatalogImagePath).toString();
     ImageUtility iu;
-    iu.setBaseDirectory(imagePath);
+    //iu.setBaseDirectory(imagePath);
 
     if (createDBWorker()) {
       QString country_sql = "select id, name, a3 from country order by name DESC ";
@@ -782,7 +789,7 @@ void MainWindow::findMissingImages()
                   last_had_image = true;
                   num_missing_in_run = 0;
               }
-              if (iu.findBookImages(country, this_scott).isEmpty()) {
+              if (iu.findBookImages(country, this_scott, ImageUtility::Image_Flags::Catalog).isEmpty()) {
                   ++num_missing_total;
                   ++num_missing_in_run;
                   if (last_had_image) {
@@ -919,3 +926,10 @@ void MainWindow::editTableByName(const QString tableName)
         delete data;
     }
 }
+
+void MainWindow::helpAbout()
+{
+    AboutDialog dialog(this);
+    dialog.exec();
+}
+

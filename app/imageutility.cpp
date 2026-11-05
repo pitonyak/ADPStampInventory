@@ -1,9 +1,13 @@
 
 #include "imageutility.h"
+#include "globals.h"
+#include "constants.h"
+
 #include <QDebug>
 #include <QPainter>
 #include <QRect>
 #include <QRegularExpression>
+#include <QSettings>
 
 ImageUtility::ImageUtility(QObject *parent) : QObject(parent), m_noFileFoundImage(nullptr),
     m_catNumberRxNoCat("^(\\d+)(.*)$", QRegularExpression::CaseInsensitiveOption | QRegularExpression::DotMatchesEverythingOption),
@@ -15,6 +19,10 @@ ImageUtility::ImageUtility(QObject *parent) : QObject(parent), m_noFileFoundImag
     QPainter painter(m_noFileFoundImage);
     painter.setPen(Qt::black);
     painter.drawText(m_noFileFoundImage->rect(), Qt::AlignCenter, "No Image Found");
+
+    QScopedPointer<QSettings> pSettings(getQSettings());
+    m_BaseDirectory = pSettings->value(Constants::Settings_CatalogImagePath).toString();
+    m_MyBaseDirectory = pSettings->value(Constants::Settings_UserImagePath).toString();
 }
 
 ImageUtility::~ImageUtility()
@@ -23,9 +31,9 @@ ImageUtility::~ImageUtility()
     m_noFileFoundImage = nullptr;
 }
 
-QString ImageUtility::getStampPath(const QString& country, const QString& category, const QString& catNumber) const
+QString ImageUtility::getStampPath(const QString& country, const QString& category, const QString& catNumber, const bool isGeneric) const
 {
-    QString cat_path = getCategoryPath(country, category);
+    QString cat_path = getCategoryPath(country, category, isGeneric);
 
     //
     // The numeric portion is preceded by the category, case does not matter.
@@ -100,7 +108,7 @@ bool ImageUtility::splitCatalogNumber(const QString& catalogNumber, QString& cat
     return true;
 }
 
-QStringList ImageUtility::findBookImages(const QString& country, const QString& catNumber) const
+QStringList ImageUtility::findBookImages(const QString& country, const QString& catNumber, ImageUtility::Image_Flags flags) const
 {
     // Path looks something like:
     // base/country/category/<number>/catNumber<optional_stuff>
@@ -112,14 +120,6 @@ QStringList ImageUtility::findBookImages(const QString& country, const QString& 
     QString trailer;
     splitCatalogNumber(catNumber, category, num, trailer);
 
-    QString stamp_path = getStampPath(country, category, catNumber);
-    QDir stamp_dir(stamp_path);
-    if (!stamp_dir.exists()) {
-        qCritical() << "Path to image directory does not exist: " << stamp_path;
-        return return_list;
-    }
-
-    QStringList const files = stamp_dir.entryList(QStringList() << "*.png", QDir::Files);
     //
     // Must begin with the cat number (case-insensitive).
     // May have a trailing '_' followed by random text.
@@ -129,18 +129,49 @@ QStringList ImageUtility::findBookImages(const QString& country, const QString& 
     //
     QRegularExpression catNumberFileRx("^" + catNumber + "(_.+|)\\.png$", QRegularExpression::CaseInsensitiveOption | QRegularExpression::DotMatchesEverythingOption);
     QRegularExpressionMatchIterator i;
-    for (QString const& x : files) {
-        i = catNumberFileRx.globalMatch(x);
-        if (i.hasNext()) {
-            qDebug() << "Found " << x << " matching " << catNumber;
-            return_list << stamp_path + QDir::separator() + x;
+
+
+    if ((flags & ImageUtility::Image_Flags::Catalog) == ImageUtility::Image_Flags::Catalog)
+    {
+        QString catalog_stamp_path = getStampPath(country, category, catNumber, true);
+        QDir catalog_stamp_dir(catalog_stamp_path);
+        if (!catalog_stamp_dir.exists()) {
+            qCritical() << "Path to the catalog image directory does not exist: " << catalog_stamp_path;
+            return return_list;
+        }
+
+        QStringList const files = catalog_stamp_dir.entryList(QStringList() << "*.png", QDir::Files);
+        for (QString const& x : files) {
+            i = catNumberFileRx.globalMatch(x);
+            if (i.hasNext()) {
+                qDebug() << "Found " << x << " matching " << catNumber;
+                return_list << catalog_stamp_path + QDir::separator() + x;
+            }
+        }
+    }
+
+    if ((flags & ImageUtility::Image_Flags::Mine) == ImageUtility::Image_Flags::Mine)
+    {
+        // repeat for personal images
+        QString my_stamp_path = getStampPath(country, category, catNumber, false);
+        QDir my_stamp_dir(my_stamp_path);
+        if (!my_stamp_dir.exists()) {
+            return return_list;
+        }
+        QStringList const myFiles = my_stamp_dir.entryList(QStringList() << "*.png", QDir::Files);
+        for (QString const& x : myFiles) {
+            i = catNumberFileRx.globalMatch(x);
+            if (i.hasNext()) {
+                qDebug() << "Found " << x << " matching " << catNumber;
+                return_list << my_stamp_path + QDir::separator() + x;
+            }
         }
     }
 
     return return_list;
 }
 
-QList<QPixmap> ImageUtility::getBookImages(const QStringList& paths) const
+QList<QPixmap> ImageUtility::getBookImages(const QStringList& paths, bool allowEmpty) const
 {
     QList<QPixmap> images;
     for (const QString& path: paths) {
@@ -156,6 +187,9 @@ QList<QPixmap> ImageUtility::getBookImages(const QStringList& paths) const
         } else {
             qDebug() << "ImageUtility::getBookImages : Ignoring path : " << path;
         }
+    }
+    if (images.isEmpty() && !allowEmpty) {
+        images.append(*m_noFileFoundImage);
     }
     return images;
 }
@@ -174,8 +208,8 @@ bool ImageUtility::hasCountry(const QString& country) const
         qCritical() << "Base image directory does not exist: " << m_BaseDirectory.path();
         return false;
     }
-    if (!QDir(getCountryPath(country)).exists()) {
-        qCritical() << "Base image country path does not exist: " << getCountryPath(country);
+    if (!QDir(getCountryPath(country, true)).exists()) {
+        qCritical() << "Base image country path does not exist: " << getCountryPath(country, true);
         return false;
     }
     return true;
@@ -186,8 +220,8 @@ bool ImageUtility::hasCategory(const QString& country, const QString& category) 
     if (!hasCountry(country)) {
         return false;
     }
-    if (!QDir(getCategoryPath(country, category)).exists()) {
-        qCritical() << "Base image category path does not exist: " << getCategoryPath(country, category);
+    if (!QDir(getCategoryPath(country, category, true)).exists()) {
+        qCritical() << "Base image category path does not exist: " << getCategoryPath(country, category, true);
         return false;
     }
     return true;

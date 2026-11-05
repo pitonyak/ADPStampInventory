@@ -3,6 +3,7 @@
 
 #include "describesqltables.h"
 #include "genericdatacollections.h"
+#include "catalogentry.h"
 
 #include <QObject>
 #include <QString>
@@ -285,6 +286,13 @@ public:
   QStringList getOneColumnAsString(const QString& sqlSelect);
 
   DescribeSqlTables m_schema;
+
+  /*!
+   * @brief Get the catalog
+   * @param sort - If true, sorted by country A3 and then by catalog ID.
+   * @return List of catalog entries.
+   */
+  QList<QSharedPointer<CatalogEntry>> getCatalog(bool sort);
 
 signals:
 

@@ -43,6 +43,7 @@ public slots:
     void exportInventoryCSV();
     void findMissingImages();
     void getSchema();
+    void helpAbout();
     void openSQLWindow();
     void readCSV();
     void testing();
