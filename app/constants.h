@@ -1,11 +1,12 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-#include<QString>
+#include <QString>
 
 //**************************************************************************
 /*! \class Constants
- *  \brief Encapulate constants in a typesafe way. These values are used in the application configuration file, for example.
+ *  \brief Encapulate constants in a typesafe way. These values are used in the
+ * application configuration file, for example.
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
@@ -13,8 +14,7 @@
  *
  **************************************************************************/
 
-class Constants
-{
+class Constants {
 public:
   Constants();
 
@@ -61,7 +61,6 @@ public:
 
   /*! Settings Name to access the path to the user images. */
   static QString Settings_UserImagePath;
-
 };
 
 #endif // CONSTANTS_H

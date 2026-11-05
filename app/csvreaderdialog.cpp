@@ -1,69 +1,60 @@
 #include "csvreaderdialog.h"
 #include "constants.h"
-#include "csvreader.h"
 #include "csvline.h"
+#include "csvreader.h"
 #include "globals.h"
 
-#include <QGroupBox>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QPushButton>
+#include <QButtonGroup>
+#include <QCheckBox>
+#include <QComboBox>
+#include <QDebug>
 #include <QDialogButtonBox>
 #include <QFormLayout>
-#include <QLabel>
-#include <QComboBox>
-#include <QSpinBox>
-#include <QCheckBox>
-#include <QMap>
-#include <QTextEdit>
-#include <QRadioButton>
 #include <QGridLayout>
-#include <QButtonGroup>
+#include <QGroupBox>
+#include <QHBoxLayout>
+#include <QLabel>
 #include <QLineEdit>
-#include <QTableWidget>
-#include <QSettings>
-#include <QDebug>
+#include <QMap>
+#include <QPushButton>
+#include <QRadioButton>
 #include <QScopedPointer>
+#include <QSettings>
+#include <QSpinBox>
+#include <QTableWidget>
+#include <QTextEdit>
+#include <QVBoxLayout>
 
-CSVReaderDialog::CSVReaderDialog(CSVReader* reader, QWidget *parent) :
-  QDialog(parent),
-  m_importGroupBox(nullptr), m_separatorOptionsGroupBox(nullptr), m_fieldsGroupBox(nullptr),
-  m_characterSet(nullptr), m_firstRow(nullptr),
-  m_separatedMap(nullptr),
-  m_otherSeparatorBox(nullptr),
-  m_otherSeparator(nullptr),
-  m_mergeDelimiters(nullptr),
-  m_textDelimiter(nullptr),
-  m_fixedWidthRB(nullptr),
-  m_separatedByRB(nullptr),
-  m_textDelimiterLabel(nullptr),
-  m_columnType(nullptr),
-  m_columnTypeLabel(nullptr),
-  m_tableWidget(nullptr),
-  m_reader(reader)
-{
+CSVReaderDialog::CSVReaderDialog(CSVReader *reader, QWidget *parent)
+    : QDialog(parent), m_importGroupBox(nullptr),
+      m_separatorOptionsGroupBox(nullptr), m_fieldsGroupBox(nullptr),
+      m_characterSet(nullptr), m_firstRow(nullptr), m_separatedMap(nullptr),
+      m_otherSeparatorBox(nullptr), m_otherSeparator(nullptr),
+      m_mergeDelimiters(nullptr), m_textDelimiter(nullptr),
+      m_fixedWidthRB(nullptr), m_separatedByRB(nullptr),
+      m_textDelimiterLabel(nullptr), m_columnType(nullptr),
+      m_columnTypeLabel(nullptr), m_tableWidget(nullptr), m_reader(reader) {
   buildDialog();
   QScopedPointer<QSettings> pSettings(getQSettings());
-  restoreGeometry(pSettings->value(Constants::Settings_CSVDialogGeometry).toByteArray());
+  restoreGeometry(
+      pSettings->value(Constants::Settings_CSVDialogGeometry).toByteArray());
 }
 
-CSVReaderDialog::~CSVReaderDialog()
-{
+CSVReaderDialog::~CSVReaderDialog() {
   QScopedPointer<QSettings> pSettings(getQSettings());
   pSettings->setValue(Constants::Settings_CSVDialogGeometry, saveGeometry());
-  if (m_separatedMap != nullptr)
-  {
+  if (m_separatedMap != nullptr) {
     delete m_separatedMap;
     m_separatedMap = nullptr;
   }
 }
 
-void CSVReaderDialog::buildDialog()
-{
+void CSVReaderDialog::buildDialog() {
   QHBoxLayout *mainLayout = new QHBoxLayout();
   QVBoxLayout *vBox = new QVBoxLayout();
 
-  QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Vertical);
+  QDialogButtonBox *buttonBox = new QDialogButtonBox(
+      QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Vertical);
   connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
   connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
 
@@ -78,8 +69,7 @@ void CSVReaderDialog::buildDialog()
   setLayout(mainLayout);
 }
 
-void CSVReaderDialog::createImportGroupBox()
-{
+void CSVReaderDialog::createImportGroupBox() {
   m_importGroupBox = new QGroupBox(tr("Import"));
   QFormLayout *layout = new QFormLayout;
   QStringList supportedCharacterSets;
@@ -136,8 +126,7 @@ void CSVReaderDialog::createImportGroupBox()
   m_characterSet->addItems(supportedCharacterSets);
   layout->addRow(new QLabel(tr("Character set")), m_characterSet);
   int utfIdx = supportedCharacterSets.indexOf("Default");
-  if (utfIdx >= 0)
-  {
+  if (utfIdx >= 0) {
     m_characterSet->setCurrentIndex(utfIdx);
   }
 
@@ -147,21 +136,21 @@ void CSVReaderDialog::createImportGroupBox()
   m_importGroupBox->setLayout(layout);
 }
 
-void CSVReaderDialog::createSeparatorOptionsGroupBox()
-{
-  QVBoxLayout* vBoxMain = new QVBoxLayout();
+void CSVReaderDialog::createSeparatorOptionsGroupBox() {
+  QVBoxLayout *vBoxMain = new QVBoxLayout();
 
-  QGridLayout* grid = new QGridLayout(this);
-  QButtonGroup* bg = new QButtonGroup(this);
+  QGridLayout *grid = new QGridLayout(this);
+  QButtonGroup *bg = new QButtonGroup(this);
   m_fixedWidthRB = new QRadioButton(tr("Fixed width"));
   m_separatedByRB = new QRadioButton(tr("Separated by"));
   m_separatedByRB->setChecked(true);
   bg->addButton(m_fixedWidthRB);
   bg->addButton(m_separatedByRB);
 
-  connect(m_separatedByRB, SIGNAL(toggled(bool)), this, SLOT(separatorToggled(bool)));
+  connect(m_separatedByRB, SIGNAL(toggled(bool)), this,
+          SLOT(separatorToggled(bool)));
 
-  m_separatedMap = new QMap<QString, QCheckBox*>();
+  m_separatedMap = new QMap<QString, QCheckBox *>();
   m_otherSeparatorBox = new QCheckBox(tr("Other"));
   m_otherSeparator = new QLineEdit();
   m_mergeDelimiters = new QCheckBox(tr("Merge delimiters"));
@@ -172,7 +161,7 @@ void CSVReaderDialog::createSeparatorOptionsGroupBox()
   vBoxMain->addWidget(m_fixedWidthRB);
   vBoxMain->addWidget(m_separatedByRB);
 
-  QCheckBox* cBox = new QCheckBox(tr("Tab"));
+  QCheckBox *cBox = new QCheckBox(tr("Tab"));
   m_separatedMap->insert("\t", cBox);
   grid->addWidget(cBox, 0, 0, Qt::AlignLeft);
 
@@ -206,12 +195,10 @@ void CSVReaderDialog::createSeparatorOptionsGroupBox()
 
   m_separatorOptionsGroupBox = new QGroupBox(tr("Separator"));
   m_separatorOptionsGroupBox->setLayout(vBoxMain);
-
 }
 
-void CSVReaderDialog::separatorToggled(bool enabled)
-{
-  QMapIterator<QString, QCheckBox*> i(*m_separatedMap);
+void CSVReaderDialog::separatorToggled(bool enabled) {
+  QMapIterator<QString, QCheckBox *> i(*m_separatedMap);
   while (i.hasNext()) {
     i.next();
     i.value()->setEnabled(enabled);
@@ -224,48 +211,45 @@ void CSVReaderDialog::separatorToggled(bool enabled)
   m_textDelimiter->setEnabled(enabled);
 }
 
-void CSVReaderDialog::tableCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn)
-{
-  qDebug() << qPrintable(QString("(%1,%2)(%3,%4)").arg(currentRow).arg(currentColumn).arg(previousRow).arg(previousColumn));
-  if (m_reader != nullptr)
-  {
-    // TODO: Add a listener to the drop down to push type changes back to the reader.
+void CSVReaderDialog::tableCellChanged(int currentRow, int currentColumn,
+                                       int previousRow, int previousColumn) {
+  qDebug() << qPrintable(QString("(%1,%2)(%3,%4)")
+                             .arg(currentRow)
+                             .arg(currentColumn)
+                             .arg(previousRow)
+                             .arg(previousColumn));
+  if (m_reader != nullptr) {
+    // TODO: Add a listener to the drop down to push type changes back to the
+    // reader.
     // TODO: Track these changes as we move from one to another.
-    //QMetaType::Type colType = m_reader->guessColumnType(currentColumn);
+    // QMetaType::Type colType = m_reader->guessColumnType(currentColumn);
     QMetaType::Type colType = m_FieldType[currentColumn];
-    if (!m_typeToTxt.contains(colType))
-    {
+    if (!m_typeToTxt.contains(colType)) {
       m_columnType->setCurrentIndex(0);
-    }
-    else
-    {
-      const QStringList& list = m_typeToTxt.value(colType);
+    } else {
+      const QStringList &list = m_typeToTxt.value(colType);
       m_columnType->setCurrentIndex(m_typeNames.indexOf(list.first()));
     }
   }
 }
 
-void CSVReaderDialog::columnTypeChanged(const QString& text)
-{
-  //int iCol = getCurrentColumn();
+void CSVReaderDialog::columnTypeChanged(const QString &text) {
+  // int iCol = getCurrentColumn();
   //?? Save the type for the column if it is a known type.
-  qDebug() << qPrintable(QString("New type %1 for column %2").arg(text).arg(getCurrentColumn()));
+  qDebug() << qPrintable(
+      QString("New type %1 for column %2").arg(text).arg(getCurrentColumn()));
 }
 
-int CSVReaderDialog::getCurrentColumn() const
-{
+int CSVReaderDialog::getCurrentColumn() const {
   return (m_tableWidget != nullptr) ? m_tableWidget->currentColumn() : -1;
 }
 
-void CSVReaderDialog::tableSelectionChanged()
-{
+void CSVReaderDialog::tableSelectionChanged() {
   qDebug() << "Table selection changed";
   QList<QTableWidgetSelectionRange> ranges = m_tableWidget->selectedRanges();
 }
 
-
-void CSVReaderDialog::creatFieldsGroupBox()
-{
+void CSVReaderDialog::creatFieldsGroupBox() {
   QList<QMetaType::Type> typeList;
   typeList << QMetaType::Bool;
   m_txtToType.insert("Boolean", typeList);
@@ -323,7 +307,6 @@ void CSVReaderDialog::creatFieldsGroupBox()
   m_typeToTxt.insert(QMetaType::UInt, sList);
   sList.clear();
 
-
   sList << "Long Integer";
   m_typeToTxt.insert(QMetaType::Long, sList);
   m_typeToTxt.insert(QMetaType::LongLong, sList);
@@ -351,7 +334,6 @@ void CSVReaderDialog::creatFieldsGroupBox()
   m_typeToTxt.insert(QMetaType::Double, sList);
   sList.clear();
 
-
   m_typeNames << "Text";
   m_typeNames << "Boolean";
   m_typeNames << "Integer";
@@ -370,8 +352,7 @@ void CSVReaderDialog::creatFieldsGroupBox()
   m_columnType = new QComboBox();
   m_columnTypeLabel->setBuddy(m_columnType);
 
-  for (int i=0; i<m_typeNames.size(); ++i)
-  {
+  for (int i = 0; i < m_typeNames.size(); ++i) {
     m_columnType->addItem(m_typeNames[i]);
   }
 
@@ -389,30 +370,26 @@ void CSVReaderDialog::creatFieldsGroupBox()
   configureFromReader(vBox);
 
   m_fieldsGroupBox->setLayout(vBox);
-  if (m_tableWidget != nullptr)
-  {
-    connect(m_tableWidget, SIGNAL(itemSelectionChanged()), this, SLOT(tableSelectionChanged()));
-    connect(m_tableWidget, SIGNAL(currentCellChanged(int, int, int, int)), this, SLOT(tableCellChanged(int, int, int, int)));
+  if (m_tableWidget != nullptr) {
+    connect(m_tableWidget, SIGNAL(itemSelectionChanged()), this,
+            SLOT(tableSelectionChanged()));
+    connect(m_tableWidget, SIGNAL(currentCellChanged(int, int, int, int)), this,
+            SLOT(tableCellChanged(int, int, int, int)));
   }
-  if (m_columnType != nullptr)
-  {
-    connect(m_columnType, SIGNAL(currentTextChanged(QString)), this, SLOT(columnTypeChanged(QString)));
+  if (m_columnType != nullptr) {
+    connect(m_columnType, SIGNAL(currentTextChanged(QString)), this,
+            SLOT(columnTypeChanged(QString)));
   }
 }
 
-
-void CSVReaderDialog::configureFromReader(QVBoxLayout* vBoxLayout)
-{
+void CSVReaderDialog::configureFromReader(QVBoxLayout *vBoxLayout) {
   bool addToWidget = false;
-  if (m_reader != nullptr)
-  {
-    if (m_tableWidget == nullptr)
-    {
-      m_tableWidget = new QTableWidget(m_reader->countLines(), m_reader->countHeaderColumns());
+  if (m_reader != nullptr) {
+    if (m_tableWidget == nullptr) {
+      m_tableWidget = new QTableWidget(m_reader->countLines(),
+                                       m_reader->countHeaderColumns());
       addToWidget = (vBoxLayout != nullptr);
-    }
-    else
-    {
+    } else {
       m_tableWidget->setRowCount(0);
       m_tableWidget->setColumnCount(0);
     }
@@ -420,27 +397,24 @@ void CSVReaderDialog::configureFromReader(QVBoxLayout* vBoxLayout)
     m_tableWidget->setRowCount(m_reader->countLines());
     m_tableWidget->setColumnCount(m_reader->countHeaderColumns());
 
-    m_tableWidget->setHorizontalHeaderLabels(m_reader->getHeader().toStringList());
-    for (int row=0; row<m_reader->countLines(); ++row)
-    {
-      const CSVLine& line = m_reader->getLine(row);
-      for (int col=0; col<line.size(); ++col)
-      {
-        QTableWidgetItem *newItem = new  QTableWidgetItem(line[col].getValue());
+    m_tableWidget->setHorizontalHeaderLabels(
+        m_reader->getHeader().toStringList());
+    for (int row = 0; row < m_reader->countLines(); ++row) {
+      const CSVLine &line = m_reader->getLine(row);
+      for (int col = 0; col < line.size(); ++col) {
+        QTableWidgetItem *newItem = new QTableWidgetItem(line[col].getValue());
         m_tableWidget->setItem(row, col, newItem);
       }
     }
-    if (addToWidget){
+    if (addToWidget) {
       vBoxLayout->addWidget(m_tableWidget);
     }
 
     // Set the expected types.
     m_FieldType.clear();
-    for (int i=0; i<m_reader->countHeaderColumns(); ++i)
-    {
+    for (int i = 0; i < m_reader->countHeaderColumns(); ++i) {
       // TODO: Set to use signed types rather than unsigned?
       m_FieldType.append(m_reader->guessColumnType(i));
     }
   }
 }
-

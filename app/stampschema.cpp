@@ -1,6 +1,3 @@
 #include "stampschema.h"
 
-StampSchema::StampSchema()
-{
-
-}
+StampSchema::StampSchema() {}

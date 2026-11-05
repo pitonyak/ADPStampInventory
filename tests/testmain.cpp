@@ -9,8 +9,8 @@
  *
  * https://stackoverflow.com/questions/37987301/how-to-run-multiple-qtest-classes
  *
- * For my purposes I will simply create a single test class, which is a horrid way to
- * do this but it will work for now.
+ * For my purposes I will simply create a single test class, which is a horrid
+ * way to do this but it will work for now.
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.

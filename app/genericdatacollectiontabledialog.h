@@ -28,8 +28,7 @@ class SearchOptions;
  * \date 2012-2019
  **************************************************************************/
 
-class GenericDataCollectionTableDialog : public QDialog
-{
+class GenericDataCollectionTableDialog : public QDialog {
   Q_OBJECT
 public:
   /*! \brief Constructor
@@ -39,10 +38,16 @@ public:
    *  \param [in, out] db Encapsulates data acccess.
    *  \param [in, out] schema For a set of tables.
    *  \param [in, out] tables Data for all of the related tables.
-   *  \param [in, out] defaultSourceId Used only if it is relevant because the bookvalue field was updated. So only used for a single table listing what a stamp is worth.
-   *  \param [in, out] parent The object's owner. The parent's destructor destroys this object.
+   *  \param [in, out] defaultSourceId Used only if it is relevant because the
+   * bookvalue field was updated. So only used for a single table listing what a
+   * stamp is worth.
+   *  \param [in, out] parent The object's owner. The parent's destructor
+   * destroys this object.
    */
-  explicit GenericDataCollectionTableDialog(const QString& tableName, GenericDataCollection& data, StampDB& db, DescribeSqlTables& schema, GenericDataCollections *tables, int defaultSourceId = -1, QWidget *parent=nullptr);
+  explicit GenericDataCollectionTableDialog(
+      const QString &tableName, GenericDataCollection &data, StampDB &db,
+      DescribeSqlTables &schema, GenericDataCollections *tables,
+      int defaultSourceId = -1, QWidget *parent = nullptr);
 
   /*! \brief Destructor saves dialog geometry. */
   virtual ~GenericDataCollectionTableDialog();
@@ -51,11 +56,14 @@ public:
   void virtual saveState();
 
   // Sadly, this cannot be virtual because it is called from the constructor.
-  // I only pulled this out so that it would be in an easily seen separated location.
+  // I only pulled this out so that it would be in an easily seen separated
+  // location.
   void restoreState();
 
-  /*! \brief Find the next instance of the string "s" based on the current cursor position and column.
-   * TODO: Should support extra search options such as regular expression, wild card, full match, partial match, etc.
+  /*! \brief Find the next instance of the string "s" based on the current
+   * cursor position and column.
+   * TODO: Should support extra search options such as regular expression, wild
+   * card, full match, partial match, etc.
    * TODO: Should support all column search.
    * TODO: Support searching by row.
    *
@@ -63,42 +71,50 @@ public:
    *
    *  \param [in] searchForward If True, searches down, if false, searches up.
    *
-   *  \return The location of the found item. Return an invalid index if not found.
+   *  \return The location of the found item. Return an invalid index if not
+   * found.
    */
-  QModelIndex find(const QString& s, const bool searchForward);
+  QModelIndex find(const QString &s, const bool searchForward);
 
-  /*! \brief Find the next instance of the string "s" based on the current cursor position and column.
-   * TODO: Should support extra search options such as regular expression, wild card, full match, partial match, etc.
+  /*! \brief Find the next instance of the string "s" based on the current
+   * cursor position and column.
+   * TODO: Should support extra search options such as regular expression, wild
+   * card, full match, partial match, etc.
    * TODO: is this even used? Regular expressions and other things do work!
    * see GenenicDataCollectionsTableProxy
    *
    *  \param [in] s String to find.
    *
-   *  \param [in] lastIndex Starting position from which to search. So, this is like find next or find previous.
+   *  \param [in] lastIndex Starting position from which to search. So, this is
+   * like find next or find previous.
    *
    *  \param [in] searchForward If True, searches down, if false, searches up.
    *
-   *  \return The location of the found item. Return an invalid index if not found.
+   *  \return The location of the found item. Return an invalid index if not
+   * found.
    */
-  QModelIndex find(const QString& s, const QModelIndex& lastIndex, const bool searchForward);
+  QModelIndex find(const QString &s, const QModelIndex &lastIndex,
+                   const bool searchForward);
 
   /*! \brief Search method called from the search dialog.
    *
    *  \param [in] options Search options used to direct the sesarch.
    *
-   *  \param [in] includeCurrent If true, the current cell is included in a forward search.
+   *  \param [in] includeCurrent If true, the current cell is included in a
+   * forward search.
    *
    *  \return True if something is found.
    */
-  bool doFind(const SearchOptions& options, const bool includeCurrent);
+  bool doFind(const SearchOptions &options, const bool includeCurrent);
 
-  GenericDataCollectionsTableModel* getTableModel() { return m_tableModel; }
-  GenericDataCollectionsTableProxy* getProxyModel() { return m_proxyModel; }
+  GenericDataCollectionsTableModel *getTableModel() { return m_tableModel; }
+  GenericDataCollectionsTableProxy *getProxyModel() { return m_proxyModel; }
 
 signals:
 
 public slots:
-  void selectionChanged( const QItemSelection & selected, const QItemSelection & deselected );
+  void selectionChanged(const QItemSelection &selected,
+                        const QItemSelection &deselected);
   void addRow();
   void deleteRow();
   void undoChange();
@@ -157,8 +173,8 @@ public slots:
   void copyCellsFrom9Below();
   void copyCellsFrom10Below();
 
-  bool genericSearch(const bool findNext, const bool findPrevious, const bool findDialog);
-
+  bool genericSearch(const bool findNext, const bool findPrevious,
+                     const bool findDialog);
 
   /*! \brief Call save state before the destructor is called. */
   void clickedOK();
@@ -168,19 +184,21 @@ public slots:
 
 protected:
   /*! \brief Handle special key press events such as F3 (find next) */
-  virtual void keyPressEvent(QKeyEvent* evt);
+  virtual void keyPressEvent(QKeyEvent *evt);
 
 private:
-
-  void privateRowDuplicator(const bool autoIncrement, const bool appendChar=false, const char charToAppend='a');
+  void privateRowDuplicator(const bool autoIncrement,
+                            const bool appendChar = false,
+                            const char charToAppend = 'a');
 
   /*! \brief Copy cell from the same column to the current row.
    *
    * Each row copied (one cell) creates one undo operation.
-   * If a book value is updated, the default value source (catalogue) is updated.
-   * If there is a last updated column, that is updated as well.
+   * If a book value is updated, the default value source (catalogue) is
+   * updated. If there is a last updated column, that is updated as well.
    *
-   *  \param [in] rowsDown How many rows down (> 0) or up (< 0) from current row to copy.
+   *  \param [in] rowsDown How many rows down (> 0) or up (< 0) from current row
+   * to copy.
    *  \param [in] numCells How many cells to copy.
    */
   void copyCells(const int rowsDown, const int numCells);
@@ -190,7 +208,6 @@ private:
    *  \param [in] incrementValue
    */
   void incrementCell(const int incrementValue);
-
 
   /*! \brief Set list columns, delegates, and initial values. */
   void buildDialog();
@@ -207,221 +224,180 @@ private:
   /*! \brief Return True if a row is currently selected. */
   bool isRowSelected() const;
 
-  void selectCell(const QModelIndex& index);
+  void selectCell(const QModelIndex &index);
 
   virtual void displayHelp();
 
   /*! \brief Copy the selected rows */
-  QPushButton* m_duplicateButton;
-  QPushButton* m_duplicateButtonIncrement;
-  QPushButton* m_duplicateButtonAppendLowerA;
-  QPushButton* m_duplicateButtonAppendUpperA;
+  QPushButton *m_duplicateButton;
+  QPushButton *m_duplicateButtonIncrement;
+  QPushButton *m_duplicateButtonAppendLowerA;
+  QPushButton *m_duplicateButtonAppendUpperA;
   /*! \brief Add a new row */
-  QPushButton* m_addButton;
+  QPushButton *m_addButton;
   /*! \brief Delete the selected rows */
-  QPushButton* m_deleteButton;
+  QPushButton *m_deleteButton;
   /*! \brief Undo the last change */
-  QPushButton* m_undoButton;
+  QPushButton *m_undoButton;
   /*! \brief Persist pending changes to the DB */
-  QPushButton* m_saveChangesButton;
-  QPushButton* m_searchButton;
+  QPushButton *m_saveChangesButton;
+  QPushButton *m_searchButton;
 
   /*! \brief Identifies the columns and the types. */
-  GenericDataCollection& m_table;
+  GenericDataCollection &m_table;
   GenericDataCollections *m_tables;
 
   /*! \brief View presented to the user */
-  QTableView* m_tableView;
+  QTableView *m_tableView;
 
   /*! \brief Used for saving and restoring dialog sizes. */
   QString m_tableName;
 
-  /*! \brief Actual data model to which changes are made and such. This is the source model for the proxy model. */
-  GenericDataCollectionsTableModel* m_tableModel;
+  /*! \brief Actual data model to which changes are made and such. This is the
+   * source model for the proxy model. */
+  GenericDataCollectionsTableModel *m_tableModel;
 
-  /*! \brief Used by the view to allow for sorting and similar. the actual table model is contained inside of this. The m_tableModel is the source model for this proxy model. */
-  GenericDataCollectionsTableProxy* m_proxyModel;
+  /*! \brief Used by the view to allow for sorting and similar. the actual table
+   * model is contained inside of this. The m_tableModel is the source model for
+   * this proxy model. */
+  GenericDataCollectionsTableProxy *m_proxyModel;
 
-  GenericDataCollectionTableSearchDialog* m_searchWindow;
-  //QSortFilterProxyModel* m_proxyModel;
+  GenericDataCollectionTableSearchDialog *m_searchWindow;
+  // QSortFilterProxyModel* m_proxyModel;
 
   /*! \brief We need this here so that we can persist the DB. */
-  StampDB& m_db;
+  StampDB &m_db;
 
   /*! \brief Describes all the tables. */
-  DescribeSqlTables& m_schema;
+  DescribeSqlTables &m_schema;
 
-  /*! \brief Used only if it is relevant because the bookvalue field was updated. So only used for a single table listing what a stamp is worth. */
+  /*! \brief Used only if it is relevant because the bookvalue field was
+   * updated. So only used for a single table listing what a stamp is worth. */
   int m_defaultSourceId = -1;
 };
 
-
-inline void GenericDataCollectionTableDialog::copyCellFrom1Above()
-{
+inline void GenericDataCollectionTableDialog::copyCellFrom1Above() {
   copyCells(-1, 1);
 }
-inline void GenericDataCollectionTableDialog::copyCellFrom2Above()
-{
+inline void GenericDataCollectionTableDialog::copyCellFrom2Above() {
   copyCells(-2, 1);
 }
-inline void GenericDataCollectionTableDialog::copyCellFrom3Above()
-{
+inline void GenericDataCollectionTableDialog::copyCellFrom3Above() {
   copyCells(-3, 1);
 }
-inline void GenericDataCollectionTableDialog::copyCellFrom4Above()
-{
+inline void GenericDataCollectionTableDialog::copyCellFrom4Above() {
   copyCells(-4, 1);
 }
-inline void GenericDataCollectionTableDialog::copyCellFrom5Above()
-{
+inline void GenericDataCollectionTableDialog::copyCellFrom5Above() {
   copyCells(-5, 1);
 }
-inline void GenericDataCollectionTableDialog::copyCellFrom6Above()
-{
+inline void GenericDataCollectionTableDialog::copyCellFrom6Above() {
   copyCells(-6, 1);
 }
-inline void GenericDataCollectionTableDialog::copyCellFrom7Above()
-{
+inline void GenericDataCollectionTableDialog::copyCellFrom7Above() {
   copyCells(-7, 1);
 }
-inline void GenericDataCollectionTableDialog::copyCellFrom8Above()
-{
+inline void GenericDataCollectionTableDialog::copyCellFrom8Above() {
   copyCells(-8, 1);
 }
-inline void GenericDataCollectionTableDialog::copyCellFrom9Above()
-{
+inline void GenericDataCollectionTableDialog::copyCellFrom9Above() {
   copyCells(-9, 1);
 }
-inline void GenericDataCollectionTableDialog::copyCellFrom10Above()
-{
+inline void GenericDataCollectionTableDialog::copyCellFrom10Above() {
   copyCells(-10, 1);
 }
 
-
-inline void GenericDataCollectionTableDialog::copyCellFrom1Below()
-{
+inline void GenericDataCollectionTableDialog::copyCellFrom1Below() {
   copyCells(1, 1);
 }
-inline void GenericDataCollectionTableDialog::copyCellFrom2Below()
-{
+inline void GenericDataCollectionTableDialog::copyCellFrom2Below() {
   copyCells(2, 1);
 }
-inline void GenericDataCollectionTableDialog::copyCellFrom3Below()
-{
+inline void GenericDataCollectionTableDialog::copyCellFrom3Below() {
   copyCells(3, 1);
 }
-inline void GenericDataCollectionTableDialog::copyCellFrom4Below()
-{
+inline void GenericDataCollectionTableDialog::copyCellFrom4Below() {
   copyCells(4, 1);
 }
-inline void GenericDataCollectionTableDialog::copyCellFrom5Below()
-{
+inline void GenericDataCollectionTableDialog::copyCellFrom5Below() {
   copyCells(5, 1);
 }
-inline void GenericDataCollectionTableDialog::copyCellFrom6Below()
-{
+inline void GenericDataCollectionTableDialog::copyCellFrom6Below() {
   copyCells(6, 1);
 }
-inline void GenericDataCollectionTableDialog::copyCellFrom7Below()
-{
+inline void GenericDataCollectionTableDialog::copyCellFrom7Below() {
   copyCells(7, 1);
 }
-inline void GenericDataCollectionTableDialog::copyCellFrom8Below()
-{
+inline void GenericDataCollectionTableDialog::copyCellFrom8Below() {
   copyCells(8, 1);
 }
-inline void GenericDataCollectionTableDialog::copyCellFrom9Below()
-{
+inline void GenericDataCollectionTableDialog::copyCellFrom9Below() {
   copyCells(9, 1);
 }
-inline void GenericDataCollectionTableDialog::copyCellFrom10Below()
-{
+inline void GenericDataCollectionTableDialog::copyCellFrom10Below() {
   copyCells(10, 1);
 }
 
-inline void GenericDataCollectionTableDialog::copyCellsFrom1Above()
-{
+inline void GenericDataCollectionTableDialog::copyCellsFrom1Above() {
   copyCells(-1, 1);
 }
-inline void GenericDataCollectionTableDialog::copyCellsFrom2Above()
-{
+inline void GenericDataCollectionTableDialog::copyCellsFrom2Above() {
   copyCells(-2, 2);
 }
-inline void GenericDataCollectionTableDialog::copyCellsFrom3Above()
-{
+inline void GenericDataCollectionTableDialog::copyCellsFrom3Above() {
   copyCells(-3, 3);
 }
-inline void GenericDataCollectionTableDialog::copyCellsFrom4Above()
-{
+inline void GenericDataCollectionTableDialog::copyCellsFrom4Above() {
   copyCells(-4, 4);
 }
-inline void GenericDataCollectionTableDialog::copyCellsFrom5Above()
-{
+inline void GenericDataCollectionTableDialog::copyCellsFrom5Above() {
   copyCells(-5, 5);
 }
-inline void GenericDataCollectionTableDialog::copyCellsFrom6Above()
-{
+inline void GenericDataCollectionTableDialog::copyCellsFrom6Above() {
   copyCells(-6, 6);
 }
-inline void GenericDataCollectionTableDialog::copyCellsFrom7Above()
-{
+inline void GenericDataCollectionTableDialog::copyCellsFrom7Above() {
   copyCells(-7, 7);
 }
-inline void GenericDataCollectionTableDialog::copyCellsFrom8Above()
-{
+inline void GenericDataCollectionTableDialog::copyCellsFrom8Above() {
   copyCells(-8, 8);
 }
-inline void GenericDataCollectionTableDialog::copyCellsFrom9Above()
-{
+inline void GenericDataCollectionTableDialog::copyCellsFrom9Above() {
   copyCells(-9, 9);
 }
-inline void GenericDataCollectionTableDialog::copyCellsFrom10Above()
-{
+inline void GenericDataCollectionTableDialog::copyCellsFrom10Above() {
   copyCells(-10, 10);
 }
 
-
-inline void GenericDataCollectionTableDialog::copyCellsFrom1Below()
-{
+inline void GenericDataCollectionTableDialog::copyCellsFrom1Below() {
   copyCells(1, 1);
 }
-inline void GenericDataCollectionTableDialog::copyCellsFrom2Below()
-{
+inline void GenericDataCollectionTableDialog::copyCellsFrom2Below() {
   copyCells(2, 2);
 }
-inline void GenericDataCollectionTableDialog::copyCellsFrom3Below()
-{
+inline void GenericDataCollectionTableDialog::copyCellsFrom3Below() {
   copyCells(3, 3);
 }
-inline void GenericDataCollectionTableDialog::copyCellsFrom4Below()
-{
+inline void GenericDataCollectionTableDialog::copyCellsFrom4Below() {
   copyCells(4, 4);
 }
-inline void GenericDataCollectionTableDialog::copyCellsFrom5Below()
-{
+inline void GenericDataCollectionTableDialog::copyCellsFrom5Below() {
   copyCells(5, 5);
 }
-inline void GenericDataCollectionTableDialog::copyCellsFrom6Below()
-{
+inline void GenericDataCollectionTableDialog::copyCellsFrom6Below() {
   copyCells(6, 6);
 }
-inline void GenericDataCollectionTableDialog::copyCellsFrom7Below()
-{
+inline void GenericDataCollectionTableDialog::copyCellsFrom7Below() {
   copyCells(7, 7);
 }
-inline void GenericDataCollectionTableDialog::copyCellsFrom8Below()
-{
+inline void GenericDataCollectionTableDialog::copyCellsFrom8Below() {
   copyCells(8, 8);
 }
-inline void GenericDataCollectionTableDialog::copyCellsFrom9Below()
-{
+inline void GenericDataCollectionTableDialog::copyCellsFrom9Below() {
   copyCells(9, 9);
 }
-inline void GenericDataCollectionTableDialog::copyCellsFrom10Below()
-{
+inline void GenericDataCollectionTableDialog::copyCellsFrom10Below() {
   copyCells(10, 10);
 }
-
-
 
 #endif // GENERICDATACOLLECTIONTABLEDIALOG_H

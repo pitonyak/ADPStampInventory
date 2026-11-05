@@ -1,11 +1,5 @@
 #include "changetrackerbase.h"
 
-ChangeTrackerBase::ChangeTrackerBase(QObject *parent) :
-  QObject(parent)
-{
-}
+ChangeTrackerBase::ChangeTrackerBase(QObject *parent) : QObject(parent) {}
 
-
-ChangeTrackerBase::~ChangeTrackerBase()
-{
-}
+ChangeTrackerBase::~ChangeTrackerBase() {}

@@ -3,14 +3,12 @@
 
 #include <QRegularExpression>
 
-class StringUtil
-{
+class StringUtil {
 public:
   StringUtil();
 
-  static QString wildCardToRegExpString(const QString& wildCard);
-  static QRegularExpression wildCardToRegExp(const QString& wildCard);
-
+  static QString wildCardToRegExpString(const QString &wildCard);
+  static QRegularExpression wildCardToRegExp(const QString &wildCard);
 };
 
 #endif // STRINGUTIL_H

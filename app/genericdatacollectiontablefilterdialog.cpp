@@ -1,33 +1,32 @@
 #include "genericdatacollectiontablefilterdialog.h"
-#include "genericdatacollectiontabledialog.h"
 #include "genericdatacollectionstablemodel.h"
+#include "genericdatacollectiontabledialog.h"
 #include "globals.h"
 
-#include <QLineEdit>
-#include <QPushButton>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QFormLayout>
-#include <QLabel>
 #include <QCheckBox>
 #include <QDialogButtonBox>
-#include <QSortFilterProxyModel>
-#include <QMessageBox>
+#include <QFormLayout>
 #include <QGroupBox>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QLineEdit>
+#include <QMessageBox>
+#include <QPushButton>
 #include <QRadioButton>
 #include <QScopedPointer>
+#include <QSortFilterProxyModel>
+#include <QVBoxLayout>
 
-GenericDataCollectionTableFilterDialog::GenericDataCollectionTableFilterDialog(GenericDataCollectionTableDialog* tableDialog, QWidget *parent) :
-  QDialog(parent), m_tableDialog(tableDialog),
-  m_findValueLineEdit(nullptr), m_replaceValueLineEdit(nullptr), m_matchCaseCB(nullptr), m_matchEntireCellCB(nullptr),
-  m_regularExpressionCB(nullptr), m_selectionOnlyCB(nullptr)
-{
-  if (m_tableDialog != nullptr)
-  {
+GenericDataCollectionTableFilterDialog::GenericDataCollectionTableFilterDialog(
+    GenericDataCollectionTableDialog *tableDialog, QWidget *parent)
+    : QDialog(parent), m_tableDialog(tableDialog), m_findValueLineEdit(nullptr),
+      m_replaceValueLineEdit(nullptr), m_matchCaseCB(nullptr),
+      m_matchEntireCellCB(nullptr), m_regularExpressionCB(nullptr),
+      m_selectionOnlyCB(nullptr) {
+  if (m_tableDialog != nullptr) {
     buildDialog();
   }
 }
-
 
 // filter string, regexp, wild card
 // Filter role (view, edit)
@@ -35,8 +34,7 @@ GenericDataCollectionTableFilterDialog::GenericDataCollectionTableFilterDialog(G
 // set locale aware
 // case sensitive
 
-void GenericDataCollectionTableFilterDialog::buildDialog()
-{
+void GenericDataCollectionTableFilterDialog::buildDialog() {
   setWindowTitle(tr("Search Table"));
 
   // Radio buttons for search:
@@ -52,23 +50,22 @@ void GenericDataCollectionTableFilterDialog::buildDialog()
   // Replace value (baesd on what I want to find)
 
   // TODO: what was I going to do with this variable?
-  //QGroupBox* filterType = new QGroupBox();
+  // QGroupBox* filterType = new QGroupBox();
   m_rbString = new QRadioButton(tr("String"));
   m_rbRegExp = new QRadioButton(tr("Regular Expression"));
   m_rbWild = new QRadioButton(tr("Wild Card"));
 
-
-  QPushButton* button;
+  QPushButton *button;
   QVBoxLayout *vLayout;
   QVBoxLayout *vLayout2;
-  //QHBoxLayout *hLayout;
+  // QHBoxLayout *hLayout;
   QFormLayout *fLayout = new QFormLayout;
 
   vLayout = new QVBoxLayout();
   m_findValueLineEdit = new QLineEdit();
   m_replaceValueLineEdit = new QLineEdit();
 
-  //hLayout = new QHBoxLayout();
+  // hLayout = new QHBoxLayout();
   vLayout->addWidget(new QLabel(tr("Search &Text")));
   button = new QPushButton(tr("&Find"));
   connect(button, SIGNAL(released()), this, SLOT(find()));
@@ -106,7 +103,7 @@ void GenericDataCollectionTableFilterDialog::buildDialog()
   hLayout2->addLayout(vLayout2);
 
   vLayout->addLayout(hLayout2);
-  QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Close);
+  QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Close);
   connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
   connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
   vLayout->addWidget(buttonBox);
@@ -127,23 +124,21 @@ void GenericDataCollectionTableFilterDialog::buildDialog()
   vLayout->addLayout(hLayout2);
 **/
 
+  // vLayout = new QVBoxLayout();
+  // vLayout->addWidget(new QLabel(tr("Find: ")));
+  // hLayout->addLayout(vLayout);
+  // vLayout->addWidget(new QLabel(tr("Replace: ")));
+  // hLayout->addLayout(vLayout);
 
-  //vLayout = new QVBoxLayout();
-  //vLayout->addWidget(new QLabel(tr("Find: ")));
-  //hLayout->addLayout(vLayout);
-  //vLayout->addWidget(new QLabel(tr("Replace: ")));
-  //hLayout->addLayout(vLayout);
+  // hLayout->addLayout(vLayout);
 
-  //hLayout->addLayout(vLayout);
-
-  //vLayout = new QVBoxLayout();
-  //vLayout->addWidget(m_findValueLineEdit);
-  //vLayout->addWidget(m_replaceValueLineEdit);
-  //hLayout->addLayout(vLayout);
+  // vLayout = new QVBoxLayout();
+  // vLayout->addWidget(m_findValueLineEdit);
+  // vLayout->addWidget(m_replaceValueLineEdit);
+  // hLayout->addLayout(vLayout);
 
   fLayout->addRow(vLayout);
   setLayout(fLayout);
-
 
   /**
   m_configFilePath = new QLineEdit();
@@ -203,24 +198,27 @@ void GenericDataCollectionTableFilterDialog::buildDialog()
   m_tableView->setItemDelegate(delegate);
 
   CheckBoxOnlyDelegate * cboDelegate = new CheckBoxOnlyDelegate(m_tableView);
-  m_tableView->setItemDelegateForColumn(TableSortFieldTableModel::ascendingColumn, cboDelegate);
-  m_tableView->setItemDelegateForColumn(TableSortFieldTableModel::caseColumn, cboDelegate);
+  m_tableView->setItemDelegateForColumn(TableSortFieldTableModel::ascendingColumn,
+  cboDelegate);
+  m_tableView->setItemDelegateForColumn(TableSortFieldTableModel::caseColumn,
+  cboDelegate);
 
   hLayout->addWidget(m_tableView);
   fLayout->addRow(hLayout);
 
 
-  QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal);
-  connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
-  connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
-  fLayout->addRow(buttonBox);
+  QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok |
+  QDialogButtonBox::Cancel, Qt::Horizontal); connect(buttonBox,
+  SIGNAL(accepted()), this, SLOT(accept())); connect(buttonBox,
+  SIGNAL(rejected()), this, SLOT(reject())); fLayout->addRow(buttonBox);
 
   setLayout(fLayout);
 
   QScopedPointer<QSettings> pSettings(getQSettings());
   restoreGeometry(pSettings->value(Constants::Settings_SortFieldDlgGeometry).toByteArray());
   setConfigFilePath(pSettings->value(Constants::SortFieldConfigDialogLastConfigPath).toString());
-  QString s = pSettings->value(Constants::SortFieldConfigDialogRoutingColumnWidths).toString();
+  QString s =
+  pSettings->value(Constants::SortFieldConfigDialogRoutingColumnWidths).toString();
   if (s.length() > 0)
   {
     QStringList list = s.split(',');
@@ -234,54 +232,50 @@ void GenericDataCollectionTableFilterDialog::buildDialog()
       }
     }
   }
-  connect(m_tableView->selectionModel(), SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)), this, SLOT(selectionChanged(const QItemSelection &, const QItemSelection &)));
+  connect(m_tableView->selectionModel(), SIGNAL(selectionChanged(const
+  QItemSelection &, const QItemSelection &)), this, SLOT(selectionChanged(const
+  QItemSelection &, const QItemSelection &)));
   **/
   enableButtons();
 }
 
-void GenericDataCollectionTableFilterDialog::enableButtons()
+void GenericDataCollectionTableFilterDialog::enableButtons() {
+  /**
+if (m_dataCollection != nullptr)
 {
-    /**
-  if (m_dataCollection != nullptr)
-  {
-    int count = m_tableModel->size();
-    int row = count > 0 ? getSelectedRow() : -1;
-    m_upButton->setEnabled(row > 0);
-    m_downButton->setEnabled(row >= 0 && row < (count - 1));
-    m_deleteButton->setEnabled(row >= 0);
-    m_addButton->setEnabled(count < m_dataCollection->getPropertyNameCount());
-  }
-  **/
+  int count = m_tableModel->size();
+  int row = count > 0 ? getSelectedRow() : -1;
+  m_upButton->setEnabled(row > 0);
+  m_downButton->setEnabled(row >= 0 && row < (count - 1));
+  m_deleteButton->setEnabled(row >= 0);
+  m_addButton->setEnabled(count < m_dataCollection->getPropertyNameCount());
+}
+**/
 }
 
-void GenericDataCollectionTableFilterDialog::setCaseSensitive(const Qt::CaseSensitivity sensitivity)
-{
-  if (m_matchCaseCB != nullptr)
-  {
+void GenericDataCollectionTableFilterDialog::setCaseSensitive(
+    const Qt::CaseSensitivity sensitivity) {
+  if (m_matchCaseCB != nullptr) {
     m_matchCaseCB->setChecked(sensitivity == Qt::CaseSensitive);
   }
 }
 
-Qt::CaseSensitivity GenericDataCollectionTableFilterDialog::getCaseSensitivity() const
-{
-  return (m_matchCaseCB != nullptr && m_matchCaseCB->isChecked()) ? Qt::CaseSensitive : Qt::CaseInsensitive;
+Qt::CaseSensitivity
+GenericDataCollectionTableFilterDialog::getCaseSensitivity() const {
+  return (m_matchCaseCB != nullptr && m_matchCaseCB->isChecked())
+             ? Qt::CaseSensitive
+             : Qt::CaseInsensitive;
 }
-
 
 #include "genericdatacollectionstableproxy.h"
 
-void GenericDataCollectionTableFilterDialog::clearFilter()
-{
+void GenericDataCollectionTableFilterDialog::clearFilter() {}
 
-}
-
-void GenericDataCollectionTableFilterDialog::applyFilter()
-{
+void GenericDataCollectionTableFilterDialog::applyFilter() {
   QString searchString = m_findValueLineEdit->text();
 
-  GenericDataCollectionsTableProxy* pm = m_tableDialog->getProxyModel();
-  if (pm != nullptr)
-  {
+  GenericDataCollectionsTableProxy *pm = m_tableDialog->getProxyModel();
+  if (pm != nullptr) {
     pm->setFilterCaseSensitivity(Qt::CaseInsensitive);
     pm->setFilterKeyColumn(4);
     pm->setFilterFixedString(searchString);
@@ -294,8 +288,9 @@ void GenericDataCollectionTableFilterDialog::applyFilter()
 
   int num_rows = m_tableDialog->getTableModel()->rowCount();
   int num_cols = m_tableDialog->getTableModel()->columnCount();
-  //QModelIndex matchingIndex = proxy.mapFromSource(proxy.index(num_rows,num_cols));
-  for (int i=0; i<num_cols; ++i)
+  //QModelIndex matchingIndex =
+  proxy.mapFromSource(proxy.index(num_rows,num_cols)); for (int i=0; i<num_cols;
+  ++i)
   {
     proxy.setFilterKeyColumn(i);
     proxy.setFilterFixedString(searchString);
@@ -304,11 +299,13 @@ void GenericDataCollectionTableFilterDialog::applyFilter()
 
    if(matchingIndex.isValid())
    {
-       QMessageBox::information(this, "Find", QString("Found in col %1").arg(i));
+       QMessageBox::information(this, "Find", QString("Found in col
+  %1").arg(i));
    }
    else
    {
-       //QMessageBox::information(this, "Find", QString("Not Found in col %1").arg(i));
+       //QMessageBox::information(this, "Find", QString("Not Found in col
+  %1").arg(i));
    }
   }
   **/

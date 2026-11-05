@@ -2,8 +2,8 @@
 #define CSVREADERDIALOG_H
 
 #include <QDialog>
-#include <QString>
 #include <QMap>
+#include <QString>
 
 class QGroupBox;
 class QVBoxLayout;
@@ -27,17 +27,17 @@ class CSVReader;
  *
  **************************************************************************/
 
-class CSVReaderDialog : public QDialog
-{
+class CSVReaderDialog : public QDialog {
   Q_OBJECT
 public:
-
-  /*! \brief Constructor. Dialog geometry is set from the settings to the last size used.
+  /*! \brief Constructor. Dialog geometry is set from the settings to the last
+   * size used.
    *
    *  \param [in,out] reader Dialog uses this to set CSV parameters.
    *  \param [in,out] parent Objects owner.
    */
-  explicit CSVReaderDialog(CSVReader* reader = nullptr, QWidget* parent = nullptr);
+  explicit CSVReaderDialog(CSVReader *reader = nullptr,
+                           QWidget *parent = nullptr);
 
   /*! \brief Destructor saves dialog geometry. */
   virtual ~CSVReaderDialog();
@@ -50,17 +50,17 @@ public:
    *
    *  \param [in,out] vBoxLayout Will contain the table widget.
    */
-  void configureFromReader(QVBoxLayout* vBoxLayout = nullptr);
+  void configureFromReader(QVBoxLayout *vBoxLayout = nullptr);
 
 signals:
 
 public slots:
   void separatorToggled(bool enabled);
 
-  void tableCellChanged(int currentRow, int currentColumn, int previousRow, int previousColumn);
+  void tableCellChanged(int currentRow, int currentColumn, int previousRow,
+                        int previousColumn);
   void tableSelectionChanged();
-  void columnTypeChanged(const QString& text);
-
+  void columnTypeChanged(const QString &text);
 
 private:
   void buildDialog();
@@ -69,28 +69,27 @@ private:
   void creatFieldsGroupBox();
   int getCurrentColumn() const;
 
-  QGroupBox* m_importGroupBox;
-  QGroupBox* m_separatorOptionsGroupBox;
-  QGroupBox* m_fieldsGroupBox;
-  QComboBox* m_characterSet;
-  QSpinBox* m_firstRow;
-  QMap<QString, QCheckBox*>* m_separatedMap;
-  QCheckBox* m_otherSeparatorBox;
-  QLineEdit* m_otherSeparator;
-  QCheckBox* m_mergeDelimiters;
-  QComboBox* m_textDelimiter;
-  QRadioButton* m_fixedWidthRB;
-  QRadioButton* m_separatedByRB;
-  QLabel* m_textDelimiterLabel;
-  QComboBox* m_columnType;
-  QLabel* m_columnTypeLabel;
-  QTableWidget* m_tableWidget;
-  CSVReader* m_reader;
+  QGroupBox *m_importGroupBox;
+  QGroupBox *m_separatorOptionsGroupBox;
+  QGroupBox *m_fieldsGroupBox;
+  QComboBox *m_characterSet;
+  QSpinBox *m_firstRow;
+  QMap<QString, QCheckBox *> *m_separatedMap;
+  QCheckBox *m_otherSeparatorBox;
+  QLineEdit *m_otherSeparator;
+  QCheckBox *m_mergeDelimiters;
+  QComboBox *m_textDelimiter;
+  QRadioButton *m_fixedWidthRB;
+  QRadioButton *m_separatedByRB;
+  QLabel *m_textDelimiterLabel;
+  QComboBox *m_columnType;
+  QLabel *m_columnTypeLabel;
+  QTableWidget *m_tableWidget;
+  CSVReader *m_reader;
   QMap<QMetaType::Type, QStringList> m_typeToTxt;
-  QMap<QString, QList<QMetaType::Type> > m_txtToType;
+  QMap<QString, QList<QMetaType::Type>> m_txtToType;
   QStringList m_typeNames;
   QList<QMetaType::Type> m_FieldType;
-
 };
 
 #endif // CSVREADERDIALOG_H

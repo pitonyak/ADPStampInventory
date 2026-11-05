@@ -1,6 +1,4 @@
 
 #include "testvaluecomparer.h"
 
-void TestValueComparer::toUpper() {
-    
-}
+void TestValueComparer::toUpper() {}

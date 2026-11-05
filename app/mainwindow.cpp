@@ -1,72 +1,68 @@
 #include "mainwindow.h"
-#include "ui_mainwindow.h"
-#include "stampdb.h"
-#include "scrollmessagebox.h"
-#include "csvreaderdialog.h"
-#include "csvreader.h"
-#include "csvwriter.h"
+#include "aboutdialog.h"
+#include "configuredialog.h"
 #include "constants.h"
-#include "sqldialog.h"
-#include "genericdatacollectiontabledialog.h"
+#include "csvreader.h"
+#include "csvreaderdialog.h"
+#include "csvwriter.h"
 #include "describesqltables.h"
 #include "genericdatacollections.h"
+#include "genericdatacollectiontabledialog.h"
 #include "globals.h"
-#include "configuredialog.h"
-#include "imageutility.h"
-#include "aboutdialog.h"
 #include "imagedialog.h"
+#include "imageutility.h"
+#include "scrollmessagebox.h"
+#include "sqldialog.h"
+#include "stampdb.h"
+#include "ui_mainwindow.h"
 
-#include <QDebug>
-#include <QMessageBox>
-#include <QSqlRecord>
-#include <QSqlField>
-#include <QStringList>
-#include <QFileDialog>
 #include <QCoreApplication>
-#include <QSettings>
-#include <QXmlStreamWriter>
+#include <QDebug>
+#include <QFileDialog>
 #include <QInputDialog>
+#include <QMessageBox>
 #include <QScopedPointer>
+#include <QSettings>
+#include <QSqlField>
+#include <QSqlRecord>
+#include <QStringList>
+#include <QXmlStreamWriter>
 
 #include <QSqlQuery>
 
-MainWindow::MainWindow(QWidget *parent) :
-  QMainWindow(parent),
-  ui(new Ui::MainWindow),
-  m_db(nullptr)
-{
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent), ui(new Ui::MainWindow), m_db(nullptr) {
   initializeSettings();
   ui->setupUi(this);
   setupMenuBar();
   setWindowTitle(tr("Stamp Inventory"));
   QScopedPointer<QSettings> pSettings(getQSettings());
-  restoreGeometry(pSettings->value(Constants::Settings_MainWindowGeometry).toByteArray());
+  restoreGeometry(
+      pSettings->value(Constants::Settings_MainWindowGeometry).toByteArray());
 }
 
-MainWindow::~MainWindow()
-{
+MainWindow::~MainWindow() {
   QScopedPointer<QSettings> pSettings(getQSettings());
   pSettings->setValue(Constants::Settings_MainWindowGeometry, saveGeometry());
   qDebug() << "file name for settings: " << pSettings->fileName();
   delete ui;
 }
 
-void MainWindow::setupMenuBar()
-{
+void MainWindow::setupMenuBar() {
   // Use the menu bar from the main window, we do not need to create one.
   QMenu *menu = menuBar()->addMenu(tr("&File"));
-  //QAction *action = nullptr;
+  // QAction *action = nullptr;
 
-  //QAction *action = menu->addAction(tr("Save layout..."));
-  //connect(action, SIGNAL(triggered()), this, SLOT(saveLayout()));
+  // QAction *action = menu->addAction(tr("Save layout..."));
+  // connect(action, SIGNAL(triggered()), this, SLOT(saveLayout()));
   //
-  //action = menu->addAction(tr("Load layout..."));
-  //connect(action, SIGNAL(triggered()), this, SLOT(loadLayout()));
+  // action = menu->addAction(tr("Load layout..."));
+  // connect(action, SIGNAL(triggered()), this, SLOT(loadLayout()));
   //
-  //action = menu->addAction(tr("Switch layout direction"));
-  //connect(action, SIGNAL(triggered()), this, SLOT(switchLayoutDirection()));
+  // action = menu->addAction(tr("Switch layout direction"));
+  // connect(action, SIGNAL(triggered()), this, SLOT(switchLayoutDirection()));
   //
-  //menu->addSeparator();
+  // menu->addSeparator();
 
   menu->addAction(tr("&Quit"), this, SLOT(close()));
 
@@ -79,7 +75,8 @@ void MainWindow::setupMenuBar()
   menu->addAction(tr("&View Schema"), this, SLOT(getSchema()));
   menu->addAction(tr("Import CSV"), this, SLOT(readCSV()));
   menu->addAction(tr("&Export CSV"), this, SLOT(exportCSV()));
-  menu->addAction(tr("Export CSV (one file)"), this, SLOT(exportInventoryCSV()));
+  menu->addAction(tr("Export CSV (one file)"), this,
+                  SLOT(exportInventoryCSV()));
   menu->addAction(tr("&SQL Window"), this, SLOT(openSQLWindow()));
   menu->addAction(tr("Configure"), this, SLOT(configure()));
   menu->addAction(tr("Add Missing Values"), this, SLOT(addMissingBookValues()));
@@ -90,7 +87,6 @@ void MainWindow::setupMenuBar()
 
   menu = menuBar()->addMenu(tr("&Help"));
   menu->addAction(tr("&About Adp Stamp Inventory"), this, SLOT(helpAbout()));
-
 
   /**
     mainWindowMenu = menuBar()->addMenu(tr("Main window"));
@@ -128,16 +124,13 @@ void MainWindow::setupMenuBar()
     **/
 }
 
-void MainWindow::createDB()
-{
-  createDBWorker();
-}
+void MainWindow::createDB() { createDBWorker(); }
 
-bool MainWindow::createDBWorker()
-{
+bool MainWindow::createDBWorker() {
   if (m_db == nullptr) {
     QScopedPointer<QSettings> pSettings(getQSettings());
-    QString dbName = pSettings->value(Constants::Settings_DBName, "").toString();
+    QString dbName =
+        pSettings->value(Constants::Settings_DBName, "").toString();
     if (dbName.isEmpty()) {
       dbName = "stamps.db.sqlite";
       pSettings->setValue(Constants::Settings_DBName, dbName);
@@ -150,16 +143,18 @@ bool MainWindow::createDBWorker()
       }
       pSettings->setValue(Constants::Settings_DBPath, path);
     } else {
-
     }
     m_db = new StampDB(this);
     m_db->pathToDB(QDir::cleanPath(path + QDir::separator() + dbName));
   }
   if (!m_db->openDB()) {
     QMessageBox msgBox;
-    msgBox.setText(tr("Error creating database '%1'\n Would you like to set select a new path and try again?").arg(m_db->pathToDB()));
+    msgBox.setText(tr("Error creating database '%1'\n Would you like to set "
+                      "select a new path and try again?")
+                       .arg(m_db->pathToDB()));
     msgBox.setInformativeText(m_db->lastError().text());
-    msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+    msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No |
+                              QMessageBox::Cancel);
     msgBox.setDefaultButton(QMessageBox::Yes);
     int pressed_btn = msgBox.exec();
 
@@ -169,7 +164,8 @@ bool MainWindow::createDBWorker()
     // There was an error, so give the user the chance to select the location.
     if (pressed_btn == QMessageBox::Yes) {
       QScopedPointer<QSettings> pSettings(getQSettings());
-      QString path = pSettings->value(Constants::Settings_DBPath, "").toString();
+      QString path =
+          pSettings->value(Constants::Settings_DBPath, "").toString();
       if (!path.isEmpty()) {
         pSettings->setValue(Constants::Settings_DBPath, "");
       }
@@ -186,17 +182,14 @@ bool MainWindow::createDBWorker()
   return true;
 }
 
-void MainWindow::createSchema()
-{
+void MainWindow::createSchema() {
   if (!createDBWorker()) {
     return;
   }
   m_db->createSchema();
 }
 
-void MainWindow::initializeSettings()
-{
-}
+void MainWindow::initializeSettings() {}
 
 void MainWindow::getSchema() {
   if (createDBWorker()) {
@@ -205,12 +198,15 @@ void MainWindow::getSchema() {
   }
 }
 
-void MainWindow::readCSV()
-{
+void MainWindow::readCSV() {
   QString defaultExtension = tr("CSV files (*.csv)");
   QScopedPointer<QSettings> pSettings(getQSettings());
-  QString lastReadDir = pSettings->value(Constants::Settings_LastCSVDirOpen).toString();
-  QString fileReadPath = QFileDialog::getOpenFileName(nullptr, "Import CSV", lastReadDir, tr("Text files (*.txt);;CSV files (*.csv);;All files (*.*)"), &defaultExtension);
+  QString lastReadDir =
+      pSettings->value(Constants::Settings_LastCSVDirOpen).toString();
+  QString fileReadPath = QFileDialog::getOpenFileName(
+      nullptr, "Import CSV", lastReadDir,
+      tr("Text files (*.txt);;CSV files (*.csv);;All files (*.*)"),
+      &defaultExtension);
   if (fileReadPath.isEmpty()) {
     // Nothing to do
     return;
@@ -221,7 +217,7 @@ void MainWindow::readCSV()
   if (!fileInfo.exists()) {
     QMessageBox msgBox;
     msgBox.setText(tr("File does not exist: %1").arg(fileReadPath));
-    //msgBox.setInformativeText();
+    // msgBox.setInformativeText();
     msgBox.setStandardButtons(QMessageBox::Ok);
     msgBox.setDefaultButton(QMessageBox::Ok);
     msgBox.exec();
@@ -229,27 +225,25 @@ void MainWindow::readCSV()
   }
 
   // The file exists, so it cannot be empty.
-  if (lastReadDir.compare(fileInfo.absolutePath()) != 0)
-  {
+  if (lastReadDir.compare(fileInfo.absolutePath()) != 0) {
     qDebug() << tr("Setting Path:(") << fileInfo.absolutePath() << ")";
-    pSettings->setValue(Constants::Settings_LastCSVDirOpen, fileInfo.absolutePath());
+    pSettings->setValue(Constants::Settings_LastCSVDirOpen,
+                        fileInfo.absolutePath());
   }
   CSVReader reader(TypeMapper::PreferSigned | TypeMapper::PreferInt);
-  if (!reader.setStreamFromPath(fileReadPath))
-  {
-    ScrollMessageBox::information(this, "ERROR", QString(tr("Read: Failed to open CSV file %1")).arg(fileReadPath));
-  }
-  else if (!reader.readHeader())
-  {
-    ScrollMessageBox::information(this, "ERROR", QString(tr("Failed to read CSV header from %1")).arg(fileReadPath));
-  }
-  else
-  {
+  if (!reader.setStreamFromPath(fileReadPath)) {
+    ScrollMessageBox::information(
+        this, "ERROR",
+        QString(tr("Read: Failed to open CSV file %1")).arg(fileReadPath));
+  } else if (!reader.readHeader()) {
+    ScrollMessageBox::information(
+        this, "ERROR",
+        QString(tr("Failed to read CSV header from %1")).arg(fileReadPath));
+  } else {
     reader.readNLines(200);
     reader.guessColumnTypes();
     CSVReaderDialog dlg(&reader, this);
-    if (dlg.exec() == QDialog::Rejected)
-    {
+    if (dlg.exec() == QDialog::Rejected) {
       return;
     }
     // This next code, if enabled, writes the CSV file.
@@ -285,166 +279,191 @@ void MainWindow::readCSV()
     }
 #endif
 
-    //??ScrollMessageBox::information(0, "Schema", QString("Table %1\n\n%2").arg(tableName, bigFieldString));
+    //??ScrollMessageBox::information(0, "Schema", QString("Table
+    //%1\n\n%2").arg(tableName, bigFieldString));
     if (!createDBWorker()) {
       // An error message was probably already displayed
-      ScrollMessageBox::information(this, "ERROR", tr("Failed to create or access the database."));
+      ScrollMessageBox::information(
+          this, "ERROR", tr("Failed to create or access the database."));
       return;
     }
 
     // The previous line worked, so this should not be null.
-    if (m_db != nullptr && !m_db->loadCSV(reader, fileInfo.baseName()))
-    {
-      ScrollMessageBox::information(this, "ERROR", tr("Failed to load the CSV file into the database."));
+    if (m_db != nullptr && !m_db->loadCSV(reader, fileInfo.baseName())) {
+      ScrollMessageBox::information(
+          this, "ERROR", tr("Failed to load the CSV file into the database."));
     }
   }
 }
 
-void MainWindow::exportCSV()
-{
-    if (!createDBWorker()) {
-        return;
-    }
+void MainWindow::exportCSV() {
+  if (!createDBWorker()) {
+    return;
+  }
 
-    QScopedPointer<QSettings> pSettings(getQSettings());
-    QString lastWritePath = pSettings->value(Constants::Settings_LastCSVDirWrite).toString();
-    if (lastWritePath.isEmpty()) {
-        lastWritePath = pSettings->value(Constants::Settings_LastCSVDirOpen).toString();
-    }
+  QScopedPointer<QSettings> pSettings(getQSettings());
+  QString lastWritePath =
+      pSettings->value(Constants::Settings_LastCSVDirWrite).toString();
+  if (lastWritePath.isEmpty()) {
+    lastWritePath =
+        pSettings->value(Constants::Settings_LastCSVDirOpen).toString();
+  }
 
-    QString fileWritePath = QFileDialog::getExistingDirectory(nullptr, tr("Export To CSV"), lastWritePath);
-    if (fileWritePath.isEmpty()) {
-        return;
-    }
-    QDir writeDir = fileWritePath;
+  QString fileWritePath = QFileDialog::getExistingDirectory(
+      nullptr, tr("Export To CSV"), lastWritePath);
+  if (fileWritePath.isEmpty()) {
+    return;
+  }
+  QDir writeDir = fileWritePath;
 
-    QStringList tableNames = m_db->getTableNames();
-    QStringList existingFiles;
-    for (int i=0; i<tableNames.size(); ++i)
-    {
-        if (QFile::exists(writeDir.filePath(tableNames.at(i) + ".csv"))) {
-            existingFiles.append(tableNames.at(i) + ".csv");
-        }
+  QStringList tableNames = m_db->getTableNames();
+  QStringList existingFiles;
+  for (int i = 0; i < tableNames.size(); ++i) {
+    if (QFile::exists(writeDir.filePath(tableNames.at(i) + ".csv"))) {
+      existingFiles.append(tableNames.at(i) + ".csv");
     }
-    if (QFile::exists(writeDir.filePath("stamps.ddl"))) {
-        existingFiles.append("stamps.ddl");
+  }
+  if (QFile::exists(writeDir.filePath("stamps.ddl"))) {
+    existingFiles.append("stamps.ddl");
+  }
+  if (existingFiles.size() > 0) {
+    if (ScrollMessageBox::question(
+            this, "WARNING",
+            QString(tr("OVerwrite the following files:\n%1"))
+                .arg(existingFiles.join("\n"))) != QDialogButtonBox::Yes) {
+      return;
     }
-    if (existingFiles.size() > 0)
-    {
-        if (ScrollMessageBox::question(this, "WARNING", QString(tr("OVerwrite the following files:\n%1")).arg(existingFiles.join("\n"))) != QDialogButtonBox::Yes)
-        {
-            return;
-        }
-    }
-    pSettings->setValue(Constants::Settings_LastCSVDirWrite, writeDir.canonicalPath());
+  }
+  pSettings->setValue(Constants::Settings_LastCSVDirWrite,
+                      writeDir.canonicalPath());
 
-    m_db->exportToCSV(writeDir.canonicalPath(), false);
+  m_db->exportToCSV(writeDir.canonicalPath(), false);
 }
 
-void MainWindow::exportInventoryCSV()
-{
-    if (!createDBWorker()) {
-        return;
-    }
-    QScopedPointer<QSettings> pSettings(getQSettings());
-    QString lastWritePath = pSettings->value(Constants::Settings_LastCSVDirWrite).toString();
-    if (lastWritePath.isEmpty()) {
-        lastWritePath = pSettings->value(Constants::Settings_LastCSVDirOpen).toString();
-    }
+void MainWindow::exportInventoryCSV() {
+  if (!createDBWorker()) {
+    return;
+  }
+  QScopedPointer<QSettings> pSettings(getQSettings());
+  QString lastWritePath =
+      pSettings->value(Constants::Settings_LastCSVDirWrite).toString();
+  if (lastWritePath.isEmpty()) {
+    lastWritePath =
+        pSettings->value(Constants::Settings_LastCSVDirOpen).toString();
+  }
 
-    QString defaultExtension = tr("CSV files (*.csv)");
-    QString fileWritePath = QFileDialog::getSaveFileName(nullptr, "Export CSV (One File)", lastWritePath, tr("Text files (*.txt);;CSV files (*.csv);;All files (*.*)"), &defaultExtension);
-    if (fileWritePath.isEmpty()) {
-        return;
-    }
-    CSVWriter writer;
-    if (!writer.setStreamFromPath(fileWritePath))
-    {
-        ScrollMessageBox::information(this, "ERROR", QString(tr("Write: Failed to open CSV file %1")).arg(fileWritePath));
-    }
+  QString defaultExtension = tr("CSV files (*.csv)");
+  QString fileWritePath = QFileDialog::getSaveFileName(
+      nullptr, "Export CSV (One File)", lastWritePath,
+      tr("Text files (*.txt);;CSV files (*.csv);;All files (*.*)"),
+      &defaultExtension);
+  if (fileWritePath.isEmpty()) {
+    return;
+  }
+  CSVWriter writer;
+  if (!writer.setStreamFromPath(fileWritePath)) {
+    ScrollMessageBox::information(
+        this, "ERROR",
+        QString(tr("Write: Failed to open CSV file %1")).arg(fileWritePath));
+  }
 
+  QDir writeDir = fileWritePath;
 
-    QDir writeDir = fileWritePath;
+  if (QFile::exists(writeDir.filePath("full_inventory.csv"))) {
+    if (ScrollMessageBox::question(
+            this, "WARNING", QString(tr("OVerwrite full_inventory.csv"))) !=
+        QDialogButtonBox::Yes) {
+      return;
+    }
+  }
+  pSettings->setValue(Constants::Settings_LastCSVDirWrite,
+                      writeDir.canonicalPath());
 
-    if (QFile::exists(writeDir.filePath("full_inventory.csv"))) {
-        if (ScrollMessageBox::question(this, "WARNING", QString(tr("OVerwrite full_inventory.csv"))) != QDialogButtonBox::Yes)
-        {
-            return;
-        }
-    }
-    pSettings->setValue(Constants::Settings_LastCSVDirWrite, writeDir.canonicalPath());
+  QString sqlString =
+      "SELECT CONCAT(country.a3, '/', catalog.scott, '/', catalogtype.name) AS "
+      "scott, inventory.quantity, inventory.grade,  inventory.condition, "
+      "inventory.selvage, inventory.centering, inventory.back, "
+      "inventory.comment, catalog.description, catalog.facevalue, "
+      "inventory.paid, bookvalues.bookvalue, inventory.valuemultiplier, "
+      "inventory.certificate, inventory.purchasedate, catalog.releasedate, "
+      "dealer.name AS dealer_name, stamplocation.name AS location_name, "
+      "stamplocation.description AS location_description, inventory.updated , "
+      "country.name AS 'country', country.a3, catalog.scott AS scott_num, "
+      "catalogtype.name as type, inventory.id FROM inventory, catalog, "
+      "bookvalues, country, stamplocation, valuetype, dealer, catalogtype "
+      "WHERE  inventory.catalogid=catalog.id AND catalog.countryid=country.id "
+      "AND inventory.dealerid=dealer.id AND "
+      "stamplocation.id=inventory.locationid AND "
+      "valuetype.description=inventory.grade AND "
+      "bookvalues.valuetypeid=valuetype.id AND catalog.id=bookvalues.catalogid "
+      " AND catalogtype.id=catalog.typeid ORDER BY country.a3, "
+      "ABS(catalog.scott), catalogtype.name";
+  QSqlDatabase &db = m_db->getDB();
+  QSqlQuery query(db);
+  if (!query.exec(sqlString)) {
+    ScrollMessageBox::information(this, "ERROR", query.lastError().text());
+    return;
+  }
+  if (!query.isSelect()) {
+    ScrollMessageBox::information(this, "ERROR",
+                                  "Why is the query NOT a select? BUG!!!");
+    return;
+  }
+  QSqlRecord rec = query.record();
+  int numCols = rec.count();
 
-    QString sqlString = "SELECT CONCAT(country.a3, '/', catalog.scott, '/', catalogtype.name) AS scott, inventory.quantity, inventory.grade,  inventory.condition, inventory.selvage, inventory.centering, inventory.back, inventory.comment, catalog.description, catalog.facevalue, inventory.paid, bookvalues.bookvalue, inventory.valuemultiplier, inventory.certificate, inventory.purchasedate, catalog.releasedate, dealer.name AS dealer_name, stamplocation.name AS location_name, stamplocation.description AS location_description, inventory.updated , country.name AS 'country', country.a3, catalog.scott AS scott_num, catalogtype.name as type, inventory.id FROM inventory, catalog, bookvalues, country, stamplocation, valuetype, dealer, catalogtype WHERE  inventory.catalogid=catalog.id AND catalog.countryid=country.id AND inventory.dealerid=dealer.id AND stamplocation.id=inventory.locationid AND valuetype.description=inventory.grade AND bookvalues.valuetypeid=valuetype.id AND catalog.id=bookvalues.catalogid  AND catalogtype.id=catalog.typeid ORDER BY country.a3, ABS(catalog.scott), catalogtype.name";
-    QSqlDatabase& db = m_db->getDB();
-    QSqlQuery query(db);
-    if (!query.exec(sqlString))
-    {
-        ScrollMessageBox::information(this, "ERROR", query.lastError().text());
-        return;
+  // CSV Headers
+  CSVLine headerLine;
+  QStringList fieldNames;
+  QStringList intHeader = {"quantity", "id"};
+  QStringList dateHeader = {"releasedate", "purchasedate"};
+  QStringList dateTimeHeader = {"updated"};
+  QStringList floatHeader = {"facevalue", "paid", "bookvalue",
+                             "valuemultiplier"};
+  int i;
+  for (i = 0; i < rec.count(); ++i) {
+    QString fieldName = rec.fieldName(i);
+    fieldNames << fieldName;
+    if (intHeader.contains(fieldName)) {
+      headerLine.append(CSVColumn(fieldName, false, QMetaType::Long));
+    } else if (floatHeader.contains(fieldName)) {
+      headerLine.append(CSVColumn(fieldName, false, QMetaType::Float16));
+    } else if (dateHeader.contains(fieldName)) {
+      headerLine.append(CSVColumn(fieldName, false, QMetaType::QDate));
+    } else if (dateTimeHeader.contains(fieldName)) {
+      headerLine.append(CSVColumn(fieldName, false, QMetaType::QDateTime));
+    } else {
+      headerLine.append(CSVColumn(fieldName, true, QMetaType::QString));
     }
-    if (!query.isSelect()) {
-        ScrollMessageBox::information(this, "ERROR", "Why is the query NOT a select? BUG!!!");
-        return;
-    }
-    QSqlRecord rec = query.record();
-    int numCols = rec.count();
+  }
+  writer.setHeader(headerLine);
+  writer.writeHeader();
 
-    // CSV Headers
-    CSVLine headerLine;
-    QStringList fieldNames;
-    QStringList intHeader = {"quantity", "id"};
-    QStringList dateHeader = {"releasedate", "purchasedate"};
-    QStringList dateTimeHeader = {"updated"};
-    QStringList floatHeader = {"facevalue", "paid", "bookvalue", "valuemultiplier"};
-    int i;
-    for (i=0; i<rec.count(); ++i)
-    {
-        QString fieldName = rec.fieldName(i);
-        fieldNames << fieldName;
-        if (intHeader.contains(fieldName)) {
-            headerLine.append(CSVColumn(fieldName, false, QMetaType::Long));
-        } else if (floatHeader.contains(fieldName)) {
-            headerLine.append(CSVColumn(fieldName, false, QMetaType::Float16));
-        } else if (dateHeader.contains(fieldName)) {
-            headerLine.append(CSVColumn(fieldName, false, QMetaType::QDate));
-        } else if (dateTimeHeader.contains(fieldName)) {
-            headerLine.append(CSVColumn(fieldName, false, QMetaType::QDateTime));
-        } else {
-            headerLine.append(CSVColumn(fieldName, true, QMetaType::QString));
-        }
+  while (query.isActive() && query.next()) {
+    CSVLine line;
+    for (int col = 0; col < numCols; ++col) {
+      QString fieldName = fieldNames[col];
+      QString fieldValue = query.value(col).toString();
+      if (intHeader.contains(fieldName)) {
+        line.append(CSVColumn(fieldValue, false, QMetaType::Long));
+      } else if (floatHeader.contains(fieldName)) {
+        line.append(CSVColumn(fieldValue, false, QMetaType::Float16));
+      } else if (dateHeader.contains(fieldName)) {
+        line.append(CSVColumn(fieldValue, false, QMetaType::QDate));
+      } else if (dateTimeHeader.contains(fieldName)) {
+        line.append(CSVColumn(fieldValue, false, QMetaType::QDateTime));
+      } else {
+        line.append(CSVColumn(fieldValue, true, QMetaType::QString));
+      }
     }
-    writer.setHeader(headerLine);
-    writer.writeHeader();
-
-    while (query.isActive() && query.next())
-    {
-        CSVLine line;
-        for (int col=0; col<numCols; ++col)
-        {
-            QString fieldName = fieldNames[col];
-            QString fieldValue = query.value(col).toString();
-            if (intHeader.contains(fieldName)) {
-                line.append(CSVColumn(fieldValue, false, QMetaType::Long));
-            } else if (floatHeader.contains(fieldName)) {
-                line.append(CSVColumn(fieldValue, false, QMetaType::Float16));
-            } else if (dateHeader.contains(fieldName)) {
-                line.append(CSVColumn(fieldValue, false, QMetaType::QDate));
-            } else if (dateTimeHeader.contains(fieldName)) {
-                line.append(CSVColumn(fieldValue, false, QMetaType::QDateTime));
-            } else {
-                line.append(CSVColumn(fieldValue, true, QMetaType::QString));
-            }
-        }
-        writer.write(line);
-    }
-    writer.cleanup();
-    ScrollMessageBox::information(this, "Done", "Full CSV Export Finished");
+    writer.write(line);
+  }
+  writer.cleanup();
+  ScrollMessageBox::information(this, "Done", "Full CSV Export Finished");
 }
 
-void MainWindow::openSQLWindow()
-{
-  if (createDBWorker())
-  {
+void MainWindow::openSQLWindow() {
+  if (createDBWorker()) {
     SQLDialog sqlDialog(*m_db);
     sqlDialog.exec();
   }
@@ -453,88 +472,90 @@ void MainWindow::openSQLWindow()
 #include "genericdatacollection.h"
 #include "tablesortfielddialog.h"
 
-void MainWindow::configure()
-{
+void MainWindow::configure() {
   bool testTableSortFieldDialog = false;
   if (testTableSortFieldDialog && createDBWorker()) {
 
-      GenericDataCollection gdc;
-      gdc.makeDummy();
-      TableSortFieldDialog dlg(&gdc);
-      dlg.exec();
+    GenericDataCollection gdc;
+    gdc.makeDummy();
+    TableSortFieldDialog dlg(&gdc);
+    dlg.exec();
 
-      // QString tableName("country");
-      // QString tableName("inventory");
-      QString tableName("stamplocation");
-      // QString tableName("stamplocation");
-      /**
-      GenericDataCollection* gdo = m_db->readTableName(tableName);
+    // QString tableName("country");
+    // QString tableName("inventory");
+    QString tableName("stamplocation");
+    // QString tableName("stamplocation");
+    /**
+    GenericDataCollection* gdo = m_db->readTableName(tableName);
 
-      qDebug(qPrintable(QString("On return, number of rows = %1").arg(gdo->rowCount())));
+    qDebug(qPrintable(QString("On return, number of rows =
+%1").arg(gdo->rowCount())));
 
-      DescribeSqlTables schema = DescribeSqlTables::getStampSchema();
+    DescribeSqlTables schema = DescribeSqlTables::getStampSchema();
 
-      GenericDataCollection* data = m_db->readTableBySchema("catalog");
+    GenericDataCollection* data = m_db->readTableBySchema("catalog");
 
-      QSqlQuery query(m_db->getDB());
-      QString s = QString("UPDATE %1 SET %2=:%2, updated=:updated WHERE %3=:id").arg("catalog").arg("releasedate").arg("id");
-      query.prepare(s);
+    QSqlQuery query(m_db->getDB());
+    QString s = QString("UPDATE %1 SET %2=:%2, updated=:updated WHERE
+%3=:id").arg("catalog").arg("releasedate").arg("id"); query.prepare(s);
 
-      for (int i=0; i<data->rowCount(); ++i)
+    for (int i=0; i<data->rowCount(); ++i)
+    {
+      GenericDataObject* row = data->getObjectByRow (i);
+      QString scott = row->getString("scott");
+      int id = row->getInt("id");
+      int countryId = row->getInt("countryid");
+      QDate rd = row->getDate("releasedate");
+      bool makeChange = false;
+      QString leadingNum = "";
+      for (int idx = 0; idx < scott.length() && scott.at(idx).isDigit(); ++idx)
       {
-        GenericDataObject* row = data->getObjectByRow (i);
-        QString scott = row->getString("scott");
-        int id = row->getInt("id");
-        int countryId = row->getInt("countryid");
-        QDate rd = row->getDate("releasedate");
-        bool makeChange = false;
-        QString leadingNum = "";
-        for (int idx = 0; idx < scott.length() && scott.at(idx).isDigit(); ++idx)
-        {
-          leadingNum.append(scott.at(idx));
-        }
-        int leadingInt = leadingNum.isEmpty() ? 0 : leadingNum.toInt();
-
-        makeChange = countryId == 5 && leadingInt < 2000 && leadingInt > 299 && (row->getDate("releasedate").year() >= 2000);
-        makeChange = (row->getDate("releasedate").year() >= 2000);
-
-        if (makeChange)
-        {
-          qDebug(qPrintable(QString("Changing %4 (%1) from %2 to %3").arg(id).arg(rd.toString("MM/dd/yyyy")).arg(rd.addYears(-100).toString("MM/dd/yyyy")).arg(scott)));
-          makeChange = false;
-        }
-        if (makeChange)
-        {
-          QDate d = row->getDate("releasedate").addYears(-100);
-          query.bindValue(":id", row->getInt("id"));
-          QDateTime now = QDateTime::currentDateTime();
-          query.bindValue(":updated", now);
-          query.bindValue(":releasedate", d);
-          if (!query.exec())
-          {
-            qDebug(qPrintable(QString("Failed to update row for id ").arg(row->getInt("id"))));
-            return;
-          }
-        }
-
+        leadingNum.append(scott.at(idx));
       }
+      int leadingInt = leadingNum.isEmpty() ? 0 : leadingNum.toInt();
+
+      makeChange = countryId == 5 && leadingInt < 2000 && leadingInt > 299 &&
+(row->getDate("releasedate").year() >= 2000); makeChange =
+(row->getDate("releasedate").year() >= 2000);
+
+      if (makeChange)
+      {
+        qDebug(qPrintable(QString("Changing %4 (%1) from %2 to
+%3").arg(id).arg(rd.toString("MM/dd/yyyy")).arg(rd.addYears(-100).toString("MM/dd/yyyy")).arg(scott)));
+        makeChange = false;
+      }
+      if (makeChange)
+      {
+        QDate d = row->getDate("releasedate").addYears(-100);
+        query.bindValue(":id", row->getInt("id"));
+        QDateTime now = QDateTime::currentDateTime();
+        query.bindValue(":updated", now);
+        query.bindValue(":releasedate", d);
+        if (!query.exec())
+        {
+          qDebug(qPrintable(QString("Failed to update row for id
+").arg(row->getInt("id")))); return;
+        }
+      }
+
+    }
 **/
-      //GenericDataCollectionTableDialog dlg(tableName, *gdo, *m_db, schema);
-      //dlg.exec();
+    // GenericDataCollectionTableDialog dlg(tableName, *gdo, *m_db, schema);
+    // dlg.exec();
   } else {
-      ConfigureDialog dlg;
-      dlg.exec();
+    ConfigureDialog dlg;
+    dlg.exec();
   }
 }
 
-
 void MainWindow::testing() {
   if (createDBWorker()) {
-        ImageDialog dialog(m_db, "USA", "4", this);
-        dialog.exec();
-        return;
+    ImageDialog dialog(m_db, "USA", "4", this);
+    dialog.exec();
+    return;
 
-    QString sql = "select id, (\"id\" || ' - ' || \"description\") As x from valuesource where ID > 0 order by valuesource.year DESC ";
+    QString sql = "select id, (\"id\" || ' - ' || \"description\") As x from "
+                  "valuesource where ID > 0 order by valuesource.year DESC ";
     QList<QSqlRecord> records;
 
     QString keyField;
@@ -544,7 +565,8 @@ void MainWindow::testing() {
       QMessageBox::warning(this, tr("ERROR"), tr("Failed to execute SQL."));
       return;
     } else if (records.size() < 1) {
-      QMessageBox::warning(this, tr("No Records Found"), tr("No catalog entries found without values."));
+      QMessageBox::warning(this, tr("No Records Found"),
+                           tr("No catalog entries found without values."));
       return;
     }
 
@@ -556,7 +578,7 @@ void MainWindow::testing() {
     }
     bool ok;
     QString item = QInputDialog::getItem(this, tr("Select Catalog To Use"),
-                                             tr("Catalog:"), items, 0, false, &ok);
+                                         tr("Catalog:"), items, 0, false, &ok);
     if (ok && !item.isEmpty())
       for (QSqlRecord r : records) {
         if (!r.isNull(1) && r.field(1).value().toString() == item) {
@@ -566,11 +588,12 @@ void MainWindow::testing() {
   }
 }
 
-void MainWindow::addMissingBookValues()
-{
+void MainWindow::addMissingBookValues() {
   if (createDBWorker()) {
     // Get stamps with no entry in "book values"
-    QString sql = "select catalog.id from catalog left outer join bookvalues on catalog.id = bookvalues.catalogid where bookvalues.catalogid IS NULL";
+    QString sql =
+        "select catalog.id from catalog left outer join bookvalues on "
+        "catalog.id = bookvalues.catalogid where bookvalues.catalogid IS NULL";
     QList<QSqlRecord> records;
 
     // We only want the IDs, so, these fields will be ignored.
@@ -578,15 +601,20 @@ void MainWindow::addMissingBookValues()
     QHash<int, int> keys;
 
     if (!m_db->executeQuery(sql, records, keyField, keys)) {
-      QMessageBox::warning(this, tr("ERROR"), tr("Failed to execute SQL to find missing entries."));
+      QMessageBox::warning(
+          this, tr("ERROR"),
+          tr("Failed to execute SQL to find missing entries."));
       return;
     } else if (records.size() < 1) {
-      QMessageBox::warning(this, tr("No Records Found"), tr("No catalog entries found without values."));
+      QMessageBox::warning(this, tr("No Records Found"),
+                           tr("No catalog entries found without values."));
       return;
     }
-    if (ScrollMessageBox::question(this, "Question", QString(tr("Add %1 stamps to the book values table?")).arg(records.size())) != QDialogButtonBox::Yes)
-    {
-        return;
+    if (ScrollMessageBox::question(
+            this, "Question",
+            QString(tr("Add %1 stamps to the book values table?"))
+                .arg(records.size())) != QDialogButtonBox::Yes) {
+      return;
     }
 
     // Set the sourceID based on the latest year that we have
@@ -598,10 +626,16 @@ void MainWindow::addMissingBookValues()
     int failed = 0;
 
     // Do the work!
-    for (int i=0; i<records.size() && failed == 0; ++i) {
+    for (int i = 0; i < records.size() && failed == 0; ++i) {
       int catalogId = records[i].value("id").toInt();
-      QString q1 = QString("INSERT INTO bookvalues (Catalogid, sourceid, valuetypeid, bookvalue) VALUES (%1, %2, 1, 0)").arg(catalogId).arg(sourceId);
-      QString q2 = QString("INSERT INTO bookvalues (Catalogid, sourceid, valuetypeid, bookvalue) VALUES (%1, %2, 2, 0)").arg(catalogId).arg(sourceId);
+      QString q1 = QString("INSERT INTO bookvalues (Catalogid, sourceid, "
+                           "valuetypeid, bookvalue) VALUES (%1, %2, 1, 0)")
+                       .arg(catalogId)
+                       .arg(sourceId);
+      QString q2 = QString("INSERT INTO bookvalues (Catalogid, sourceid, "
+                           "valuetypeid, bookvalue) VALUES (%1, %2, 2, 0)")
+                       .arg(catalogId)
+                       .arg(sourceId);
       if (!m_db->executeQuery(q1, ignoredRecords, keyField, keys)) {
         ++failed;
         QMessageBox::warning(this, tr("ERROR"), q1);
@@ -615,321 +649,358 @@ void MainWindow::addMissingBookValues()
         }
       }
     }
-    ScrollMessageBox::question(this, "Done", QString(tr("Added %1 entries to the book values table. %2 failed.")).arg(added).arg(failed));
+    ScrollMessageBox::question(
+        this, "Done",
+        QString(tr("Added %1 entries to the book values table. %2 failed."))
+            .arg(added)
+            .arg(failed));
   }
 }
 
 #include "scottnumber.h"
 
-void MainWindow::findMissingImages()
-{
-    //QScopedPointer<QSettings> pSettings(getQSettings());
-    //QString imagePath = pSettings->value(Constants::Settings_CatalogImagePath).toString();
-    ImageUtility iu;
-    //iu.setBaseDirectory(imagePath);
+void MainWindow::findMissingImages() {
+  // QScopedPointer<QSettings> pSettings(getQSettings());
+  // QString imagePath =
+  // pSettings->value(Constants::Settings_CatalogImagePath).toString();
+  ImageUtility iu;
+  // iu.setBaseDirectory(imagePath);
 
-    if (createDBWorker()) {
-      QString country_sql = "select id, name, a3 from country order by name DESC ";
-      QList<QSqlRecord> records;
+  if (createDBWorker()) {
+    QString country_sql =
+        "select id, name, a3 from country order by name DESC ";
+    QList<QSqlRecord> records;
 
-      QString country_keyField;
-      QHash<int, int> keys;
+    QString country_keyField;
+    QHash<int, int> keys;
 
-      if (!m_db->executeQuery(country_sql, records, country_keyField, keys)) {
+    if (!m_db->executeQuery(country_sql, records, country_keyField, keys)) {
+      QMessageBox::warning(this, tr("ERROR"), tr("Failed to execute SQL."));
+      return;
+    } else if (records.size() < 1) {
+      QMessageBox::warning(this, tr("No Records Found"),
+                           tr("No catalog entries found without values."));
+      return;
+    }
+
+    QStringList country_list;
+    QStringList bad_country_list;
+    for (QSqlRecord r : records) {
+      if (!r.isNull(2)) {
+        QString a_country = r.field(2).value().toString();
+        if (iu.hasCountry(a_country)) {
+          country_list << a_country;
+        } else {
+          bad_country_list << a_country;
+        }
+      }
+    }
+
+    // See how many catalog entries with this country
+    QStringList country_count_list;
+    QSqlQuery count_cat_query(m_db->getDB());
+    QSqlQuery count_inv_query(m_db->getDB());
+
+    count_inv_query.prepare("select count(*) from inventory, catalog, country "
+                            "where inventory.catalogid=catalog.id AND "
+                            "catalog.countryid=country.id AND country.a3=:c");
+    for (QString country : bad_country_list) {
+      records.clear();
+      keys.clear();
+      count_cat_query.prepare("SELECT COUNT(*) FROM catalog, country WHERE "
+                              "catalog.countryid=country.id AND country.a3=:c");
+      count_cat_query.bindValue(":c", country);
+      int num_catalog = 0;
+      int num_inventory = 0;
+      if (!m_db->executeQuery(count_cat_query, records, country_keyField,
+                              keys)) {
         QMessageBox::warning(this, tr("ERROR"), tr("Failed to execute SQL."));
         return;
       } else if (records.size() < 1) {
-        QMessageBox::warning(this, tr("No Records Found"), tr("No catalog entries found without values."));
+        QMessageBox::warning(
+            this, tr("No Records Found"),
+            tr("This should not happen when counting records"));
+        return;
+      } else {
+        num_catalog = records.at(0).field(0).value().toInt();
+      }
+
+      if (num_catalog > 0) {
+        records.clear();
+        keys.clear();
+        count_inv_query.bindValue(":c", country);
+        if (!m_db->executeQuery(count_inv_query, records, country_keyField,
+                                keys)) {
+          QMessageBox::warning(this, tr("ERROR"), tr("Failed to execute SQL."));
+          return;
+        } else if (records.size() < 1) {
+          QMessageBox::warning(
+              this, tr("No Records Found"),
+              tr("This should not happen when counting records"));
+          return;
+        } else {
+          num_inventory = records.at(0).field(0).value().toInt();
+        }
+      }
+      country_count_list << (country +
+                             "(N)\tcat:" + QString::number(num_catalog) +
+                             "\tinv:" + QString::number(num_inventory));
+    }
+
+    // Get a list of each country
+    for (QString country : country_list) {
+      records.clear();
+      keys.clear();
+      count_cat_query.bindValue(":c", country);
+      int num_catalog = 0;
+      int num_inventory = 0;
+      if (!m_db->executeQuery(count_cat_query, records, country_keyField,
+                              keys)) {
+        QMessageBox::warning(this, tr("ERROR"), tr("Failed to execute SQL."));
+        return;
+      } else if (records.size() < 1) {
+        QMessageBox::warning(
+            this, tr("No Records Found"),
+            tr("This should not happen when counting records"));
+        return;
+      } else {
+        num_catalog = records.at(0).field(0).value().toInt();
+      }
+      if (num_catalog > 0) {
+        records.clear();
+        keys.clear();
+        country_keyField.clear();
+        count_inv_query.bindValue(":c", country);
+        if (!m_db->executeQuery(count_inv_query, records, country_keyField,
+                                keys)) {
+          QMessageBox::warning(this, tr("ERROR"), tr("Failed to execute SQL."));
+          return;
+        } else if (records.size() < 1) {
+          QMessageBox::warning(
+              this, tr("No Records Found"),
+              tr("This should not happen when counting records"));
+          return;
+        } else {
+          num_inventory = records.at(0).field(0).value().toInt();
+        }
+      }
+      country_count_list << (country +
+                             "(Y)\tcat:" + QString::number(num_catalog) +
+                             "\tinv:" + QString::number(num_inventory));
+    }
+
+    if (country_list.size() > 0)
+      ScrollMessageBox::information(this, "Has Country Image Directory",
+                                    country_count_list.join("\n"));
+
+    // Now check each stamp for an image/
+    // This sorts the full SCOTT value alphabetically, which is a problem
+    // because "4" > "1332". To avoid this, the entire list is pulled for each
+    // country and sorted using the ScottNumber class. Not efficient, but it
+    // works as desired.
+    QSqlQuery sel_cat_query(m_db->getDB());
+    sel_cat_query.prepare(
+        "SELECT scott FROM catalog, country WHERE catalog.countryid=country.id "
+        "AND country.a3=:c order by scott ASC");
+
+    QString last_scott;
+    QString first_scott_in_run;
+    QString this_scott;
+    QString last_category;
+    QStringList running_result;
+    bool last_had_image;
+    int num_missing_total = 0;
+    int num_missing_in_run;
+    for (QString country : country_list) {
+      last_had_image = true;
+      num_missing_in_run = 0;
+      num_missing_total = 0;
+      records.clear();
+      keys.clear();
+      sel_cat_query.bindValue(":c", country);
+      if (!m_db->executeQuery(sel_cat_query, records, country_keyField, keys)) {
+        QMessageBox::warning(this, tr("ERROR"), tr("Failed to execute SQL."));
+        return;
+      } else if (records.size() < 1) {
+        QMessageBox::warning(
+            this, tr("No Records Found"),
+            tr("This should not happen when counting records"));
         return;
       }
 
-      QStringList country_list;
-      QStringList bad_country_list;
+      // I can either sort values by Category/number/trailer, or have a sorted
+      // list of a ScottNumber data type includes: country, category, number
+      // (int), and trailer Sorting is then done using appropriate data types.
+      // Step 1 is to pull ALL scott numbers from the DB.
+      QList<ScottNumber> scott_numbers;
       for (QSqlRecord r : records) {
-        if (!r.isNull(2)) {
-          QString a_country = r.field(2).value().toString();
-          if (iu.hasCountry(a_country)) {
-            country_list << a_country;
-          } else {
-              bad_country_list << a_country;
-          }
-        }
+        this_scott = r.field(0).value().toString();
+        scott_numbers << ScottNumber(country, this_scott);
       }
 
-      // See how many catalog entries with this country
-      QStringList country_count_list;
-      QSqlQuery count_cat_query(m_db->getDB());
-      QSqlQuery count_inv_query(m_db->getDB());
+      std::sort(scott_numbers.begin(), scott_numbers.end());
 
-      count_inv_query.prepare("select count(*) from inventory, catalog, country where inventory.catalogid=catalog.id AND catalog.countryid=country.id AND country.a3=:c");
-      for (QString country : bad_country_list) {
-          records.clear();
-          keys.clear();
-          count_cat_query.prepare("SELECT COUNT(*) FROM catalog, country WHERE catalog.countryid=country.id AND country.a3=:c");
-          count_cat_query.bindValue(":c", country);
-          int num_catalog = 0;
-          int num_inventory = 0;
-          if (!m_db->executeQuery(count_cat_query, records, country_keyField, keys)) {
-              QMessageBox::warning(this, tr("ERROR"), tr("Failed to execute SQL."));
-              return;
-          } else if (records.size() < 1) {
-              QMessageBox::warning(this, tr("No Records Found"), tr("This should not happen when counting records"));
-              return;
-          } else {
-              num_catalog = records.at(0).field(0).value().toInt();
+      for (ScottNumber &sn : scott_numbers) {
+        // sn.getCategory() % QString::number(sn.getNumber()) % sn.getTrailer();
+        this_scott = sn.getScott();
+
+        if (sn.getCategory() != last_category && !running_result.isEmpty()) {
+          if (num_missing_in_run == 1) {
+            running_result << first_scott_in_run;
+          } else if (num_missing_in_run > 1) {
+            running_result << (first_scott_in_run + " - " + last_scott + " (" +
+                               QString::number(num_missing_in_run) + ")");
           }
-
-          if (num_catalog > 0) {
-              records.clear();
-              keys.clear();
-              count_inv_query.bindValue(":c", country);
-              if (!m_db->executeQuery(count_inv_query, records, country_keyField, keys)) {
-                  QMessageBox::warning(this, tr("ERROR"), tr("Failed to execute SQL."));
-                  return;
-              } else if (records.size() < 1) {
-                  QMessageBox::warning(this, tr("No Records Found"), tr("This should not happen when counting records"));
-                  return;
-              } else {
-                  num_inventory = records.at(0).field(0).value().toInt();
-              }
-          }
-          country_count_list << (country + "(N)\tcat:" + QString::number(num_catalog) + "\tinv:" + QString::number(num_inventory));
-      }
-
-      // Get a list of each country
-      for (QString country : country_list) {
-          records.clear();
-          keys.clear();
-          count_cat_query.bindValue(":c", country);
-          int num_catalog = 0;
-          int num_inventory = 0;
-          if (!m_db->executeQuery(count_cat_query, records, country_keyField, keys)) {
-              QMessageBox::warning(this, tr("ERROR"), tr("Failed to execute SQL."));
-              return;
-          } else if (records.size() < 1) {
-              QMessageBox::warning(this, tr("No Records Found"), tr("This should not happen when counting records"));
-              return;
-          } else {
-              num_catalog = records.at(0).field(0).value().toInt();
-          }
-          if (num_catalog > 0) {
-              records.clear();
-              keys.clear();
-              country_keyField.clear();
-              count_inv_query.bindValue(":c", country);
-              if (!m_db->executeQuery(count_inv_query, records, country_keyField, keys)) {
-                  QMessageBox::warning(this, tr("ERROR"), tr("Failed to execute SQL."));
-                  return;
-              } else if (records.size() < 1) {
-                  QMessageBox::warning(this, tr("No Records Found"), tr("This should not happen when counting records"));
-                  return;
-              } else {
-                  num_inventory = records.at(0).field(0).value().toInt();
-              }
-          }
-          country_count_list << (country + "(Y)\tcat:" + QString::number(num_catalog) + "\tinv:" + QString::number(num_inventory));
-      }
-
-
-      if (country_list.size() > 0)
-        ScrollMessageBox::information(this, "Has Country Image Directory", country_count_list.join("\n"));
-
-      // Now check each stamp for an image/
-      // This sorts the full SCOTT value alphabetically, which is a problem because "4" > "1332".
-      // To avoid this, the entire list is pulled for each country and sorted
-      // using the ScottNumber class. Not efficient, but it works as desired.
-      QSqlQuery sel_cat_query(m_db->getDB());
-      sel_cat_query.prepare("SELECT scott FROM catalog, country WHERE catalog.countryid=country.id AND country.a3=:c order by scott ASC");
-
-      QString last_scott;
-      QString first_scott_in_run;
-      QString this_scott;
-      QString last_category;
-      QStringList running_result;
-      bool last_had_image;
-      int num_missing_total=0;
-      int num_missing_in_run;
-      for (QString country : country_list) {
           last_had_image = true;
           num_missing_in_run = 0;
-          num_missing_total = 0;
-          records.clear();
-          keys.clear();
-          sel_cat_query.bindValue(":c", country);
-          if (!m_db->executeQuery(sel_cat_query, records, country_keyField, keys)) {
-              QMessageBox::warning(this, tr("ERROR"), tr("Failed to execute SQL."));
-              return;
-          } else if (records.size() < 1) {
-              QMessageBox::warning(this, tr("No Records Found"), tr("This should not happen when counting records"));
-              return;
+        }
+        if (iu.findBookImages(country, this_scott,
+                              ImageUtility::Image_Flags::Catalog)
+                .isEmpty()) {
+          ++num_missing_total;
+          ++num_missing_in_run;
+          if (last_had_image) {
+            first_scott_in_run = this_scott;
+            last_scott = this_scott;
+            last_had_image = false;
+            last_category = sn.getCategory();
+          } else {
+            last_scott = this_scott;
           }
-
-          // I can either sort values by Category/number/trailer, or have a sorted list of
-          // a ScottNumber data type includes: country, category, number (int), and trailer
-          // Sorting is then done using appropriate data types.
-          // Step 1 is to pull ALL scott numbers from the DB.
-          QList<ScottNumber> scott_numbers;
-          for (QSqlRecord r : records) {
-              this_scott = r.field(0).value().toString();
-              scott_numbers << ScottNumber(country, this_scott);
+        } else if (!last_had_image) {
+          // We have an image now but did not last time.
+          if (num_missing_in_run == 1) {
+            running_result << first_scott_in_run;
+          } else {
+            running_result << (first_scott_in_run + " - " + last_scott + " (" +
+                               QString::number(num_missing_in_run) + ")");
           }
-
-          std::sort(scott_numbers.begin(), scott_numbers.end());
-
-          for (ScottNumber& sn : scott_numbers) {
-              // sn.getCategory() % QString::number(sn.getNumber()) % sn.getTrailer();
-              this_scott = sn.getScott();
-
-              if (sn.getCategory() != last_category && !running_result.isEmpty()) {
-                  if (num_missing_in_run == 1) {
-                      running_result << first_scott_in_run;
-                  } else if (num_missing_in_run > 1) {
-                      running_result << (first_scott_in_run + " - " + last_scott + " (" + QString::number(num_missing_in_run) + ")");
-                  }
-                  last_had_image = true;
-                  num_missing_in_run = 0;
-              }
-              if (iu.findBookImages(country, this_scott, ImageUtility::Image_Flags::Catalog).isEmpty()) {
-                  ++num_missing_total;
-                  ++num_missing_in_run;
-                  if (last_had_image) {
-                      first_scott_in_run = this_scott;
-                      last_scott = this_scott;
-                      last_had_image = false;
-                      last_category = sn.getCategory();
-                  } else {
-                      last_scott = this_scott;
-                  }
-              } else if (!last_had_image) {
-                  // We have an image now but did not last time.
-                  if (num_missing_in_run == 1) {
-                      running_result << first_scott_in_run;
-                  } else {
-                      running_result << (first_scott_in_run + " - " + last_scott + " (" + QString::number(num_missing_in_run) + ")");
-                  }
-                  last_had_image = true;
-                  num_missing_in_run = 0;
-              }
-          }
-          if (!running_result.isEmpty()) {
-              ScrollMessageBox::information(this, QString::number(num_missing_total) + " Missing Stamps For " + country, running_result.join("\n"));
-          }
+          last_had_image = true;
+          num_missing_in_run = 0;
+        }
+      }
+      if (!running_result.isEmpty()) {
+        ScrollMessageBox::information(this,
+                                      QString::number(num_missing_total) +
+                                          " Missing Stamps For " + country,
+                                      running_result.join("\n"));
       }
     }
+  }
 }
 
 #include <QXmlStreamReader>
 
-void MainWindow::editTable()
-{
+void MainWindow::editTable() {
 
-    if (!createDBWorker()) {
-        return;
+  if (!createDBWorker()) {
+    return;
+  }
+  DescribeSqlTables schema = DescribeSqlTables::getStampSchema();
+  /**
+  QString s;
+  QXmlStreamWriter writer(&s);
+  writer.setAutoFormatting(true);
+  writer.writeStartDocument();
+  schema.writeXml(writer);
+  writer.writeEndDocument();
+
+  qDebug(qPrintable(s));
+
+  QXmlStreamReader reader(s);
+  DescribeSqlTables schema2 = DescribeSqlTables::readXml(reader);
+
+  QString s2;
+  QXmlStreamWriter writer2(&s2);
+  writer2.setAutoFormatting(true);
+  writer2.writeStartDocument();
+  schema2.writeXml(writer2);
+  writer2.writeEndDocument();
+
+  if (s.compare(s2) != 0) {
+      qDebug("Failure, s != s2");
+      qDebug(qPrintable(s2));
+  } else {
+      qDebug("Yeah!, s == s2");
+      qDebug(qPrintable(s2));
+  }
+  **/
+
+  QStringList tableNames = schema.getTableNames();
+  tableNames.sort(Qt::CaseInsensitive);
+  bool ok;
+  // QString s = schema.getDDL(true).join("\n\n");
+  // ScrollMessageBox::information(this, "Schema", s);
+
+  QScopedPointer<QSettings> pSettings(getQSettings());
+  int focusedNameIndex = 0;
+  if (tableNames.size() > 0) {
+    QString startName =
+        pSettings
+            ->value(Constants::Settings_GenericDataCollectionLastEditedTable,
+                    tableNames.at(0))
+            .toString();
+    focusedNameIndex = tableNames.indexOf(startName);
+    if (focusedNameIndex < 0) {
+      focusedNameIndex = 0;
     }
-    DescribeSqlTables schema = DescribeSqlTables::getStampSchema();
-    /**
-    QString s;
-    QXmlStreamWriter writer(&s);
-    writer.setAutoFormatting(true);
-    writer.writeStartDocument();
-    schema.writeXml(writer);
-    writer.writeEndDocument();
+  }
 
-    qDebug(qPrintable(s));
+  QString tableName =
+      QInputDialog::getItem(this, tr("Choose Table"), tr("Table"), tableNames,
+                            focusedNameIndex, false, &ok);
+  editTableByName(tableName);
 
-    QXmlStreamReader reader(s);
-    DescribeSqlTables schema2 = DescribeSqlTables::readXml(reader);
-
-    QString s2;
-    QXmlStreamWriter writer2(&s2);
-    writer2.setAutoFormatting(true);
-    writer2.writeStartDocument();
-    schema2.writeXml(writer2);
-    writer2.writeEndDocument();
-
-    if (s.compare(s2) != 0) {
-        qDebug("Failure, s != s2");
-        qDebug(qPrintable(s2));
-    } else {
-        qDebug("Yeah!, s == s2");
-        qDebug(qPrintable(s2));
-    }
-    **/
-
-    QStringList tableNames = schema.getTableNames();
-    tableNames.sort(Qt::CaseInsensitive);
-    bool ok;
-    //QString s = schema.getDDL(true).join("\n\n");
-    //ScrollMessageBox::information(this, "Schema", s);
-
-    QScopedPointer<QSettings> pSettings(getQSettings());
-    int focusedNameIndex = 0;
-    if (tableNames.size() > 0) {
-        QString startName = pSettings->value(Constants::Settings_GenericDataCollectionLastEditedTable, tableNames.at(0)).toString();
-        focusedNameIndex = tableNames.indexOf(startName);
-        if (focusedNameIndex < 0) {
-          focusedNameIndex = 0;
-        }
-    }
-
-    QString tableName = QInputDialog::getItem(this, tr("Choose Table"), tr("Table"), tableNames, focusedNameIndex, false, &ok);
-    editTableByName(tableName);
-
-    //int maxID = m_db->getMaxId(tableName);
-    //ScrollMessageBox::information(this, "Max ID", QString("Max ID is %1").arg(maxID));
+  // int maxID = m_db->getMaxId(tableName);
+  // ScrollMessageBox::information(this, "Max ID", QString("Max ID is
+  // %1").arg(maxID));
 }
 
-void MainWindow::editTableInventory()
-{
-    editTableByName("inventory");
-}
+void MainWindow::editTableInventory() { editTableByName("inventory"); }
 
-void MainWindow::editTableCatalog()
-{
-    editTableByName("catalog");
-}
+void MainWindow::editTableCatalog() { editTableByName("catalog"); }
 
-void MainWindow::editTableByName(const QString tableName)
-{
-    if (tableName.isEmpty() || !createDBWorker()) {
-        return;
+void MainWindow::editTableByName(const QString tableName) {
+  if (tableName.isEmpty() || !createDBWorker()) {
+    return;
+  }
+
+  DescribeSqlTables schema = DescribeSqlTables::getStampSchema();
+  QStringList tableNames = schema.getTableNames();
+  if (!tableNames.contains(tableName, Qt::CaseSensitive)) {
+    ScrollMessageBox::critical(this, "Table Not Found", tableName);
+    return;
+  }
+  // tableNames.sort(Qt::CaseInsensitive);
+
+  QScopedPointer<QSettings> pSettings(getQSettings());
+
+  pSettings->setValue(Constants::Settings_GenericDataCollectionLastEditedTable,
+                      tableName);
+
+  // This reads the table along with all linked / related tables.
+  GenericDataCollections *data = m_db->readTableWithLinks(tableName);
+  // GenericDataCollection* data = m_db->readTableBySchema(tableName);
+  Q_ASSERT_X(data != nullptr, "MainWindow::editTable", "Returned data is null");
+
+  // ScrollMessageBox::information(this, "Supported Tables",
+  // data->getNames().join("\n"));
+
+  Q_ASSERT_X(data->contains(tableName), "MainWindow::editTableByName",
+             "Table not returned");
+  if (data != nullptr) {
+    int defaultSourceId = -1;
+    if (tableName.compare("bookvalues", Qt::CaseInsensitive) == 0) {
+      defaultSourceId = m_db->selectValueSourceId(this);
     }
-
-    DescribeSqlTables schema = DescribeSqlTables::getStampSchema();
-    QStringList tableNames = schema.getTableNames();
-    if (!tableNames.contains(tableName, Qt::CaseSensitive)) {
-        ScrollMessageBox::critical(this, "Table Not Found", tableName);
-        return;
-    }
-    //tableNames.sort(Qt::CaseInsensitive);
-
-    QScopedPointer<QSettings> pSettings(getQSettings());
-
-    pSettings->setValue(Constants::Settings_GenericDataCollectionLastEditedTable, tableName);
-
-    // This reads the table along with all linked / related tables.
-    GenericDataCollections* data = m_db->readTableWithLinks(tableName);
-    //GenericDataCollection* data = m_db->readTableBySchema(tableName);
-    Q_ASSERT_X(data != nullptr, "MainWindow::editTable", "Returned data is null");
-
-    //ScrollMessageBox::information(this, "Supported Tables", data->getNames().join("\n"));
-
-    Q_ASSERT_X(data->contains(tableName), "MainWindow::editTableByName", "Table not returned");
-    if (data != nullptr)
-    {
-        int defaultSourceId = -1;
-        if (tableName.compare("bookvalues", Qt::CaseInsensitive) == 0) {
-            defaultSourceId = m_db->selectValueSourceId(this);
-        }
-        GenericDataCollectionTableDialog dlg(tableName, *data->getTable(tableName), *m_db, schema, data, defaultSourceId);
-        dlg.exec();
-        delete data;
-    }
+    GenericDataCollectionTableDialog dlg(tableName, *data->getTable(tableName),
+                                         *m_db, schema, data, defaultSourceId);
+    dlg.exec();
+    delete data;
+  }
 }
 
-void MainWindow::helpAbout()
-{
-    AboutDialog dialog(this);
-    dialog.exec();
+void MainWindow::helpAbout() {
+  AboutDialog dialog(this);
+  dialog.exec();
 }
-

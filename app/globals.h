@@ -5,10 +5,11 @@
 #include <QDateTime>
 #include <QSettings>
 
-QtEnumMapper& getEnumMapper();
+QtEnumMapper &getEnumMapper();
 
-inline QSettings* getQSettings() {
-    return new QSettings(QSettings::IniFormat, QSettings::UserScope, "ADPStampInventory", "Stamp Inventory ADP");
+inline QSettings *getQSettings() {
+  return new QSettings(QSettings::IniFormat, QSettings::UserScope,
+                       "ADPStampInventory", "Stamp Inventory ADP");
 }
 
 #endif // GLOBALCOPYLINEUTIL_H

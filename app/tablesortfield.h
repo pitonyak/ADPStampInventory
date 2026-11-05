@@ -1,10 +1,10 @@
 #ifndef TABLESORTFIELD_H
 #define TABLESORTFIELD_H
 
+#include "valuecomparer.h"
+#include <QMetaEnum>
 #include <QObject>
 #include <QString>
-#include <QMetaEnum>
-#include "valuecomparer.h"
 
 class QXmlStreamWriter;
 class QXmlStreamReader;
@@ -13,8 +13,9 @@ class QXmlStreamReader;
 /*! \class TableSortField
  * \brief Provide a method to sort columns in a field.
  *
- *  Identifies a field name, field index, order (ascending / descending), and a comparer to use.
- *  The comparer provides the actual comparison capability, which includes desired case sensitivity.
+ *  Identifies a field name, field index, order (ascending / descending), and a
+ * comparer to use. The comparer provides the actual comparison capability,
+ * which includes desired case sensitivity.
  *
  *  The field index assumes that the field names are in a particular order.
  *
@@ -24,362 +25,368 @@ class QXmlStreamReader;
  * \copyright Andrew Pitonyak, but you may use without restriction.
  * \date 2013-2026
  ***************************************************************************/
-class TableSortField : public QObject
-{
-    Q_OBJECT
+class TableSortField : public QObject {
+  Q_OBJECT
 public:
   //**************************************************************************
   /*! \brief Constructor copied from the specified filter object.
    *
    *  This assumes that the parent object is a nullptr.
-   *  I only added this version because it confused compilers when I moved to QT 6.
+   *  I only added this version because it confused compilers when I moved to
+   * QT 6.
    *
    *  \param [in] filter This filter object is copied into this object.
    *
    ***************************************************************************/
-   TableSortField(const TableSortField& obj);
+  TableSortField(const TableSortField &obj);
 
-    //**************************************************************************
-    /*! \brief Default constructor with the specified parent.
-     *
-     *  All objects owned by the parent are destroyed in the destructor.
-     *  \param [in] parent The object's owner.
-     ***************************************************************************/
-    explicit TableSortField(QObject *parent = nullptr);
+  //**************************************************************************
+  /*! \brief Default constructor with the specified parent.
+   *
+   *  All objects owned by the parent are destroyed in the destructor.
+   *  \param [in] parent The object's owner.
+   ***************************************************************************/
+  explicit TableSortField(QObject *parent = nullptr);
 
-    //**************************************************************************
-    /*! \brief Constructor copied from the specified filter object.
-     *
-     *  All objects owned by the parent are destroyed in the destructor.
-     *  \param [in] filter This filter object is copied into this object.
-     *  \param [in] parent The object's owner.
-     ***************************************************************************/
-    explicit TableSortField(const TableSortField& obj, QObject *parent);
+  //**************************************************************************
+  /*! \brief Constructor copied from the specified filter object.
+   *
+   *  All objects owned by the parent are destroyed in the destructor.
+   *  \param [in] filter This filter object is copied into this object.
+   *  \param [in] parent The object's owner.
+   ***************************************************************************/
+  explicit TableSortField(const TableSortField &obj, QObject *parent);
 
-    //**************************************************************************
-    /*! \brief Constructor
-     *
-     *  \param [in] name Field name.
-     *  \param [in] index Field index. Defaults to -1.
-     *  \param [in] order How to sort, Ascending or Descending. Defaults to Ascending.
-     *  \param [in] sensitive Case sensitivity. Defaults to case insensitive.
-     ***************************************************************************/
-    TableSortField(const QString name, int index=-1, Qt::SortOrder order=Qt::AscendingOrder, Qt::CaseSensitivity sensitive=Qt::CaseInsensitive);
+  //**************************************************************************
+  /*! \brief Constructor
+   *
+   *  \param [in] name Field name.
+   *  \param [in] index Field index. Defaults to -1.
+   *  \param [in] order How to sort, Ascending or Descending. Defaults to
+   * Ascending.
+   *  \param [in] sensitive Case sensitivity. Defaults to case insensitive.
+   ***************************************************************************/
+  TableSortField(const QString name, int index = -1,
+                 Qt::SortOrder order = Qt::AscendingOrder,
+                 Qt::CaseSensitivity sensitive = Qt::CaseInsensitive);
 
-    //**************************************************************************
-    /*! \brief Constructor
-     *
-     *  \param [in] parent The object's owner.
-     *  \param [in] name Field name.
-     *  \param [in] index Field index. Defaults to -1.
-     *  \param [in] order How to sort, Ascending or Descending. Defaults to Ascending.
-     *  \param [in] sensitive Case sensitivity. Defaults to case insensitive.
-     ***************************************************************************/
-    TableSortField(QObject *parent, const QString name, int index=-1, Qt::SortOrder order=Qt::AscendingOrder, Qt::CaseSensitivity sensitive=Qt::CaseInsensitive);
+  //**************************************************************************
+  /*! \brief Constructor
+   *
+   *  \param [in] parent The object's owner.
+   *  \param [in] name Field name.
+   *  \param [in] index Field index. Defaults to -1.
+   *  \param [in] order How to sort, Ascending or Descending. Defaults to
+   * Ascending.
+   *  \param [in] sensitive Case sensitivity. Defaults to case insensitive.
+   ***************************************************************************/
+  TableSortField(QObject *parent, const QString name, int index = -1,
+                 Qt::SortOrder order = Qt::AscendingOrder,
+                 Qt::CaseSensitivity sensitive = Qt::CaseInsensitive);
 
-    //**************************************************************************
-    /*! \brief Destructor to delete the comparer.
-     ***************************************************************************/
-    virtual ~TableSortField();
+  //**************************************************************************
+  /*! \brief Destructor to delete the comparer.
+   ***************************************************************************/
+  virtual ~TableSortField();
 
-    /*! \brief Set the field index, defaults to -1 if no parameter. */
-    void setFieldIndex(int index=-1);
+  /*! \brief Set the field index, defaults to -1 if no parameter. */
+  void setFieldIndex(int index = -1);
 
-    /*! \brief Set the sort order, defaults to ascending if no parameter. */
-    void setSortOrder(Qt::SortOrder order = Qt::AscendingOrder);
+  /*! \brief Set the sort order, defaults to ascending if no parameter. */
+  void setSortOrder(Qt::SortOrder order = Qt::AscendingOrder);
 
-    /*! \brief Set the field name. */
-    void setFieldName(const QString& name);
+  /*! \brief Set the field name. */
+  void setFieldName(const QString &name);
 
-    /*! \brief Set the field type. */
-    void setFieldType(const QMetaType::Type metaType=QMetaType::UnknownType);
+  /*! \brief Set the field type. */
+  void setFieldType(const QMetaType::Type metaType = QMetaType::UnknownType);
 
-    /*! \return The field index. */
-    int fieldIndex() const;
+  /*! \return The field index. */
+  int fieldIndex() const;
 
-    /*! \return Current sort order (ascending or descending). */
-    Qt::SortOrder sortOrder() const;
+  /*! \return Current sort order (ascending or descending). */
+  Qt::SortOrder sortOrder() const;
 
-    /*! \return Field name. */
-    const QString& fieldName() const;
+  /*! \return Field name. */
+  const QString &fieldName() const;
 
-    /*! \return Field type. */
-    QMetaType::Type fieldType() const;
+  /*! \return Field type. */
+  QMetaType::Type fieldType() const;
 
+  //**************************************************************************
+  /*! \brief Get the case sensitivity.
+   *
+   *  \return The case sensitivity.
+   ***************************************************************************/
+  Qt::CaseSensitivity caseSensitivity() const;
 
-    //**************************************************************************
-    /*! \brief Get the case sensitivity.
-     *
-     *  \return The case sensitivity.
-     ***************************************************************************/
-    Qt::CaseSensitivity caseSensitivity() const;
+  //**************************************************************************
+  /*! \brief Set the case sensitivity.
+   *
+   *  \param [in] caseSensitive Sets the case sensitivity; defaults to
+   * CaseInsensitive.
+   ***************************************************************************/
+  void setCase(const Qt::CaseSensitivity caseSensitive = Qt::CaseInsensitive);
 
-    //**************************************************************************
-    /*! \brief Set the case sensitivity.
-     *
-     *  \param [in] caseSensitive Sets the case sensitivity; defaults to CaseInsensitive.
-     ***************************************************************************/
-    void setCase(const Qt::CaseSensitivity caseSensitive = Qt::CaseInsensitive);
+  //**************************************************************************
+  /*! \brief Thin wrapper to call the corresponding function on the contained
+   * comparer.
+   *
+   * Comparer must not be null.
+   *
+   *  \param [in] v1 First object to compare
+   *  \param [in] v2 Second object to compare
+   *  \return true if v1 < v2
+   ***************************************************************************/
+  bool lessThan(const QVariant &v1, const QVariant &v2) const;
 
-    //**************************************************************************
-    /*! \brief Thin wrapper to call the corresponding function on the contained comparer.
-     *
-     * Comparer must not be null.
-     *
-     *  \param [in] v1 First object to compare
-     *  \param [in] v2 Second object to compare
-     *  \return true if v1 < v2
-     ***************************************************************************/
-    bool lessThan(const QVariant& v1, const QVariant& v2) const;
+  //**************************************************************************
+  /*! \brief Thin wrapper to call the corresponding function on the contained
+   * comparer.
+   *
+   * Comparer must not be null.
+   *
+   *  \param [in] v1 First object to compare
+   *  \param [in] v2 Second object to compare
+   *  \return true if v1 <= v2
+   ***************************************************************************/
+  bool lessThanEqual(const QVariant &v1, const QVariant &v2) const;
 
-    //**************************************************************************
-    /*! \brief Thin wrapper to call the corresponding function on the contained comparer.
-     *
-     * Comparer must not be null.
-     *
-     *  \param [in] v1 First object to compare
-     *  \param [in] v2 Second object to compare
-     *  \return true if v1 <= v2
-     ***************************************************************************/
-    bool lessThanEqual(const QVariant& v1, const QVariant& v2) const;
+  //**************************************************************************
+  /*! \brief Thin wrapper to call the corresponding function on the contained
+   * comparer.
+   *
+   * Comparer must not be null.
+   *
+   *  \param [in] v1 First object to compare
+   *  \param [in] v2 Second object to compare
+   *  \return true if v1 == v2
+   ***************************************************************************/
+  bool equal(const QVariant &v1, const QVariant &v2) const;
 
-    //**************************************************************************
-    /*! \brief Thin wrapper to call the corresponding function on the contained comparer.
-     *
-     * Comparer must not be null.
-     *
-     *  \param [in] v1 First object to compare
-     *  \param [in] v2 Second object to compare
-     *  \return true if v1 == v2
-     ***************************************************************************/
-    bool equal(const QVariant& v1, const QVariant& v2) const;
+  //**************************************************************************
+  /*! \brief Thin wrapper to call the corresponding function on the contained
+   * comparer.
+   *
+   * Comparer must not be null.
+   *
+   *  \param [in] v1 First object to compare
+   *  \param [in] v2 Second object to compare
+   *  \return true if v1 != v2
+   ***************************************************************************/
+  bool notEqual(const QVariant &v1, const QVariant &v2) const;
 
-    //**************************************************************************
-    /*! \brief Thin wrapper to call the corresponding function on the contained comparer.
-     *
-     * Comparer must not be null.
-     *
-     *  \param [in] v1 First object to compare
-     *  \param [in] v2 Second object to compare
-     *  \return true if v1 != v2
-     ***************************************************************************/
-    bool notEqual(const QVariant& v1, const QVariant& v2) const;
+  //**************************************************************************
+  /*! \brief Thin wrapper to call the corresponding function on the contained
+   * comparer.
+   *
+   * Comparer must not be null.
+   *
+   *  \param [in] v1 First object to compare
+   *  \param [in] v2 Second object to compare
+   *  \return true if v1 > v2
+   ***************************************************************************/
+  bool greaterThan(const QVariant &v1, const QVariant &v2) const;
 
-    //**************************************************************************
-    /*! \brief Thin wrapper to call the corresponding function on the contained comparer.
-     *
-     * Comparer must not be null.
-     *
-     *  \param [in] v1 First object to compare
-     *  \param [in] v2 Second object to compare
-     *  \return true if v1 > v2
-     ***************************************************************************/
-    bool greaterThan(const QVariant& v1, const QVariant& v2) const;
+  //**************************************************************************
+  /*! \brief Thin wrapper to call the corresponding function on the contained
+   * comparer.
+   *
+   * Comparer must not be null.
+   *
+   *  \param [in] v1 First object to compare
+   *  \param [in] v2 Second object to compare
+   *  \return true if v1 >= v2
+   ***************************************************************************/
+  bool greaterThanEqual(const QVariant &v1, const QVariant &v2) const;
 
-    //**************************************************************************
-    /*! \brief Thin wrapper to call the corresponding function on the contained comparer.
-     *
-     * Comparer must not be null.
-     *
-     *  \param [in] v1 First object to compare
-     *  \param [in] v2 Second object to compare
-     *  \return true if v1 >= v2
-     ***************************************************************************/
-    bool greaterThanEqual(const QVariant& v1, const QVariant& v2) const;
+  //**************************************************************************
+  /*! \brief Thin wrapper to call the corresponding function on the contained
+   * comparer.
+   *
+   * Comparer must not be null.
+   *
+   *  \param [in] v1 First object to compare
+   *  \param [in] v2 Second object to compare
+   *  \return -1 (v1 < v2), 0 (v1 == v2), or 1 (v1 > v2)
+   ***************************************************************************/
+  int valueCompare(const QVariant &v1, const QVariant &v2) const;
 
-    //**************************************************************************
-    /*! \brief Thin wrapper to call the corresponding function on the contained comparer.
-     *
-     * Comparer must not be null.
-     *
-     *  \param [in] v1 First object to compare
-     *  \param [in] v2 Second object to compare
-     *  \return -1 (v1 < v2), 0 (v1 == v2), or 1 (v1 > v2)
-     ***************************************************************************/
-    int valueCompare(const QVariant& v1, const QVariant& v2) const;
+  //**************************************************************************
+  /*! \brief Shortcut to determine if this should sort ascending.
+   *  \return true if sort should be in ascending order.
+   ***************************************************************************/
+  bool isAscending() const;
 
-    //**************************************************************************
-    /*! \brief Shortcut to determine if this should sort ascending.
-     *  \return true if sort should be in ascending order.
-     ***************************************************************************/
-    bool isAscending() const;
+  //**************************************************************************
+  /*! \brief Shortcut to determine if this will sort descending.
+   *  \return true if sort will be in descending order.
+   ***************************************************************************/
+  bool isDescending() const;
 
-    //**************************************************************************
-    /*! \brief Shortcut to determine if this will sort descending.
-     *  \return true if sort will be in descending order.
-     ***************************************************************************/
-     bool isDescending() const;
+  //**************************************************************************
+  /*! \brief Assignment operator.
+   *
+   *  \param [in] obj Object to copy.
+   *  \return Reference to this object.
+   ***************************************************************************/
+  const TableSortField &operator=(const TableSortField &obj);
 
-     //**************************************************************************
-     /*! \brief Assignment operator.
-      *
-      *  \param [in] obj Object to copy.
-      *  \return Reference to this object.
-      ***************************************************************************/
-     const TableSortField& operator=(const TableSortField& obj);
+  //**************************************************************************
+  /*! \brief Get the sort order name from the enum.
+   *
+   *  \param [in] sortOrder Value to convert
+   *  \return Return the name for the sort order value.
+   ***************************************************************************/
+  static QString sortOrderToName(const Qt::SortOrder sortOrder);
 
-     //**************************************************************************
-     /*! \brief Get the sort order name from the enum.
-      *
-      *  \param [in] sortOrder Value to convert
-      *  \return Return the name for the sort order value.
-      ***************************************************************************/
-     static QString sortOrderToName(const Qt::SortOrder sortOrder);
+  //**************************************************************************
+  /*! \brief Get the sort order value from the name. If the name is not known,
+   * returns Ascending.
+   *
+   *  \param [in] name Sort order name to evalute in a case insensitive way
+   * "Ascending" or "Descending".
+   *  \return Sort order value from the name.
+   ***************************************************************************/
+  static Qt::SortOrder sortOrderFromName(const QString &name);
 
-     //**************************************************************************
-     /*! \brief Get the sort order value from the name. If the name is not known, returns Ascending.
-      *
-      *  \param [in] name Sort order name to evalute in a case insensitive way "Ascending" or "Descending".
-      *  \return Sort order value from the name.
-      ***************************************************************************/
-     static Qt::SortOrder sortOrderFromName(const QString& name);
+  QXmlStreamWriter &write(QXmlStreamWriter &writer) const;
 
-     QXmlStreamWriter& write(QXmlStreamWriter& writer) const;
+  //**************************************************************************
+  /*! \brief Write a list of fields to an XML object (I think).
+   *
+   *  Write a list of table sort fields in a form similar to:
+   *  \code
+   *  <TableSortFields><TableSortField></TableSortField><TableSortField></TableSortField></TableSortFields>
+   *  \endcode
+   *
+   *  I have no idea if this is used anywhere!
+   *
+   *  \param [in] list Fields to write as XML.
+   *  \param [in, out] writer Stream to which the XML is written.
+   *  \return Reference to the stream.
+   ***************************************************************************/
+  static QXmlStreamWriter &write(const QList<TableSortField> &list,
+                                 QXmlStreamWriter &writer);
 
-     //**************************************************************************
-     /*! \brief Write a list of fields to an XML object (I think).
-      *
-      *  Write a list of table sort fields in a form similar to:
-      *  \code
-      *  <TableSortFields><TableSortField></TableSortField><TableSortField></TableSortField></TableSortFields>
-      *  \endcode
-      *
-      *  I have no idea if this is used anywhere!
-      *
-      *  \param [in] list Fields to write as XML.
-      *  \param [in, out] writer Stream to which the XML is written.
-      *  \return Reference to the stream.
-      ***************************************************************************/
-     static QXmlStreamWriter& write(const QList<TableSortField>& list, QXmlStreamWriter& writer);
+  //**************************************************************************
+  /*! \brief Read an XML string into a list of sort fields.
+   *
+   *  I have no idea if this is used anywhere!
+   *
+   *  \param [out] list Fields to read from XML.
+   *  \param [in, out] reader
+   *  \return Reference to the stream.
+   ***************************************************************************/
+  static QXmlStreamReader &read(QList<TableSortField> &list,
+                                QXmlStreamReader &reader);
 
-     //**************************************************************************
-     /*! \brief Read an XML string into a list of sort fields.
-      *
-      *  I have no idea if this is used anywhere!
-      *
-      *  \param [out] list Fields to read from XML.
-      *  \param [in, out] reader
-      *  \return Reference to the stream.
-      ***************************************************************************/
-     static QXmlStreamReader& read(QList<TableSortField>& list, QXmlStreamReader& reader);
-
-     //**************************************************************************
-     /*! \brief Return a list of human readable names for the sort orders, specifically, Ascending and Descending.
-      *
-      *  \return String list with the text Ascending and Descending.
-      ***************************************************************************/
-     static QStringList sortOrderNames();
+  //**************************************************************************
+  /*! \brief Return a list of human readable names for the sort orders,
+   * specifically, Ascending and Descending.
+   *
+   *  \return String list with the text Ascending and Descending.
+   ***************************************************************************/
+  static QStringList sortOrderNames();
 
 private:
-    /*! \brief comparer is created and owned by this class. */
-    ValueComparer* m_comparer;
+  /*! \brief comparer is created and owned by this class. */
+  ValueComparer *m_comparer;
 
-    /*! \brief Numeric index of the field in a table (second column, for example). */
-    int m_fieldIndex;
+  /*! \brief Numeric index of the field in a table (second column, for example).
+   */
+  int m_fieldIndex;
 
-    /*! \brief  Ascending or Descending */
-    Qt::SortOrder m_sortOrder;
+  /*! \brief  Ascending or Descending */
+  Qt::SortOrder m_sortOrder;
 
-    /*! \brief name of the field */
-    QString m_fieldName;
+  /*! \brief name of the field */
+  QString m_fieldName;
 
-    QMetaType::Type m_MetaType;
+  QMetaType::Type m_MetaType;
 };
 
-inline void TableSortField::setFieldIndex(int index)
-{
-    m_fieldIndex = index;
+inline void TableSortField::setFieldIndex(int index) { m_fieldIndex = index; }
+
+inline void TableSortField::setCase(Qt::CaseSensitivity sensitive) {
+  m_comparer->setSensitivity(sensitive);
 }
 
-inline void TableSortField::setCase(Qt::CaseSensitivity sensitive)
-{
-    m_comparer->setSensitivity(sensitive);
+inline void TableSortField::setSortOrder(Qt::SortOrder order) {
+  m_sortOrder = order;
 }
 
-inline void TableSortField::setSortOrder(Qt::SortOrder order)
-{
-    m_sortOrder = order;
+inline void TableSortField::setFieldName(const QString &name) {
+  m_fieldName = name;
 }
 
-inline void TableSortField::setFieldName(const QString& name)
-{
-    m_fieldName = name;
+inline void TableSortField::setFieldType(const QMetaType::Type metaType) {
+  m_MetaType = metaType;
 }
 
-inline void TableSortField::setFieldType(const QMetaType::Type metaType)
-{
-    m_MetaType = metaType;
+inline int TableSortField::fieldIndex() const { return m_fieldIndex; }
+
+inline Qt::CaseSensitivity TableSortField::caseSensitivity() const {
+  return m_comparer->caseSensitivity();
 }
 
-inline int TableSortField::fieldIndex() const
-{
-    return m_fieldIndex;
+inline Qt::SortOrder TableSortField::sortOrder() const { return m_sortOrder; }
+
+inline const QString &TableSortField::fieldName() const { return m_fieldName; }
+
+inline QMetaType::Type TableSortField::fieldType() const { return m_MetaType; }
+
+inline bool TableSortField::lessThan(const QVariant &v1,
+                                     const QVariant &v2) const {
+  return m_sortOrder == Qt::AscendingOrder
+             ? m_comparer->lessThan(v1, v2)
+             : m_comparer->greaterThanEqual(v1, v2);
 }
 
-inline Qt::CaseSensitivity TableSortField::caseSensitivity() const
-{
-    return m_comparer->caseSensitivity();
+inline bool TableSortField::lessThanEqual(const QVariant &v1,
+                                          const QVariant &v2) const {
+  return m_sortOrder == Qt::AscendingOrder ? m_comparer->lessThanEqual(v1, v2)
+                                           : m_comparer->greaterThan(v1, v2);
 }
 
-inline Qt::SortOrder TableSortField::sortOrder() const
-{
-    return m_sortOrder;
+inline bool TableSortField::equal(const QVariant &v1,
+                                  const QVariant &v2) const {
+  return m_sortOrder == Qt::AscendingOrder ? m_comparer->equal(v1, v2)
+                                           : m_comparer->notEqual(v1, v2);
 }
 
-inline const QString& TableSortField::fieldName() const
-{
-    return m_fieldName;
+inline bool TableSortField::notEqual(const QVariant &v1,
+                                     const QVariant &v2) const {
+  return m_sortOrder == Qt::AscendingOrder ? m_comparer->notEqual(v1, v2)
+                                           : m_comparer->equal(v1, v2);
 }
 
-inline QMetaType::Type TableSortField::fieldType() const
-{
-    return m_MetaType;
+inline bool TableSortField::greaterThan(const QVariant &v1,
+                                        const QVariant &v2) const {
+  return m_sortOrder == Qt::AscendingOrder ? m_comparer->greaterThan(v1, v2)
+                                           : m_comparer->lessThanEqual(v1, v2);
 }
 
-inline bool TableSortField::lessThan(const QVariant& v1, const QVariant& v2) const
-{
-    return m_sortOrder == Qt::AscendingOrder ? m_comparer->lessThan(v1, v2) : m_comparer->greaterThanEqual(v1, v2) ;
+inline bool TableSortField::greaterThanEqual(const QVariant &v1,
+                                             const QVariant &v2) const {
+  return m_sortOrder == Qt::AscendingOrder
+             ? m_comparer->greaterThanEqual(v1, v2)
+             : m_comparer->lessThan(v1, v2);
 }
 
-inline bool TableSortField::lessThanEqual(const QVariant& v1, const QVariant& v2) const
-{
-    return m_sortOrder == Qt::AscendingOrder ? m_comparer->lessThanEqual(v1, v2) : m_comparer->greaterThan(v1, v2) ;
+inline int TableSortField::valueCompare(const QVariant &v1,
+                                        const QVariant &v2) const {
+  return m_sortOrder == Qt::AscendingOrder
+             ? m_comparer->valueCompare(v1, v2)
+             : m_comparer->valueCompare(v1, v2) * -1;
 }
 
-inline bool TableSortField::equal(const QVariant& v1, const QVariant& v2) const
-{
-    return m_sortOrder == Qt::AscendingOrder ? m_comparer->equal(v1, v2) : m_comparer->notEqual(v1, v2) ;
+inline bool TableSortField::isAscending() const {
+  return m_sortOrder == Qt::AscendingOrder;
 }
 
-inline bool TableSortField::notEqual(const QVariant& v1, const QVariant& v2) const
-{
-    return m_sortOrder == Qt::AscendingOrder ? m_comparer->notEqual(v1, v2) : m_comparer->equal(v1, v2) ;
+inline bool TableSortField::isDescending() const {
+  return m_sortOrder == Qt::DescendingOrder;
 }
-
-inline bool TableSortField::greaterThan(const QVariant& v1, const QVariant& v2) const
-{
-    return m_sortOrder == Qt::AscendingOrder ? m_comparer->greaterThan(v1, v2) : m_comparer->lessThanEqual(v1, v2) ;
-}
-
-inline bool TableSortField::greaterThanEqual(const QVariant& v1, const QVariant& v2) const
-{
-    return m_sortOrder == Qt::AscendingOrder ? m_comparer->greaterThanEqual(v1, v2) : m_comparer->lessThan(v1, v2) ;
-}
-
-inline int TableSortField::valueCompare(const QVariant& v1, const QVariant& v2) const
-{
-    return m_sortOrder == Qt::AscendingOrder ? m_comparer->valueCompare(v1, v2) : m_comparer->valueCompare(v1, v2) * -1 ;
-}
-
-inline bool TableSortField::isAscending() const
-{
-    return m_sortOrder == Qt::AscendingOrder;
-}
-
-inline bool TableSortField::isDescending() const
-{
-    return m_sortOrder == Qt::DescendingOrder;
-}
-
 
 #endif // TABLESORTFIELD_H

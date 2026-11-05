@@ -1,39 +1,35 @@
 #include "stampdb.h"
-#include "scrollmessagebox.h"
 #include "csvreader.h"
 #include "csvwriter.h"
 #include "genericdatacollection.h"
 #include "genericdatacollections.h"
 #include "imageutility.h"
+#include "scrollmessagebox.h"
 
-#include <QFile>
-#include <QDir>
+#include <QCollator>
 #include <QDebug>
+#include <QDir>
+#include <QFile>
+#include <QInputDialog>
+#include <QList>
+#include <QMap>
+#include <QMessageBox>
+#include <QMetaType>
+#include <QRegularExpression>
+#include <QSet>
+#include <QSqlDriver>
 #include <QSqlField>
 #include <QSqlQuery>
 #include <QSqlRecord>
 #include <QStringList>
-#include <QRegularExpression>
-#include <QMessageBox>
-#include <QMetaType>
-#include <QVariant>
-#include <QMap>
-#include <QSet>
-#include <QSqlDriver>
 #include <QTextStream>
-#include <QList>
+#include <QVariant>
 #include <QtGlobal>
-#include <QInputDialog>
-#include <QCollator>
 #include <algorithm> // Required for std::sort
 
-StampDB::StampDB(QObject *parent) :
-  QObject(parent),
-  m_dbIsInitialized(false),
-  m_tableMap(nullptr),
-  m_outerDDLRegExp(nullptr),
-  m_desiredSchemaDDLList(nullptr)
-{
+StampDB::StampDB(QObject *parent)
+    : QObject(parent), m_dbIsInitialized(false), m_tableMap(nullptr),
+      m_outerDDLRegExp(nullptr), m_desiredSchemaDDLList(nullptr) {
   m_desiredSchemaDDLList = new QStringList();
 
   *m_desiredSchemaDDLList << "CREATE TABLE catalogtype("
@@ -112,15 +108,16 @@ StampDB::StampDB(QObject *parent) :
                              " typeid INTEGER,"
                              " valuemultiplier FLOAT)";
 
-  m_outerDDLRegExp = new QRegularExpression("^\\s*create\\s+table\\s+([a-z0-9_\\-\\.]+)\\s*\\((.*)\\)\\s*$");
-  m_outerDDLRegExp->setPatternOptions(QRegularExpression::CaseInsensitiveOption);
+  m_outerDDLRegExp = new QRegularExpression(
+      "^\\s*create\\s+table\\s+([a-z0-9_\\-\\.]+)\\s*\\((.*)\\)\\s*$");
+  m_outerDDLRegExp->setPatternOptions(
+      QRegularExpression::CaseInsensitiveOption);
 
   // There are now two distinct methods to get the stamp schema!
   m_schema = DescribeSqlTables::getStampSchema();
 }
 
-StampDB::~StampDB()
-{
+StampDB::~StampDB() {
   closeDB();
   if (m_tableMap != nullptr) {
     delete m_tableMap;
@@ -136,13 +133,9 @@ StampDB::~StampDB()
   }
 }
 
-const QString& StampDB::pathToDB() const
-{
-  return m_pathToDB;
-}
+const QString &StampDB::pathToDB() const { return m_pathToDB; }
 
-void StampDB::pathToDB(const QString& fullpath)
-{
+void StampDB::pathToDB(const QString &fullpath) {
   if (m_pathToDB.compare(fullpath, Qt::CaseSensitive) != 0) {
     if (m_dbIsInitialized) {
       m_db.close();
@@ -152,8 +145,7 @@ void StampDB::pathToDB(const QString& fullpath)
   }
 }
 
-bool StampDB::openDB()
-{
+bool StampDB::openDB() {
   if (!m_db.isOpen()) {
     if (m_pathToDB.length() == 0) {
       // TODO: error handling
@@ -180,42 +172,37 @@ bool StampDB::openDB()
   return true;
 }
 
-void StampDB::closeDB()
-{
+void StampDB::closeDB() {
   if (m_db.isOpen()) {
     m_db.close();
   }
 }
 
-
-bool StampDB::deleteDB()
-{
+bool StampDB::deleteDB() {
   closeDB();
   return QFile::remove(pathToDB());
 }
 
-QSqlError StampDB::lastError()
-{
+QSqlError StampDB::lastError() {
   // If opening database has failed user can ask
   // error description by QSqlError::text()
   return m_db.lastError();
 }
 
-bool StampDB::createSchema()
-{
+bool StampDB::createSchema() {
   bool ret = false;
   if (openDB()) {
 
     QRegularExpression tableNameRegExp("create\\s+table\\s+(\\w+)");
-    tableNameRegExp.setPatternOptions(QRegularExpression::CaseInsensitiveOption);
+    tableNameRegExp.setPatternOptions(
+        QRegularExpression::CaseInsensitiveOption);
 
     QSqlQuery query(m_db);
     QStringList tables = m_db.tables(QSql::Tables);
     ret = true;
-    for (int i=0; i<m_desiredSchemaDDLList->size() && ret; ++i) {
-      const QString& ddl = m_desiredSchemaDDLList->at(i);
+    for (int i = 0; i < m_desiredSchemaDDLList->size() && ret; ++i) {
+      const QString &ddl = m_desiredSchemaDDLList->at(i);
       QRegularExpressionMatch match = tableNameRegExp.match(ddl);
-
 
       if (!match.hasMatch()) {
 
@@ -231,13 +218,14 @@ bool StampDB::createSchema()
         // Table already exists.
         /*
                 QMessageBox msgBox;
-                msgBox.setText(tr("Table '%1' already exists").arg(tableNameRegExp.cap(1)));
+                msgBox.setText(tr("Table '%1' already
+           exists").arg(tableNameRegExp.cap(1)));
                 msgBox.setInformativeText(tr("DDL:%1").arg(ddl));
                 msgBox.setStandardButtons(QMessageBox::Ok);
                 msgBox.setDefaultButton(QMessageBox::Ok);
                 msgBox.exec();
                 */
-        //query.exec(QString("DROP TABLE %1").arg(tableNameRegExp.cap(1)));
+        // query.exec(QString("DROP TABLE %1").arg(tableNameRegExp.cap(1)));
 
       } else {
         QString tableName = match.captured(1);
@@ -245,7 +233,8 @@ bool StampDB::createSchema()
         if (!ret) {
           QMessageBox msgBox;
           msgBox.setText(tr("Schema Error creating table '%1'").arg(tableName));
-          msgBox.setInformativeText(tr("Error:%1\nDDL:%2").arg(m_db.lastError().text(), ddl));
+          msgBox.setInformativeText(
+              tr("Error:%1\nDDL:%2").arg(m_db.lastError().text(), ddl));
           msgBox.setStandardButtons(QMessageBox::Ok);
           msgBox.setDefaultButton(QMessageBox::Ok);
           msgBox.exec();
@@ -257,11 +246,10 @@ bool StampDB::createSchema()
   return ret;
 }
 
-QString StampDB::getSchema() const
-{
+QString StampDB::getSchema() const {
   QString s;
   QStringList tables = m_db.tables(QSql::Tables);
-  for (int i=0; i<tables.size(); ++i) {
+  for (int i = 0; i < tables.size(); ++i) {
     if (i > 0) {
       s += "\n\n";
     }
@@ -271,14 +259,12 @@ QString StampDB::getSchema() const
   return s;
 }
 
-QString StampDB::getSchema(const QSqlRecord& record) const
-{
+QString StampDB::getSchema(const QSqlRecord &record) const {
   return getSchema("", record);
 }
 
-
-QString StampDB::getSchema(const QString& tableName, const QSqlRecord& record) const
-{
+QString StampDB::getSchema(const QString &tableName,
+                           const QSqlRecord &record) const {
   QString s;
   if (!record.isEmpty()) {
     QString indent = "";
@@ -288,7 +274,7 @@ QString StampDB::getSchema(const QString& tableName, const QSqlRecord& record) c
       s += "(";
       indent = "    ";
     }
-    for (int i=0; i<record.count(); ++i) {
+    for (int i = 0; i < record.count(); ++i) {
       if (i > 0) {
         s += ",";
       }
@@ -302,12 +288,11 @@ QString StampDB::getSchema(const QString& tableName, const QSqlRecord& record) c
   return s;
 }
 
-QString StampDB::getSchema(const QSqlField& field) const
-{
+QString StampDB::getSchema(const QSqlField &field) const {
   QString s = field.name() + " ";
 
   switch (field.metaType().id()) {
-  case QMetaType::QString :
+  case QMetaType::QString:
     if (field.length() <= 0) {
       // Length is not available from the DB.
       // This must be SQLite.
@@ -316,17 +301,17 @@ QString StampDB::getSchema(const QSqlField& field) const
       s += QString("VARCHAR(%1)").arg(field.length());
     }
     break;
-  case QMetaType::Int :
+  case QMetaType::Int:
     s += "INTEGER";
     break;
-  case QMetaType::Double :
+  case QMetaType::Double:
     s += "DOUBLE";
     break;
-  case QMetaType::QDate :
+  case QMetaType::QDate:
     // SQLite returns a String for date.
     s += "DATE";
     break;
-  case QMetaType::QDateTime :
+  case QMetaType::QDateTime:
     // SQLite returns a String for date / time.
     s += "TIMESTAMP";
     break;
@@ -340,76 +325,73 @@ QString StampDB::getSchema(const QSqlField& field) const
   return s;
 }
 
-QStringList StampDB::getTableNames(const bool ignoreSystemTables)
-{
-    if (!ignoreSystemTables)
-    {
-        return m_db.tables(QSql::Tables);
-    }
+QStringList StampDB::getTableNames(const bool ignoreSystemTables) {
+  if (!ignoreSystemTables) {
+    return m_db.tables(QSql::Tables);
+  }
 
-    QString sql = "SELECT tbl_name FROM sqlite_master WHERE type='table' and tbl_name<>'sqlite_sequence' order by tbl_name";
-    return getOneColumnAsString(sql);
+  QString sql = "SELECT tbl_name FROM sqlite_master WHERE type='table' and "
+                "tbl_name<>'sqlite_sequence' order by tbl_name";
+  return getOneColumnAsString(sql);
 }
 
-QStringList StampDB::getColumnNames(const QString& tableName)
-{
+QStringList StampDB::getColumnNames(const QString &tableName) {
   QStringList columnNames;
-  if (openDB())
-  {
-    // The QSqlRecord class encapsulates the functionality and characteristics of a
-    // database record (usually a row in a table or view within the database).
-    // Get the values associated with this table.
+  if (openDB()) {
+    // The QSqlRecord class encapsulates the functionality and characteristics
+    // of a database record (usually a row in a table or view within the
+    // database). Get the values associated with this table.
     QSqlRecord record = m_db.record(tableName);
-    for (int i=0; i<record.count(); ++i) {
+    for (int i = 0; i < record.count(); ++i) {
       columnNames.append(record.field(i).name());
     }
   }
   return columnNames;
 }
 
-QStringList StampDB::getDDLForExport()
-{
-    QString sql = "SELECT sql FROM sqlite_master WHERE type='table' and tbl_name<>'sqlite_sequence' order by tbl_name";
-    return getOneColumnAsString(sql);
+QStringList StampDB::getDDLForExport() {
+  QString sql = "SELECT sql FROM sqlite_master WHERE type='table' and "
+                "tbl_name<>'sqlite_sequence' order by tbl_name";
+  return getOneColumnAsString(sql);
 }
 
-int StampDB::getMaxId(const QString& tableName)
-{
-    return getMaxId(tableName, "id");
+int StampDB::getMaxId(const QString &tableName) {
+  return getMaxId(tableName, "id");
 }
 
-int StampDB::getMaxId(const QString& tableName, const QString& fieldName)
-{
-    QString sql = QString("SELECT MAX(%2) FROM %1").arg(tableName).arg(fieldName);
-    return getIdFromSql(sql);
+int StampDB::getMaxId(const QString &tableName, const QString &fieldName) {
+  QString sql = QString("SELECT MAX(%2) FROM %1").arg(tableName).arg(fieldName);
+  return getIdFromSql(sql);
 }
 
-int StampDB::getIdFromSql(const QString& sql) {
-  QSqlDatabase& db = getDB();
+int StampDB::getIdFromSql(const QString &sql) {
+  QSqlDatabase &db = getDB();
   QSqlQuery query(db);
 
-  if (!query.exec(sql))
-  {
-      QString errMsg = QString("SQL: %1\n\nError:\n%2").arg(sql).arg(query.lastError().text());
-      ScrollMessageBox::information(nullptr, "ERROR", errMsg);
-  }
-  else if (query.isSelect() && query.isActive() && query.next() && !query.record().isNull(0))
-  {
-      bool ok = true;
-      int rc = query.record().value(0).toInt(&ok);
-      if (ok) {
-          return rc;
-      }
-      QString errMsg = QString("SQL: %1\n\nError:\nCannot convert returned value to an integer").arg(sql);
-      ScrollMessageBox::information(nullptr, "ERROR", errMsg);
+  if (!query.exec(sql)) {
+    QString errMsg =
+        QString("SQL: %1\n\nError:\n%2").arg(sql).arg(query.lastError().text());
+    ScrollMessageBox::information(nullptr, "ERROR", errMsg);
+  } else if (query.isSelect() && query.isActive() && query.next() &&
+             !query.record().isNull(0)) {
+    bool ok = true;
+    int rc = query.record().value(0).toInt(&ok);
+    if (ok) {
+      return rc;
+    }
+    QString errMsg =
+        QString(
+            "SQL: %1\n\nError:\nCannot convert returned value to an integer")
+            .arg(sql);
+    ScrollMessageBox::information(nullptr, "ERROR", errMsg);
   }
   return -1;
 }
 
-int StampDB::selectValueSourceId(QWidget *parent)
-{
+int StampDB::selectValueSourceId(QWidget *parent) {
   int errorReturn = 0;
-  QString sql = "select id, (\"id\" || ' - ' || \"description\") As x from valuesource where ID > 0 order by valuesource.year DESC ";
+  QString sql = "select id, (\"id\" || ' - ' || \"description\") As x from "
+                "valuesource where ID > 0 order by valuesource.year DESC ";
   QList<QSqlRecord> records;
 
   QString keyField;
@@ -419,7 +401,8 @@ int StampDB::selectValueSourceId(QWidget *parent)
     QMessageBox::warning(parent, tr("ERROR"), tr("Failed to execute SQL."));
     return errorReturn;
   } else if (records.size() < 1) {
-    QMessageBox::warning(parent, tr("No Records Found"), tr("No catalog entries found without values."));
+    QMessageBox::warning(parent, tr("No Records Found"),
+                         tr("No catalog entries found without values."));
     return errorReturn;
   }
 
@@ -431,7 +414,7 @@ int StampDB::selectValueSourceId(QWidget *parent)
   }
   bool ok;
   QString item = QInputDialog::getItem(parent, tr("Select Catalog To Use"),
-                                           tr("Catalog:"), items, 0, false, &ok);
+                                       tr("Catalog:"), items, 0, false, &ok);
   if (ok && !item.isEmpty())
     for (QSqlRecord r : records) {
       if (!r.isNull(1) && r.field(1).value().toString() == item) {
@@ -443,118 +426,134 @@ int StampDB::selectValueSourceId(QWidget *parent)
 }
 
 int StampDB::getMaxValueSourceId() {
-  return getIdFromSql("select id from valuesource order by valuesource.year DESC limit 1");
+  return getIdFromSql(
+      "select id from valuesource order by valuesource.year DESC limit 1");
 }
 
-
-GenericDataCollection *StampDB::readTableName(const QString& tableName, const bool sortByKey, const bool useSchema)
-{
+GenericDataCollection *StampDB::readTableName(const QString &tableName,
+                                              const bool sortByKey,
+                                              const bool useSchema) {
   if (!useSchema) {
     if (sortByKey) {
-        return readTableSql(QString("select * from %1 order by ID").arg(tableName));
+      return readTableSql(
+          QString("select * from %1 order by ID").arg(tableName));
     } else {
-        return readTableSql(QString("select * from %1").arg(tableName));
+      return readTableSql(QString("select * from %1").arg(tableName));
     }
   }
   return readTableSql(QString("select * from %1 order by ID").arg(tableName));
 }
 
-GenericDataCollections* StampDB::readTableWithLinks(const QString& tableName, const int maxLinkDepth, const bool sortByKey)
-{
-    // This is a collection of tables.
-    GenericDataCollections* tables = new GenericDataCollections();
-    QHash<QString, int> tableDepth;
-    QSet<QString> tablesToRead;
-    tableDepth.insert(tableName.toLower(), 0);
-    tablesToRead << tableName;
+GenericDataCollections *StampDB::readTableWithLinks(const QString &tableName,
+                                                    const int maxLinkDepth,
+                                                    const bool sortByKey) {
+  // This is a collection of tables.
+  GenericDataCollections *tables = new GenericDataCollections();
+  QHash<QString, int> tableDepth;
+  QSet<QString> tablesToRead;
+  tableDepth.insert(tableName.toLower(), 0);
+  tablesToRead << tableName;
 
-    while (!tablesToRead.isEmpty())
-    {
-        QString tableNameToReadNow = *tablesToRead.begin();
-        if (!tables->contains(tableNameToReadNow) && (maxLinkDepth < 0 || tableDepth[tableNameToReadNow.toLower()] <= maxLinkDepth)) {
-            int currentLevel = tableDepth[tableNameToReadNow.toLower()];
+  while (!tablesToRead.isEmpty()) {
+    QString tableNameToReadNow = *tablesToRead.begin();
+    if (!tables->contains(tableNameToReadNow) &&
+        (maxLinkDepth < 0 ||
+         tableDepth[tableNameToReadNow.toLower()] <= maxLinkDepth)) {
+      int currentLevel = tableDepth[tableNameToReadNow.toLower()];
 
-            // This is a single table. Read it and set the types based on the schema.
-            GenericDataCollection* table = readTableBySchema(tableNameToReadNow, sortByKey);
-            if (table != nullptr) {
-                // so that when tables is deleted, table is also deleted.
-                table->setParent(tables);
-                tables->addCollection(tableNameToReadNow, table);
-                if (((maxLinkDepth < 0) || (currentLevel + 1 <= maxLinkDepth)) && m_schema.containsTable(tableNameToReadNow)) {
-                    QSet<QString> newNames = m_schema.getLinkedTableNames(tableNameToReadNow);
-                    QSetIterator<QString> i(newNames);
-                    while (i.hasNext()) {
-                        QString newTable = i.next();
-                        if (!tables->contains(newTable)) {
-                            if (tableDepth.contains(newTable.toLower())) {
-                                if (tableDepth[newTable.toLower()] > currentLevel + 1) {
-                                    tableDepth[newTable.toLower()] = currentLevel + 1;
-                                }
-                            } else {
-                                tablesToRead << newTable;
-                                tableDepth[newTable.toLower()] = currentLevel + 1;
-                            }
-                        }
-                    }
+      // This is a single table. Read it and set the types based on the schema.
+      GenericDataCollection *table =
+          readTableBySchema(tableNameToReadNow, sortByKey);
+      if (table != nullptr) {
+        // so that when tables is deleted, table is also deleted.
+        table->setParent(tables);
+        tables->addCollection(tableNameToReadNow, table);
+        if (((maxLinkDepth < 0) || (currentLevel + 1 <= maxLinkDepth)) &&
+            m_schema.containsTable(tableNameToReadNow)) {
+          QSet<QString> newNames =
+              m_schema.getLinkedTableNames(tableNameToReadNow);
+          QSetIterator<QString> i(newNames);
+          while (i.hasNext()) {
+            QString newTable = i.next();
+            if (!tables->contains(newTable)) {
+              if (tableDepth.contains(newTable.toLower())) {
+                if (tableDepth[newTable.toLower()] > currentLevel + 1) {
+                  tableDepth[newTable.toLower()] = currentLevel + 1;
                 }
+              } else {
+                tablesToRead << newTable;
+                tableDepth[newTable.toLower()] = currentLevel + 1;
+              }
             }
+          }
         }
-        tablesToRead.remove(tableNameToReadNow);
+      }
     }
-    return tables;
+    tablesToRead.remove(tableNameToReadNow);
+  }
+  return tables;
 }
 
-
-GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, const bool sortByKey)
-{
-  Q_ASSERT_X(m_schema.containsTable(tableName), "readTableBySchema", qPrintable(QString("Table [%1] is not in the schema.").arg(tableName)));
+GenericDataCollection *StampDB::readTableBySchema(const QString &tableName,
+                                                  const bool sortByKey) {
+  Q_ASSERT_X(
+      m_schema.containsTable(tableName), "readTableBySchema",
+      qPrintable(QString("Table [%1] is not in the schema.").arg(tableName)));
   QStringList orderByList;
 
   if (sortByKey) {
-      const DescribeSqlTable* table = m_schema.getTableByName(tableName);
-      if (table == nullptr) {
-          return nullptr;
+    const DescribeSqlTable *table = m_schema.getTableByName(tableName);
+    if (table == nullptr) {
+      return nullptr;
+    }
+    QStringList fieldNames = table->getFieldNames();
+    for (QStringListIterator fieldIterator(fieldNames);
+         fieldIterator.hasNext();) {
+      QString fieldName = fieldIterator.next();
+      if (table->getFieldByName(fieldName)->isKey()) {
+        orderByList << fieldName;
       }
-      QStringList fieldNames = table->getFieldNames();
-      for (QStringListIterator fieldIterator(fieldNames); fieldIterator.hasNext(); )
-      {
-          QString fieldName = fieldIterator.next();
-          if (table->getFieldByName(fieldName)->isKey()) {
-              orderByList << fieldName;
-          }
-      }
-      if (orderByList.isEmpty() && table->containsField("id")) {
-          orderByList << "id";
-      }
+    }
+    if (orderByList.isEmpty() && table->containsField("id")) {
+      orderByList << "id";
+    }
   }
   return readTableBySchema(tableName, orderByList);
 }
 
-GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, const QStringList& orderByList)
-{
-  Q_ASSERT_X(m_schema.containsTable(tableName), "readTableBySchema", qPrintable(QString("Table [%1] is not in the schema.").arg(tableName)));
+GenericDataCollection *
+StampDB::readTableBySchema(const QString &tableName,
+                           const QStringList &orderByList) {
+  Q_ASSERT_X(
+      m_schema.containsTable(tableName), "readTableBySchema",
+      qPrintable(QString("Table [%1] is not in the schema.").arg(tableName)));
 
-  const DescribeSqlTable* table = m_schema.getTableByName(tableName);
+  const DescribeSqlTable *table = m_schema.getTableByName(tableName);
   if (table == nullptr) {
-      return nullptr;
+    return nullptr;
   }
   QStringList fieldNames = table->getFieldNames();
 
   QString orderBy = "";
 
-  for (QStringListIterator fieldSortIterator(orderByList); fieldSortIterator.hasNext(); )
-  {
+  for (QStringListIterator fieldSortIterator(orderByList);
+       fieldSortIterator.hasNext();) {
     QString fieldName = fieldSortIterator.next();
-    Q_ASSERT_X(table->containsField(fieldName), "readTableBySchema", qPrintable(QString("Table [%1] does not have a field named [%2].").arg(tableName).arg(fieldName)));
+    Q_ASSERT_X(
+        table->containsField(fieldName), "readTableBySchema",
+        qPrintable(QString("Table [%1] does not have a field named [%2].")
+                       .arg(tableName)
+                       .arg(fieldName)));
     if (orderBy.isEmpty()) {
-        orderBy = QString("%1.%2").arg(tableName).arg(fieldName);
+      orderBy = QString("%1.%2").arg(tableName).arg(fieldName);
     } else {
-        orderBy = orderBy.append(QString(", %1.%2").arg(tableName).arg(fieldName));
+      orderBy =
+          orderBy.append(QString(", %1.%2").arg(tableName).arg(fieldName));
     }
   }
 
   if (!orderBy.isEmpty()) {
-      orderBy = QString("ORDER BY %1").arg(orderBy);
+    orderBy = QString("ORDER BY %1").arg(orderBy);
   }
 
   QString sqlFields = "";
@@ -562,58 +561,67 @@ GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, cons
   // For our purposes, we could simply use "*".
   // Use something similar if you send in a list of fields to use.
   // If support multiple tables, then use a table name portion identifier.
-  for (QStringListIterator fieldIterator(fieldNames); fieldIterator.hasNext(); )
-  {
-      QString fieldName = fieldIterator.next();
-      if (sqlFields.isEmpty()) {
-          sqlFields = QString("%1.%2").arg(tableName).arg(fieldName);;
-      } else {
-          sqlFields = sqlFields.append(QString(", %1.%2").arg(tableName).arg(fieldName));
-      }
+  for (QStringListIterator fieldIterator(fieldNames);
+       fieldIterator.hasNext();) {
+    QString fieldName = fieldIterator.next();
+    if (sqlFields.isEmpty()) {
+      sqlFields = QString("%1.%2").arg(tableName).arg(fieldName);
+      ;
+    } else {
+      sqlFields =
+          sqlFields.append(QString(", %1.%2").arg(tableName).arg(fieldName));
+    }
   }
 
   if (sqlFields.isEmpty()) {
-      qDebug("No fields to select");
-      return nullptr;
+    qDebug("No fields to select");
+    return nullptr;
   }
 
-  QString sql = QString("SELECT %1 FROM %2 %3").arg(sqlFields).arg(tableName).arg(orderBy);
+  QString sql = QString("SELECT %1 FROM %2 %3")
+                    .arg(sqlFields)
+                    .arg(tableName)
+                    .arg(orderBy);
 
-  if (openDB())
-  {
+  if (openDB()) {
     qDebug() << "(1) Reading table using [" << sql << "]";
-    QSqlDatabase& db = getDB();
+    QSqlDatabase &db = getDB();
     QSqlQuery query(db);
 
-    if (!query.exec(sql))
-    {
-        ScrollMessageBox::information(nullptr, "ERROR", query.lastError().text());
-    }
-    else if (query.isSelect())
-    {
-      GenericDataCollection* collection = new GenericDataCollection();
+    if (!query.exec(sql)) {
+      ScrollMessageBox::information(nullptr, "ERROR", query.lastError().text());
+    } else if (query.isSelect()) {
+      GenericDataCollection *collection = new GenericDataCollection();
 
       // Set the property names and types in order!
       QStringList duplicateColumns;
-      for (int i=0; i<query.record().count(); ++i)
-      {
+      for (int i = 0; i < query.record().count(); ++i) {
         // query.record().field(i).type()) returns a QVariant type.
-        if (!collection->appendPropertyName(query.record().fieldName(i), m_schema.getFieldMetaType(tableName,  query.record().fieldName(i))))
-        {
+        if (!collection->appendPropertyName(
+                query.record().fieldName(i),
+                m_schema.getFieldMetaType(tableName,
+                                          query.record().fieldName(i)))) {
           duplicateColumns.append(query.record().fieldName(i));
         }
       }
 
-      if (duplicateColumns.size() > 0)
-      {
-        ScrollMessageBox::information(nullptr, "ERROR", QString(tr("Problem converting the following SQL\n\n%1\n\nThe following columns are duplicated:\n%2")).arg(sql).arg(duplicateColumns.join("\n")));
+      if (duplicateColumns.size() > 0) {
+        ScrollMessageBox::information(
+            nullptr, "ERROR",
+            QString(tr("Problem converting the following SQL\n\n%1\n\nThe "
+                       "following columns are duplicated:\n%2"))
+                .arg(sql)
+                .arg(duplicateColumns.join("\n")));
         delete collection;
         return nullptr;
       }
 
       // TODO: Get first key
       QString firstKeyField = table->getFirstKeyFieldName();
-      Q_ASSERT_X(!firstKeyField.isEmpty(), "readTableBySchema", qPrintable(QString("Table %1 does not have a key field").arg(tableName)));
+      Q_ASSERT_X(
+          !firstKeyField.isEmpty(), "readTableBySchema",
+          qPrintable(
+              QString("Table %1 does not have a key field").arg(tableName)));
       if (firstKeyField.isEmpty()) {
         firstKeyField = "id";
       }
@@ -621,69 +629,74 @@ GenericDataCollection* StampDB::readTableBySchema(const QString& tableName, cons
       // In case a different name is used for the property name in the field.
       // I doubt if this ever happens.
       bool hasIdColumn = collection->containsProperty(firstKeyField);
-      QString idString = hasIdColumn ? collection->getPropertyName(firstKeyField) : "";
+      QString idString =
+          hasIdColumn ? collection->getPropertyName(firstKeyField) : "";
       int iCount = 0;
       TypeMapper mapper;
       bool ok;
-      while (query.isActive() && query.next())
-      {
-        GenericDataObject* gdo = new GenericDataObject(collection);
-        for (int i=0; i<query.record().count(); ++i)
-        {
-          if (!query.record().isNull(i))
-          {
+      while (query.isActive() && query.next()) {
+        GenericDataObject *gdo = new GenericDataObject(collection);
+        for (int i = 0; i < query.record().count(); ++i) {
+          if (!query.record().isNull(i)) {
             // A Variant is returned at this point. The concern is
             // that some data types are stored as a string in the DB and
             // we might want to treat them as a special type.
-            // This is particularly problematic with SQL Light that uses strings for many things.
-            // If a BIT Varying type is used, and, if the string length is greater than 1, then string should be used
-            // rather than a boolean value. I don't have this problem at the moment, so,ignore it for now.
-            // gdo->setValue(collection->getPropertyName(i), query.record().value(i));
-            gdo->setValueNative(collection->getPropertyName(i), mapper.forceToType(query.record().value(i), table->getFieldMetaType(collection->getPropertyName(i)), &ok));
+            // This is particularly problematic with SQL Light that uses strings
+            // for many things. If a BIT Varying type is used, and, if the
+            // string length is greater than 1, then string should be used
+            // rather than a boolean value. I don't have this problem at the
+            // moment, so,ignore it for now.
+            // gdo->setValue(collection->getPropertyName(i),
+            // query.record().value(i));
+            gdo->setValueNative(
+                collection->getPropertyName(i),
+                mapper.forceToType(
+                    query.record().value(i),
+                    table->getFieldMetaType(collection->getPropertyName(i)),
+                    &ok));
           }
         }
 
-        collection->appendObject(hasIdColumn ? gdo->getInt(idString) : iCount, gdo);
+        collection->appendObject(hasIdColumn ? gdo->getInt(idString) : iCount,
+                                 gdo);
         ++iCount;
       }
       return collection;
     }
   }
 
-
   return nullptr;
 }
 
-GenericDataCollection* StampDB::readTableSql(const QString& sql)
-{
-  if (openDB())
-  {
+GenericDataCollection *StampDB::readTableSql(const QString &sql) {
+  if (openDB()) {
     qDebug() << "Reading table using [" << sql << "]";
-    QSqlDatabase& db = getDB();
+    QSqlDatabase &db = getDB();
     QSqlQuery query(db);
 
-    if (!query.exec(sql))
-    {
-        ScrollMessageBox::information(nullptr, "ERROR", query.lastError().text());
-    }
-    else if (query.isSelect())
-    {
-      GenericDataCollection* collection = new GenericDataCollection();
+    if (!query.exec(sql)) {
+      ScrollMessageBox::information(nullptr, "ERROR", query.lastError().text());
+    } else if (query.isSelect()) {
+      GenericDataCollection *collection = new GenericDataCollection();
 
       TypeMapper mapper;
 
       // Set the property names and types in order!
       QStringList duplicateColumns;
-      for (int i=0; i<query.record().count(); ++i)
-      {
-        if (!collection->appendPropertyName(query.record().fieldName(i), (QMetaType::Type) query.record().field(i).metaType().id()))
-        {
+      for (int i = 0; i < query.record().count(); ++i) {
+        if (!collection->appendPropertyName(
+                query.record().fieldName(i),
+                (QMetaType::Type)query.record().field(i).metaType().id())) {
           duplicateColumns.append(query.record().fieldName(i));
         }
       }
-      if (duplicateColumns.size() > 0)
-      {
-        ScrollMessageBox::information(nullptr, "ERROR", QString(tr("Problem converting the following SQL\n\n%1\n\nThe following columns are duplicated:\n%2")).arg(sql).arg(duplicateColumns.join("\n")));
+      if (duplicateColumns.size() > 0) {
+        ScrollMessageBox::information(
+            nullptr, "ERROR",
+            QString(tr("Problem converting the following SQL\n\n%1\n\nThe "
+                       "following columns are duplicated:\n%2"))
+                .arg(sql)
+                .arg(duplicateColumns.join("\n")));
         delete collection;
         return nullptr;
       }
@@ -691,17 +704,16 @@ GenericDataCollection* StampDB::readTableSql(const QString& sql)
       bool hasIdColumn = collection->containsProperty("id");
       QString idString = hasIdColumn ? collection->getPropertyName("id") : "";
       int iCount = 0;
-      while (query.isActive() && query.next())
-      {
-        GenericDataObject* gdo = new GenericDataObject(collection);
-        for (int i=0; i<query.record().count(); ++i)
-        {
-          if (!query.record().isNull(i))
-          {
-            gdo->setValueNative(collection->getPropertyName(i), query.record().value(i));
+      while (query.isActive() && query.next()) {
+        GenericDataObject *gdo = new GenericDataObject(collection);
+        for (int i = 0; i < query.record().count(); ++i) {
+          if (!query.record().isNull(i)) {
+            gdo->setValueNative(collection->getPropertyName(i),
+                                query.record().value(i));
           }
         }
-        collection->appendObject(hasIdColumn ? gdo->getInt(idString) : iCount, gdo);
+        collection->appendObject(hasIdColumn ? gdo->getInt(idString) : iCount,
+                                 gdo);
         ++iCount;
       }
       return collection;
@@ -711,22 +723,17 @@ GenericDataCollection* StampDB::readTableSql(const QString& sql)
   return nullptr;
 }
 
-QString StampDB::getClosestTableName(const QString& aName)
-{
-  if (openDB())
-  {
+QString StampDB::getClosestTableName(const QString &aName) {
+  if (openDB()) {
 
     QStringList tables = m_db.tables(QSql::Tables);
-    //ScrollMessageBox::information(nullptr, "Tables", tables.join("\n"));
+    // ScrollMessageBox::information(nullptr, "Tables", tables.join("\n"));
     int i = tables.indexOf(aName);
-    if (i >= 0)
-    {
+    if (i >= 0) {
       return tables[i];
     }
-    for (i =0; i<tables.size(); ++i)
-    {
-      if (aName.compare(tables[i], Qt::CaseInsensitive) == 0)
-      {
+    for (i = 0; i < tables.size(); ++i) {
+      if (aName.compare(tables[i], Qt::CaseInsensitive) == 0) {
         return tables[i];
       }
     }
@@ -734,298 +741,306 @@ QString StampDB::getClosestTableName(const QString& aName)
   return "";
 }
 
-QList<QSharedPointer<CatalogEntry>> StampDB::getCatalog(bool sort)
-{
-    QList<QSharedPointer<CatalogEntry>> list;
-    QString sqlSelect = "select catalog.id, catalog.scott, country.a3, catalog.releasedate, catalog.facevalue, catalog.description, catalog.updated from catalog, country where catalog.countryid= country.id AND country.a3='USA' order by catalog.scott";
-    if (openDB())
-    {
-        QSqlDatabase& db = getDB();
-        QSqlQuery query(db);
-
-        if (!query.exec(sqlSelect))
-        {
-            ScrollMessageBox::information(nullptr, "ERROR", query.lastError().text());
-        }
-        else if (query.isSelect())
-        {
-            ImageUtility iu;
-            while (query.isActive() && query.next())
-            {
-                int i = 0;
-                long dbId = query.record().value(i).isNull() ? -1 : query.record().value(i).toLongLong();
-                ++i;
-                QString catalogId = query.record().value(i).isNull() ? "" : query.record().value(i).toString();
-                ++i;
-                const QString& countryA3 = query.record().value(i).isNull() ? "" : query.record().value(i).toString();
-                ++i;
-                const QDateTime releaseDate = query.record().value(i).isNull() ? QDateTime::currentDateTime() : query.record().value(i).toDateTime();
-                ++i;
-                float faceValue = query.record().value(i).isNull() ? 0.0 : query.record().value(i).toFloat();
-                ++i;
-                const QString& description = query.record().value(i).isNull() ? "" : query.record().value(i).toString();
-                ++i;
-                const QDateTime updatedDate = query.record().value(i).isNull() ? QDateTime::currentDateTime() : query.record().value(i).toDateTime();
-                list.append(QSharedPointer<CatalogEntry>::create(dbId, faceValue, catalogId, countryA3, description, releaseDate, updatedDate, nullptr));
-                QString category;
-                QString num;
-                QString trailer;
-                iu.splitCatalogNumber(catalogId, category, num, trailer);
-                list.last()->setIdCategory(category);
-                list.last()->setIdNum(num.toLong());
-                list.last()->setIdTrailer(trailer);
-            }
-        }
-    }
-    if (sort)
-    {
-        QCollator collator;
-        collator.setCaseSensitivity(Qt::CaseInsensitive);
-        collator.setNumericMode(true);
-        std::sort(list.begin(), list.end(), [&collator](const QSharedPointer<CatalogEntry> &a, const QSharedPointer<CatalogEntry> &b){
-            int tempCompare = a->getCountryA3().compare(b->getCountryA3(), Qt::CaseInsensitive);
-            if (tempCompare != 0) {
-                return tempCompare < 0;
-            }
-            tempCompare = a->getIdCategory().compare(b->getIdCategory(), Qt::CaseInsensitive);
-            if (tempCompare != 0) {
-                return tempCompare < 0;
-            }
-            if (a->getIdNum() != b->getIdNum()) {
-                return a->getIdNum() < b->getIdNum();
-            }
-            return a->getIdTrailer() < b->getIdTrailer();
-        });
-    }
-    return list;
-}
-
-QStringList StampDB::getOneColumnAsString(const QString& sqlSelect)
-{
-    QStringList colStrings;
-    if (openDB())
-    {
-        QSqlDatabase& db = getDB();
-        QSqlQuery query(db);
-
-        if (!query.exec(sqlSelect))
-        {
-            ScrollMessageBox::information(nullptr, "ERROR", query.lastError().text());
-        }
-        else if (query.isSelect())
-        {
-            while (query.isActive() && query.next())
-            {
-                colStrings.append(query.record().value(0).toString());
-            }
-        }
-    }
-
-    return colStrings;
-}
-
-bool StampDB::executeQuery(const QString& sqlSelect, QList<QSqlRecord>& records, const QString &keyField, QHash<int, int> &keys)
-{
-    if (!openDB())
-    {
-      return false;
-    }
-
-    QSqlDatabase& db = getDB();
+QList<QSharedPointer<CatalogEntry>> StampDB::getCatalog(bool sort) {
+  QList<QSharedPointer<CatalogEntry>> list;
+  QString sqlSelect =
+      "select catalog.id, catalog.scott, country.a3, catalog.releasedate, "
+      "catalog.facevalue, catalog.description, catalog.updated from catalog, "
+      "country where catalog.countryid= country.id AND country.a3='USA' order "
+      "by catalog.scott";
+  if (openDB()) {
+    QSqlDatabase &db = getDB();
     QSqlQuery query(db);
-    query.prepare(sqlSelect);
-    return executeQuery(query, records, keyField, keys);
-    /**
-    if (!query.exec(sqlSelect))
-    {
-        ScrollMessageBox::information(nullptr, "ERROR", query.lastError().text());
-        return false;
+
+    if (!query.exec(sqlSelect)) {
+      ScrollMessageBox::information(nullptr, "ERROR", query.lastError().text());
+    } else if (query.isSelect()) {
+      ImageUtility iu;
+      while (query.isActive() && query.next()) {
+        int i = 0;
+        long dbId = query.record().value(i).isNull()
+                        ? -1
+                        : query.record().value(i).toLongLong();
+        ++i;
+        QString catalogId = query.record().value(i).isNull()
+                                ? ""
+                                : query.record().value(i).toString();
+        ++i;
+        const QString &countryA3 = query.record().value(i).isNull()
+                                       ? ""
+                                       : query.record().value(i).toString();
+        ++i;
+        const QDateTime releaseDate =
+            query.record().value(i).isNull()
+                ? QDateTime::currentDateTime()
+                : query.record().value(i).toDateTime();
+        ++i;
+        float faceValue = query.record().value(i).isNull()
+                              ? 0.0
+                              : query.record().value(i).toFloat();
+        ++i;
+        const QString &description = query.record().value(i).isNull()
+                                         ? ""
+                                         : query.record().value(i).toString();
+        ++i;
+        const QDateTime updatedDate =
+            query.record().value(i).isNull()
+                ? QDateTime::currentDateTime()
+                : query.record().value(i).toDateTime();
+        list.append(QSharedPointer<CatalogEntry>::create(
+            dbId, faceValue, catalogId, countryA3, description, releaseDate,
+            updatedDate, nullptr));
+        QString category;
+        QString num;
+        QString trailer;
+        iu.splitCatalogNumber(catalogId, category, num, trailer);
+        list.last()->setIdCategory(category);
+        list.last()->setIdNum(num.toLong());
+        list.last()->setIdTrailer(trailer);
+      }
     }
-    else if (query.isSelect())
-    {
-
-        int keyIndex = query.record().indexOf(keyField);
-        int recordKey = -1;
-
-        while (query.isActive() && query.next())
-        {
-            QSqlRecord rec = query.record();
-            if (keyIndex >= 0)
-            {
-                bool ok = false;
-                recordKey = rec.value(keyIndex).toInt(&ok);
-                if (keys.contains(recordKey)) {
-
-                    // I really do not expect this, but, do it anyway.
-                    // Replace the previous record.
-                    records[keys[recordKey]] = rec;
-                } else {
-                    keys.insert(recordKey, records.size());
-                    records.append(rec);
+  }
+  if (sort) {
+    QCollator collator;
+    collator.setCaseSensitivity(Qt::CaseInsensitive);
+    collator.setNumericMode(true);
+    std::sort(list.begin(), list.end(),
+              [&collator](const QSharedPointer<CatalogEntry> &a,
+                          const QSharedPointer<CatalogEntry> &b) {
+                int tempCompare = a->getCountryA3().compare(
+                    b->getCountryA3(), Qt::CaseInsensitive);
+                if (tempCompare != 0) {
+                  return tempCompare < 0;
                 }
-            } else {
-                records.append(rec);
-            }
-        }
-    } else {
-        // query.numRowsAffected();
+                tempCompare = a->getIdCategory().compare(b->getIdCategory(),
+                                                         Qt::CaseInsensitive);
+                if (tempCompare != 0) {
+                  return tempCompare < 0;
+                }
+                if (a->getIdNum() != b->getIdNum()) {
+                  return a->getIdNum() < b->getIdNum();
+                }
+                return a->getIdTrailer() < b->getIdTrailer();
+              });
+  }
+  return list;
+}
+
+QStringList StampDB::getOneColumnAsString(const QString &sqlSelect) {
+  QStringList colStrings;
+  if (openDB()) {
+    QSqlDatabase &db = getDB();
+    QSqlQuery query(db);
+
+    if (!query.exec(sqlSelect)) {
+      ScrollMessageBox::information(nullptr, "ERROR", query.lastError().text());
+    } else if (query.isSelect()) {
+      while (query.isActive() && query.next()) {
+        colStrings.append(query.record().value(0).toString());
+      }
     }
-    return true;
+  }
+
+  return colStrings;
+}
+
+bool StampDB::executeQuery(const QString &sqlSelect, QList<QSqlRecord> &records,
+                           const QString &keyField, QHash<int, int> &keys) {
+  if (!openDB()) {
+    return false;
+  }
+
+  QSqlDatabase &db = getDB();
+  QSqlQuery query(db);
+  query.prepare(sqlSelect);
+  return executeQuery(query, records, keyField, keys);
+  /**
+  if (!query.exec(sqlSelect))
+  {
+      ScrollMessageBox::information(nullptr, "ERROR", query.lastError().text());
+      return false;
+  }
+  else if (query.isSelect())
+  {
+
+      int keyIndex = query.record().indexOf(keyField);
+      int recordKey = -1;
+
+      while (query.isActive() && query.next())
+      {
+          QSqlRecord rec = query.record();
+          if (keyIndex >= 0)
+          {
+              bool ok = false;
+              recordKey = rec.value(keyIndex).toInt(&ok);
+              if (keys.contains(recordKey)) {
+
+                  // I really do not expect this, but, do it anyway.
+                  // Replace the previous record.
+                  records[keys[recordKey]] = rec;
+              } else {
+                  keys.insert(recordKey, records.size());
+                  records.append(rec);
+              }
+          } else {
+              records.append(rec);
+          }
+      }
+  } else {
+      // query.numRowsAffected();
+  }
+  return true;
 **/
 }
 
-bool StampDB::executeQuery(QSqlQuery& query,  QList<QSqlRecord>& records, const QString& keyField, QHash<int, int>& keys)
-{
+bool StampDB::executeQuery(QSqlQuery &query, QList<QSqlRecord> &records,
+                           const QString &keyField, QHash<int, int> &keys) {
 
-    if (!query.exec())
-    {
-        ScrollMessageBox::information(nullptr, "ERROR", query.lastError().text());
-        return false;
-    }
-    else if (query.isSelect())
-    {
+  if (!query.exec()) {
+    ScrollMessageBox::information(nullptr, "ERROR", query.lastError().text());
+    return false;
+  } else if (query.isSelect()) {
 
-        int keyIndex = query.record().indexOf(keyField);
-        int recordKey = -1;
+    int keyIndex = query.record().indexOf(keyField);
+    int recordKey = -1;
 
-        while (query.isActive() && query.next())
-        {
-            QSqlRecord rec = query.record();
-            if (keyIndex >= 0)
-            {
-                bool ok = false;
-                recordKey = rec.value(keyIndex).toInt(&ok);
-                if (keys.contains(recordKey)) {
+    while (query.isActive() && query.next()) {
+      QSqlRecord rec = query.record();
+      if (keyIndex >= 0) {
+        bool ok = false;
+        recordKey = rec.value(keyIndex).toInt(&ok);
+        if (keys.contains(recordKey)) {
 
-                    // I really do not expect this, but, do it anyway.
-                    // Replace the previous record.
-                    records[keys[recordKey]] = rec;
-                } else {
-                    keys.insert(recordKey, records.size());
-                    records.append(rec);
-                }
-            } else {
-                records.append(rec);
-            }
+          // I really do not expect this, but, do it anyway.
+          // Replace the previous record.
+          records[keys[recordKey]] = rec;
+        } else {
+          keys.insert(recordKey, records.size());
+          records.append(rec);
         }
-    } else {
-        // query.numRowsAffected();
+      } else {
+        records.append(rec);
+      }
     }
-    return true;
+  } else {
+    // query.numRowsAffected();
+  }
+  return true;
 }
 
+bool StampDB::exportToCSV(const QDir &outputDir, const bool overwrite) {
+  QFile ddlFile(outputDir.filePath("stamps.ddl"));
+  if (ddlFile.exists() && overwrite) {
+    if (!ddlFile.remove()) {
+      ScrollMessageBox::information(
+          nullptr, "ERROR",
+          QString(tr("Failed to remove file %1")).arg(ddlFile.fileName()));
+    }
+  }
+  if (!ddlFile.exists()) {
+    QStringList ddl = getDDLForExport();
+    if (!ddlFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+      ScrollMessageBox::information(
+          nullptr, "ERROR",
+          QString(tr("Failed to open file %1 for writing."))
+              .arg(ddlFile.fileName()));
+    }
+    QTextStream out(&ddlFile);
+    out << ddl.join("\n");
+    ddlFile.close();
+  }
 
-bool StampDB::exportToCSV(const QDir& outputDir, const bool overwrite)
-{
-    QFile ddlFile(outputDir.filePath("stamps.ddl"));
-    if (ddlFile.exists() && overwrite) {
-        if (!ddlFile.remove()) {
-            ScrollMessageBox::information(nullptr, "ERROR", QString(tr("Failed to remove file %1")).arg(ddlFile.fileName()));
-        }
+  QStringList tableNames = getTableNames(true);
+  for (int iTable = 0; iTable < tableNames.size(); ++iTable) {
+    QFile file(outputDir.filePath(tableNames.at(iTable) + ".csv"));
+    if (file.exists() && overwrite) {
+      if (!file.remove()) {
+        ScrollMessageBox::information(
+            nullptr, "ERROR",
+            QString(tr("Failed to remove file %1")).arg(file.fileName()));
+      }
     }
-    if (!ddlFile.exists())
-    {
-        QStringList ddl = getDDLForExport();
-        if (!ddlFile.open(QIODevice::WriteOnly | QIODevice::Text))
-        {
-            ScrollMessageBox::information(nullptr, "ERROR", QString(tr("Failed to open file %1 for writing.")).arg(ddlFile.fileName()));
+    if (!file.exists()) {
+      CSVWriter writer;
+      if (!writer.setStreamFromPath(file.fileName())) {
+        ScrollMessageBox::information(
+            nullptr, "ERROR",
+            QString(tr("Write: Failed to open CSV file %1"))
+                .arg(file.fileName()));
+      } else {
+        // ScrollMessageBox::information(nullptr, "INFO", QString(tr("ready to
+        // read from table %1")).arg(tableNames.at(iTable)));
+        GenericDataCollection *gdo = readTableName(tableNames.at(iTable));
+        // ScrollMessageBox::information(nullptr, "INFO", QString(tr("read %1
+        // records from table ")).arg(gdo->getObjectCount()));
+        if (gdo == nullptr) {
+          ScrollMessageBox::information(
+              nullptr, "ERROR",
+              QString(tr("Failed to load table %1 for export"))
+                  .arg(tableNames.at(iTable)));
+        } else {
+          gdo->exportToCSV(writer);
+          delete gdo;
         }
-        QTextStream out(&ddlFile);
-        out << ddl.join("\n");
-        ddlFile.close();
+      }
     }
-
-    QStringList tableNames = getTableNames(true);
-    for (int iTable=0; iTable < tableNames.size(); ++iTable)
-    {
-      QFile file(outputDir.filePath(tableNames.at(iTable) + ".csv"));
-        if (file.exists() && overwrite) {
-            if (!file.remove()) {
-                ScrollMessageBox::information(nullptr, "ERROR", QString(tr("Failed to remove file %1")).arg(file.fileName()));
-            }
-        }
-        if (!file.exists())
-        {
-            CSVWriter writer;
-            if (!writer.setStreamFromPath(file.fileName()))
-            {
-              ScrollMessageBox::information(nullptr, "ERROR", QString(tr("Write: Failed to open CSV file %1")).arg(file.fileName()));
-            }
-            else
-            {
-              //ScrollMessageBox::information(nullptr, "INFO", QString(tr("ready to read from table %1")).arg(tableNames.at(iTable)));
-              GenericDataCollection* gdo = readTableName(tableNames.at(iTable));
-              //ScrollMessageBox::information(nullptr, "INFO", QString(tr("read %1 records from table ")).arg(gdo->getObjectCount()));
-              if (gdo == nullptr)
-              {
-                ScrollMessageBox::information(nullptr, "ERROR", QString(tr("Failed to load table %1 for export")).arg(tableNames.at(iTable)));
-              }
-              else
-              {
-                gdo->exportToCSV(writer);
-                delete gdo;
-              }
-            }
-        }
-    }
-    return true;
+  }
+  return true;
 }
 
-bool StampDB::loadCSV(CSVReader& reader, const QString& tableName)
-{
-  if (!openDB())
-  {
+bool StampDB::loadCSV(CSVReader &reader, const QString &tableName) {
+  if (!openDB()) {
     return false;
   }
   QString useTableName = getClosestTableName(tableName);
-  if (tableName.isEmpty())
-  {
-    ScrollMessageBox::information(nullptr, "ERROR", QString(tr("Failed to find a table with a name close to the CSV filename %1")).arg(tableName));
+  if (tableName.isEmpty()) {
+    ScrollMessageBox::information(
+        nullptr, "ERROR",
+        QString(tr("Failed to find a table with a name close to the CSV "
+                   "filename %1"))
+            .arg(tableName));
     return false;
   }
 
   QSqlRecord record = m_db.record(useTableName);
   QStringList fieldNames;
   int i;
-  for (i=0; i<record.count(); ++i)
-  {
+  for (i = 0; i < record.count(); ++i) {
     fieldNames << record.fieldName(i);
   }
 
-  if (fieldNames.size() == 0)
-  {
-    ScrollMessageBox::information(nullptr, "WARN", QString(tr("Table %1 has no fields.")).arg(useTableName));
+  if (fieldNames.size() == 0) {
+    ScrollMessageBox::information(
+        nullptr, "WARN",
+        QString(tr("Table %1 has no fields.")).arg(useTableName));
     return false;
   }
 
   QList<int> csvColumnIndex = reader.getHeaderIndexByName(fieldNames);
   QString sError;
   int numberOfColumnMatches = 0;
-  for (int iCol=0; iCol<csvColumnIndex.size(); ++iCol)
-  {
-    if (csvColumnIndex[iCol] >= 0)
-    {
+  for (int iCol = 0; iCol < csvColumnIndex.size(); ++iCol) {
+    if (csvColumnIndex[iCol] >= 0) {
       ++numberOfColumnMatches;
-    }
-    else
-    {
-        if (!sError.isEmpty())
-        {
-            sError += "\n";
-        }
-        sError += QString(tr("No match found for field %1")).arg(fieldNames.at(iCol));
+    } else {
+      if (!sError.isEmpty()) {
+        sError += "\n";
+      }
+      sError +=
+          QString(tr("No match found for field %1")).arg(fieldNames.at(iCol));
     }
   }
 
-  if (!sError.isEmpty())
-  {
-      ScrollMessageBox::information(nullptr, "WARN", sError);
-      sError.clear();
+  if (!sError.isEmpty()) {
+    ScrollMessageBox::information(nullptr, "WARN", sError);
+    sError.clear();
   }
 
-  if (numberOfColumnMatches == 0)
-  {
-    ScrollMessageBox::information(nullptr, "WARN", QString(tr("No column names in the CSV file match column names in Table %1.")).arg(useTableName));
+  if (numberOfColumnMatches == 0) {
+    ScrollMessageBox::information(nullptr, "WARN",
+                                  QString(tr("No column names in the CSV file "
+                                             "match column names in Table %1."))
+                                      .arg(useTableName));
     return false;
   }
 
@@ -1035,52 +1050,55 @@ bool StampDB::loadCSV(CSVReader& reader, const QString& tableName)
   QHash<int, int> keys;
   int csvKeyColumn = -1;
   if (!executeQuery(sGetAll, records, keyField, keys)) {
-      // TODO: how to deal with an error?
+    // TODO: how to deal with an error?
   }
 
-  // TODO: Verify that a column is not repeated, ie, two CSV columns match to the same DB column.
+  // TODO: Verify that a column is not repeated, ie, two CSV columns match to
+  // the same DB column.
 
   // TODO: build the prepared statement
   // Use positional rather than named
   QString q1 = QString("INSERT INTO %1 (").arg(useTableName);
   QString q2 = ") VALUES (";
   bool firstLine = true;
-  for (int iCol=0; iCol<csvColumnIndex.size(); ++iCol)
-  {
+  for (int iCol = 0; iCol < csvColumnIndex.size(); ++iCol) {
     // Verify that a column in the DB has a corresponding entry
     // in the CSV file
-    if (0 <= csvColumnIndex[iCol])
-    {
-      if (firstLine)
-      {
+    if (0 <= csvColumnIndex[iCol]) {
+      if (firstLine) {
         firstLine = false;
         q2 += "?";
-      }
-      else
-      {
+      } else {
         q1 += ", ";
         q2 += ", ?";
       }
       q1 += fieldNames[iCol];
-      if (csvKeyColumn < 0 && fieldNames[iCol].compare(keyField, Qt::CaseInsensitive) == 0) {
-          csvKeyColumn = iCol;
+      if (csvKeyColumn < 0 &&
+          fieldNames[iCol].compare(keyField, Qt::CaseInsensitive) == 0) {
+        csvKeyColumn = iCol;
       }
     }
   }
   q2 += ")";
 
   QSqlQuery q;
-  if (!q.prepare(q1 + q2))
-  {
-    ScrollMessageBox::information(nullptr, "ERROR", QString(tr("Prepare statement failed for (%1) error: %2")).arg(q1+q2).arg(q.lastError().text()));
+  if (!q.prepare(q1 + q2)) {
+    ScrollMessageBox::information(
+        nullptr, "ERROR",
+        QString(tr("Prepare statement failed for (%1) error: %2"))
+            .arg(q1 + q2)
+            .arg(q.lastError().text()));
     return false;
   }
-  ScrollMessageBox::information(nullptr, "INFO", QString(tr("Prepared statement (%1)")).arg(q1+q2));
+  ScrollMessageBox::information(
+      nullptr, "INFO", QString(tr("Prepared statement (%1)")).arg(q1 + q2));
 
   bool useTransactions = m_db.driver()->hasFeature(QSqlDriver::Transactions);
-  if (useTransactions && !m_db.transaction())
-  {
-    ScrollMessageBox::information(nullptr, "ERROR", QString(tr("Failed to begin a transaction: %1")).arg(q.lastError().text()));
+  if (useTransactions && !m_db.transaction()) {
+    ScrollMessageBox::information(
+        nullptr, "ERROR",
+        QString(tr("Failed to begin a transaction: %1"))
+            .arg(q.lastError().text()));
     return false;
   }
 
@@ -1090,96 +1108,85 @@ bool StampDB::loadCSV(CSVReader& reader, const QString& tableName)
   QString errorMessage;
   int iRow;
   int csvKeyValue;
-  for (iRow=0; iRow < reader.countLines() || reader.readNextRecord(false); ++iRow)
-  {
+  for (iRow = 0; iRow < reader.countLines() || reader.readNextRecord(false);
+       ++iRow) {
     csvKeyValue = -1;
-    const CSVLine& readLine = reader.getLine(iRow);
-    if (csvKeyColumn >= 0 && csvKeyColumn < readLine.size())
-    {
-        const CSVColumn& c = readLine[csvKeyColumn];
-        QVariant v = c.toVariant();
-        bool ok = true;
-        csvKeyValue = v.toInt(&ok);
-        if (!ok) {
-            csvKeyValue = -1;
-        }
+    const CSVLine &readLine = reader.getLine(iRow);
+    if (csvKeyColumn >= 0 && csvKeyColumn < readLine.size()) {
+      const CSVColumn &c = readLine[csvKeyColumn];
+      QVariant v = c.toVariant();
+      bool ok = true;
+      csvKeyValue = v.toInt(&ok);
+      if (!ok) {
+        csvKeyValue = -1;
+      }
     }
 
-    for (int iCol=0; iCol<csvColumnIndex.size(); ++iCol)
-    {
+    for (int iCol = 0; iCol < csvColumnIndex.size(); ++iCol) {
       // Verify that a column in the DB has a corresponding entry
       // in the CSV file
-      if (0 <= csvColumnIndex[iCol])
-      {
+      if (0 <= csvColumnIndex[iCol]) {
         // verify that the CSV file has at least
         // that many columns in the current line.
-        if (csvColumnIndex[iCol] < readLine.size())
-        {
-          const CSVColumn& c = readLine[csvColumnIndex[iCol]];
+        if (csvColumnIndex[iCol] < readLine.size()) {
+          const CSVColumn &c = readLine[csvColumnIndex[iCol]];
           QVariant v = c.toVariant();
           // Insert this into the prepared statement
           q.bindValue(iCol, v);
-        }
-        else
-        {
+        } else {
           // Get a null value based on the expected type for the column.
           q.bindValue(iCol, reader.getNullVariant(csvColumnIndex[iCol]));
         }
-      }
-      else
-      {
+      } else {
         qDebug() << "E: " << iRow << " " << iCol;
       }
     }
-    if (csvKeyValue < 0 || !keys.contains(csvKeyValue))
-    {
-        if (q.exec())
-        {
-          ++numRowsAdded;
+    if (csvKeyValue < 0 || !keys.contains(csvKeyValue)) {
+      if (q.exec()) {
+        ++numRowsAdded;
+      } else {
+        if (numErrors > 0) {
+          errorMessage += "\n";
         }
-        else
-        {
-          if (numErrors > 0)
-          {
-            errorMessage += "\n";
-          }
-          errorMessage += QString("Row %1 : %2").arg(iRow).arg(q.lastError().text());
-          ++numErrors;
-        }
+        errorMessage +=
+            QString("Row %1 : %2").arg(iRow).arg(q.lastError().text());
+        ++numErrors;
+      }
     } else {
-        // TODO: use an update instead!
-        ++numRowsSkipped;
+      // TODO: use an update instead!
+      ++numRowsSkipped;
     }
   }
 
   QString status = "INFO";
-  sError = QString(tr("Added %1 / %2 rows into table %3")).arg(numRowsAdded).arg(iRow).arg(useTableName);
+  sError = QString(tr("Added %1 / %2 rows into table %3"))
+               .arg(numRowsAdded)
+               .arg(iRow)
+               .arg(useTableName);
 
   if (numRowsSkipped > 0) {
-      sError += "\n";
-      sError += QString(tr("Skipped %1 records.")).arg(numRowsSkipped);
-      status = "WARN";
+    sError += "\n";
+    sError += QString(tr("Skipped %1 records.")).arg(numRowsSkipped);
+    status = "WARN";
   }
 
-  if (numErrors > 0)
-  {
-      sError += "\n";
-      sError += QString(tr("Had %1 errors.")).arg(numErrors);
-      status = "ERROR";
+  if (numErrors > 0) {
+    sError += "\n";
+    sError += QString(tr("Had %1 errors.")).arg(numErrors);
+    status = "ERROR";
   }
 
-
-  if (useTransactions && !m_db.commit())
-  {
-    ScrollMessageBox::information(nullptr, "ERROR", QString(tr("Failed to begin end the transaction after reading %1 rows: %2")).arg(iRow).arg(q.lastError().text()));
+  if (useTransactions && !m_db.commit()) {
+    ScrollMessageBox::information(
+        nullptr, "ERROR",
+        QString(
+            tr("Failed to begin end the transaction after reading %1 rows: %2"))
+            .arg(iRow)
+            .arg(q.lastError().text()));
     return false;
-  }
-  else
-  {
+  } else {
     ScrollMessageBox::information(nullptr, status, sError);
   }
 
   return true;
 }
-
-

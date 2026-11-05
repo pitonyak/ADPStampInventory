@@ -1,12 +1,12 @@
 #ifndef CSVCONTROLLER_H
 #define CSVCONTROLLER_H
 
-#include <QObject>
-#include <QVariant>
-#include <QStringList>
-#include <QSet>
-#include <QList>
 #include "csvline.h"
+#include <QList>
+#include <QObject>
+#include <QSet>
+#include <QStringList>
+#include <QVariant>
 
 //**************************************************************************
 /*! \class CSVController
@@ -21,22 +21,41 @@
  *
  **************************************************************************/
 
-
-class CSVController : public QObject
-{
+class CSVController : public QObject {
   Q_OBJECT
 
-  Q_PROPERTY(QChar textDelimiter READ getTextDelimiter WRITE setTextDelimiter NOTIFY textDelimiterChanged RESET setTextDelimiter STORED false)
-  Q_PROPERTY(QChar columnDelimiter READ getColumnDelimiter WRITE setColumnDelimiter NOTIFY columnDelimiterChanged RESET setColumnDelimiter STORED false)
-  Q_PROPERTY(QChar recordDelimiter READ getRecordDelimiter WRITE setRecordDelimiter NOTIFY recordDelimiterChanged RESET setRecordDelimiter STORED false)
-  Q_PROPERTY(QChar commentCharacter READ getCommentCharacter WRITE setCommentCharacter NOTIFY commentCharacterChanged RESET setCommentCharacter STORED false)
-  Q_PROPERTY(QChar escapeCharacter READ getEscapeCharacter WRITE setEscapeCharacter NOTIFY escapeCharacterChanged RESET setEscapeCharacter STORED false)
-  Q_PROPERTY(bool  recordDelimiterIsDefault READ getRecordDelimiterIsDefault WRITE setRecordDelimiterIsDefault NOTIFY recordDelimiterIsDefaultChanged RESET setRecordDelimiterIsDefault STORED false)
-  Q_PROPERTY(bool useComments READ getUseComments WRITE setUseComments NOTIFY useCommentsChanged RESET setUseComments STORED false)
-  Q_PROPERTY(bool trimSpaces READ getTrimSpaces WRITE setTrimSpaces NOTIFY trimSpacesChanged RESET setTrimSpaces STORED false)
-  Q_PROPERTY(bool compactSpaces READ getCompactSpaces WRITE setCompactSpaces NOTIFY compactSpacesChanged RESET setCompactSpaces STORED false)
-  Q_PROPERTY(bool skipEmptyLines READ getSkipEmptyLines WRITE setSkipEmptyLines NOTIFY skipEmptyLinesChanged RESET setSkipEmptyLines STORED false)
-  Q_PROPERTY(bool mergeDelimiters READ getMergeDelimiters WRITE setMergeDelimiters NOTIFY mergeDelimitersChanged RESET setMergeDelimiters STORED false)
+  Q_PROPERTY(
+      QChar textDelimiter READ getTextDelimiter WRITE setTextDelimiter NOTIFY
+          textDelimiterChanged RESET setTextDelimiter STORED false)
+  Q_PROPERTY(
+      QChar columnDelimiter READ getColumnDelimiter WRITE setColumnDelimiter
+          NOTIFY columnDelimiterChanged RESET setColumnDelimiter STORED false)
+  Q_PROPERTY(
+      QChar recordDelimiter READ getRecordDelimiter WRITE setRecordDelimiter
+          NOTIFY recordDelimiterChanged RESET setRecordDelimiter STORED false)
+  Q_PROPERTY(
+      QChar commentCharacter READ getCommentCharacter WRITE setCommentCharacter
+          NOTIFY commentCharacterChanged RESET setCommentCharacter STORED false)
+  Q_PROPERTY(
+      QChar escapeCharacter READ getEscapeCharacter WRITE setEscapeCharacter
+          NOTIFY escapeCharacterChanged RESET setEscapeCharacter STORED false)
+  Q_PROPERTY(
+      bool recordDelimiterIsDefault READ getRecordDelimiterIsDefault WRITE
+          setRecordDelimiterIsDefault NOTIFY recordDelimiterIsDefaultChanged
+              RESET setRecordDelimiterIsDefault STORED false)
+  Q_PROPERTY(bool useComments READ getUseComments WRITE setUseComments NOTIFY
+                 useCommentsChanged RESET setUseComments STORED false)
+  Q_PROPERTY(bool trimSpaces READ getTrimSpaces WRITE setTrimSpaces NOTIFY
+                 trimSpacesChanged RESET setTrimSpaces STORED false)
+  Q_PROPERTY(
+      bool compactSpaces READ getCompactSpaces WRITE setCompactSpaces NOTIFY
+          compactSpacesChanged RESET setCompactSpaces STORED false)
+  Q_PROPERTY(
+      bool skipEmptyLines READ getSkipEmptyLines WRITE setSkipEmptyLines NOTIFY
+          skipEmptyLinesChanged RESET setSkipEmptyLines STORED false)
+  Q_PROPERTY(
+      bool mergeDelimiters READ getMergeDelimiters WRITE setMergeDelimiters
+          NOTIFY mergeDelimitersChanged RESET setMergeDelimiters STORED false)
 
 public:
   //**************************************************************************
@@ -62,8 +81,8 @@ public:
    * is a delimiter or if no delimiter is defined, comma is returned; otherwise,
    * the first column delimiter is returned.
    *
-   * Note that if there are no column delimiters, comma will not pass as a column delimiter,
-   * even though it is returned as the column delimiter.
+   * Note that if there are no column delimiters, comma will not pass as a
+   * column delimiter, even though it is returned as the column delimiter.
    *
    * \returns A column delimiter.
    *
@@ -86,7 +105,8 @@ public:
   QChar getRecordDelimiter() const;
 
   //**************************************************************************
-  /*! \brief Return the character used to start a line as a comment; defaults to "#".
+  /*! \brief Return the character used to start a line as a comment; defaults to
+   * "#".
    *
    * \returns Character used to start a line as a comment; defaults to "#".
    ***************************************************************************/
@@ -96,11 +116,12 @@ public:
   QChar getEscapeCharacter() const;
 
   //**************************************************************************
-  /*! \brief Determine if the default (CR or LF) are accepted as the record delimiter.
+  /*! \brief Determine if the default (CR or LF) are accepted as the record
+   * delimiter.
    *
-   * By default, 0x0D and 0x0A (CR and LF) are both accepted as a record delimiter.
-   * If this is set to False, then the single character set as the record delimiter
-   * is used instead.
+   * By default, 0x0D and 0x0A (CR and LF) are both accepted as a record
+   * delimiter. If this is set to False, then the single character set as the
+   * record delimiter is used instead.
    *
    * \returns True if the default record delimiter is used.
    ***************************************************************************/
@@ -112,14 +133,17 @@ public:
   /*! \returns If True, leading and trailing white space is removed. */
   bool getTrimSpaces() const;
 
-  /*! \returns If True, all internal sequences of white space are replaced by a single space. Leading and trailing white space is removed. */
+  /*! \returns If True, all internal sequences of white space are replaced by a
+   * single space. Leading and trailing white space is removed. */
   bool getCompactSpaces() const;
 
   /*! \returns If True, empty lines are ignored. */
   bool getSkipEmptyLines() const;
 
   //**************************************************************************
-  /*! \brief Not implemented, but, if True, multiple delimiters should be treated as a single delimiter. For example, if tab is the delimiter, four tabs is treated the same as one tab.
+  /*! \brief Not implemented, but, if True, multiple delimiters should be
+   * treated as a single delimiter. For example, if tab is the delimiter, four
+   * tabs is treated the same as one tab.
    *
    * \returns State of the merge delimiters flag.
    ***************************************************************************/
@@ -128,7 +152,8 @@ public:
   QList<QChar> getColumnDelimiters() const;
 
   //**************************************************************************
-  /*! \brief Checks to see if the parameter is the text delimiter (such as a double quote).
+  /*! \brief Checks to see if the parameter is the text delimiter (such as a
+   * double quote).
    *
    * \param [in] c Character to compare.
    * \returns true if c is the delimiter character.
@@ -136,10 +161,12 @@ public:
   bool isTextDelimiter(const QChar c) const;
 
   //**************************************************************************
-  /*! \brief Checks to see if the parameter is a column delimiter (such as a comma or tab).
+  /*! \brief Checks to see if the parameter is a column delimiter (such as a
+   * comma or tab).
    *
-   * If no column delimiter is set, then no character will ever cause true to be returned
-   * even though getColumnDelimiter() will return comma as a valid comma delimiter.
+   * If no column delimiter is set, then no character will ever cause true to be
+   * returned even though getColumnDelimiter() will return comma as a valid
+   * comma delimiter.
    *
    * \param [in] c Character to compare.
    * \returns true if c is a columnn delimiter.
@@ -147,14 +174,15 @@ public:
   bool isColumnDelimiter(const QChar c) const;
 
   //**************************************************************************
-  /*! \brief Renders a string safe by escaping escaping the escape character and double quoting quotes.
+  /*! \brief Renders a string safe by escaping escaping the escape character and
+   * double quoting quotes.
    *
    * Quotes are always doubled, should I escape them instead?
    *
    * \param [in] s String to modify.
    * \returns String with proper escaping and quoting.
    ***************************************************************************/
-  QString makeSafe(const QString& s) const;
+  QString makeSafe(const QString &s) const;
 
   //**************************************************************************
   /*! \brief Trim and compact spaces based on the current configuration.
@@ -165,13 +193,15 @@ public:
    * \sa CSVController::getTrimSpaces()
    * \sa CSVController::getCompactSpaces()
    ***************************************************************************/
-  QString reduceSpaces(const QString& s) const;
+  QString reduceSpaces(const QString &s) const;
 
   //**************************************************************************
-  /*! \brief Checks to see if the parameter is a record delimiter. This is either the character set by the user, or a CR or a LF if not set.
+  /*! \brief Checks to see if the parameter is a record delimiter. This is
+   * either the character set by the user, or a CR or a LF if not set.
    *
-   * Current implementation allows a single character record delimiter. If CR LF is used,
-   * this could introduce an empty record, but empty records are ignored, so this works.
+   * Current implementation allows a single character record delimiter. If CR LF
+   * is used, this could introduce an empty record, but empty records are
+   * ignored, so this works.
    *
    * \param [in] c Character to compare.
    * \returns true if c is a record delimitter.
@@ -180,7 +210,8 @@ public:
   bool isRecordDelimiter(const QChar c) const;
 
   //**************************************************************************
-  /*! Checks to see if the parameter is the comment character and comments are enabled.
+  /*! Checks to see if the parameter is the comment character and comments are
+   * enabled.
    *
    * \param [in] c Character to compare.
    * \returns true if c is the comment character and comments are enabled.
@@ -191,7 +222,8 @@ public:
   //**************************************************************************
   /*! \brief Checks to see if the parameter is white space that can be skipped.
    *
-   * This does not check if white space can be skipped. A tab is considered white space unless it has been set as a record or column delimiter.
+   * This does not check if white space can be skipped. A tab is considered
+   * white space unless it has been set as a record or column delimiter.
    * \param [in] c Character to compare.
    * \returns true if c white space that can be skipped.
    *
@@ -208,31 +240,34 @@ public:
   bool isEscapeCharacter(QChar c) const;
 
   //**************************************************************************
-  /*! \brief Checks to see if the parameter is a valid octal digit of 0, 1, 2, 3, 4, 5, 6, or 7.
+  /*! \brief Checks to see if the parameter is a valid octal digit of 0, 1, 2,
+   * 3, 4, 5, 6, or 7.
    *
    * \param [in] c Character to compare.
    * \returns true if c is a valid octal digit.
    *
    ***************************************************************************/
-  bool isOctDigit(const QChar& c) const;
+  bool isOctDigit(const QChar &c) const;
 
   //**************************************************************************
-  /*! \brief Checks to see if the parameter is a valid hex digit of 0-9, a-f, or A-F.
+  /*! \brief Checks to see if the parameter is a valid hex digit of 0-9, a-f, or
+   * A-F.
    *
    * \param [in] c Character to compare.
    * \returns true if c is a valid hex digit.
    *
    ***************************************************************************/
-  bool isHexDigit(const QChar& c) const;
+  bool isHexDigit(const QChar &c) const;
 
   //**************************************************************************
-  /*! \brief Converts a hex digit (0-9, a-f, or A-F) to the corresponding numeric values of 0-15.
+  /*! \brief Converts a hex digit (0-9, a-f, or A-F) to the corresponding
+   * numeric values of 0-15.
    *
    * \param [in] c Character to convert.
    * \returns Corresponding numeric value from the hex digit.
    *
    ***************************************************************************/
-  uint hexDigitToDecimalValue(const QChar& c) const;
+  uint hexDigitToDecimalValue(const QChar &c) const;
 
 signals:
   void textDelimiterChanged(QChar);
@@ -268,7 +303,8 @@ public slots:
   void setRecordDelimiter(const QChar delimiter = '\n');
 
   //**************************************************************************
-  /*! \brief Set the text delimiter used to surround text elements; usually a double quote.
+  /*! \brief Set the text delimiter used to surround text elements; usually a
+   * double quote.
    *
    * \param [in] delimiter New value for the record delimiter.
    *
@@ -276,7 +312,8 @@ public slots:
   void setTextDelimiter(const QChar delimiter = '"');
 
   //**************************************************************************
-  /*! \brief Set the character that indicates that a line is a comment. Ignored unless use comments is true. Default is '#'
+  /*! \brief Set the character that indicates that a line is a comment. Ignored
+   * unless use comments is true. Default is '#'
    *
    * \param [in] comment is the character that identifies a comment.
    *
@@ -286,7 +323,8 @@ public slots:
   //**************************************************************************
   /*! \brief Qualified text is almost always escaped with a backslash.
    *
-   * \param [in] escapeCharacter New character used to escape special characters.
+   * \param [in] escapeCharacter New character used to escape special
+   * characters.
    *
    ***************************************************************************/
   void setEscapeCharacter(const QChar escapeCharacter = '\\');
@@ -305,7 +343,7 @@ public slots:
    * \param [in] useComments
    *
    ***************************************************************************/
-  void setUseComments(const bool useComments=true);
+  void setUseComments(const bool useComments = true);
 
   //**************************************************************************
   /*! \brief Set if leading and trailing white space is removed.
@@ -323,18 +361,17 @@ public slots:
    ***************************************************************************/
   void setCompactSpaces(const bool compactSpaces = true);
 
-
   void setSkipEmptyLines(const bool skipEmptyLines = true);
   void setMergeDelimiters(const bool mergeDelimiters = false);
 
-  void addHeader(const QString& headerName, const QMetaType::Type headerType);
+  void addHeader(const QString &headerName, const QMetaType::Type headerType);
   QString getHeaderName(int i) const;
   QMetaType::Type getHeaderType(int i) const;
 
-  void setHeader(const CSVLine& header);
+  void setHeader(const CSVLine &header);
 
   /*! \returns The header element as set. */
-  const CSVLine& getHeader() const;
+  const CSVLine &getHeader() const;
 
   /*! Clear the columns from the header. */
   void clearHeader();
@@ -354,7 +391,7 @@ public slots:
    * \param [in] index Index of the line for which columns are counted.
    * \returns the numer of columns in the specified line.
    ***************************************************************************/
-  int countColumns(int index=0) const;
+  int countColumns(int index = 0) const;
 
   //**************************************************************************
   /*! \brief Return the specified line.
@@ -362,7 +399,7 @@ public slots:
    * \param [in] index Index of the line to return.
    * \returns Specified line.
    ***************************************************************************/
-  const CSVLine& getLine(int index=0) const;
+  const CSVLine &getLine(int index = 0) const;
 
 private:
   void setControllerDefaults();
@@ -377,7 +414,7 @@ private:
    *
    *
    ***************************************************************************/
-  bool  m_recordDelimiterIsDefault;
+  bool m_recordDelimiterIsDefault;
 
   bool m_useComments;
   bool m_trimSpaces;
@@ -393,70 +430,46 @@ protected:
   QSet<QChar> m_columnDelimiters;
 };
 
-
-inline bool CSVController::isTextDelimiter(const QChar c) const
-{
+inline bool CSVController::isTextDelimiter(const QChar c) const {
   return m_textDelimiter == c;
 }
 
-inline bool CSVController::isColumnDelimiter(const QChar c) const
-{
+inline bool CSVController::isColumnDelimiter(const QChar c) const {
   return m_columnDelimiters.contains(c);
 }
 
-inline bool CSVController::isRecordDelimiter(const QChar c) const
-{
-  if (m_recordDelimiterIsDefault)
-  {
+inline bool CSVController::isRecordDelimiter(const QChar c) const {
+  if (m_recordDelimiterIsDefault) {
     return (c.toLatin1() == 13 || c.toLatin1() == 10);
   }
   return (m_textDelimiter == c);
 }
 
-inline bool CSVController::isComment(const QChar c) const
-{
-  return  m_useComments && m_comment == c;
+inline bool CSVController::isComment(const QChar c) const {
+  return m_useComments && m_comment == c;
 }
 
-inline bool CSVController::isEscapeCharacter(QChar c) const
-{
+inline bool CSVController::isEscapeCharacter(QChar c) const {
   return m_escapeCharacter == c;
 }
 
-inline bool CSVController::isSkipWS(const QChar c) const
-{
-  return !isColumnDelimiter(c) && !isRecordDelimiter(c) && (c == ' ' || c == '\t');
+inline bool CSVController::isSkipWS(const QChar c) const {
+  return !isColumnDelimiter(c) && !isRecordDelimiter(c) &&
+         (c == ' ' || c == '\t');
 }
 
-inline void CSVController::clearHeader()
-{
-  m_header.clear();
-}
+inline void CSVController::clearHeader() { m_header.clear(); }
 
-inline void CSVController::clearLines()
-{
-  m_lines.clear();
-}
+inline void CSVController::clearLines() { m_lines.clear(); }
 
-inline int CSVController::countHeaderColumns() const
-{
-  return m_header.size();
-}
+inline int CSVController::countHeaderColumns() const { return m_header.size(); }
 
-inline int CSVController::countLines() const
-{
-  return m_lines.size();
-}
+inline int CSVController::countLines() const { return m_lines.size(); }
 
-inline bool CSVController::getMergeDelimiters() const
-{
+inline bool CSVController::getMergeDelimiters() const {
   return m_mergeDelimiters;
 }
 
-inline const CSVLine& CSVController::getHeader() const
-{
-  return m_header;
-}
-
+inline const CSVLine &CSVController::getHeader() const { return m_header; }
 
 #endif // CSVCONTROLLER_H

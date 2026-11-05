@@ -3,16 +3,14 @@
 
 #include <QDialog>
 
-class TableEditorGenericGrid : public QDialog
-{
+class TableEditorGenericGrid : public QDialog {
   Q_OBJECT
 public:
   explicit TableEditorGenericGrid(QWidget *parent = 0);
-  
+
 signals:
-  
+
 public slots:
-  
 };
 
 #endif // TABLEEDITORGENERICGRID_H

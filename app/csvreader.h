@@ -1,15 +1,16 @@
 #ifndef CSVREADER_H
 #define CSVREADER_H
 
-#include <QObject>
-#include <QStringList>
-#include <QList>
 #include "csvcontroller.h"
 #include "typemapper.h"
+#include <QList>
+#include <QObject>
+#include <QStringList>
 
 //**************************************************************************
 /*! \class CSVReader
- *  \brief Parse CSV files that are assumed to be small enough to fit into memory.
+ *  \brief Parse CSV files that are assumed to be small enough to fit into
+ * memory.
  *
  * \author Andrew Pitonyak
  * \copyright Andrew Pitonyak, but you may use without restriction.
@@ -21,8 +22,7 @@ class QIODevice;
 class QFile;
 class QTextStream;
 
-class CSVReader : public CSVController
-{
+class CSVReader : public CSVController {
   Q_OBJECT
 public:
   //**************************************************************************
@@ -32,46 +32,57 @@ public:
    *
    *
    **************************************************************************/
-  enum CSVReadMode {MODE_ERROR, MODE_RECORD_START, MODE_COLUMN_START, MODE_COLUMN_READ, MODE_COLUMN_END};
-
+  enum CSVReadMode {
+    MODE_ERROR,
+    MODE_RECORD_START,
+    MODE_COLUMN_START,
+    MODE_COLUMN_READ,
+    MODE_COLUMN_END
+  };
 
   explicit CSVReader(QObject *parent = nullptr);
-  explicit CSVReader(const TypeMapper::ColumnConversionPreferences preferences, QObject *parent = nullptr);
+  explicit CSVReader(const TypeMapper::ColumnConversionPreferences preferences,
+                     QObject *parent = nullptr);
   virtual ~CSVReader();
 
-  bool setStreamFromPath(const QString& fullPath);
+  bool setStreamFromPath(const QString &fullPath);
 
   //**************************************************************************
-  //! Begin Parsing CSV contained in a string assuming that everything is in this string.
+  //! Begin Parsing CSV contained in a string assuming that everything is in
+  //! this string.
   /*!
    * \param s The string to parse.
    * \returns True if initial parsing worked fine.
    *
    ***************************************************************************/
-  bool setStreamFromString(const QString& s);
+  bool setStreamFromString(const QString &s);
 
   //**************************************************************************
-  //! Begin Parsing CSV contained in the open device. It is assumed that readAll reads everything available.
+  //! Begin Parsing CSV contained in the open device. It is assumed that readAll
+  //! reads everything available.
   /*!
    * The current locale is assumed.
    * \param device Opened device containing the CSV to parse.
    * \returns True if initial parsing worked fine.
    *
    ***************************************************************************/
-  bool parseFromDevice(QIODevice* device);
+  bool parseFromDevice(QIODevice *device);
 
   //**************************************************************************
-  //! Begin Parsing CSV contained in the open device. It is assumed that readAll reads everything available.
+  //! Begin Parsing CSV contained in the open device. It is assumed that readAll
+  //! reads everything available.
   /*!
    * \param device Opened device containing the CSV to parse.
-   * \param codecName Name of the codec to use for parsing; so that other locales can be specified.
+   * \param codecName Name of the codec to use for parsing; so that other
+   * locales can be specified.
    * \returns True if initial parsing worked fine.
    *
    ***************************************************************************/
   // TODO: ?? bool parseFromDevice(QIODevice* device, const char* codecName);
 
   //**************************************************************************
-  //! Read the header record. Headers are always cleared before reading, so previous headers are lost.
+  //! Read the header record. Headers are always cleared before reading, so
+  //! previous headers are lost.
   /*!
    * \param clearBeforeReading If true, then lines are cleared before reading.
    * \returns True if no errors are encountered.
@@ -82,7 +93,8 @@ public:
   //**************************************************************************
   //! Read the next CSV record.
   /*!
-   * \param clearBeforeReading If true, lines are cleared before reading, otherwise, it is appended to the list.
+   * \param clearBeforeReading If true, lines are cleared before reading,
+   * otherwise, it is appended to the list.
    * \returns True if no errors are encountered.
    *
    ***************************************************************************/
@@ -91,12 +103,15 @@ public:
   //**************************************************************************
   //! Try to read the specified number of lines.
   /*!
-   * If the header has not yet been read, then the header is read before lines are read.
-   * Returns without error if no more characters are available for reading.
+   * If the header has not yet been read, then the header is read before lines
+   * are read. Returns without error if no more characters are available for
+   * reading.
    *
    * \param n Number of lines to try to reqad.
-   * \param clearBeforeReading If true, lines are cleared before reading, otherwise, it is appended to the list.
-   * \returns True if no errors are encountered. This does not imply that n lines were read.
+   * \param clearBeforeReading If true, lines are cleared before reading,
+   * otherwise, it is appended to the list.
+   * \returns True if no errors are encountered. This does not imply that n
+   * lines were read.
    *
    ***************************************************************************/
   bool readNLines(int n, bool clearBeforeReading = true);
@@ -105,7 +120,8 @@ public:
   bool moveToNextChar();
 
   //**************************************************************************
-  //! Check if a character is ready to be read. moveToNextChar must be called before the first character can be read.
+  //! Check if a character is ready to be read. moveToNextChar must be called
+  //! before the first character can be read.
   /*!
    * \returns True the buffer is ready to return a single character.
    *
@@ -113,7 +129,8 @@ public:
   bool hasChar();
 
   //**************************************************************************
-  //! Check if a previous character is set. This is useful to see if two double quotes are next to each other.
+  //! Check if a previous character is set. This is useful to see if two double
+  //! quotes are next to each other.
   /*!
    * \returns True if the "last character" property is set.
    *
@@ -146,33 +163,39 @@ public:
   bool canReadFromStream() const;
 
   //**************************************************************************
-  //! Reads at most maxlen characters from the stream, and returns the data read as a QString.
+  //! Reads at most maxlen characters from the stream, and returns the data read
+  //! as a QString.
   /*!
    * \param maxlen
-   * \returns Data read. If canReadFromStream returns false, than a NULL string is returned.
+   * \returns Data read. If canReadFromStream returns false, than a NULL string
+   * is returned.
    *
    ***************************************************************************/
-  QString read( qint64 maxlen );
+  QString read(qint64 maxlen);
 
   QString toString(bool brief = true) const;
 
   void setColumnType(const int i, const QMetaType::Type t);
 
-  QMetaType::Type guessColumnType(const int i, TypeMapper::ColumnConversionPreferences flags=TypeMapper::PreferNone);
+  QMetaType::Type guessColumnType(
+      const int i,
+      TypeMapper::ColumnConversionPreferences flags = TypeMapper::PreferNone);
 
   //**************************************************************************
-  //! Look at the read data and guess the column types based on the data present.
+  //! Look at the read data and guess the column types based on the data
+  //! present.
   /*!
    * \param flags
    *
    ***************************************************************************/
-  void guessColumnTypes(TypeMapper::ColumnConversionPreferences flags=TypeMapper::PreferNone);
+  void guessColumnTypes(
+      TypeMapper::ColumnConversionPreferences flags = TypeMapper::PreferNone);
 
   QMetaType::Type getColumnType(const int i) const;
   QVariant getNullVariant(const int i) const;
 
-  int getHeaderIndexByName(const QString& name) const;
-  QList<int> getHeaderIndexByName(const QStringList& names) const;
+  int getHeaderIndexByName(const QString &name) const;
+  QList<int> getHeaderIndexByName(const QStringList &names) const;
 
 signals:
 
@@ -180,10 +203,10 @@ public slots:
 
 private:
   /*! Define it but do not implement it to prevent this from being used. */
-  CSVReader(const CSVReader& reader);
+  CSVReader(const CSVReader &reader);
 
   /*! Define it but do not implement it to prevent this from being used. */
-  CSVReader& operator=(const CSVReader& reader);
+  CSVReader &operator=(const CSVReader &reader);
 
   void readerInitialization();
   void recordInitialization();
@@ -211,11 +234,11 @@ private:
    * \param columnValue last column value read.
    *
    ***************************************************************************/
-  void endOfColumnReached(const QString& columnValue, bool wasDelimited);
+  void endOfColumnReached(const QString &columnValue, bool wasDelimited);
 
   TypeMapper::ColumnConversionPreferences m_conversionPreferences;
 
-  QList<QMetaType::Type> * m_columnTypes;
+  QList<QMetaType::Type> *m_columnTypes;
 
   bool m_entireRecordRead;
   int m_numberOfRecordsRead;
@@ -225,22 +248,15 @@ private:
   int m_positionInBuffer;
   bool m_hasChar;
 
-  QFile* m_file;
-  QTextStream* m_inStream;
+  QFile *m_file;
+  QTextStream *m_inStream;
   bool m_hasLastChar;
   QChar m_lastChar;
   QString m_tempForTextStream;
 };
 
-inline bool CSVReader::hasLastChar() const
-{
-  return m_hasLastChar;
-}
+inline bool CSVReader::hasLastChar() const { return m_hasLastChar; }
 
-inline QChar CSVReader::lastChar() const
-{
-  return m_lastChar;
-}
-
+inline QChar CSVReader::lastChar() const { return m_lastChar; }
 
 #endif // CSVREADER_H

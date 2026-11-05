@@ -1,59 +1,62 @@
 #include "genericdatacollectiontabledialog.h"
-#include "genericdatacollectiontablemodel.h"
-#include "genericdatacollectionstablemodel.h"
-#include "linkbackfilterdelegate.h"
 #include "checkboxonlydelegate.h"
 #include "constants.h"
-#include "stampdb.h"
 #include "describesqltables.h"
+#include "genericdatacollectionstablemodel.h"
 #include "genericdatacollectionstableproxy.h"
+#include "genericdatacollectiontablemodel.h"
 #include "genericdatacollectiontablesearchdialog.h"
 #include "globals.h"
+#include "linkbackfilterdelegate.h"
+#include "stampdb.h"
 
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QFormLayout>
-#include <QTableView>
-#include <QLabel>
-#include <QPushButton>
-#include <QDialogButtonBox>
-#include <QSettings>
-#include <QItemSelection>
-#include <QSortFilterProxyModel>
-#include <QMessageBox>
-#include <QKeyEvent>
-#include <QHeaderView>
 #include <QDebug>
+#include <QDialogButtonBox>
+#include <QFormLayout>
+#include <QHBoxLayout>
+#include <QHeaderView>
+#include <QItemSelection>
+#include <QKeyEvent>
+#include <QLabel>
+#include <QMessageBox>
+#include <QPushButton>
 #include <QScopedPointer>
+#include <QSettings>
 #include <QShortcut>
+#include <QSortFilterProxyModel>
+#include <QTableView>
+#include <QVBoxLayout>
 
-GenericDataCollectionTableDialog::GenericDataCollectionTableDialog(const QString& tableName, GenericDataCollection &data, StampDB &db, DescribeSqlTables& schema, GenericDataCollections *tables, int defaultSourceId, QWidget *parent) :
-  QDialog(parent),
-  m_duplicateButton(nullptr), m_duplicateButtonIncrement(nullptr),
-  m_duplicateButtonAppendLowerA(nullptr), m_duplicateButtonAppendUpperA(nullptr),
-  m_addButton(nullptr), m_deleteButton(nullptr), m_undoButton(nullptr),
-  m_saveChangesButton(nullptr), m_searchButton(nullptr),
-  m_table(data), m_tables(tables), m_tableView(nullptr),
-  m_tableName(tableName), m_tableModel(nullptr),m_searchWindow(nullptr),
-  m_db(db), m_schema(schema), m_defaultSourceId(defaultSourceId)
-{
+GenericDataCollectionTableDialog::GenericDataCollectionTableDialog(
+    const QString &tableName, GenericDataCollection &data, StampDB &db,
+    DescribeSqlTables &schema, GenericDataCollections *tables,
+    int defaultSourceId, QWidget *parent)
+    : QDialog(parent), m_duplicateButton(nullptr),
+      m_duplicateButtonIncrement(nullptr),
+      m_duplicateButtonAppendLowerA(nullptr),
+      m_duplicateButtonAppendUpperA(nullptr), m_addButton(nullptr),
+      m_deleteButton(nullptr), m_undoButton(nullptr),
+      m_saveChangesButton(nullptr), m_searchButton(nullptr), m_table(data),
+      m_tables(tables), m_tableView(nullptr), m_tableName(tableName),
+      m_tableModel(nullptr), m_searchWindow(nullptr), m_db(db),
+      m_schema(schema), m_defaultSourceId(defaultSourceId) {
   buildDialog();
 }
 
-GenericDataCollectionTableDialog::~GenericDataCollectionTableDialog()
-{
-}
+GenericDataCollectionTableDialog::~GenericDataCollectionTableDialog() {}
 
-void GenericDataCollectionTableDialog::buildDialog()
-{
+void GenericDataCollectionTableDialog::buildDialog() {
   setWindowTitle(tr("Edit Table %1").arg(m_tableName));
   QVBoxLayout *vLayout;
   QHBoxLayout *hLayout;
 
   // Build the primary table.
   m_tableView = new QTableView();
-  Q_ASSERT_X(m_tables != nullptr, "GenericDataCollectionTableDialog::buildDialog()", "m_tables is null");
-  m_tableModel = new GenericDataCollectionsTableModel(true, m_tableName, *m_tables, m_schema, m_defaultSourceId);
+  Q_ASSERT_X(m_tables != nullptr,
+             "GenericDataCollectionTableDialog::buildDialog()",
+             "m_tables is null");
+  m_tableModel = new GenericDataCollectionsTableModel(
+      true, m_tableName, *m_tables, m_schema, m_defaultSourceId);
 
   // I could use QSortFilterProxyModel(this), but I want to use a
   // "natural" sort, which recognizes numbers.
@@ -70,26 +73,28 @@ void GenericDataCollectionTableDialog::buildDialog()
   qDebug() << "Num columns " << m_table.getPropertyNameCount();
 
   // Parameter sets the owning parent that will delete the delegate.
-  LinkBackFilterDelegate* delegate = new LinkBackFilterDelegate(m_tableView);
+  LinkBackFilterDelegate *delegate = new LinkBackFilterDelegate(m_tableView);
   delegate->setDateFormatString("MM/dd/yyyy");
   m_tableView->setItemDelegate(delegate);
 
   // For all columns that are boolean, use this delegate.
-  CheckBoxOnlyDelegate * cboDelegate = nullptr;
-  for (int i=m_table.getPropertyNameCount() - 1; i>=0; --i) {
+  CheckBoxOnlyDelegate *cboDelegate = nullptr;
+  for (int i = m_table.getPropertyNameCount() - 1; i >= 0; --i) {
     if (m_table.getPropertyTypeMeta(i) == QMetaType::Bool) {
       if (cboDelegate == nullptr) {
         cboDelegate = new CheckBoxOnlyDelegate(m_tableView);
       }
       m_tableView->setItemDelegateForColumn(i, cboDelegate);
     }
-    //qDebug(qPrintable(QString("%1 is type %2").arg(m_dataCollection.getPropertyName(i)).arg(m_dataCollection.getPropertyTypeMeta(i))));
+    // qDebug(qPrintable(QString("%1 is type
+    // %2").arg(m_dataCollection.getPropertyName(i)).arg(m_dataCollection.getPropertyTypeMeta(i))));
   }
 
   vLayout = new QVBoxLayout();
   vLayout->addWidget(m_tableView, 0);
 
-  QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal);
+  QDialogButtonBox *buttonBox = new QDialogButtonBox(
+      QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal);
   connect(buttonBox, SIGNAL(accepted()), this, SLOT(clickedOK()));
   connect(buttonBox, SIGNAL(rejected()), this, SLOT(clickedCancel()));
 
@@ -114,69 +119,113 @@ void GenericDataCollectionTableDialog::buildDialog()
   m_duplicateButtonAppendUpperA = new QPushButton(tr("Duplicate A"));
   hLayout->addWidget(m_duplicateButtonAppendUpperA);
 
-
   m_undoButton = new QPushButton(tr("Undo"));
   hLayout->addWidget(m_undoButton);
   m_saveChangesButton = new QPushButton(tr("Save Changes"));
   hLayout->addWidget(m_saveChangesButton);
   hLayout->addWidget(buttonBox);
 
+  connect(new QShortcut(tr("Ctrl+1"), this), SIGNAL(activated()), this,
+          SLOT(copyCellFrom1Above()));
+  connect(new QShortcut(tr("Ctrl+2"), this), SIGNAL(activated()), this,
+          SLOT(copyCellFrom2Above()));
+  connect(new QShortcut(tr("Ctrl+3"), this), SIGNAL(activated()), this,
+          SLOT(copyCellFrom3Above()));
+  connect(new QShortcut(tr("Ctrl+4"), this), SIGNAL(activated()), this,
+          SLOT(copyCellFrom4Above()));
+  connect(new QShortcut(tr("Ctrl+5"), this), SIGNAL(activated()), this,
+          SLOT(copyCellFrom5Above()));
+  connect(new QShortcut(tr("Ctrl+6"), this), SIGNAL(activated()), this,
+          SLOT(copyCellFrom6Above()));
+  connect(new QShortcut(tr("Ctrl+7"), this), SIGNAL(activated()), this,
+          SLOT(copyCellFrom7Above()));
+  connect(new QShortcut(tr("Ctrl+8"), this), SIGNAL(activated()), this,
+          SLOT(copyCellFrom8Above()));
+  connect(new QShortcut(tr("Ctrl+9"), this), SIGNAL(activated()), this,
+          SLOT(copyCellFrom9Above()));
+  connect(new QShortcut(tr("Ctrl+0"), this), SIGNAL(activated()), this,
+          SLOT(copyCellFrom10Above()));
 
-  connect(new QShortcut(tr("Ctrl+1"), this), SIGNAL(activated()), this, SLOT(copyCellFrom1Above()));
-  connect(new QShortcut(tr("Ctrl+2"), this), SIGNAL(activated()), this, SLOT(copyCellFrom2Above()));
-  connect(new QShortcut(tr("Ctrl+3"), this), SIGNAL(activated()), this, SLOT(copyCellFrom3Above()));
-  connect(new QShortcut(tr("Ctrl+4"), this), SIGNAL(activated()), this, SLOT(copyCellFrom4Above()));
-  connect(new QShortcut(tr("Ctrl+5"), this), SIGNAL(activated()), this, SLOT(copyCellFrom5Above()));
-  connect(new QShortcut(tr("Ctrl+6"), this), SIGNAL(activated()), this, SLOT(copyCellFrom6Above()));
-  connect(new QShortcut(tr("Ctrl+7"), this), SIGNAL(activated()), this, SLOT(copyCellFrom7Above()));
-  connect(new QShortcut(tr("Ctrl+8"), this), SIGNAL(activated()), this, SLOT(copyCellFrom8Above()));
-  connect(new QShortcut(tr("Ctrl+9"), this), SIGNAL(activated()), this, SLOT(copyCellFrom9Above()));
-  connect(new QShortcut(tr("Ctrl+0"), this), SIGNAL(activated()), this, SLOT(copyCellFrom10Above()));
+  connect(new QShortcut(tr("Ctrl+Shift+1"), this), SIGNAL(activated()), this,
+          SLOT(copyCellFrom1Below()));
+  connect(new QShortcut(tr("Ctrl+Shift+2"), this), SIGNAL(activated()), this,
+          SLOT(copyCellFrom2Below()));
+  connect(new QShortcut(tr("Ctrl+Shift+3"), this), SIGNAL(activated()), this,
+          SLOT(copyCellFrom3Below()));
+  connect(new QShortcut(tr("Ctrl+Shift+4"), this), SIGNAL(activated()), this,
+          SLOT(copyCellFrom4Below()));
+  connect(new QShortcut(tr("Ctrl+Shift+5"), this), SIGNAL(activated()), this,
+          SLOT(copyCellFrom5Below()));
+  connect(new QShortcut(tr("Ctrl+Shift+6"), this), SIGNAL(activated()), this,
+          SLOT(copyCellFrom6Below()));
+  connect(new QShortcut(tr("Ctrl+Shift+7"), this), SIGNAL(activated()), this,
+          SLOT(copyCellFrom7Below()));
+  connect(new QShortcut(tr("Ctrl+Shift+8"), this), SIGNAL(activated()), this,
+          SLOT(copyCellFrom8Below()));
+  connect(new QShortcut(tr("Ctrl+Shift+9"), this), SIGNAL(activated()), this,
+          SLOT(copyCellFrom9Below()));
+  connect(new QShortcut(tr("Ctrl+Shift+0"), this), SIGNAL(activated()), this,
+          SLOT(copyCellFrom10Below()));
 
-  connect(new QShortcut(tr("Ctrl+Shift+1"), this), SIGNAL(activated()), this, SLOT(copyCellFrom1Below()));
-  connect(new QShortcut(tr("Ctrl+Shift+2"), this), SIGNAL(activated()), this, SLOT(copyCellFrom2Below()));
-  connect(new QShortcut(tr("Ctrl+Shift+3"), this), SIGNAL(activated()), this, SLOT(copyCellFrom3Below()));
-  connect(new QShortcut(tr("Ctrl+Shift+4"), this), SIGNAL(activated()), this, SLOT(copyCellFrom4Below()));
-  connect(new QShortcut(tr("Ctrl+Shift+5"), this), SIGNAL(activated()), this, SLOT(copyCellFrom5Below()));
-  connect(new QShortcut(tr("Ctrl+Shift+6"), this), SIGNAL(activated()), this, SLOT(copyCellFrom6Below()));
-  connect(new QShortcut(tr("Ctrl+Shift+7"), this), SIGNAL(activated()), this, SLOT(copyCellFrom7Below()));
-  connect(new QShortcut(tr("Ctrl+Shift+8"), this), SIGNAL(activated()), this, SLOT(copyCellFrom8Below()));
-  connect(new QShortcut(tr("Ctrl+Shift+9"), this), SIGNAL(activated()), this, SLOT(copyCellFrom9Below()));
-  connect(new QShortcut(tr("Ctrl+Shift+0"), this), SIGNAL(activated()), this, SLOT(copyCellFrom10Below()));
+  connect(new QShortcut(tr("Alt+1"), this), SIGNAL(activated()), this,
+          SLOT(copyCellsFrom1Above()));
+  connect(new QShortcut(tr("Alt+2"), this), SIGNAL(activated()), this,
+          SLOT(copyCellsFrom2Above()));
+  connect(new QShortcut(tr("Alt+3"), this), SIGNAL(activated()), this,
+          SLOT(copyCellsFrom3Above()));
+  connect(new QShortcut(tr("Alt+4"), this), SIGNAL(activated()), this,
+          SLOT(copyCellsFrom4Above()));
+  connect(new QShortcut(tr("Alt+5"), this), SIGNAL(activated()), this,
+          SLOT(copyCellsFrom5Above()));
+  connect(new QShortcut(tr("Alt+6"), this), SIGNAL(activated()), this,
+          SLOT(copyCellsFrom6Above()));
+  connect(new QShortcut(tr("Alt+7"), this), SIGNAL(activated()), this,
+          SLOT(copyCellsFrom7Above()));
+  connect(new QShortcut(tr("Alt+8"), this), SIGNAL(activated()), this,
+          SLOT(copyCellsFrom8Above()));
+  connect(new QShortcut(tr("Alt+9"), this), SIGNAL(activated()), this,
+          SLOT(copyCellsFrom9Above()));
+  connect(new QShortcut(tr("Alt+0"), this), SIGNAL(activated()), this,
+          SLOT(copyCellsFrom10Above()));
 
-  connect(new QShortcut(tr("Alt+1"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom1Above()));
-  connect(new QShortcut(tr("Alt+2"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom2Above()));
-  connect(new QShortcut(tr("Alt+3"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom3Above()));
-  connect(new QShortcut(tr("Alt+4"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom4Above()));
-  connect(new QShortcut(tr("Alt+5"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom5Above()));
-  connect(new QShortcut(tr("Alt+6"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom6Above()));
-  connect(new QShortcut(tr("Alt+7"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom7Above()));
-  connect(new QShortcut(tr("Alt+8"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom8Above()));
-  connect(new QShortcut(tr("Alt+9"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom9Above()));
-  connect(new QShortcut(tr("Alt+0"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom10Above()));
+  connect(new QShortcut(tr("Alt+Shift+1"), this), SIGNAL(activated()), this,
+          SLOT(copyCellsFrom1Below()));
+  connect(new QShortcut(tr("Alt+Shift+2"), this), SIGNAL(activated()), this,
+          SLOT(copyCellsFrom2Below()));
+  connect(new QShortcut(tr("Alt+Shift+3"), this), SIGNAL(activated()), this,
+          SLOT(copyCellsFrom3Below()));
+  connect(new QShortcut(tr("Alt+Shift+4"), this), SIGNAL(activated()), this,
+          SLOT(copyCellsFrom4Below()));
+  connect(new QShortcut(tr("Alt+Shift+5"), this), SIGNAL(activated()), this,
+          SLOT(copyCellsFrom5Below()));
+  connect(new QShortcut(tr("Alt+Shift+6"), this), SIGNAL(activated()), this,
+          SLOT(copyCellsFrom6Below()));
+  connect(new QShortcut(tr("Alt+Shift+7"), this), SIGNAL(activated()), this,
+          SLOT(copyCellsFrom7Below()));
+  connect(new QShortcut(tr("Alt+Shift+8"), this), SIGNAL(activated()), this,
+          SLOT(copyCellsFrom8Below()));
+  connect(new QShortcut(tr("Alt+Shift+9"), this), SIGNAL(activated()), this,
+          SLOT(copyCellsFrom9Below()));
+  connect(new QShortcut(tr("Alt+Shift+0"), this), SIGNAL(activated()), this,
+          SLOT(copyCellsFrom10Below()));
 
-  connect(new QShortcut(tr("Alt+Shift+1"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom1Below()));
-  connect(new QShortcut(tr("Alt+Shift+2"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom2Below()));
-  connect(new QShortcut(tr("Alt+Shift+3"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom3Below()));
-  connect(new QShortcut(tr("Alt+Shift+4"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom4Below()));
-  connect(new QShortcut(tr("Alt+Shift+5"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom5Below()));
-  connect(new QShortcut(tr("Alt+Shift+6"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom6Below()));
-  connect(new QShortcut(tr("Alt+Shift+7"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom7Below()));
-  connect(new QShortcut(tr("Alt+Shift+8"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom8Below()));
-  connect(new QShortcut(tr("Alt+Shift+9"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom9Below()));
-  connect(new QShortcut(tr("Alt+Shift+0"), this), SIGNAL(activated()), this, SLOT(copyCellsFrom10Below()));
-
-  connect(new QShortcut(tr("Ctrl+Shift+D"), this), SIGNAL(activated()), this, SLOT(copyCellFrom1Above()));
-  connect(new QShortcut(tr("Ctrl+D"), this), SIGNAL(activated()), this, SLOT(copyCellFrom1Below()));
-  connect(new QShortcut(tr("Ctrl+Z"), this), SIGNAL(activated()), this, SLOT(undoChange()));
+  connect(new QShortcut(tr("Ctrl+Shift+D"), this), SIGNAL(activated()), this,
+          SLOT(copyCellFrom1Above()));
+  connect(new QShortcut(tr("Ctrl+D"), this), SIGNAL(activated()), this,
+          SLOT(copyCellFrom1Below()));
+  connect(new QShortcut(tr("Ctrl+Z"), this), SIGNAL(activated()), this,
+          SLOT(undoChange()));
 
   connect(m_addButton, SIGNAL(clicked()), this, SLOT(addRow()));
   connect(m_deleteButton, SIGNAL(clicked()), this, SLOT(deleteRow()));
   connect(m_duplicateButton, SIGNAL(clicked()), this, SLOT(duplicateRow()));
-  connect(m_duplicateButtonIncrement, SIGNAL(clicked()), this, SLOT(duplicateRowAutoIncrement()));
+  connect(m_duplicateButtonIncrement, SIGNAL(clicked()), this,
+          SLOT(duplicateRowAutoIncrement()));
 
-  connect(m_duplicateButtonAppendLowerA, SIGNAL(clicked()), this, SLOT(duplicateRowAddLowerA()));
-  connect(m_duplicateButtonAppendUpperA, SIGNAL(clicked()), this, SLOT(duplicateRowAddUpperA()));
+  connect(m_duplicateButtonAppendLowerA, SIGNAL(clicked()), this,
+          SLOT(duplicateRowAddLowerA()));
+  connect(m_duplicateButtonAppendUpperA, SIGNAL(clicked()), this,
+          SLOT(duplicateRowAddUpperA()));
 
   connect(m_undoButton, SIGNAL(clicked()), this, SLOT(undoChange()));
   connect(m_saveChangesButton, SIGNAL(clicked()), this, SLOT(saveChanges()));
@@ -186,43 +235,45 @@ void GenericDataCollectionTableDialog::buildDialog()
   setLayout(vLayout);
 
   restoreState();
-  connect(m_tableView->selectionModel(), SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)), this, SLOT(selectionChanged(const QItemSelection &, const QItemSelection &)));
+  connect(
+      m_tableView->selectionModel(),
+      SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)),
+      this,
+      SLOT(selectionChanged(const QItemSelection &, const QItemSelection &)));
   enableButtons();
 }
 
-void GenericDataCollectionTableDialog::selectionChanged( const QItemSelection & selected, const QItemSelection & deselected )
-{
+void GenericDataCollectionTableDialog::selectionChanged(
+    const QItemSelection &selected, const QItemSelection &deselected) {
   (void)selected;
   (void)deselected;
   enableButtons();
 }
 
-int GenericDataCollectionTableDialog::getSelectedRow() const
-{
-  return (m_tableModel != nullptr && m_tableView != nullptr && m_tableModel->rowCount() > 0) ? m_tableView->currentIndex().row() : -1;
+int GenericDataCollectionTableDialog::getSelectedRow() const {
+  return (m_tableModel != nullptr && m_tableView != nullptr &&
+          m_tableModel->rowCount() > 0)
+             ? m_tableView->currentIndex().row()
+             : -1;
 }
 
-
-bool GenericDataCollectionTableDialog::isRowSelected() const
-{
+bool GenericDataCollectionTableDialog::isRowSelected() const {
   return getSelectedRow() >= 0;
 }
 
-void GenericDataCollectionTableDialog::disableButtons()
-{
-    m_duplicateButton->setEnabled(false);
-    m_duplicateButtonIncrement->setEnabled(false);
-    m_duplicateButtonAppendLowerA->setEnabled(false);
-    m_duplicateButtonAppendUpperA->setEnabled(false);
-    m_addButton->setEnabled(false);
-    m_deleteButton->setEnabled(false);
-    m_undoButton->setEnabled(false);
-    m_saveChangesButton->setEnabled(false);
-    m_searchButton->setEnabled(false);
+void GenericDataCollectionTableDialog::disableButtons() {
+  m_duplicateButton->setEnabled(false);
+  m_duplicateButtonIncrement->setEnabled(false);
+  m_duplicateButtonAppendLowerA->setEnabled(false);
+  m_duplicateButtonAppendUpperA->setEnabled(false);
+  m_addButton->setEnabled(false);
+  m_deleteButton->setEnabled(false);
+  m_undoButton->setEnabled(false);
+  m_saveChangesButton->setEnabled(false);
+  m_searchButton->setEnabled(false);
 }
 
-void GenericDataCollectionTableDialog::enableButtons()
-{
+void GenericDataCollectionTableDialog::enableButtons() {
   bool somethingSelected = isRowSelected();
   m_duplicateButton->setEnabled(somethingSelected);
   m_duplicateButtonIncrement->setEnabled(somethingSelected);
@@ -235,113 +286,109 @@ void GenericDataCollectionTableDialog::enableButtons()
   m_searchButton->setEnabled(true);
 }
 
-void GenericDataCollectionTableDialog::addRow()
-{
+void GenericDataCollectionTableDialog::addRow() {
   m_tableModel->addRow();
   enableButtons();
 }
 
-void GenericDataCollectionTableDialog::deleteRow()
-{
+void GenericDataCollectionTableDialog::deleteRow() {
   QModelIndexList proxyList = m_tableView->selectionModel()->selectedIndexes();
   QModelIndexList mappedList;
-  for (int i=0; i<proxyList.size(); ++i) {
+  for (int i = 0; i < proxyList.size(); ++i) {
     mappedList.append(m_proxyModel->mapToSource(proxyList.at(i)));
   }
   m_tableModel->deleteRows(mappedList);
   enableButtons();
 }
 
-void GenericDataCollectionTableDialog::undoChange()
-{
+void GenericDataCollectionTableDialog::undoChange() {
   m_tableModel->undoChange();
   enableButtons();
 }
 
-void GenericDataCollectionTableDialog::saveChanges()
-{
+void GenericDataCollectionTableDialog::saveChanges() {
   disableButtons();
-  m_tableModel->saveTrackedChanges(m_tableName, m_table, m_db.getDB(), m_schema);
+  m_tableModel->saveTrackedChanges(m_tableName, m_table, m_db.getDB(),
+                                   m_schema);
   enableButtons();
 }
 
-void GenericDataCollectionTableDialog::duplicateRow()
-{
+void GenericDataCollectionTableDialog::duplicateRow() {
   // autoIncrement
   privateRowDuplicator(false);
 }
 
-void GenericDataCollectionTableDialog::duplicateRowAutoIncrement()
-{
+void GenericDataCollectionTableDialog::duplicateRowAutoIncrement() {
   // autoIncrement, appendChar, charToAppend
   privateRowDuplicator(true, false, 'a');
 }
 
-void GenericDataCollectionTableDialog::duplicateRowAddLowerA()
-{
+void GenericDataCollectionTableDialog::duplicateRowAddLowerA() {
   // autoIncrement, appendChar, charToAppend
   privateRowDuplicator(false, true, 'a');
 }
 
-void GenericDataCollectionTableDialog::duplicateRowAddUpperA()
-{
+void GenericDataCollectionTableDialog::duplicateRowAddUpperA() {
   // autoIncrement, appendChar, charToAppend
   privateRowDuplicator(false, true, 'A');
 }
 
-void GenericDataCollectionTableDialog::incrementCell(const int incrementValue)
-{
+void GenericDataCollectionTableDialog::incrementCell(const int incrementValue) {
   QModelIndex index = m_tableView->selectionModel()->currentIndex();
   QModelIndex mappedIndex = m_proxyModel->mapToSource(index);
   m_tableModel->incrementCell(mappedIndex, incrementValue);
   enableButtons();
 }
 
-void GenericDataCollectionTableDialog::copyCells(const int rowsDown, const int numCells)
-{
+void GenericDataCollectionTableDialog::copyCells(const int rowsDown,
+                                                 const int numCells) {
   if (rowsDown == 0 || numCells < 1) {
-    qDebug() << "GenericDataCollectionTableDialog::copyCells rowsDown:" << rowsDown << " numCells:" << numCells;
+    qDebug() << "GenericDataCollectionTableDialog::copyCells rowsDown:"
+             << rowsDown << " numCells:" << numCells;
     return;
   }
 
   QModelIndex firstToIndex = m_tableView->selectionModel()->currentIndex();
   int direction = (rowsDown < 0) ? 1 : -1;
-  for (int i=0; i < numCells; ++i)
-  {
+  for (int i = 0; i < numCells; ++i) {
     int destinationRow = firstToIndex.row() + i * direction;
-    QModelIndex fromIndex = m_proxyModel->getIndexByRowCol(destinationRow + rowsDown, firstToIndex.column());
-    QModelIndex toIndex = m_proxyModel->getIndexByRowCol(destinationRow, firstToIndex.column());
+    QModelIndex fromIndex = m_proxyModel->getIndexByRowCol(
+        destinationRow + rowsDown, firstToIndex.column());
+    QModelIndex toIndex =
+        m_proxyModel->getIndexByRowCol(destinationRow, firstToIndex.column());
 
     qDebug() << "To (" << toIndex.row() << ", " << toIndex.column() << ")";
-    qDebug() << "From (" << fromIndex.row() << ", " << fromIndex.column() << ")";
+    qDebug() << "From (" << fromIndex.row() << ", " << fromIndex.column()
+             << ")";
 
     QModelIndex toMappedIndex = m_proxyModel->mapToSource(toIndex);
     QModelIndex fromMappedIndex = m_proxyModel->mapToSource(fromIndex);
 
-    qDebug() << "Mapped To (" << toMappedIndex.row() << ", " << toMappedIndex.column() << ")";
-    qDebug() << "Mapped From (" << fromMappedIndex.row() << ", " << fromMappedIndex.column() << ")";
+    qDebug() << "Mapped To (" << toMappedIndex.row() << ", "
+             << toMappedIndex.column() << ")";
+    qDebug() << "Mapped From (" << fromMappedIndex.row() << ", "
+             << fromMappedIndex.column() << ")";
 
     m_tableModel->copyCell(fromMappedIndex, toMappedIndex);
   }
   enableButtons();
 }
 
-void GenericDataCollectionTableDialog::privateRowDuplicator(const bool autoIncrement, const bool appendChar, const char charToAppend)
-{
+void GenericDataCollectionTableDialog::privateRowDuplicator(
+    const bool autoIncrement, const bool appendChar, const char charToAppend) {
   QModelIndexList proxyList = m_tableView->selectionModel()->selectedIndexes();
   QModelIndexList mappedList;
-  for (int i=0; i<proxyList.size(); ++i) {
+  for (int i = 0; i < proxyList.size(); ++i) {
     mappedList.append(m_proxyModel->mapToSource(proxyList.at(i)));
   }
-  QList<int> addedIds = m_tableModel->duplicateRows(mappedList, autoIncrement, appendChar, charToAppend);
-  if (!addedIds.isEmpty())
-  {
+  QList<int> addedIds = m_tableModel->duplicateRows(mappedList, autoIncrement,
+                                                    appendChar, charToAppend);
+  if (!addedIds.isEmpty()) {
     int row = m_tableModel->getIndexOf(addedIds.first());
     if (row >= 0) {
       // Select the first inserted Id.
       QModelIndex tableIndex = m_tableModel->getIndexByRowCol(row, 1);
-      if (tableIndex.isValid())
-      {
+      if (tableIndex.isValid()) {
         selectCell(m_proxyModel->mapFromSource(tableIndex));
       }
     }
@@ -349,139 +396,155 @@ void GenericDataCollectionTableDialog::privateRowDuplicator(const bool autoIncre
   enableButtons();
 }
 
-void GenericDataCollectionTableDialog::selectCell(const QModelIndex& index)
-{
-  if (index.isValid())
-  {
+void GenericDataCollectionTableDialog::selectCell(const QModelIndex &index) {
+  if (index.isValid()) {
     m_tableView->scrollTo(index);
-    m_tableView->selectionModel()->select(index, QItemSelectionModel::ClearAndSelect);
+    m_tableView->selectionModel()->select(index,
+                                          QItemSelectionModel::ClearAndSelect);
     m_tableView->setCurrentIndex(index);
   }
 }
 
-void GenericDataCollectionTableDialog::displayHelp()
-{
-  QMessageBox::about(this, "Supported Keys", "F1 - Help\nF2 - Edit cell\nF3 - Find Next\nShift+F3 - Find Previous\nF10 - Increment current cell\nShift+F10 - Decrement current cell\nCtrl+n - Copy one cell from n above\nAlt+n - Copy n cells from above\nShift+Ctrl+n - Copy one cell from n below\nAlt+Shift+n - Copy n cells from below\nCtrl+D - Copy value from column above\nCtrl+d - Copy value from column below\nESC - Cancel");
+void GenericDataCollectionTableDialog::displayHelp() {
+  QMessageBox::about(
+      this, "Supported Keys",
+      "F1 - Help\nF2 - Edit cell\nF3 - Find Next\nShift+F3 - Find "
+      "Previous\nF10 - Increment current cell\nShift+F10 - Decrement current "
+      "cell\nCtrl+n - Copy one cell from n above\nAlt+n - Copy n cells from "
+      "above\nShift+Ctrl+n - Copy one cell from n below\nAlt+Shift+n - Copy n "
+      "cells from below\nCtrl+D - Copy value from column above\nCtrl+d - Copy "
+      "value from column below\nESC - Cancel");
 }
 
-void GenericDataCollectionTableDialog::restoreState()
-{
+void GenericDataCollectionTableDialog::restoreState() {
   QScopedPointer<QSettings> pSettings(getQSettings());
-  restoreGeometry(pSettings->value(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgGeometry, m_tableName)).toByteArray());
-  QString s = pSettings->value(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgColumnWidths, m_tableName)).toString();
-  if (s.length() > 0)
-  {
+  restoreGeometry(pSettings
+                      ->value(QString("%1_%2").arg(
+                          Constants::Settings_GenericDataCollectionDlgGeometry,
+                          m_tableName))
+                      .toByteArray());
+  QString s = pSettings
+                  ->value(QString("%1_%2").arg(
+                      Constants::Settings_GenericDataCollectionDlgColumnWidths,
+                      m_tableName))
+                  .toString();
+  if (s.length() > 0) {
     QStringList list = s.split(',');
     bool ok = true;
-    for (int i=0; i<list.size() && i<m_table.getPropertyNameCount(); ++i)
-    {
+    for (int i = 0; i < list.size() && i < m_table.getPropertyNameCount();
+         ++i) {
       int width = list[i].toInt(&ok);
-      if (ok && width > 0)
-      {
+      if (ok && width > 0) {
         m_tableView->setColumnWidth(i, width);
       }
     }
   }
   // Restore sort column order.
-  s = pSettings->value(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgSorting, m_tableName)).toString();
-  if (s.length() > 0)
-  {
+  s = pSettings
+          ->value(QString("%1_%2").arg(
+              Constants::Settings_GenericDataCollectionDlgSorting, m_tableName))
+          .toString();
+  if (s.length() > 0) {
     QStringList list = s.split(',');
     if (list.size() == 2) {
       bool ok = true;
       int sortColumn = list[0].toInt(&ok);
       if (ok) {
-        //Qt:SortOrder order = list[0].toInt(&ok);
+        // Qt:SortOrder order = list[0].toInt(&ok);
         int order = list[0].toInt(&ok);
         if (ok) {
-          m_tableView->horizontalHeader()->setSortIndicator(sortColumn, (Qt::SortOrder) order);
+          m_tableView->horizontalHeader()->setSortIndicator(
+              sortColumn, (Qt::SortOrder)order);
         }
       }
     }
   }
-
 }
 
-void GenericDataCollectionTableDialog::saveState()
-{
-  // This code used to live in the desructor, but, sometime around September 2014, this code
-  // started failing in the destructor because  the the m_dataCollection no longer contained data
-  // by the time that this objects destructor was called. So, now this is called before the destructor.
-  // save the dialog state.
+void GenericDataCollectionTableDialog::saveState() {
+  // This code used to live in the desructor, but, sometime around September
+  // 2014, this code started failing in the destructor because  the the
+  // m_dataCollection no longer contained data by the time that this objects
+  // destructor was called. So, now this is called before the destructor. save
+  // the dialog state.
   QScopedPointer<QSettings> pSettings(getQSettings());
-  pSettings->setValue(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgGeometry, m_tableName), saveGeometry());
+  pSettings->setValue(
+      QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgGeometry,
+                           m_tableName),
+      saveGeometry());
 
-    if (m_tableView != nullptr)
-    {
-      QString s = "";
+  if (m_tableView != nullptr) {
+    QString s = "";
 
-      if (m_tableView->isSortingEnabled()) {
-        int order = m_tableView->horizontalHeader()->sortIndicatorOrder();
-        int sortColumn = m_tableView->horizontalHeader()->sortIndicatorSection();
-        s = QString("%1,%2").arg(sortColumn).arg(order);
-      }
-      pSettings->setValue(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgSorting, m_tableName), s);
-      s = "";
-
-      for (int i=0; i<m_table.getPropertyNameCount(); ++i)
-      {
-        //qDebug(qPrintable(QString("(%1)(%2)").arg(i, m_tableView->columnWidth(i))));
-        if (s.length() > 0)
-        {
-          s.append(',');
-        }
-        s.append(QString("%1").arg(m_tableView->columnWidth(i)));
-      }
-      qDebug() << "(" << m_tableName << ")(" << s << ")";
-      pSettings->setValue(QString("%1_%2").arg(Constants::Settings_GenericDataCollectionDlgColumnWidths, m_tableName), s);
+    if (m_tableView->isSortingEnabled()) {
+      int order = m_tableView->horizontalHeader()->sortIndicatorOrder();
+      int sortColumn = m_tableView->horizontalHeader()->sortIndicatorSection();
+      s = QString("%1,%2").arg(sortColumn).arg(order);
     }
+    pSettings->setValue(
+        QString("%1_%2").arg(
+            Constants::Settings_GenericDataCollectionDlgSorting, m_tableName),
+        s);
+    s = "";
+
+    for (int i = 0; i < m_table.getPropertyNameCount(); ++i) {
+      // qDebug(qPrintable(QString("(%1)(%2)").arg(i,
+      // m_tableView->columnWidth(i))));
+      if (s.length() > 0) {
+        s.append(',');
+      }
+      s.append(QString("%1").arg(m_tableView->columnWidth(i)));
+    }
+    qDebug() << "(" << m_tableName << ")(" << s << ")";
+    pSettings->setValue(
+        QString("%1_%2").arg(
+            Constants::Settings_GenericDataCollectionDlgColumnWidths,
+            m_tableName),
+        s);
+  }
 }
 
-void GenericDataCollectionTableDialog::clickedOK()
-{
+void GenericDataCollectionTableDialog::clickedOK() {
   saveState();
   saveChanges();
   accept();
 }
 
-void GenericDataCollectionTableDialog::keyPressEvent(QKeyEvent* evt)
-{
+void GenericDataCollectionTableDialog::keyPressEvent(QKeyEvent *evt) {
   bool handled = false;
 
-  // TODO: Can I just use a QShortCut to associate hot keys to my desired things?
+  // TODO: Can I just use a QShortCut to associate hot keys to my desired
+  // things?
   qDebug() << "keyPressEvent: " << evt->modifiers() << " key: " << evt->key();
 
-  if ((evt->key() == Qt::Key_F) && ((evt->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier)) == Qt::ControlModifier))
-  {
+  if ((evt->key() == Qt::Key_F) &&
+      ((evt->modifiers() & (Qt::ControlModifier | Qt::AltModifier |
+                            Qt::MetaModifier)) == Qt::ControlModifier)) {
     genericSearch(false, false, true);
     handled = true;
-  }
-  else if ((evt->key() == Qt::Key_F3) && (evt->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier)) == 0)
-  {
-    if ((evt->modifiers() & Qt::ShiftModifier) == Qt::ShiftModifier)
-    {
+  } else if ((evt->key() == Qt::Key_F3) &&
+             (evt->modifiers() & (Qt::ControlModifier | Qt::AltModifier |
+                                  Qt::MetaModifier)) == 0) {
+    if ((evt->modifiers() & Qt::ShiftModifier) == Qt::ShiftModifier) {
       // Find previous
       genericSearch(false, true, false);
-    }
-    else
-    {
+    } else {
       // Find Next
       genericSearch(true, false, false);
     }
     handled = true;
-  }
-  else if(evt->key() == Qt::Key_Escape) {
+  } else if (evt->key() == Qt::Key_Escape) {
     clickedCancel();
     handled = true;
-  }
-  else if ((evt->key() == Qt::Key_F10) && (evt->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier)) == 0)
-  {
+  } else if ((evt->key() == Qt::Key_F10) &&
+             (evt->modifiers() & (Qt::ControlModifier | Qt::AltModifier |
+                                  Qt::MetaModifier)) == 0) {
     int incValue = (evt->modifiers() & Qt::ShiftModifier) == 0 ? 1 : -1;
     incrementCell(incValue);
     handled = true;
-  }
-  else if ((evt->key() == Qt::Key_F1) && (evt->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier | Qt::ShiftModifier)) == 0)
-  {
+  } else if ((evt->key() == Qt::Key_F1) &&
+             (evt->modifiers() & (Qt::ControlModifier | Qt::AltModifier |
+                                  Qt::MetaModifier | Qt::ShiftModifier)) == 0) {
     displayHelp();
     handled = true;
   }
@@ -491,24 +554,24 @@ void GenericDataCollectionTableDialog::keyPressEvent(QKeyEvent* evt)
   }
 }
 
-QModelIndex GenericDataCollectionTableDialog::find(const QString& s, const bool searchForward)
-{
+QModelIndex GenericDataCollectionTableDialog::find(const QString &s,
+                                                   const bool searchForward) {
   // Determine a start index and go from there!
-  qDebug() << "current row (" << m_tableView->currentIndex().row() << ") (" << m_tableView->currentIndex().column() << ")";
-  if (m_tableView->currentIndex().row() >= 0)
-  {
+  qDebug() << "current row (" << m_tableView->currentIndex().row() << ") ("
+           << m_tableView->currentIndex().column() << ")";
+  if (m_tableView->currentIndex().row() >= 0) {
     return find(s, m_tableView->currentIndex(), searchForward);
-  }
-  else if (m_tableModel->rowCount() > 0)
-  {
+  } else if (m_tableModel->rowCount() > 0) {
     // return find(s, m_proxyModel->createIndex(0, 0), searchForward);
   }
 
   return QModelIndex();
 }
 
-QModelIndex GenericDataCollectionTableDialog::find(const QString& s, const QModelIndex& startIndex, const bool /** searchForward **/)
-{
+QModelIndex
+GenericDataCollectionTableDialog::find(const QString &s,
+                                       const QModelIndex &startIndex,
+                                       const bool /** searchForward **/) {
   // TODO: Deal with unused parameter searchForward.
   qDebug("In ::find()");
   QModelIndex matchIndex;
@@ -523,45 +586,48 @@ QModelIndex GenericDataCollectionTableDialog::find(const QString& s, const QMode
   // MatchFixedString = 8, Performs string-based matching.
   // MatchCaseSensitive = 16,
   // MatchWrap = 32,
-  // MatchRecursive = 64 Searches the entire hierarchy, but I do not have heirarchical data.
+  // MatchRecursive = 64 Searches the entire hierarchy, but I do not have
+  // heirarchical data.
 
   Qt::MatchFlags matchFlags = Qt::MatchWrap | Qt::MatchContains;
-  if (startIndex.isValid())
-  {
-    QModelIndexList list = m_proxyModel->match(startIndex, Qt::DisplayRole, s, 1, matchFlags);
-    if (list.count() > 0)
-    {
+  if (startIndex.isValid()) {
+    QModelIndexList list =
+        m_proxyModel->match(startIndex, Qt::DisplayRole, s, 1, matchFlags);
+    if (list.count() > 0) {
       matchIndex = list.at(0);
       qDebug() << "Found (" << m_proxyModel->data(matchIndex).toString() << ")";
+    } else {
+      qDebug() << "Did not find anything (" << s << ") ("
+               << m_proxyModel->data(startIndex).toString() << ")";
     }
-    else
-    {
-      qDebug() << "Did not find anything (" << s << ") (" << m_proxyModel->data(startIndex).toString() << ")";
-    }
-  }
-  else
-  {
-    //QModelIndexList list = m_proxyModel->match(m_proxyModel->createIndex(0, 0), Qt::DisplayRole, s, 1, matchFlags);
-    //if (list.count() > 0)
+  } else {
+    // QModelIndexList list = m_proxyModel->match(m_proxyModel->createIndex(0,
+    // 0), Qt::DisplayRole, s, 1, matchFlags); if (list.count() > 0)
     //{
-    //  matchIndex = list.at(0);
-    //  qDebug(qPrintable(QString("Found (%1)").arg(m_proxyModel->data(matchIndex).toString())));
-    //}
+    //   matchIndex = list.at(0);
+    //   qDebug(qPrintable(QString("Found
+    //   (%1)").arg(m_proxyModel->data(matchIndex).toString())));
+    // }
   }
-//    for (int i=currentRow; i<m_proxyModel->rowCount(); ++i) {
-//      QModelIndex currentIndex = m_proxyModel->mapToSource(m_proxyModel->createIndex(i, currentCol));
-//    }
+  //    for (int i=currentRow; i<m_proxyModel->rowCount(); ++i) {
+  //      QModelIndex currentIndex =
+  //      m_proxyModel->mapToSource(m_proxyModel->createIndex(i, currentCol));
+  //    }
   return matchIndex;
 }
 
-bool GenericDataCollectionTableDialog::genericSearch(const bool findNext, const bool findPrevious, const bool findDialog)
-{
+bool GenericDataCollectionTableDialog::genericSearch(const bool findNext,
+                                                     const bool findPrevious,
+                                                     const bool findDialog) {
   bool foundSomething = false;
 
   QScopedPointer<QSettings> pSettings(getQSettings());
-  QString dfltFind = pSettings->value(Constants::Settings_SearchFindValue, "").toString();
-  QString dfltReplace = pSettings->value(Constants::Settings_SearchReplaceValue, "").toString();
-  QString dfltOptions = pSettings->value(Constants::Settings_SearchOptions, "").toString();
+  QString dfltFind =
+      pSettings->value(Constants::Settings_SearchFindValue, "").toString();
+  QString dfltReplace =
+      pSettings->value(Constants::Settings_SearchReplaceValue, "").toString();
+  QString dfltOptions =
+      pSettings->value(Constants::Settings_SearchOptions, "").toString();
 
   SearchOptions options;
   options.setFindValue(dfltFind);
@@ -571,23 +637,22 @@ bool GenericDataCollectionTableDialog::genericSearch(const bool findNext, const 
     options.deserializeSettings(dfltOptions);
   }
 
-  if (findDialog)
-  {
-    if (m_searchWindow == nullptr)
-    {
+  if (findDialog) {
+    if (m_searchWindow == nullptr) {
       // Will be destroyed when the parent object is destroyed.
       m_searchWindow = new GenericDataCollectionTableSearchDialog(this, this);
     }
 
     m_searchWindow->set(options);
-    m_searchWindow->setWindowFlags(m_searchWindow->windowFlags() | Qt::WindowStaysOnTopHint);
+    m_searchWindow->setWindowFlags(m_searchWindow->windowFlags() |
+                                   Qt::WindowStaysOnTopHint);
     m_searchWindow->show();
     m_searchWindow->raise();
     m_searchWindow->activateWindow();
-    //m_searchWindow->setFocus();
+    // m_searchWindow->setFocus();
     /**
-    GenericDataCollectionTableSearchDialog* dlg = new GenericDataCollectionTableSearchDialog(this, this);
-    dlg->set(options);
+    GenericDataCollectionTableSearchDialog* dlg = new
+    GenericDataCollectionTableSearchDialog(this, this); dlg->set(options);
     dlg->setWindowFlags(dlg->windowFlags() | Qt::WindowStaysOnTopHint);
     dlg->show();
     dlg->raise();
@@ -599,16 +664,21 @@ bool GenericDataCollectionTableDialog::genericSearch(const bool findNext, const 
     if (rc == QDialog::Accepted)
     {
       options = dlg->getOptions();
-      pSettings->setValue(Constants::Settings_SearchFindValue, options.getFindValue());
-      pSettings->setValue(Constants::Settings_SearchReplaceValue, options.getReplaceValue());
-      pSettings->setValue(Constants::Settings_SearchOptions, options.serializeSettings());
+      pSettings->setValue(Constants::Settings_SearchFindValue,
+    options.getFindValue());
+      pSettings->setValue(Constants::Settings_SearchReplaceValue,
+    options.getReplaceValue());
+      pSettings->setValue(Constants::Settings_SearchOptions,
+    options.serializeSettings());
 
-      QModelIndexList list = m_proxyModel->search(m_tableView->currentIndex(), options);
+      QModelIndexList list = m_proxyModel->search(m_tableView->currentIndex(),
+    options);
 
       if (list.count() > 0)
       {
         QModelIndex matchIndex = list.at(0);
-        qDebug(qPrintable(QString("Found (%1)").arg(m_proxyModel->data(matchIndex).toString())));
+        qDebug(qPrintable(QString("Found
+    (%1)").arg(m_proxyModel->data(matchIndex).toString())));
         selectCell(matchIndex);
         foundSomething = true;
       }
@@ -619,30 +689,23 @@ bool GenericDataCollectionTableDialog::genericSearch(const bool findNext, const 
     }
     delete dlg;
     ***/
-  }
-  else
-  {
+  } else {
     int currentRow = m_tableView->currentIndex().row();
     int currentColumn = m_tableView->currentIndex().column();
 
-    if (findNext)
-    {
-      currentRow = (currentRow + 1) < m_proxyModel->rowCount() ? currentRow + 1 : 0;
-      if (options.isBackwards())
-      {
+    if (findNext) {
+      currentRow =
+          (currentRow + 1) < m_proxyModel->rowCount() ? currentRow + 1 : 0;
+      if (options.isBackwards()) {
         options.setBackwards(false);
       }
-    }
-    else if (findPrevious)
-    {
-      //currentRow = (currentRow > 0) ? currentRow - 1 : m_proxyModel->rowCount() - 1;
-      if (!options.isBackwards())
-      {
+    } else if (findPrevious) {
+      // currentRow = (currentRow > 0) ? currentRow - 1 :
+      // m_proxyModel->rowCount() - 1;
+      if (!options.isBackwards()) {
         options.setBackwards(true);
       }
-    }
-    else
-    {
+    } else {
       qDebug("Expected findNext, findPrevious, or searchDialog to be true");
       return false;
     }
@@ -651,48 +714,41 @@ bool GenericDataCollectionTableDialog::genericSearch(const bool findNext, const 
     QModelIndex startIndex = m_proxyModel->index(currentRow, currentColumn);
     QModelIndexList list = m_proxyModel->search(startIndex, options);
 
-    if (list.count() > 0)
-    {
+    if (list.count() > 0) {
       QModelIndex matchIndex = list.at(0);
       qDebug() << "Found (" << m_proxyModel->data(matchIndex).toString() << ")";
       selectCell(matchIndex);
       foundSomething = true;
-    }
-    else
-    {
+    } else {
       qDebug() << "Did not find anything ";
     }
   }
   return foundSomething;
 }
 
-bool GenericDataCollectionTableDialog::doFind(const SearchOptions& options, const bool includeCurrent)
-{
-  if (includeCurrent)
-  {
-    QModelIndexList list = m_proxyModel->search(m_tableView->currentIndex(), options);
+bool GenericDataCollectionTableDialog::doFind(const SearchOptions &options,
+                                              const bool includeCurrent) {
+  if (includeCurrent) {
+    QModelIndexList list =
+        m_proxyModel->search(m_tableView->currentIndex(), options);
 
-    if (list.count() > 0)
-    {
+    if (list.count() > 0) {
       QModelIndex matchIndex = list.at(0);
       qDebug() << "Found (" << m_proxyModel->data(matchIndex).toString() << ")";
       selectCell(matchIndex);
       return true;
     }
-  }
-  else
-  {
+  } else {
     int currentRow = m_tableView->currentIndex().row();
     int currentColumn = m_tableView->currentIndex().column();
-    if (!options.isBackwards())
-    {
-      currentRow = (currentRow + 1) < m_proxyModel->rowCount() ? currentRow + 1 : 0;
+    if (!options.isBackwards()) {
+      currentRow =
+          (currentRow + 1) < m_proxyModel->rowCount() ? currentRow + 1 : 0;
     }
     QModelIndex startIndex = m_proxyModel->index(currentRow, currentColumn);
     QModelIndexList list = m_proxyModel->search(startIndex, options);
 
-    if (list.count() > 0)
-    {
+    if (list.count() > 0) {
       QModelIndex matchIndex = list.at(0);
       qDebug() << "Found (" << m_proxyModel->data(matchIndex).toString() << ")";
       selectCell(matchIndex);
@@ -702,19 +758,19 @@ bool GenericDataCollectionTableDialog::doFind(const SearchOptions& options, cons
   return false;
 }
 
-
-void GenericDataCollectionTableDialog::searchDialog()
-{
+void GenericDataCollectionTableDialog::searchDialog() {
   genericSearch(false, false, true);
   /***
   qDebug("in ::searchDialog()");
-  GenericDataCollectionTableSearchDialog* dlg = new GenericDataCollectionTableSearchDialog(this, nullptr);
+  GenericDataCollectionTableSearchDialog* dlg = new
+GenericDataCollectionTableSearchDialog(this, nullptr);
 
   QScopedPointer<QSettings> pSettings(getQSettings());
-  QString dfltFind = pSettings->value(Constants::Settings_SearchFindValue, "").toString();
-  QString dfltReplace = pSettings->value(Constants::Settings_SearchReplaceValue, "").toString();
-  QString dfltOptions = pSettings->value(Constants::Settings_SearchOptions, "").toString();
-  SearchOptions options;
+  QString dfltFind = pSettings->value(Constants::Settings_SearchFindValue,
+"").toString(); QString dfltReplace =
+pSettings->value(Constants::Settings_SearchReplaceValue, "").toString(); QString
+dfltOptions = pSettings->value(Constants::Settings_SearchOptions,
+"").toString(); SearchOptions options;
 
   if (!dfltOptions.isEmpty()) {
     options.deserializeSettings(dfltOptions);
@@ -730,17 +786,21 @@ void GenericDataCollectionTableDialog::searchDialog()
   if (rc == QDialog::Accepted)
   {
     options = dlg->getOptions();
-    pSettings->setValue(Constants::Settings_SearchFindValue, options.getFindValue());
-    pSettings->setValue(Constants::Settings_SearchReplaceValue, options.getReplaceValue());
-    pSettings->setValue(Constants::Settings_SearchOptions, options.serializeSettings());
+    pSettings->setValue(Constants::Settings_SearchFindValue,
+options.getFindValue());
+    pSettings->setValue(Constants::Settings_SearchReplaceValue,
+options.getReplaceValue());
+    pSettings->setValue(Constants::Settings_SearchOptions,
+options.serializeSettings());
 
-    QModelIndexList list = m_proxyModel->search(m_tableView->currentIndex(), options);
+    QModelIndexList list = m_proxyModel->search(m_tableView->currentIndex(),
+options);
 
     if (list.count() > 0)
     {
       QModelIndex matchIndex = list.at(0);
-      qDebug(qPrintable(QString("Found (%1)").arg(m_proxyModel->data(matchIndex).toString())));
-      selectCell(matchIndex);
+      qDebug(qPrintable(QString("Found
+(%1)").arg(m_proxyModel->data(matchIndex).toString()))); selectCell(matchIndex);
     }
     else
     {
@@ -751,22 +811,18 @@ void GenericDataCollectionTableDialog::searchDialog()
 **/
 }
 
-void GenericDataCollectionTableDialog::clickedCancel()
-{
-  if (!m_tableModel->trackerIsEmpty())
-  {
-    QMessageBox::StandardButton rc = QMessageBox::warning(this, tr("title"), tr("There are unsaved changes, Exit anyway?"), QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel, QMessageBox::Cancel);
-    if (rc == QMessageBox::Save)
-    {
+void GenericDataCollectionTableDialog::clickedCancel() {
+  if (!m_tableModel->trackerIsEmpty()) {
+    QMessageBox::StandardButton rc = QMessageBox::warning(
+        this, tr("title"), tr("There are unsaved changes, Exit anyway?"),
+        QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel,
+        QMessageBox::Cancel);
+    if (rc == QMessageBox::Save) {
       clickedOK();
       return;
-    }
-    else if (rc == QMessageBox::Cancel)
-    {
+    } else if (rc == QMessageBox::Cancel) {
       return;
     }
   }
   reject();
 }
-
-

@@ -1,102 +1,90 @@
 #include "tablesortfielddialog.h"
-#include "constants.h"
-#include "linkbackfilterdelegate.h"
 #include "checkboxonlydelegate.h"
+#include "constants.h"
 #include "globals.h"
+#include "linkbackfilterdelegate.h"
 
+#include <QDialogButtonBox>
+#include <QFile>
+#include <QFileDialog>
+#include <QFormLayout>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QLineEdit>
+#include <QMessageBox>
+#include <QPushButton>
+#include <QScopedPointer>
 #include <QSettings>
 #include <QTableView>
-#include <QLineEdit>
-#include <QFileDialog>
-#include <QFile>
-#include <QMessageBox>
-#include <QXmlStreamReader>
 #include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QFormLayout>
-#include <QLabel>
-#include <QPushButton>
-#include <QDialogButtonBox>
-#include <QScopedPointer>
+#include <QXmlStreamReader>
 
-TableSortFieldDialog::TableSortFieldDialog(const GenericDataCollection *dataCollection, QWidget *parent) :
-  QDialog(parent), m_upButton(nullptr), m_downButton(nullptr), m_addButton(nullptr), m_deleteButton(nullptr),
-  m_dataCollection(dataCollection), m_tableView(nullptr), m_configFilePath(nullptr), m_tableModel(nullptr)
-{
+TableSortFieldDialog::TableSortFieldDialog(
+    const GenericDataCollection *dataCollection, QWidget *parent)
+    : QDialog(parent), m_upButton(nullptr), m_downButton(nullptr),
+      m_addButton(nullptr), m_deleteButton(nullptr),
+      m_dataCollection(dataCollection), m_tableView(nullptr),
+      m_configFilePath(nullptr), m_tableModel(nullptr) {
   buildDialog();
 }
 
-TableSortFieldDialog::~TableSortFieldDialog()
-{
+TableSortFieldDialog::~TableSortFieldDialog() {
   QScopedPointer<QSettings> pSettings(getQSettings());
   pSettings->setValue(Constants::Settings_SortFieldDlgGeometry, saveGeometry());
-  pSettings->setValue(Constants::SortFieldConfigDialogLastConfigPath, getConfigFilePath());
+  pSettings->setValue(Constants::SortFieldConfigDialogLastConfigPath,
+                      getConfigFilePath());
 
-    if (m_tableView != nullptr)
-    {
-      QString s;
-      for (int i=0; i<TableSortFieldTableModel::numColumns; ++i)
-      {
-        if (s.length() > 0)
-        {
-          s = s + QString(",%1").arg(m_tableView->columnWidth(i));
-        }
-        else
-        {
-          s = QString("%1").arg(m_tableView->columnWidth(i));
-        }
+  if (m_tableView != nullptr) {
+    QString s;
+    for (int i = 0; i < TableSortFieldTableModel::numColumns; ++i) {
+      if (s.length() > 0) {
+        s = s + QString(",%1").arg(m_tableView->columnWidth(i));
+      } else {
+        s = QString("%1").arg(m_tableView->columnWidth(i));
       }
-      pSettings->setValue(Constants::SortFieldConfigDialogRoutingColumnWidths, s);
     }
+    pSettings->setValue(Constants::SortFieldConfigDialogRoutingColumnWidths, s);
+  }
 }
 
-void TableSortFieldDialog::setConfigFilePath(const QString& path)
-{
-  if (m_configFilePath != nullptr)
-  {
+void TableSortFieldDialog::setConfigFilePath(const QString &path) {
+  if (m_configFilePath != nullptr) {
     m_configFilePath->setText(path);
   }
 }
 
-QString TableSortFieldDialog::getConfigFilePath() const
-{
+QString TableSortFieldDialog::getConfigFilePath() const {
   return (m_configFilePath != nullptr) ? m_configFilePath->text() : "";
 }
 
-bool TableSortFieldDialog::isRowSelected() const
-{
-  return m_tableModel != nullptr && m_tableView != nullptr && m_tableModel->size() > 0 && m_tableView->currentIndex().row() >= 0;
+bool TableSortFieldDialog::isRowSelected() const {
+  return m_tableModel != nullptr && m_tableView != nullptr &&
+         m_tableModel->size() > 0 && m_tableView->currentIndex().row() >= 0;
 }
 
-int TableSortFieldDialog::getSelectedRow() const
-{
+int TableSortFieldDialog::getSelectedRow() const {
   return m_tableView->currentIndex().row();
 }
 
-void TableSortFieldDialog::delSelectedRow()
-{
-  if (isRowSelected())
-  {
+void TableSortFieldDialog::delSelectedRow() {
+  if (isRowSelected()) {
     m_tableModel->removeRow(getSelectedRow());
     enableButtons();
   }
 }
 
-void TableSortFieldDialog::copyRow()
-{
+void TableSortFieldDialog::copyRow() {
   m_tableModel->copyRow(getSelectedRow());
   enableButtons();
 }
 
-void TableSortFieldDialog::addRow()
-{
+void TableSortFieldDialog::addRow() {
   if (m_dataCollection == nullptr) {
     return;
   }
-  for (int i=0; i<m_dataCollection->getPropertyNameCount(); ++i)
-  {
-    if (!m_tableModel->containsFieldName(m_dataCollection->getPropertyName(i)))
-    {
+  for (int i = 0; i < m_dataCollection->getPropertyNameCount(); ++i) {
+    if (!m_tableModel->containsFieldName(
+            m_dataCollection->getPropertyName(i))) {
       TableSortField field;
       field.setFieldName(m_dataCollection->getPropertyName(i));
       field.setFieldIndex(i);
@@ -108,27 +96,24 @@ void TableSortFieldDialog::addRow()
   }
 }
 
-void TableSortFieldDialog::loadConfiguration()
-{
+void TableSortFieldDialog::loadConfiguration() {
   QString fileExtension;
-  QString s = QFileDialog::getOpenFileName(this, tr("Select Configuration File To Open"), getConfigFilePath(), tr("XML(*.xml);;Text(*.txt);;All(*.*)"), &fileExtension, QFileDialog::DontUseNativeDialog);
-  if (s.length() > 0)
-  {
+  QString s = QFileDialog::getOpenFileName(
+      this, tr("Select Configuration File To Open"), getConfigFilePath(),
+      tr("XML(*.xml);;Text(*.txt);;All(*.*)"), &fileExtension,
+      QFileDialog::DontUseNativeDialog);
+  if (s.length() > 0) {
     setConfigFilePath(s);
     QFile file(s);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
-      QMessageBox::warning(this, tr("ERROR"), tr("Failed to open file for reading."));
-    }
-    else
-    {
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+      QMessageBox::warning(this, tr("ERROR"),
+                           tr("Failed to open file for reading."));
+    } else {
       QXmlStreamReader reader(&file);
-      if (reader.hasError())
-      {
-        QMessageBox::warning(this, tr("ERROR"), tr("Failed to create output stream for reading."));
-      }
-      else
-      {
+      if (reader.hasError()) {
+        QMessageBox::warning(this, tr("ERROR"),
+                             tr("Failed to create output stream for reading."));
+      } else {
         QList<TableSortField> list;
         TableSortField::read(list, reader);
         m_tableModel->clear();
@@ -144,45 +129,40 @@ void TableSortFieldDialog::loadConfiguration()
   }
 }
 
-void TableSortFieldDialog::selectionChanged( const QItemSelection & selected, const QItemSelection & deselected )
-{
+void TableSortFieldDialog::selectionChanged(const QItemSelection &selected,
+                                            const QItemSelection &deselected) {
   (void)selected;
   (void)deselected;
   enableButtons();
 }
 
-void TableSortFieldDialog::saveConfiguration()
-{
+void TableSortFieldDialog::saveConfiguration() {
   QString fileExtension;
-  QString s = QFileDialog::getSaveFileName(this, tr("Save To"), getConfigFilePath(), tr("XML(*.xml);;Text(*.txt);;All(*.*)"), &fileExtension, QFileDialog::DontUseNativeDialog);
-  if (s.length() > 0)
-  {
-    if (!s.contains('.'))
-    {
-      if (fileExtension.compare(tr("XML(*.xml)"), Qt::CaseInsensitive) == 0)
-      {
+  QString s = QFileDialog::getSaveFileName(
+      this, tr("Save To"), getConfigFilePath(),
+      tr("XML(*.xml);;Text(*.txt);;All(*.*)"), &fileExtension,
+      QFileDialog::DontUseNativeDialog);
+  if (s.length() > 0) {
+    if (!s.contains('.')) {
+      if (fileExtension.compare(tr("XML(*.xml)"), Qt::CaseInsensitive) == 0) {
         s = s + ".xml";
-      }
-      else if (fileExtension.compare(tr("Text(*.txt)"), Qt::CaseInsensitive) == 0)
-      {
+      } else if (fileExtension.compare(tr("Text(*.txt)"),
+                                       Qt::CaseInsensitive) == 0) {
         s = s + ".txt";
       }
     }
     setConfigFilePath(s);
     QFile file(s);
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
-    {
-      QMessageBox::warning(this, tr("ERROR"), tr("Failed to open file for writing."));
-    }
-    else
-    {
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+      QMessageBox::warning(this, tr("ERROR"),
+                           tr("Failed to open file for writing."));
+    } else {
       QXmlStreamWriter writer(&file);
-      if (writer.hasError())
-      {
-        QMessageBox::warning(this, tr("ERROR"), tr("Failed to create output stream for writing logger."));
-      }
-      else
-      {
+      if (writer.hasError()) {
+        QMessageBox::warning(
+            this, tr("ERROR"),
+            tr("Failed to create output stream for writing logger."));
+      } else {
         writer.setAutoFormatting(true);
         TableSortField::write(m_tableModel->getList(), writer);
       }
@@ -191,22 +171,19 @@ void TableSortFieldDialog::saveConfiguration()
   }
 }
 
-void TableSortFieldDialog::rowUp()
-{
+void TableSortFieldDialog::rowUp() {
   m_tableModel->moveRowUp(getSelectedRow());
   enableButtons();
 }
 
-void TableSortFieldDialog::rowDown()
-{
+void TableSortFieldDialog::rowDown() {
   m_tableModel->moveRowDown(getSelectedRow());
   enableButtons();
 }
 
-void TableSortFieldDialog::buildDialog()
-{
+void TableSortFieldDialog::buildDialog() {
   setWindowTitle(tr("Configure Sorting"));
-  QPushButton* button;
+  QPushButton *button;
   QVBoxLayout *vLayout;
   QHBoxLayout *hLayout;
   QFormLayout *fLayout = new QFormLayout;
@@ -264,18 +241,20 @@ void TableSortFieldDialog::buildDialog()
   m_tableView->setModel(m_tableModel);
 
   // Parameter sets the owning parent that will delete the delegate.
-  LinkBackFilterDelegate* delegate = new LinkBackFilterDelegate(m_tableView);
+  LinkBackFilterDelegate *delegate = new LinkBackFilterDelegate(m_tableView);
   m_tableView->setItemDelegate(delegate);
 
-  CheckBoxOnlyDelegate * cboDelegate = new CheckBoxOnlyDelegate(m_tableView);
-  m_tableView->setItemDelegateForColumn(TableSortFieldTableModel::ascendingColumn, cboDelegate);
-  m_tableView->setItemDelegateForColumn(TableSortFieldTableModel::caseColumn, cboDelegate);
+  CheckBoxOnlyDelegate *cboDelegate = new CheckBoxOnlyDelegate(m_tableView);
+  m_tableView->setItemDelegateForColumn(
+      TableSortFieldTableModel::ascendingColumn, cboDelegate);
+  m_tableView->setItemDelegateForColumn(TableSortFieldTableModel::caseColumn,
+                                        cboDelegate);
 
   hLayout->addWidget(m_tableView);
   fLayout->addRow(hLayout);
 
-
-  QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal);
+  QDialogButtonBox *buttonBox = new QDialogButtonBox(
+      QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal);
   connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
   connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
   fLayout->addRow(buttonBox);
@@ -283,30 +262,35 @@ void TableSortFieldDialog::buildDialog()
   setLayout(fLayout);
 
   QScopedPointer<QSettings> pSettings(getQSettings());
-  restoreGeometry(pSettings->value(Constants::Settings_SortFieldDlgGeometry).toByteArray());
-  setConfigFilePath(pSettings->value(Constants::SortFieldConfigDialogLastConfigPath).toString());
-  QString s = pSettings->value(Constants::SortFieldConfigDialogRoutingColumnWidths).toString();
-  if (s.length() > 0)
-  {
+  restoreGeometry(
+      pSettings->value(Constants::Settings_SortFieldDlgGeometry).toByteArray());
+  setConfigFilePath(
+      pSettings->value(Constants::SortFieldConfigDialogLastConfigPath)
+          .toString());
+  QString s =
+      pSettings->value(Constants::SortFieldConfigDialogRoutingColumnWidths)
+          .toString();
+  if (s.length() > 0) {
     QStringList list = s.split(',');
     bool ok = true;
-    for (int i=0; i<list.size() && i<TableSortFieldTableModel::numColumns; ++i)
-    {
+    for (int i = 0; i < list.size() && i < TableSortFieldTableModel::numColumns;
+         ++i) {
       int width = list[i].toInt(&ok);
-      if (ok && width > 0)
-      {
+      if (ok && width > 0) {
         m_tableView->setColumnWidth(i, width);
       }
     }
   }
-  connect(m_tableView->selectionModel(), SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)), this, SLOT(selectionChanged(const QItemSelection &, const QItemSelection &)));
+  connect(
+      m_tableView->selectionModel(),
+      SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)),
+      this,
+      SLOT(selectionChanged(const QItemSelection &, const QItemSelection &)));
   enableButtons();
 }
 
-void TableSortFieldDialog::enableButtons()
-{
-  if (m_dataCollection != nullptr)
-  {
+void TableSortFieldDialog::enableButtons() {
+  if (m_dataCollection != nullptr) {
     int count = m_tableModel->size();
     int row = count > 0 ? getSelectedRow() : -1;
     m_upButton->setEnabled(row > 0);
@@ -315,4 +299,3 @@ void TableSortFieldDialog::enableButtons()
     m_addButton->setEnabled(count < m_dataCollection->getPropertyNameCount());
   }
 }
-

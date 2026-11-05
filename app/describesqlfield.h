@@ -1,15 +1,16 @@
 #ifndef DESCRIBESQLFIELD_H
 #define DESCRIBESQLFIELD_H
 
-#include <QString>
 #include "sqlfieldtype.h"
+#include <QString>
 
 class QXmlStreamWriter;
 class QXmlStreamReader;
 
 //**************************************************************************
 /*! \class DescribeSqlField
- * \brief Used to describe what a single field looks like for display and housekeeping.
+ * \brief Used to describe what a single field looks like for display and
+ * housekeeping.
  *
  * Gives a field a name, type, and other things used to describe a field.
  * This object is intended to live inside of a DescribeSqlTable.
@@ -18,26 +19,28 @@ class QXmlStreamReader;
  * \copyright Andrew Pitonyak, but you may use without restriction.
  * \date September 2014-2020
  **************************************************************************/
-class DescribeSqlField
-{
+class DescribeSqlField {
 public:
   /*! \brief Constructor
-   *  \param [in, out] parent The object's owner. The parent's destructor destroys this object.
+   *  \param [in, out] parent The object's owner. The parent's destructor
+   * destroys this object.
    */
   DescribeSqlField();
 
   /*! \brief Copy Constructor
    *  \param [in] field Object to copy.
    */
-  DescribeSqlField(const DescribeSqlField& field);
+  DescribeSqlField(const DescribeSqlField &field);
 
   /*! \brief Get the fields name as used in the database. */
   QString getName() const { return m_name; }
 
-  /*! \brief Get the fields display name, which is probably more user friendly. */
-  QString getViewName() const {return m_viewName; }
+  /*! \brief Get the fields display name, which is probably more user friendly.
+   */
+  QString getViewName() const { return m_viewName; }
 
-  /*! \brief Get the field's description, which is probably suitable for pop-up help or similar. */
+  /*! \brief Get the field's description, which is probably suitable for pop-up
+   * help or similar. */
   QString getDescription() const { return m_description; }
 
   /*! \brief Get the fields type. */
@@ -45,77 +48,103 @@ public:
 
   QMetaType::Type getFieldMetaType() const { return m_fieldType.qtType(); }
 
-  /*! \brief Get the fields preferred type name in case some mapping causes more than one type to be mapped to this field. */
+  /*! \brief Get the fields preferred type name in case some mapping causes more
+   * than one type to be mapped to this field. */
   QString getPreferredTypeName() const { return m_preferredTypeName; }
 
-  /*! \brief If this field is a foreign key to another table, this returns that tables name. */
+  /*! \brief If this field is a foreign key to another table, this returns that
+   * tables name. */
   QString getLinkTableName() const { return m_linkTable; }
 
-  /*! \brief If this field is a foreign key to another table, this returns the key field name in the linked table. */
+  /*! \brief If this field is a foreign key to another table, this returns the
+   * key field name in the linked table. */
   QString getLinkFieldName() const { return m_linkField; }
 
   /*! \brief Comma delimted list of field names for link display fields. */
   QStringList getLinkDisplayField() const;
 
-  /*! \brief If this is currency, return an appropriate currency symbol, such as "$". */
+  /*! \brief If this is currency, return an appropriate currency symbol, such as
+   * "$". */
   QString getCurrencySymbol() const { return m_currencySymbol; }
   bool isAutoIncrement() const { return m_isAutoIncrement; }
   bool isRequired() const { return m_isRequired; }
 
-  /*! \brief Is this a key field, which implies it can be used as a foreign key, and that it cannot be changed. */
+  /*! \brief Is this a key field, which implies it can be used as a foreign key,
+   * and that it cannot be changed. */
   bool isKey() const { return m_isKey; }
 
-  /*! \brief Determines if this field contains a foreign key by inspecting the link table name and the link field name.
-   *  \return True if this field links to another field (foreign key constraint).
+  /*! \brief Determines if this field contains a foreign key by inspecting the
+   * link table name and the link field name.
+   *  \return True if this field links to another field (foreign key
+   * constraint).
    */
   bool isLinkField() const;
 
-  /*! \brief Determines if this is a currency field by inspecting the currency symbol to see if it is empty. */
+  /*! \brief Determines if this is a currency field by inspecting the currency
+   * symbol to see if it is empty. */
   bool isCurrency() const { return !m_currencySymbol.isEmpty(); }
 
   int getFieldLength() const { return m_fieldLength; }
   int getFieldPrecision() const { return m_fieldPrecision; }
 
-  void setName(const QString& name) { m_name = name; }
-  void setViewName(const QString& viewName) { m_viewName = viewName; }
-  void setDescription(const QString& description) { m_description = description; }
-  void setFieldType(const SqlFieldType& fieldType) { m_fieldType = fieldType; }
-  void setPreferredTypeName(const QString& preferredName) { m_preferredTypeName = preferredName; }
-  void setLinkTableName(const QString& linkTableName) { m_linkTable = linkTableName; }
-  void setLinkFieldName(const QString& linkFieldName) { m_linkField = linkFieldName; }
-  void setLinkDisplayField(const QString& linkDisplayField) { m_linkDisplayField = linkDisplayField; }
-  void setCurrencySymbol(const QString& currencySymbol) { m_currencySymbol = currencySymbol; }
-  void setIsAutoIncrement(const bool isAutoInc) { m_isAutoIncrement = isAutoInc; }
+  void setName(const QString &name) { m_name = name; }
+  void setViewName(const QString &viewName) { m_viewName = viewName; }
+  void setDescription(const QString &description) {
+    m_description = description;
+  }
+  void setFieldType(const SqlFieldType &fieldType) { m_fieldType = fieldType; }
+  void setPreferredTypeName(const QString &preferredName) {
+    m_preferredTypeName = preferredName;
+  }
+  void setLinkTableName(const QString &linkTableName) {
+    m_linkTable = linkTableName;
+  }
+  void setLinkFieldName(const QString &linkFieldName) {
+    m_linkField = linkFieldName;
+  }
+  void setLinkDisplayField(const QString &linkDisplayField) {
+    m_linkDisplayField = linkDisplayField;
+  }
+  void setCurrencySymbol(const QString &currencySymbol) {
+    m_currencySymbol = currencySymbol;
+  }
+  void setIsAutoIncrement(const bool isAutoInc) {
+    m_isAutoIncrement = isAutoInc;
+  }
   void setIsRequired(const bool isReq) { m_isRequired = isReq; }
   void setIsKey(const bool isK) { m_isKey = isK; }
   void setFieldLength(const int len) { m_fieldLength = len; }
   void setFieldPrecision(const int len) { m_fieldPrecision = len; }
 
-  const DescribeSqlField& operator=(const DescribeSqlField& field) { return copy(field); }
+  const DescribeSqlField &operator=(const DescribeSqlField &field) {
+    return copy(field);
+  }
 
   /*! \brief Write this object to an XML stream.
    *  \param [in, out] writer Write to this XML stream.
    *  \return reference to the writer stream.
    */
-  QXmlStreamWriter& writeXml(QXmlStreamWriter& writer) const;
+  QXmlStreamWriter &writeXml(QXmlStreamWriter &writer) const;
 
-  /*! \brief Read and return an object of this type. Fields not included in the XML use the default values.
+  /*! \brief Read and return an object of this type. Fields not included in the
+   * XML use the default values.
    *  \param [in, out] reader Read from this XML stream.
    *  \return A new field that was just read.
    */
-  static DescribeSqlField readXml(QXmlStreamReader& reader);
+  static DescribeSqlField readXml(QXmlStreamReader &reader);
 
   /*! \brief Generate the DDL usable to create this field. */
   QString getDDL() const;
 
 private:
+  const DescribeSqlField &copy(const DescribeSqlField &field);
 
-  const DescribeSqlField& copy(const DescribeSqlField& field);
-
-  /*! \brief Simple unique name as used by the database; probably all lower case. */
+  /*! \brief Simple unique name as used by the database; probably all lower
+   * case. */
   QString m_name;
 
-  /*! \brief Table name as shown to the user, probably has upper and lower case. */
+  /*! \brief Table name as shown to the user, probably has upper and lower case.
+   */
   QString m_viewName;
 
   /*! \brief Describe what the table contains. */
@@ -130,10 +159,13 @@ private:
   /*! \brief Name of the table to which this field is linked. */
   QString m_linkTable;
 
-  /*! \brief Name of the field to which this field is linked in the associated link table. */
+  /*! \brief Name of the field to which this field is linked in the associated
+   * link table. */
   QString m_linkField;
 
-  /*! \brief Name of the field to display. This is a comma separated list of field names. Display this field by concatenating all these fields (from the target link table) together with some separator. */
+  /*! \brief Name of the field to display. This is a comma separated list of
+   * field names. Display this field by concatenating all these fields (from the
+   * target link table) together with some separator. */
   QString m_linkDisplayField;
 
   /*! \brief If not empty, then this is a currency field. */

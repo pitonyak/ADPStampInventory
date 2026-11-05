@@ -2,25 +2,16 @@
 
 #include <QStringList>
 
-SearchOptions::SearchOptions()
-{
-  setToDefault();
-}
+SearchOptions::SearchOptions() { setToDefault(); }
 
-SearchOptions::SearchOptions(const SearchOptions& options)
-{
-  copy(options);
-}
+SearchOptions::SearchOptions(const SearchOptions &options) { copy(options); }
 
-const SearchOptions& SearchOptions::operator=(const SearchOptions& options)
-{
+const SearchOptions &SearchOptions::operator=(const SearchOptions &options) {
   return copy(options);
 }
 
-const SearchOptions& SearchOptions::copy(const SearchOptions& options)
-{
-  if (this != &options)
-  {
+const SearchOptions &SearchOptions::copy(const SearchOptions &options) {
+  if (this != &options) {
     m_isCaseSensitive = options.m_isCaseSensitive;
     m_isMatchEntireString = options.m_isMatchEntireString;
     m_isContains = options.m_isContains;
@@ -41,9 +32,7 @@ const SearchOptions& SearchOptions::copy(const SearchOptions& options)
   return *this;
 }
 
-
-void SearchOptions::setToDefault()
-{
+void SearchOptions::setToDefault() {
   setContains();
   setMatchAsString();
   setCaseSensitive(false);
@@ -54,105 +43,100 @@ void SearchOptions::setToDefault()
   setIsReplaceAll(false);
 }
 
-void SearchOptions::setMatchEntireString()
-{
+void SearchOptions::setMatchEntireString() {
   m_isMatchEntireString = true;
   m_isContains = false;
   m_isStartsWith = false;
   m_isEndsWith = false;
 }
 
-void SearchOptions::setContains()
-{
+void SearchOptions::setContains() {
   m_isMatchEntireString = false;
   m_isContains = true;
   m_isStartsWith = false;
   m_isEndsWith = false;
 }
 
-
-void SearchOptions::setStartsWith()
-{
+void SearchOptions::setStartsWith() {
   m_isMatchEntireString = false;
   m_isContains = false;
   m_isStartsWith = true;
   m_isEndsWith = false;
 }
 
-
-void SearchOptions::setEndsWith()
-{
+void SearchOptions::setEndsWith() {
   m_isMatchEntireString = false;
   m_isContains = false;
   m_isStartsWith = false;
   m_isEndsWith = true;
 }
 
-
-
-void SearchOptions::setMatchAsString()
-{
+void SearchOptions::setMatchAsString() {
   m_isMatchAsString = true;
   m_isRegularExpression = false;
   m_isWildCard = false;
 }
 
-void SearchOptions::setRegularExpression()
-{
+void SearchOptions::setRegularExpression() {
   m_isMatchAsString = false;
   m_isRegularExpression = true;
   m_isWildCard = false;
 }
 
-
-void SearchOptions::setWildCard()
-{
+void SearchOptions::setWildCard() {
   m_isMatchAsString = false;
   m_isRegularExpression = false;
   m_isWildCard = true;
 }
 
+Qt::MatchFlags SearchOptions::getMatchFlags() const {
 
-Qt::MatchFlags SearchOptions::getMatchFlags() const
-{
-
-    // *** match flags ***
-    // MatchExactly = 0, Performs QVariant-based matching.
-    // MatchContains = 1,
-    // MatchStartsWith = 2,
-    // MatchEndsWith = 3,
-    // MatchRegExp = 4,
-    // MatchWildcard = 5,
-    // MatchFixedString = 8, Performs string-based matching.
-    // MatchCaseSensitive = 16,
-    // MatchWrap = 32,
-    // MatchRecursive = 64 Searches the entire hierarchy, but I do not have heirarchical data.
+  // *** match flags ***
+  // MatchExactly = 0, Performs QVariant-based matching.
+  // MatchContains = 1,
+  // MatchStartsWith = 2,
+  // MatchEndsWith = 3,
+  // MatchRegExp = 4,
+  // MatchWildcard = 5,
+  // MatchFixedString = 8, Performs string-based matching.
+  // MatchCaseSensitive = 16,
+  // MatchWrap = 32,
+  // MatchRecursive = 64 Searches the entire hierarchy, but I do not have
+  // heirarchical data.
 
   Qt::MatchFlags flags = Qt::MatchExactly;
-  if (isMatchEntireString()) flags |= Qt::MatchFixedString;
-  if (isContains()) flags |= Qt::MatchContains;
-  if (isStartsWith()) flags |= Qt::MatchStartsWith;
-  if (isEndsWith()) flags |= Qt::MatchEndsWith;
-  //if (isMatchAsString()) flags |= Qt::MatchFixedString;
-  if (isRegularExpression()) flags |= Qt::MatchRegularExpression;
-  if (isWildCard()) flags |= Qt::MatchWildcard;
-  if (isCaseSensitive()) flags |= Qt::MatchCaseSensitive;
-  if (isWrap()) flags |= Qt::MatchWrap;
+  if (isMatchEntireString())
+    flags |= Qt::MatchFixedString;
+  if (isContains())
+    flags |= Qt::MatchContains;
+  if (isStartsWith())
+    flags |= Qt::MatchStartsWith;
+  if (isEndsWith())
+    flags |= Qt::MatchEndsWith;
+  // if (isMatchAsString()) flags |= Qt::MatchFixedString;
+  if (isRegularExpression())
+    flags |= Qt::MatchRegularExpression;
+  if (isWildCard())
+    flags |= Qt::MatchWildcard;
+  if (isCaseSensitive())
+    flags |= Qt::MatchCaseSensitive;
+  if (isWrap())
+    flags |= Qt::MatchWrap;
   return flags;
 }
 
-void SearchOptions::setMatchFlags(const Qt::MatchFlags flags)
-{
+void SearchOptions::setMatchFlags(const Qt::MatchFlags flags) {
   if ((flags & Qt::MatchWildcard) == Qt::MatchWildcard) {
-      setWildCard();
-  } else if ((flags & Qt::MatchRegularExpression) == Qt::MatchRegularExpression) {
-      setRegularExpression();
+    setWildCard();
+  } else if ((flags & Qt::MatchRegularExpression) ==
+             Qt::MatchRegularExpression) {
+    setRegularExpression();
   } else {
     setMatchAsString();
   }
 
   if ((flags & Qt::MatchEndsWith) == Qt::MatchEndsWith) {
-      setEndsWith();
+    setEndsWith();
   } else if ((flags & Qt::MatchStartsWith) == Qt::MatchStartsWith) {
     setStartsWith();
   } else if ((flags & Qt::MatchContains) == Qt::MatchContains) {
@@ -165,8 +149,7 @@ void SearchOptions::setMatchFlags(const Qt::MatchFlags flags)
   setWrap((flags & Qt::MatchWrap) == Qt::MatchWrap);
 }
 
-void SearchOptions::deserializeSettings(const QString allOptions)
-{
+void SearchOptions::deserializeSettings(const QString allOptions) {
   setMatchEntireString();
   setMatchAsString();
   setCaseSensitive(false);
@@ -176,7 +159,7 @@ void SearchOptions::deserializeSettings(const QString allOptions)
   setIsReplace(false);
   setIsReplaceAll(false);
   QStringList list = allOptions.split(",");
-  for (int i=0; i<list.count(); ++i) {
+  for (int i = 0; i < list.count(); ++i) {
     QString s = list.at(i);
     if (s.compare("MatchEntireString", Qt::CaseInsensitive) == 0) {
       setMatchEntireString();
@@ -216,30 +199,39 @@ void SearchOptions::deserializeSettings(const QString allOptions)
   }
 }
 
-QString SearchOptions::serializeSettings() const
-{
+QString SearchOptions::serializeSettings() const {
   QStringList list;
-  if (isMatchEntireString()) list << "MatchEntireString";
-  if (isContains()) list << "Contains";
-  if (isStartsWith()) list << "StartsWith";
-  if (isEndsWith()) list << "EndsWith";
+  if (isMatchEntireString())
+    list << "MatchEntireString";
+  if (isContains())
+    list << "Contains";
+  if (isStartsWith())
+    list << "StartsWith";
+  if (isEndsWith())
+    list << "EndsWith";
 
-  if (isMatchAsString()) list << "AsString";
-  if (isRegularExpression()) list << "RegExp";
-  if (isWildCard()) list << "Wildcard";
+  if (isMatchAsString())
+    list << "AsString";
+  if (isRegularExpression())
+    list << "RegExp";
+  if (isWildCard())
+    list << "Wildcard";
 
   list << (isCaseSensitive() ? "CaseSensitive" : "CaseInSensitive");
   list << (isWrap() ? "Wrap" : "NoWrap");
   list << (isBackwards() ? "Backward" : "Forward");
   list << (isAllColumns() ? "AllColumns" : "OneColumn");
-  if (isReplace()) list << "Replace";
-  if (isReplaceAll()) list << "ReplaceAll";
+  if (isReplace())
+    list << "Replace";
+  if (isReplaceAll())
+    list << "ReplaceAll";
   return list.join(",");
 }
 
-QRegularExpression SearchOptions::getRegularExpression() const
-{
-  QRegularExpression regexp = isWildCard() ? StringUtil::wildCardToRegExp(getFindValue()) : QRegularExpression(getFindValue());
+QRegularExpression SearchOptions::getRegularExpression() const {
+  QRegularExpression regexp = isWildCard()
+                                  ? StringUtil::wildCardToRegExp(getFindValue())
+                                  : QRegularExpression(getFindValue());
   if (!isCaseSensitive()) {
     regexp.setPatternOptions(QRegularExpression::CaseInsensitiveOption);
   }

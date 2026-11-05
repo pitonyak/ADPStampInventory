@@ -11,15 +11,13 @@
  * \date 2026
  **************************************************************************/
 
-
 #include <QDialog>
 
-class AboutDialog : public QDialog
-{
-    Q_OBJECT
+class AboutDialog : public QDialog {
+  Q_OBJECT
 public:
-    explicit AboutDialog(QWidget *parent = nullptr);
-    ~AboutDialog() override = default;
+  explicit AboutDialog(QWidget *parent = nullptr);
+  ~AboutDialog() override = default;
 };
 
 #endif // ABOUTDIALOG_H

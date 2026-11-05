@@ -4,34 +4,34 @@
 #include "searchoptions.h"
 
 #include <QDialog>
-#include <QVariant>
-#include <QString>
 #include <QModelIndex>
+#include <QString>
+#include <QVariant>
 
 class QLineEdit;
 class GenericDataCollectionTableDialog;
 class QCheckBox;
 class QRadioButton;
 
-class GenericDataCollectionTableSearchDialog : public QDialog
-{
-    Q_OBJECT
+class GenericDataCollectionTableSearchDialog : public QDialog {
+  Q_OBJECT
 public:
-  explicit GenericDataCollectionTableSearchDialog(GenericDataCollectionTableDialog* tableDialog, QWidget *parent = nullptr);
+  explicit GenericDataCollectionTableSearchDialog(
+      GenericDataCollectionTableDialog *tableDialog, QWidget *parent = nullptr);
 
-  void set(const SearchOptions& options);
+  void set(const SearchOptions &options);
   SearchOptions getOptions() const;
 
-  //Requires a reference to the parent dialog.
+  // Requires a reference to the parent dialog.
 
   void setCaseSensitive(const bool b);
   bool isCaseSensitive() const;
 
   QString getFindValue() const;
-  void setFindValue(const QString& s);
+  void setFindValue(const QString &s);
 
   QString getReplaceValue() const;
-  void setReplaceValue(const QString& s);
+  void setReplaceValue(const QString &s);
 
   bool isMatchAll() const;
   bool isContains() const;
@@ -63,7 +63,6 @@ public:
   void restoreSettings();
   void focusFindField();
 
-
 signals:
 
 public slots:
@@ -77,23 +76,22 @@ private:
 
   void enableButtons();
 
-  GenericDataCollectionTableDialog* m_tableDialog;
-  QLineEdit* m_findValueLineEdit;
-  QLineEdit* m_replaceValueLineEdit;
-  QCheckBox* m_matchCaseCB;
-  QCheckBox* m_WrapCB;
-  QCheckBox* m_Backwards;
-  QCheckBox* m_AllColumns;
+  GenericDataCollectionTableDialog *m_tableDialog;
+  QLineEdit *m_findValueLineEdit;
+  QLineEdit *m_replaceValueLineEdit;
+  QCheckBox *m_matchCaseCB;
+  QCheckBox *m_WrapCB;
+  QCheckBox *m_Backwards;
+  QCheckBox *m_AllColumns;
 
-  QRadioButton* m_rbMatchAll;
-  QRadioButton* m_rbContains;
-  QRadioButton* m_rbStartsWith;
-  QRadioButton* m_rbEndsWith;
+  QRadioButton *m_rbMatchAll;
+  QRadioButton *m_rbContains;
+  QRadioButton *m_rbStartsWith;
+  QRadioButton *m_rbEndsWith;
 
-  QRadioButton* m_rbString;
-  QRadioButton* m_rbRegExp;
-  QRadioButton* m_rbWildCard;
-
+  QRadioButton *m_rbString;
+  QRadioButton *m_rbRegExp;
+  QRadioButton *m_rbWildCard;
 
   QVariant m_findValue;
   QVariant m_replaceValue;
