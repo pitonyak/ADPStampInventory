@@ -1,6 +1,8 @@
 #ifndef IMAGEUTILITY_H
 #define IMAGEUTILITY_H
 
+#include "stampimage.h"
+
 #include <QDir>
 #include <QFile>
 #include <QList>
@@ -25,7 +27,7 @@ class ImageUtility : public QObject {
 public:
   enum class Image_Flags : unsigned char {
     None = 0,
-    Catalog = 1 << 0,
+    Stock = 1 << 0,
     Mine = 1 << 1,
     Both = 3,
   };
@@ -44,11 +46,11 @@ public:
    *
    *  \param [in] country is probably the three letter country code
    *  \param [in] catNumber is the stamp number (probably Scott number)
-   *  \param [in] flags Indicate if we want images for Catalog, Owned stamps, or
+   *  \param [in] flags Indicate if we want images for Stock, Owned stamps, or
    * both.
    *  \return List of paths to images for the specified stamp.
    */
-  QStringList findBookImages(const QString &country, const QString &catNumber,
+  QStringList getBookImagePaths(const QString &country, const QString &catNumber,
                              ImageUtility::Image_Flags flags) const;
 
   /*! \brief Get list of images associated with a specific stamp (Scott Number)
@@ -61,7 +63,7 @@ public:
    *  \param [in] catNumber is the stamp number (probably Scott number)
    *  \param [in] allowEmpty if false the default empty image is returned if no
    * images are present.
-   *  \param [in] flags Indicate if we want images for Catalog, Owned stamps, or
+   *  \param [in] flags Indicate if we want images for Stock, Owned stamps, or
    * both.
    *  \return List of images for the specified stamp.
    */
@@ -84,6 +86,10 @@ public:
    */
   QList<QPixmap> getBookImages(const QStringList &paths,
                                bool allowEmpty = false) const;
+
+  QList<StampImage> getStampImages(const QString &country, const QString &catNumber,
+                             ImageUtility::Image_Flags flags,
+                                   bool allowEmpty = false) const;
 
   const QPixmap &getEmptyImage() const { return *m_noFileFoundImage; }
 
@@ -189,7 +195,7 @@ inline QList<QPixmap>
 ImageUtility::getBookImages(const QString &country, const QString &catNumber,
                             ImageUtility::Image_Flags flags,
                             bool allowEmpty) const {
-  return getBookImages(findBookImages(country, catNumber, flags), allowEmpty);
+  return getBookImages(getBookImagePaths(country, catNumber, flags), allowEmpty);
 }
 
 // Overload bitwise operators for ImageUtility::Image_Flags

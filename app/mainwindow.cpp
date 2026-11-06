@@ -854,8 +854,8 @@ void MainWindow::findMissingImages() {
           last_had_image = true;
           num_missing_in_run = 0;
         }
-        if (iu.findBookImages(country, this_scott,
-                              ImageUtility::Image_Flags::Catalog)
+        if (iu.getBookImagePaths(country, this_scott,
+                              ImageUtility::Image_Flags::Stock)
                 .isEmpty()) {
           ++num_missing_total;
           ++num_missing_in_run;

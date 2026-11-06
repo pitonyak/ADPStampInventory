@@ -2,6 +2,7 @@
 #define IMAGEDIALOG_H
 
 #include "catalogentry.h"
+#include "stampimage.h"
 
 #include <QDialog>
 #include <QPixmap>
@@ -111,7 +112,7 @@ private:
   QString m_CurrentScott;
 
   /*! \brief List of images for the current stamp. */
-  QList<QPixmap> m_PixmapList;
+  QList<StampImage> m_StampImageList;
 
   /*! \brief ALL entries from the catalog table. */
   QList<QSharedPointer<CatalogEntry>> m_CatalogEntries;

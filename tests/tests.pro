@@ -16,11 +16,13 @@ SOURCES += \
     testmain.cpp \
     testall.cpp \
     ../app/imageutility.cpp \
+    ../app/stampimage.cpp \
     ../app/constants.cpp \
 
 HEADERS += \
     testall.h \
     ../app/imageutility.h \
+    ../app/stampimage.h \
     ../app/constants.cpp \
 
 INCLUDEPATH += \

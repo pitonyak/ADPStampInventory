@@ -125,8 +125,28 @@ bool ImageUtility::splitCatalogNumber(const QString &catalogNumber,
   return true;
 }
 
+QList<StampImage> ImageUtility::getStampImages(const QString &country, const QString &catNumber,
+                                 ImageUtility::Image_Flags flags,
+                                 bool allowEmpty) const
+{
+    QStringList paths = getBookImagePaths(country, catNumber, flags);
+    QList<QPixmap> images = getBookImages(getBookImagePaths(country, catNumber, flags), false);
+    if (paths.isEmpty() && allowEmpty) {
+        images.append(*m_noFileFoundImage);
+        paths.append("empty.png");
+    }
+    QList<StampImage> returnList;
+    for (int i=0; i<paths.size(); ++i)
+    {
+        returnList.append(StampImage(paths.at(i), images.at(i)));
+    }
+    return returnList;
+}
+
+
+
 QStringList
-ImageUtility::findBookImages(const QString &country, const QString &catNumber,
+ImageUtility::getBookImagePaths(const QString &country, const QString &catNumber,
                              ImageUtility::Image_Flags flags) const {
   // Path looks something like:
   // base/country/category/<number>/catNumber<optional_stuff>
@@ -151,8 +171,8 @@ ImageUtility::findBookImages(const QString &country, const QString &catNumber,
           QRegularExpression::DotMatchesEverythingOption);
   QRegularExpressionMatchIterator i;
 
-  if ((flags & ImageUtility::Image_Flags::Catalog) ==
-      ImageUtility::Image_Flags::Catalog) {
+  if ((flags & ImageUtility::Image_Flags::Stock) ==
+      ImageUtility::Image_Flags::Stock) {
     QString catalog_stamp_path =
         getStampPath(country, category, catNumber, true);
     QDir catalog_stamp_dir(catalog_stamp_path);

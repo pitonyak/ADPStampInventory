@@ -47,24 +47,24 @@ void TestAll::testImageUtility() {
   QVERIFY(!iu.splitCatalogNumber("!", category, num, trailer));
 
   QStringList list;
-  list = iu.findBookImages("USA", "100", ImageUtility::Image_Flags::Catalog);
+  list = iu.getBookImagePaths("USA", "100", ImageUtility::Image_Flags::Stock);
   QVERIFY(list.size() > 0);
-  list = iu.findBookImages("USA", "11a", ImageUtility::Image_Flags::Catalog);
+  list = iu.getBookImagePaths("USA", "11a", ImageUtility::Image_Flags::Stock);
   QVERIFY(list.size() > 0);
-  list = iu.findBookImages("USA", "11", ImageUtility::Image_Flags::Catalog);
+  list = iu.getBookImagePaths("USA", "11", ImageUtility::Image_Flags::Stock);
   QVERIFY(list.size() > 0);
-  list = iu.findBookImages("USA", "3278b", ImageUtility::Image_Flags::Catalog);
+  list = iu.getBookImagePaths("USA", "3278b", ImageUtility::Image_Flags::Stock);
   QVERIFY(list.size() == 0);
-  list = iu.findBookImages("USA", "4972", ImageUtility::Image_Flags::Catalog);
+  list = iu.getBookImagePaths("USA", "4972", ImageUtility::Image_Flags::Stock);
   QVERIFY(list.size() > 0);
-  list = iu.findBookImages("USA", "4972a", ImageUtility::Image_Flags::Catalog);
+  list = iu.getBookImagePaths("USA", "4972a", ImageUtility::Image_Flags::Stock);
   QVERIFY(list.size() > 0);
-  list = iu.findBookImages("USA", "rw1", ImageUtility::Image_Flags::Catalog);
+  list = iu.getBookImagePaths("USA", "rw1", ImageUtility::Image_Flags::Stock);
   QVERIFY(list.size() > 0);
-  list = iu.findBookImages("USA", "RW1", ImageUtility::Image_Flags::Catalog);
+  list = iu.getBookImagePaths("USA", "RW1", ImageUtility::Image_Flags::Stock);
   QVERIFY(list.size() > 0);
 
   QList<QPixmap> pixList =
-      iu.getBookImages("USA", "11", ImageUtility::Image_Flags::Catalog);
+      iu.getBookImages("USA", "11", ImageUtility::Image_Flags::Stock);
   QVERIFY(pixList.size() > 0);
 }

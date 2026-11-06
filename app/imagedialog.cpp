@@ -1,6 +1,7 @@
 #include "imagedialog.h"
 #include "imageutility.h"
 #include "stampdb.h"
+#include "stampimage.h"
 
 #include <QComboBox>
 #include <QDialogButtonBox>
@@ -16,7 +17,7 @@ ImageDialog::ImageDialog(StampDB *db, QWidget *parent)
       m_NextCat{nullptr}, m_CurrentImageIndex(0), m_NumStockImages(0),
       m_NumPersonalImages(0), m_ImageUtility{nullptr}, m_CurrentScott("") {
   setWindowTitle("Image Dialog");
-  resize(600, 600);
+  resize(800, 600);
   buildDialog();
 }
 
@@ -90,14 +91,13 @@ void ImageDialog::setBookImages(const QString &country,
   m_CurrentScott = catNumber;
 
   // Get standard catalog images with no empty image.
-  m_PixmapList = m_ImageUtility->getBookImages(
-      country, catNumber, ImageUtility::Image_Flags::Catalog, true);
-  m_NumStockImages = m_PixmapList.size();
-  m_PixmapList.append(m_ImageUtility->getBookImages(
-      country, catNumber, ImageUtility::Image_Flags::Mine, true));
-  m_NumPersonalImages = m_PixmapList.size() - m_NumStockImages;
-  if (m_PixmapList.empty()) {
-    m_PixmapList.append(m_ImageUtility->getEmptyImage());
+  m_StampImageList = m_ImageUtility->getStampImages(country, catNumber, ImageUtility::Image_Flags::Stock, false);
+  m_NumStockImages = m_StampImageList.size();
+  m_StampImageList.append(m_ImageUtility->getStampImages(country, catNumber, ImageUtility::Image_Flags::Mine, false));
+  m_NumPersonalImages = m_StampImageList.size() - m_NumStockImages;
+  if (m_StampImageList.isEmpty())
+  {
+      m_StampImageList.append(StampImage("empty.png", m_ImageUtility->getEmptyImage()));
   }
   setImage(0);
 
@@ -141,46 +141,47 @@ void ImageDialog::setSelectedCatalogId(int selectedCatalogId) {
   m_CatalogComboBox->setCurrentIndex(selectedCatalogId);
   const QSharedPointer<CatalogEntry> &entry =
       m_CatalogEntries.at(selectedCatalogId);
-  m_SummaryText->setText(QString("<p><b>#%2 / %1</b></p>"
-                                 "<p><b>Description:</b> %3</p>"
-                                 "<p><b>Released:</b> %4</p>")
+  m_SummaryText->setText(QString("<table cellpadding='0' cellspacing='5' border='0'>"
+                                 "<tr><td><b>#</b></td><td>%2 / %1</td><td></td><td><b>Postage</b></td><td>$%5</td><td><b>Released:</b></td><td>%4</td><td><b>Updated:</b></td><td>%6</td></tr>"
+                                 "</table>"
+                                 "<p><b>Description:</b> %3</p>")
                              .arg(entry->getCountryA3(), entry->getCatalogId(),
                                   entry->getDescription(),
-                                  entry->getReleaseDate().date().toString()));
+                                  entry->getReleaseDate().date().toString()).arg(entry->getFaceValue()).arg(entry->getUpdatedDate().toString()));
 }
 
 void ImageDialog::enableButtons() {
-  if (m_PixmapList.count() < 2) {
+  if (m_StampImageList.count() < 2) {
     m_PrevImage->setEnabled(false);
     m_NextImage->setEnabled(false);
   } else {
     m_PrevImage->setEnabled(m_CurrentImageIndex > 0);
-    m_NextImage->setEnabled((m_CurrentImageIndex + 1) < m_PixmapList.count() &&
+    m_NextImage->setEnabled((m_CurrentImageIndex + 1) < m_StampImageList.count() &&
                             (m_NumStockImages > 0 || m_NumPersonalImages > 0));
   }
   m_PrevCat->setEnabled(m_SelectedCatalogId > 0);
   m_NextCat->setEnabled((m_SelectedCatalogId + 1) < m_CatalogEntries.size());
   if (m_CurrentImageIndex < m_NumStockImages) {
-    setWindowTitle(QString("%1/%2 Stock Image for #%3")
+    setWindowTitle(QString("%1/%2 Stock Image for #%3 : (%4)")
                        .arg(m_CurrentImageIndex + 1)
                        .arg(m_NumStockImages + m_NumPersonalImages)
-                       .arg(m_CurrentScott));
+                       .arg(m_CurrentScott).arg(m_StampImageList.at(m_CurrentImageIndex).getFilename()));
   } else if (m_CurrentImageIndex < m_NumStockImages + m_NumPersonalImages) {
-    setWindowTitle(QString("%1/%2 Personal Image for #%3")
+    setWindowTitle(QString("%1/%2 Personal Image for #%3 : (%4)")
                        .arg(m_CurrentImageIndex + 1)
                        .arg(m_NumStockImages + m_NumPersonalImages)
-                       .arg(m_CurrentScott));
+                         .arg(m_CurrentScott).arg(m_StampImageList.at(m_CurrentImageIndex).getFilename()));
   } else {
     setWindowTitle("No Image for #" + m_CurrentScott);
   }
 }
 
 void ImageDialog::setImage(int i) {
-  if (0 <= i && i < m_PixmapList.count()) {
+  if (0 <= i && i < m_StampImageList.count()) {
     m_CurrentImageIndex = i;
-    QPixmap pixmap = m_PixmapList.at(m_CurrentImageIndex);
+    QPixmap pixmap = m_StampImageList.at(m_CurrentImageIndex).getImage();
     m_ImageLabel->setPixmap(
-        pixmap.scaled(350, 350, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        pixmap.scaled(550, 350, Qt::KeepAspectRatio, Qt::SmoothTransformation));
     m_ImageLabel->setAlignment(Qt::AlignCenter);
   }
   enableButtons();
