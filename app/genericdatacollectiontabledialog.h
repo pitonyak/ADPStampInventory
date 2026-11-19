@@ -124,6 +124,7 @@ public slots:
   void duplicateRowAddUpperA();
   void saveChanges();
   void searchDialog();
+  void imageDialog();
 
   // Copy 1 cell from n above
   void copyCellFrom1Above();
@@ -242,6 +243,7 @@ private:
   /*! \brief Persist pending changes to the DB */
   QPushButton *m_saveChangesButton;
   QPushButton *m_searchButton;
+  QPushButton *m_ImageButton;
 
   /*! \brief Identifies the columns and the types. */
   GenericDataCollection &m_table;

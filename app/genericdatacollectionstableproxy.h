@@ -42,7 +42,6 @@ public:
    * implements "search backwards".
    *
    *  \param [in] startIndex Where to start searching.
-   *
    *  \param [in] options tell everything else about the search.
    */
   QModelIndexList searchOneColumn(const QModelIndex &startIndex,
@@ -51,6 +50,17 @@ public:
   bool oneMatch(const QModelIndex &startIndex, const SearchOptions &options,
                 const QRegularExpression *regexp = nullptr) const;
 
+  /*! \brief Wraps getting the index to validate that the row and col are in bounds.
+   *
+   * The standard search allows for the general searching, but it only supports
+   * searching forward. This code will hopefully allow for "replace", and it
+   * implements "search backwards".
+   *
+   *  \param [in] row The row of interest.
+   *  \param [in] col The column of interest.
+   *
+   *  \returns an index that is valid even if row or col is out of bounds.
+   */
   QModelIndex getIndexByRowCol(int row, int col) const;
 
 signals:

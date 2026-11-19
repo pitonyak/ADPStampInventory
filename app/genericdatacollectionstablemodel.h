@@ -205,6 +205,7 @@ public:
    ***************************************************************************/
   void incrementCell(const int row, const int col, int incrementValue);
   void incrementCell(const QModelIndex &index, int incrementValue);
+  int getColumnIndexByName(const QString& name) const;
 
 signals:
 

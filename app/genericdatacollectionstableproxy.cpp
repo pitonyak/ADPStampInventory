@@ -47,7 +47,7 @@ bool GenericDataCollectionsTableProxy::oneMatch(
     if (options.isContains()) {
       return s.contains(*regexp);
     }
-    // TODO: Do I care abotu match entire string, starts with or ends with?
+    // TODO: Do I care about match entire string, starts with or ends with?
     return regexp->match(s).hasMatch();
   }
   qDebug("regular expression is null in "

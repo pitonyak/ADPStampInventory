@@ -7,6 +7,7 @@
 #include "genericdatacollectiontablemodel.h"
 #include "genericdatacollectiontablesearchdialog.h"
 #include "globals.h"
+#include "imagedialog.h"
 #include "linkbackfilterdelegate.h"
 #include "stampdb.h"
 
@@ -31,15 +32,15 @@ GenericDataCollectionTableDialog::GenericDataCollectionTableDialog(
     const QString &tableName, GenericDataCollection &data, StampDB &db,
     DescribeSqlTables &schema, GenericDataCollections *tables,
     int defaultSourceId, QWidget *parent)
-    : QDialog(parent), m_duplicateButton(nullptr),
-      m_duplicateButtonIncrement(nullptr),
-      m_duplicateButtonAppendLowerA(nullptr),
-      m_duplicateButtonAppendUpperA(nullptr), m_addButton(nullptr),
-      m_deleteButton(nullptr), m_undoButton(nullptr),
-      m_saveChangesButton(nullptr), m_searchButton(nullptr), m_table(data),
-      m_tables(tables), m_tableView(nullptr), m_tableName(tableName),
-      m_tableModel(nullptr), m_searchWindow(nullptr), m_db(db),
-      m_schema(schema), m_defaultSourceId(defaultSourceId) {
+    : QDialog(parent), m_duplicateButton{nullptr},
+      m_duplicateButtonIncrement{nullptr},
+      m_duplicateButtonAppendLowerA{nullptr},
+      m_duplicateButtonAppendUpperA{nullptr}, m_addButton{nullptr},
+      m_deleteButton{nullptr}, m_undoButton{nullptr},
+      m_saveChangesButton{nullptr}, m_searchButton{nullptr}, m_ImageButton{nullptr}, m_table{data},
+      m_tables{tables}, m_tableView{nullptr}, m_tableName{tableName},
+      m_tableModel{nullptr}, m_searchWindow{nullptr}, m_db{db},
+      m_schema{schema}, m_defaultSourceId(defaultSourceId) {
   buildDialog();
 }
 
@@ -101,6 +102,13 @@ void GenericDataCollectionTableDialog::buildDialog() {
   m_searchButton = new QPushButton(tr("Find"));
   connect(m_searchButton, SIGNAL(clicked()), this, SLOT(searchDialog()));
   hLayout->addWidget(m_searchButton);
+
+  if (m_tableName.compare("inventory",Qt::CaseInsensitive) || m_tableName.compare("catalog",Qt::CaseInsensitive)) {
+      m_ImageButton = new QPushButton(tr("Image"));
+      connect(m_ImageButton, SIGNAL(clicked()), this, SLOT(imageDialog()));
+      hLayout->addWidget(m_ImageButton);
+  }
+
   vLayout->addLayout(hLayout);
 
   hLayout = new QHBoxLayout();
@@ -755,6 +763,37 @@ bool GenericDataCollectionTableDialog::doFind(const SearchOptions &options,
     }
   }
   return false;
+}
+
+void GenericDataCollectionTableDialog::imageDialog() {
+    qDebug("in ::imageDialog()");
+    // Interested in the current  "catalogid" (inventory table) or "id" (catalog table) column.
+    QString columnName = m_tableName.compare("inventory", Qt::CaseInsensitive) == 0 ? "catalogid" : "id";
+    int columnIndex = m_tableModel->getColumnIndexByName(columnName);
+    if (columnIndex < 0) {
+        qDebug("Table does not contain a field named catalogid or id.");
+        return;
+    }
+
+    int currentRow = m_tableView->currentIndex().row();
+
+    // Use the proxy model rather than the direct model because the proxy remaps for sorting.
+    QModelIndex index = m_proxyModel->index(currentRow, columnIndex);
+    QVariant cellValue = m_proxyModel->data(index, Qt::DisplayRole);
+
+    //QVariant cellValue = m_tableModel->data(index, Qt::DisplayRole);
+    const auto parts = cellValue.toString().split(u'/');
+    if (parts.size() != 3) {
+        //qDebug(cellValue.toString().constData());
+        return;
+    }
+    QString country = parts[0];
+    QString catalogId = parts[1];
+
+    ImageDialog dialog(&m_db, country, catalogId);
+    dialog.exec();
+    // TODO: Could use this to choose a different stamp if desired!
+    return;
 }
 
 void GenericDataCollectionTableDialog::searchDialog() {

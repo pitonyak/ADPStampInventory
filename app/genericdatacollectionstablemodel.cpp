@@ -154,6 +154,16 @@ bool GenericDataCollectionsTableModel::setData(const QModelIndex &index,
   return false;
 }
 
+int GenericDataCollectionsTableModel::getColumnIndexByName(const QString& name) const {
+    for (int iCol=0; iCol<m_schema.getFieldCount(); ++iCol) {
+        QString fieldName = m_table->getPropertyName(iCol);
+        if (fieldName.compare(name, Qt::CaseInsensitive) == 0) {
+            return iCol;
+        }
+    }
+    return -1;
+}
+
 QVariant GenericDataCollectionsTableModel::data(const QModelIndex &index,
                                                 int role) const {
   const GenericDataObject *object =
