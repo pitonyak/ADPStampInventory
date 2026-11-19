@@ -3,7 +3,6 @@
 #include <QComboBox>
 #include <QDoubleSpinBox>
 #include <QLineEdit>
-#include <typeinfo>
 
 LinkBackFilterDelegate::LinkBackFilterDelegate(QObject *parent)
     : QStyledItemDelegate(parent) {

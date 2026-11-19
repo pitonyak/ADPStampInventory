@@ -73,6 +73,7 @@ SOURCES += main.cpp\
     sqlfieldtype.cpp \
     sqlfieldtypemaster.cpp \
     stampdb.cpp \
+    stampidcollator.cpp \
     stampimage.cpp \
     stampschema.cpp \
     stringutil.cpp \
@@ -137,6 +138,7 @@ HEADERS  += \
     sqlfieldtype.h \
     sqlfieldtypemaster.h \
     stampdb.h \
+    stampidcollator.h \
     stampimage.h \
     stampschema.h \
     stringutil.h \

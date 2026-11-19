@@ -215,9 +215,12 @@ public:
   void setFieldRequired(const QString &name, bool x);
 
   //**************************************************************************
-  /*! \brief
+  /*! \brief Allows for a field to display values from another table, for example, display a type name rather than a type id.
    *
-   *  \param [in]
+   *  \param [in] name Field name in the current table.
+   *  \param [in] linkTableName Name of the table to link.
+   *  \param [in] linkFieldName Name of the field in the linked table.
+   *  \param [in] linkDisplayFields Comma separated list of field names. Cocatenate values from taget table with a separator.
    *  \return
    ***************************************************************************/
   void setFieldLink(const QString &name, const QString &linkTableName,
@@ -225,27 +228,26 @@ public:
                     const QString &linkDisplayFields);
 
   //**************************************************************************
-  /*! \brief
+  /*! \brief Associate field names that are always assumed to be currency and associate with a currency symbol.
    *
-   *  \param [in]
-   *  \return
+   *  \param [in] name Fields with this name are assumed to be currency. A dumb way to do it but it works for this.
+   *  \param [in] currencySymbol Symbol to use.
    ***************************************************************************/
   void setFieldCurrencySymbol(const QString &name,
                               const QString &currencySymbol);
 
   //**************************************************************************
-  /*! \brief
+  /*! \brief Get a list of tables linked to this table; so we know what other tables to load.
    *
-   *  \param [in]
-   *  \return
+   *  \return List of tables linked to this table.
    ***************************************************************************/
   QSet<QString> getLinkedTableNames() const;
 
   //**************************************************************************
   /*! \brief
    *
-   *  \param [in]
-   *  \return
+   *  \param [in] writer
+   *  \return Reference to the stream.
    ***************************************************************************/
   QXmlStreamWriter &writeXml(QXmlStreamWriter &writer) const;
 

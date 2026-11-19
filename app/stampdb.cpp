@@ -88,6 +88,8 @@ StampDB::StampDB(QObject *parent)
                              " valuetypeid INTEGER,"
                              " bookvalue FLOAT)";
 
+  // TODO: Why store the typeid when I should pull it from the catalog table.
+  // UPDATE inventory set typeid = catalog.typeid FROM catalog WHERE inventory.catalogid = catalog.id
   *m_desiredSchemaDDLList << "CREATE TABLE inventory("
                              " id INTEGER PRIMARY KEY AUTOINCREMENT,"
                              " catalogid INTEGER,"

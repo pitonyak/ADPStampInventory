@@ -9,14 +9,14 @@
 #include <QRegularExpression>
 #include <QSettings>
 
+QRegularExpression ImageUtility::m_catNumberRxNoCat("^(\\d+)(.*)$",
+    QRegularExpression::CaseInsensitiveOption | QRegularExpression::DotMatchesEverythingOption);
+
+QRegularExpression ImageUtility::m_catNumberRxWithCat("^([^0-9]*)(\\d+)(.*)$",
+    QRegularExpression::CaseInsensitiveOption | QRegularExpression::DotMatchesEverythingOption);
+
 ImageUtility::ImageUtility(QObject *parent)
-    : QObject(parent), m_noFileFoundImage(nullptr),
-      m_catNumberRxNoCat("^(\\d+)(.*)$",
-                         QRegularExpression::CaseInsensitiveOption |
-                             QRegularExpression::DotMatchesEverythingOption),
-      m_catNumberRxWithCat("^([^0-9]*)(\\d+)(.*)$",
-                           QRegularExpression::CaseInsensitiveOption |
-                               QRegularExpression::DotMatchesEverythingOption) {
+    : QObject(parent), m_noFileFoundImage(nullptr) {
   // Build the default image when no file is found.
   m_noFileFoundImage = new QPixmap(400, 400);
   m_noFileFoundImage->fill(Qt::white);
@@ -76,7 +76,7 @@ QString ImageUtility::getStampPath(const QString &country,
 }
 
 bool ImageUtility::splitCatalogNumber(const QString &catalogNumber,
-                                      QString &num, QString &trailer) const {
+                                      QString &num, QString &trailer) {
   QRegularExpressionMatchIterator i =
       m_catNumberRxNoCat.globalMatch(catalogNumber);
 
@@ -96,7 +96,11 @@ bool ImageUtility::splitCatalogNumber(const QString &catalogNumber,
 
 bool ImageUtility::splitCatalogNumber(const QString &catalogNumber,
                                       QString &category, QString &num,
-                                      QString &trailer) const {
+                                      QString &trailer) {
+  if (catalogNumber.startsWith("1CVPO", Qt::CaseInsensitive)) {
+     category = "1CVPO";
+     return splitCatalogNumber(catalogNumber.mid(5), num, trailer);
+  }
   if (catalogNumber.startsWith("1CVP", Qt::CaseInsensitive)) {
     category = "1CVP";
     return splitCatalogNumber(catalogNumber.mid(4), num, trailer);

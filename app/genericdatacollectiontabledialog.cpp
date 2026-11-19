@@ -64,7 +64,6 @@ void GenericDataCollectionTableDialog::buildDialog() {
   // http://doc.qt.digia.com/4.6/itemviews-customsortfiltermodel.html
   m_proxyModel = new GenericDataCollectionsTableProxy(this);
   m_proxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
-  m_proxyModel->setNumericMode(true);
   m_proxyModel->setSourceModel(m_tableModel);
 
   m_tableView->setModel(m_proxyModel);

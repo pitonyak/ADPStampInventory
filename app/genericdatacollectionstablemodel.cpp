@@ -3,6 +3,8 @@
 #include "dbtransactionhandler.h"
 #include "describesqltables.h"
 
+#include "stampidcollator.h"
+
 #include <QCollator>
 #include <QDebug>
 #include <QLocale>
@@ -266,6 +268,10 @@ GenericDataCollectionsTableModel::getLinkEditValues(const QString &tableName,
 
   // Sort this list before storing it.
   // Use a QCollator so that numbers and strings sort well.
+  // TODO: ???? Change the collator
+
+  StampIdCollator stampCollator{};
+
   QCollator collator;
   collator.setNumericMode(true);
   collator.setCaseSensitivity(Qt::CaseInsensitive);
@@ -276,8 +282,14 @@ GenericDataCollectionsTableModel::getLinkEditValues(const QString &tableName,
     return collator.compare(a, b) < 0;
   });
 
+  auto stampSort = ([stampCollator](const QString &a, const QString &b) {
+      return stampCollator.stampIdLessThan(a, b);
+  });
+
+
   // Use the standard sort to sort the list in ascending order.
-  std::sort(list.begin(), list.end(), mySort);
+  //std::sort(list.begin(), list.end(), mySort);
+  std::sort(list.begin(), list.end(), stampSort);
 
   const_cast<LinkedFieldSelectionCache &>(m_linkCache)
       .setCachedList(cacheId, list);

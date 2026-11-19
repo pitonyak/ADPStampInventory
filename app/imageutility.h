@@ -93,10 +93,10 @@ public:
 
   const QPixmap &getEmptyImage() const { return *m_noFileFoundImage; }
 
-  bool splitCatalogNumber(const QString &catalogNumber, QString &num,
-                          QString &trailer) const;
-  bool splitCatalogNumber(const QString &catalogNumber, QString &category,
-                          QString &num, QString &trailer) const;
+  static bool splitCatalogNumber(const QString &catalogNumber, QString &num,
+                          QString &trailer);
+  static bool splitCatalogNumber(const QString &catalogNumber, QString &category,
+                          QString &num, QString &trailer);
 
   void setBaseDirectory(const QString &x) { setBaseDirectory(QDir(x)); }
   void setBaseDirectory(const QDir &x);
@@ -165,11 +165,11 @@ private:
 
   /*! \brief Matches a catalog number that starts with a number, so, something
    * like 1000 or 1000a, will not match RW42a */
-  QRegularExpression m_catNumberRxNoCat;
+  static QRegularExpression m_catNumberRxNoCat;
 
   /*! \brief Matches a catalog number that MAY start with a letter such as
    * RW42a. Will also match 1000 and 1000a */
-  QRegularExpression m_catNumberRxWithCat;
+  static QRegularExpression m_catNumberRxWithCat;
 
   /*! \brief Where to start when trying to find an image. */
   QDir m_BaseDirectory;

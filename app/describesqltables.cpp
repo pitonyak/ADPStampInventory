@@ -474,7 +474,7 @@ DescribeSqlTables DescribeSqlTables::getStampSchema() {
   inventoryTable.setFieldLink("dealerid", "dealer", "id", "name");
   inventoryTable.setFieldLink("locationid", "stamplocation", "id", "name");
   inventoryTable.setFieldKey("id", true);
-  // TODO: Remove type id.
+  // TODO: Remove type id. Should use the typeid from the catalog table, which is not supported here!
   inventoryTable.setFieldLink("typeid", "catalogtype", "id", "name");
   inventoryTable.setFieldCurrencySymbol("paid", "$");
   schema.addTable(inventoryTable);
