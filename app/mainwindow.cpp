@@ -379,6 +379,7 @@ void MainWindow::exportInventoryCSV() {
   pSettings->setValue(Constants::Settings_LastCSVDirWrite,
                       writeDir.canonicalPath());
 
+  /**
   QString sqlString =
       "SELECT CONCAT(country.a3, '/', catalog.scott, '/', catalogtype.name) AS "
       "scott, inventory.quantity, inventory.grade,  inventory.condition, "
@@ -391,13 +392,18 @@ void MainWindow::exportInventoryCSV() {
       "country.name AS 'country', country.a3, catalog.scott AS scott_num, "
       "catalogtype.name as type, inventory.id FROM inventory, catalog, "
       "bookvalues, country, stamplocation, valuetype, dealer, catalogtype "
-      "WHERE  inventory.catalogid=catalog.id AND catalog.countryid=country.id "
+      "WHERE inventory.catalogid=catalog.id AND catalog.countryid=country.id "
       "AND inventory.dealerid=dealer.id AND "
       "stamplocation.id=inventory.locationid AND "
       "valuetype.description=inventory.grade AND "
       "bookvalues.valuetypeid=valuetype.id AND catalog.id=bookvalues.catalogid "
       " AND catalogtype.id=catalog.typeid ORDER BY country.a3, "
       "ABS(catalog.scott), catalogtype.name";
+  **/
+
+  QString sqlString =
+      "SELECT CONCAT(country.a3, '/', catalog.scott, '/', catalogtype.name) AS scott, inventory.quantity, inventory.grade,  inventory.condition, inventory.selvage, inventory.centering, inventory.back, inventory.comment, catalog.description, catalog.facevalue, inventory.paid, bookvalues.bookvalue, inventory.valuemultiplier, inventory.certificate, inventory.purchasedate, catalog.releasedate, dealer.name AS dealer_name, stamplocation.name AS location_name, stamplocation.description AS location_description, inventory.updated , country.name AS 'country', country.a3, catalog.scott AS scott_num, catalogtype.name as type, inventory.id FROM inventory LEFT JOIN catalog on inventory.catalogid=catalog.id LEFT JOIN country on catalog.countryid=country.id LEFT JOIN dealer ON inventory.dealerid=dealer.id LEFT JOIN stamplocation ON stamplocation.id=inventory.locationid LEFT JOIN valuetype ON valuetype.description=inventory.grade  LEFT JOIN bookvalues ON bookvalues.valuetypeid=valuetype.id  AND catalog.id=bookvalues.catalogid LEFT JOIN catalogtype ON catalogtype.id=catalog.typeid ORDER BY country.a3, ABS(catalog.scott), catalogtype.name";
+
   QSqlDatabase &db = m_db->getDB();
   QSqlQuery query(db);
   if (!query.exec(sqlString)) {

@@ -3,6 +3,7 @@
 #include "globals.h"
 #include "scrollmessagebox.h"
 #include "stampdb.h"
+#include "csvwriter.h"
 
 #include <QDialogButtonBox>
 #include <QPlainTextEdit>
@@ -16,6 +17,100 @@
 #include <QTextBlock>
 #include <QTextCursor>
 #include <QVBoxLayout>
+
+#include <QApplication>
+#include <QClipboard>
+#include <QKeySequence>
+#include <QShortcut>
+#include <set>
+
+void setupTableCopyHandler(QTableWidget* table) {
+
+    auto* copyShortcut = new QShortcut(QKeySequence::Copy, table);
+    copyShortcut->setContext(Qt::WidgetShortcut); // Only triggers when table has focus
+
+    QObject::connect(copyShortcut, &QShortcut::activated, table, [table]() {
+        const QList<QTableWidgetSelectionRange> ranges = table->selectedRanges();
+        if (ranges.isEmpty()) {
+            return;
+        }
+
+        QStringList headers;
+        for (int col = 0; col < table->columnCount(); ++col) {
+            QTableWidgetItem* headerItem = table->horizontalHeaderItem(col);
+            if (headerItem) {
+                headers.append(headerItem->text());
+            } else {
+                // Fallback to the underlying model's header data (e.g., default "1", "2", etc.)
+                headers.append(table->model()->headerData(col, Qt::Horizontal).toString());
+            }
+        }
+
+        QString csvString;
+        CSVWriter writer;
+        writer.setStreamWriteToString(&csvString);
+        // CSV Headers
+        CSVLine headerLine;
+        QStringList fieldNames;
+        QStringList intHeader = {"quantity", "id"};
+        QStringList dateHeader = {"releasedate", "purchasedate"};
+        QStringList dateTimeHeader = {"updated"};
+        QStringList floatHeader = {"facevalue", "paid", "bookvalue",
+                                   "valuemultiplier"};
+        // Collect unique, sorted row and column indices across all selection ranges
+        std::set<int> rows;
+        std::set<int> cols;
+        for (const auto& range : ranges) {
+            for (int r = range.topRow(); r <= range.bottomRow(); ++r) {
+                rows.insert(r);
+            }
+            for (int c = range.leftColumn(); c <= range.rightColumn(); ++c) {
+                cols.insert(c);
+                QString fieldName = headers[c];
+                if (intHeader.contains(fieldName)) {
+                    headerLine.append(CSVColumn(fieldName, false, QMetaType::Long));
+                } else if (floatHeader.contains(fieldName)) {
+                    headerLine.append(CSVColumn(fieldName, false, QMetaType::Float16));
+                } else if (dateHeader.contains(fieldName)) {
+                    headerLine.append(CSVColumn(fieldName, false, QMetaType::QDate));
+                } else if (dateTimeHeader.contains(fieldName)) {
+                    headerLine.append(CSVColumn(fieldName, false, QMetaType::QDateTime));
+                } else {
+                    headerLine.append(CSVColumn(fieldName, true, QMetaType::QString));
+                }
+            }
+        }
+        if (cols.size() > 1) {
+            writer.setHeader(headerLine);
+            writer.writeHeader();
+        }
+
+        for (auto rIt = rows.begin(); rIt != rows.end(); ++rIt) {
+            CSVLine line;
+            for (auto cIt = cols.begin(); cIt != cols.end(); ++cIt) {
+                if (const QTableWidgetItem* item = table->item(*rIt, *cIt)) {
+                    QString fieldName = headers[*cIt];
+                    QString fieldValue = item->text();
+                    if (intHeader.contains(fieldName)) {
+                        line.append(CSVColumn(fieldValue, false, QMetaType::Long));
+                    } else if (floatHeader.contains(fieldName)) {
+                        line.append(CSVColumn(fieldValue, false, QMetaType::Float16));
+                    } else if (dateHeader.contains(fieldName)) {
+                        line.append(CSVColumn(fieldValue, false, QMetaType::QDate));
+                    } else if (dateTimeHeader.contains(fieldName)) {
+                        line.append(CSVColumn(fieldValue, false, QMetaType::QDateTime));
+                    } else {
+                        line.append(CSVColumn(fieldValue, true, QMetaType::QString));
+                    }
+                }
+            }
+            writer.write(line);
+        }
+
+        QApplication::clipboard()->setText(csvString);
+    });
+}
+
 
 SQLDialog::SQLDialog(StampDB &db, QWidget *parent)
     : QDialog(parent), m_db(db), m_textEdit(nullptr), m_tableWidget(nullptr),
@@ -54,6 +149,7 @@ SQLDialog::SQLDialog(StampDB &db, QWidget *parent)
 
   m_tableWidget = new QTableWidget(1, 1);
   vBox->addWidget(m_tableWidget);
+  setupTableCopyHandler(m_tableWidget);
 
   m_statusBar = new QStatusBar();
   vBox->addWidget(m_statusBar);
@@ -140,7 +236,7 @@ void SQLDialog::executeSql(const QString &sqlString) {
       int numAffected = query.numRowsAffected();
       if (numAffected >= 0) {
         m_statusBar->showMessage(
-            QString(tr("Successful query with %1 rows arrected"))
+            QString(tr("Successful query with %1 rows affected"))
                 .arg(numAffected));
       } else {
         m_statusBar->showMessage(QString(tr("Successful query!")));
@@ -149,3 +245,4 @@ void SQLDialog::executeSql(const QString &sqlString) {
     // Handle things here!
   }
 }
+
